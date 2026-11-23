@@ -33,10 +33,14 @@ def _load(folder: Path, name: str) -> dict:
     return json.loads((folder / f"{name}.json").read_text(encoding="utf-8"))
 
 
-def _check_texts(rules: dict, tables: dict, unnamed: set[str]) -> list[str]:
+def _check_texts(rules: dict, tables: dict, unnamed: set[str], descriptionless: set[str]) -> list[str]:
     problems = []
     expected = {f"{category}:{ident}" for section, category in _CATEGORIES.items()
                 for ident in rules.get(section, {})}
+    idents = expected | {key.split(":", 1)[1] for key in expected}
+    for listed in sorted(descriptionless - idents):
+        problems.append(f"{listed}: listed with a missing description but not found")
+    no_description = {key for key in expected if key in descriptionless or key.split(":", 1)[1] in descriptionless}
     for file, language in _LANGUAGES.items():
         table = tables[file]
         for key in sorted(expected):
@@ -47,6 +51,8 @@ def _check_texts(rules: dict, tables: dict, unnamed: set[str]) -> list[str]:
                 problems.append(f"{key}: no entry in the {language} table")
             elif not (entry.get("name") or "").strip():
                 problems.append(f"{key}: empty name in the {language} table")
+            elif key in no_description and entry.get("description") is not None:
+                problems.append(f"{key}: listed with a missing description but has one in the {language} table")
         for key in sorted(set(table) - expected):
             problems.append(f"{key}: stray key in the {language} table")
     return problems
@@ -153,12 +159,14 @@ def _check_meta(meta: dict) -> list[str]:
 
 def verify(folder: Path, counts: dict[str, int] = COUNTS, unnamed: set[str] | None = None,
            duplicates: list[frozenset[str]] | None = None, wiki: dict[str, dict] | None = None,
-           excluded: dict[str, str] | None = None) -> list[str]:
+           excluded: dict[str, str] | None = None, descriptionless: set[str] | None = None) -> list[str]:
     """Every problem found in the data folder, sorted; empty when everything is fine. `wiki` (default: the
     committed bg3.wiki items) and `excluded` (default: items_excluded.txt) set the expected items."""
     folder = Path(folder)
     if unnamed is None:
         unnamed = texts.read_unnamed(UNNAMED)
+    if descriptionless is None:
+        descriptionless = texts.read_unnamed_descriptions(UNNAMED)
     if duplicates is None:
         duplicates = model.read_duplicates(KNOWN_DUPLICATES)
     if wiki is None:
@@ -167,7 +175,7 @@ def verify(folder: Path, counts: dict[str, int] = COUNTS, unnamed: set[str] | No
         excluded = model.read_excluded(ITEMS_EXCLUDED)
     rules = _load(folder, "rules")
     tables = {name: _load(folder, name) for name in _LANGUAGES}
-    problems = (_check_texts(rules, tables, unnamed) + _check_references(rules)
+    problems = (_check_texts(rules, tables, unnamed, descriptionless) + _check_references(rules)
                 + _check_items(rules, wiki, excluded) + _check_counts(rules, counts) + _check_meta(_load(folder, "meta"))
                 + model.duplicate_problems(rules.get("progressions", []), duplicates))
     return sorted(problems)

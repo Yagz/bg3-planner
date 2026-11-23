@@ -123,6 +123,54 @@ class TextsTest(unittest.TestCase):
         self.assertEqual(out["progressions"], r["progressions"])
         self.assertEqual(out["lists"], r["lists"])
 
+    def test_description_only_keeps_the_name(self):
+        fr = {k: v for k, v in FR.items() if k != "hPassiveDesc"}
+        out, en, fr_table = texts.resolve(rules(), EN, fr, set(), {"passive:Sharpshooter"})
+        self.assertEqual(en["passive:Sharpshooter"], {"name": "Sharpshooter (passive)", "description": None})
+        self.assertEqual(fr_table["passive:Sharpshooter"], {"name": "Tireur (passif)", "description": None})
+        self.assertNotIn("text", out["passives"]["Sharpshooter"])
+        # A bare identifier works as for whole-element entries.
+        _, en, _ = texts.resolve({**rules(), "feats": {}}, EN, fr, set(), {"Sharpshooter"})
+        self.assertIsNone(en["passive:Sharpshooter"]["description"])
+        # The unknown-handle marker counts as a missing description.
+        r = rules()
+        r["passives"]["Sharpshooter"]["text"]["description"] = texts.UNKNOWN_HANDLE
+        _, en, _ = texts.resolve(r, EN, FR, set(), {"passive:Sharpshooter"})
+        self.assertIsNone(en["passive:Sharpshooter"]["description"])
+
+    def test_description_only_still_needs_the_name(self):
+        fr = {k: v for k, v in FR.items() if k not in ("hPassive", "hPassiveDesc")}
+        with self.assertRaises(texts.MissingText) as ctx:
+            texts.resolve(rules(), EN, fr, set(), {"passive:Sharpshooter"})
+        self.assertEqual(len(ctx.exception.errors), 1, ctx.exception.errors)
+        self.assertIn("hPassive ", ctx.exception.errors[0] + " ")
+        r = rules()
+        r["passives"]["Sharpshooter"]["text"]["name"] = None
+        with self.assertRaises(texts.MissingText) as ctx:
+            texts.resolve(r, EN, FR, set(), {"passive:Sharpshooter"})
+        self.assertIn("no name handle", ctx.exception.errors[0])
+
+    def test_description_only_stale_entries(self):
+        with self.assertRaises(texts.MissingText) as ctx:
+            texts.resolve(rules(), EN, FR, set(), {"passive:Sharpshooter", "feat:Sharpshooter", "spell:Ghost"})
+        errors = ctx.exception.errors
+        self.assertEqual(len(errors), 3, errors)
+        self.assertTrue(any("passive:Sharpshooter" in e and "description" in e for e in errors))
+        # No description handle at all: nothing to list.
+        self.assertTrue(any("feat:Sharpshooter" in e and "description" in e for e in errors))
+        self.assertTrue(any("spell:Ghost" in e and "not found" in e for e in errors))
+
+    def test_read_unnamed_forms(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / "u.txt"
+            p.write_text("A\nitem:B description  # why\nC description\n", encoding="utf-8")
+            self.assertEqual(texts.read_unnamed(p), {"A"})
+            self.assertEqual(texts.read_unnamed_descriptions(p), {"item:B", "C"})
+            for bad in ("A name\n", "A description extra\n", "A\nA description\n", "A\nA\n"):
+                p.write_text(bad, encoding="utf-8")
+                with self.assertRaises(ValueError, msg=bad):
+                    texts.read_unnamed(p)
+
     def test_read_unnamed_ignores_comments(self):
         with tempfile.TemporaryDirectory() as d:
             p = Path(d) / "u.txt"

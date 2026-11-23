@@ -135,7 +135,8 @@ def build(game: Path, game_version: str, wiki: Path | None = None) -> dict[str, 
                         templates=resolved_templates, excluded=model.read_excluded(ITEMS_EXCLUDED))
     en = loca.table(game / "Data" / ENGLISH_PAK, "English")
     fr = loca.table(game / "Data" / FRENCH_PAK, "French")
-    rules, texts_en, texts_fr = texts.resolve(rules, en, fr, texts.read_unnamed(UNNAMED))
+    rules, texts_en, texts_fr = texts.resolve(rules, en, fr, texts.read_unnamed(UNNAMED),
+                                             texts.read_unnamed_descriptions(UNNAMED))
     return {
         "meta.json": {"game": game_version, "modules": list(sources.MODULES), "notice": NOTICE},
         "rules.json": rules,

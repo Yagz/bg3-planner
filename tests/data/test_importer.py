@@ -266,6 +266,16 @@ class ImporterTest(unittest.TestCase):
         self.assertEqual([p.name for p in self.out.iterdir()], ["rules.json"])
         self.assertEqual((self.out / "rules.json").read_text(encoding="utf-8"), "previous")
 
+    def test_description_only_unnamed_entry(self):
+        game, folder = make_game(drop_french="hAlertDesc")
+        self.addCleanup(folder.cleanup)
+        self.set_list("UNNAMED", "feat:Alert description  # test\n")
+        importer.run(game, self.out, "1.2.3")
+        fr = json.loads((self.out / "texts.fr.json").read_text(encoding="utf-8"))
+        en = json.loads((self.out / "texts.en.json").read_text(encoding="utf-8"))
+        self.assertEqual(fr["feat:Alert"], {"name": "FR hAlert", "description": None})
+        self.assertEqual(en["feat:Alert"], {"name": "EN hAlert", "description": None})
+
     def test_game_from_environment(self):
         with mock.patch.dict(os.environ, {"BG3_GAME": str(self.game)}):
             code = importer.main(["--game-version", "1.2.3", "--output", str(self.out)])

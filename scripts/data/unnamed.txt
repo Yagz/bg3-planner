@@ -1,4 +1,7 @@
 # Identifiers (`<category>:<id>` or bare `<id>`) deliberately left without a name, one per line.
+# `<identifier> description` keeps the name (it must exist in both languages) and knowingly leaves the
+# description missing: the element is in both text tables with a null description.
+# A listed identifier that matches no element, or whose element lacks nothing the listing excuses, is an error.
 
 # Passives with a "%%% Empty" developer-placeholder English name and no French text.
 passive:Bladesong_Armor_Message
@@ -32,11 +35,13 @@ passive:Divine_Strike_War_Toggle
 # Hidden technical or helper passives: "%%%" placeholder English name or description, no French text.
 passive:ArcaneWard_Cast
 passive:BardSpellcasting
-passive:FlurryOfBlowsUnlock
 passive:Monk_SoundSwitch
 passive:Rage_Armour_Message
 passive:Rage_NoHeavyArmour_VFX
 
 # Items whose game description handle is the unknown-handle marker in both languages.
-item:UNI_Karlach_Gloves  # the game's own description is the unknown-handle marker
-item:WPN_HUM_Sword_Shar_A  # the game's own description is the unknown-handle marker
+item:UNI_Karlach_Gloves description  # the game's own description is the unknown-handle marker
+item:WPN_HUM_Sword_Shar_A description  # the game's own description is the unknown-handle marker
+
+# Passive whose name exists in both languages but whose description has no French text.
+passive:FlurryOfBlowsUnlock description  # French description missing in the game

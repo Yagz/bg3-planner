@@ -44,7 +44,8 @@ WIKI = {"MAG_Boots": {"uuid": "t-boots", "kind": "equipment", "rarity": "rare", 
 
 def verify(folder: Path, counts=COUNTS, **kwargs):
     """checks.verify on synthetic wiki items, no exclusion and no known duplicate, unless given."""
-    return checks.verify(folder, counts, **{"wiki": WIKI, "excluded": {}, "duplicates": [], **kwargs})
+    return checks.verify(folder, counts, **{"wiki": WIKI, "excluded": {}, "duplicates": [], "descriptionless": set(),
+                                            **kwargs})
 META = {"game": "1.0", "modules": ["Shared"], "notice": {"en": "Notice.", "fr": "Mention."}}
 
 
@@ -112,6 +113,27 @@ class ChecksTest(unittest.TestCase):
         write(self.folder, keys=[k for k in KEYS if k != "passive:Soldier"],
               fr_keys=[k for k in KEYS if k != "passive:Soldier"])
         self.assertEqual(verify(self.folder, COUNTS, unnamed={"passive:Soldier"}, duplicates=[]), [])
+
+    def test_description_only_entry(self):
+        write(self.folder)
+        self.assertEqual(verify(self.folder, descriptionless={"passive:Soldier"}), [])
+        path = self.folder / "texts.fr.json"
+        table = json.loads(path.read_text(encoding="utf-8"))
+        table["passive:Soldier"]["description"] = "Present."
+        path.write_text(json.dumps(table), encoding="utf-8")
+        problems = verify(self.folder, descriptionless={"passive:Soldier"})
+        self.assertEqual(len(problems), 1, problems)
+        self.assertIn("passive:Soldier", problems[0])
+        self.assertIn("French", problems[0])
+        # The name is still required.
+        write(self.folder, keys=[k for k in KEYS if k != "passive:Soldier"])
+        problems = verify(self.folder, descriptionless={"passive:Soldier"})
+        self.assertTrue(any("passive:Soldier" in p and "no entry" in p for p in problems), problems)
+        # A listed element that does not exist.
+        write(self.folder)
+        problems = verify(self.folder, descriptionless={"passive:Ghost"})
+        self.assertEqual(len(problems), 1)
+        self.assertIn("passive:Ghost", problems[0])
 
     def test_wrong_count(self):
         write(self.folder)

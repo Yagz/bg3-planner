@@ -27,7 +27,7 @@ python3.14 -m scripts.data.importer --game <game install directory> --game-versi
 
 Four committed lists, each entry with its reason, describe the exceptions found in the source data (the game's files, or the bg3.wiki items for `items_excluded.txt`); an entry that no longer matches the data is an error, so each list stays exact:
 
-- `scripts/data/unnamed.txt`: identifiers deliberately left without a name.
+- `scripts/data/unnamed.txt`: identifiers deliberately left without a name; a line `<identifier> description` instead keeps the name (required in both languages) and leaves the description knowingly missing (`null` in both text tables).
 - `scripts/data/game_typos.txt`: typos in the game's own progression or feat selectors, each corrected before parsing, only on an exact match of the raw segment. Nothing else is ever corrected.
 - `scripts/data/items_excluded.txt`: obtainable bg3.wiki items kept out of the imported items because neither lookup finds them in the game data, or because the wiki and the game disagree on them; an entry that is not an obtainable wiki item is an error.
 - `scripts/data/known_duplicates.txt`: groups of progressions that share the same table, level and multiclass flag in the game itself. They are kept unchanged in `rules.json`; which node the game applies is not settled here.
