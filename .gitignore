@@ -1,6 +1,7 @@
-# Contexte propre au poste de l'utilisateur : chemins, règles de travail, état de la session
+# Maintainer-local context and documentation (paths, working rules, design notes): not versioned
 CLAUDE.local.md
 .claude/settings.local.json
+docs/
 .superpowers
 
 # Node / Vite
@@ -14,10 +15,10 @@ __pycache__/
 *.pyc
 .venv/
 
-# Caches d'extraction (fichiers du jeu, réponses de bg3.wiki) : seuls les JSON produits sont versionnés
+# Extraction caches (game files, bg3.wiki responses): only the produced JSON is versioned
 cache/
 
-# Sauvegardes de jeu : jamais dans le dépôt
+# Game saves: never in the repository
 *.lsv
 saves/
 
@@ -25,7 +26,7 @@ saves/
 .env
 .env.*
 
-# OS / éditeurs
+# OS / editors
 .DS_Store
 Thumbs.db
 .vscode/

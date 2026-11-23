@@ -2,8 +2,6 @@
 
 **Generated — do not edit by hand.** Every file in this folder except this README is written by the import command from the installed game's files, read-only.
 
-> Projet de fans non commercial ; contenu propriété de Larian Studios.
->
 > Non-commercial fan project; content owned by Larian Studios.
 
 ## Provenance
@@ -14,7 +12,7 @@
 
 ## Files
 
-- `meta.json`: game version, modules read, bilingual notice.
+- `meta.json`: game version, modules read, and the ownership notice in English and French (shown by the app in each language).
 - `rules.json`: classes and subclasses, playable races, backgrounds, feats, progressions, the lists they reference, spells and passives (with their boosts). `spells.*.level` is `null` when the game's stats give the spell no `Level`.
 - `texts.en.json`, `texts.fr.json`: name and description of every element, keyed `<category>:<identifier>`.
 

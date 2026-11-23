@@ -1,28 +1,29 @@
-# BG3 Planner — instructions du projet
+# BG3 Planner — project instructions
 
-Planificateur de partie pour Baldur's Gate 3, bilingue (français, anglais), application web statique publiée sur GitHub Pages. **La conception fait foi** : `docs/superpowers/specs/2026-11-23-bg3-planner-design.md`. La lire avant tout travail, et ne pas rouvrir une décision qu'elle consigne sans accord de l'utilisateur.
+A party planner for Baldur's Gate 3, bilingual (English, French), built as a static web app published on GitHub Pages. The design document, maintainer-local and not versioned, is `docs/superpowers/specs/2026-11-23-bg3-planner-design.md` (in French): when it is present, read it before any work and do not reopen a decision it records without the maintainer's agreement. The rules below are the parts of it every contributor must follow.
 
-Le contexte propre au poste (chemins du jeu, outils existants, règles de travail, état de la session précédente) est dans `CLAUDE.local.md`, non versionné.
+Machine-specific context (game paths, local tools, working rules, state of the previous session) lives in `CLAUDE.local.md`, which is not versioned.
 
-## Principes qui ne se négocient pas
+## Non-negotiable principles
 
-- **Tout est repéré par l'identifiant interne du jeu** (`Target_BurstingSinew`, `MAG_Acrobat_Shoes`…). Les noms affichés sont des traductions de cet identifiant, jamais des clés.
-- **Aucun libellé de jeu écrit à la main** : noms et descriptions viennent des tables de traduction anglaise et française du jeu, produites par les scripts d'import.
-- **Aucune ressource chargée depuis un autre site** une fois la page servie : polices, scripts, styles, images et données sont inclus dans le site. Un contrôle à la construction le vérifie.
-- **Aucun serveur** : l'état vit dans le navigateur ; la chaîne d'export (préfixe versionné, JSON compressé, base64 URL) est la seule sauvegarde durable et doit rester relisible d'une version à l'autre.
-- **Un import ne corrige jamais en silence** : tout choix refusé par le moteur de règles est listé.
-- **Les sauvegardes et les fichiers du jeu se lisent, ne s'écrivent jamais.**
+- **Everything is keyed by the game's internal identifier** (`Target_BurstingSinew`, `MAG_Acrobat_Shoes`…). Displayed names are translations of that identifier, never keys.
+- **No hand-written game label**: names and descriptions come from the game's English and French translation tables, produced by the import scripts.
+- **No resource loaded from another site** once the page is served: fonts, scripts, styles, images and data ship with the site. A build-time check enforces it.
+- **No server**: state lives in the browser; the export string (versioned prefix, compressed JSON, URL-safe base64) is the only durable save and must stay readable from one version to the next.
+- **An import never corrects silently**: every choice the rules engine refuses is listed. The same holds for the data import: an exception found in the game itself is accepted only when listed, with its reason, in a committed file.
+- **Saves and game files are read, never written.**
 
-## Données et licences
+## Data and licences
 
-- Code : GPL-3.0 (`LICENSE`). Du code repris d'un autre projet doit avoir une licence compatible (MIT, BSD, GPL-3.0…) et garder sa mention d'origine ; un projet sans licence se lit, ne se copie pas.
-- `data/larian/` : produit par script depuis les fichiers du jeu, jamais édité à la main ; contenu propriété de Larian Studios, projet de fans non commercial.
-- `data/wiki/` : produit par script depuis bg3.wiki (tables Cargo), CC BY-NC-SA 4.0, attribution obligatoire. bg3.wiki limite fortement les robots : extraction ponctuelle, lente, jamais depuis le site.
-- `data/rules/` : écrit à la main, bilingue (compagnons, alertes d'histoire, bonus uniques), faits sourcés sur bg3.wiki, libellés tirés des tables de traduction.
+- Code: GPL-3.0-or-later (`LICENSE`). Code taken from another project must have a compatible licence (MIT, BSD, GPL-3.0…) and keep its origin notice; a project without a licence may be read, not copied.
+- `data/larian/`: produced by script from the game files, never edited by hand; content owned by Larian Studios, non-commercial fan project. See `data/larian/README.md`.
+- `data/wiki/`: produced by script from bg3.wiki (Cargo tables), CC BY-NC-SA 4.0, attribution required. bg3.wiki strongly limits bots: one-off, slow extraction, never from the site.
+- `data/rules/`: hand-written, bilingual (companions, story alerts, unique bonuses), facts sourced from bg3.wiki, labels taken from the translation tables.
 
 ## Conventions
 
-- **Tout en anglais** (décision de l'utilisateur, 2026-11-23) : code (identifiants, commentaires, docstrings, tests, messages d'erreur, clés des JSON produits, noms de dossiers), documentation technique et messages de commit. La conception et le plan 1, écrits avant cette décision, restent en français. Un message de commit dit ce que le changement établit, pas les fichiers touchés.
-- Aucun retour à la ligne forcé dans les fichiers texte (Markdown compris).
-- Jamais d'URL de session ni d'identifiant interne d'outil dans un commit, une PR ou une issue.
-- Node 24 (Node 26 casse Vitest) ; Python 3.14 pour les scripts de données.
+- **Everything public is in English**: code (identifiers, comments, docstrings, tests, error messages, keys of produced JSON, folder names), documentation and commit messages. French appears only as product content (French game texts, the French UI and notices). Maintainer-local material (`docs/`, `CLAUDE.local.md`) may be in French and is not versioned.
+- A commit message states what the change establishes, not which files it touches.
+- No hard line wrapping in text files (Markdown included).
+- Never a session URL or an internal tool identifier in a commit, a PR or an issue.
+- Node 24 (Node 26 breaks Vitest); Python 3.14 for the data scripts, standard library only.
