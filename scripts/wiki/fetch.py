@@ -6,6 +6,7 @@ Never called from the site: run by hand, slowly, once per game patch.
 
 import argparse
 import hashlib
+import html
 import json
 import sys
 import time
@@ -58,7 +59,7 @@ def export(table: str, fields: list[str], get: Callable[[str], bytes]) -> list[d
             raise ValueError(f"{table}: page at offset {offset} is not a list of objects")
         if previous is not None and batch == previous:
             raise ValueError(f"{table}: page at offset {offset} repeats the previous page (offset ignored?)")
-        rows.extend(batch)
+        rows.extend({key: html.unescape(value) if isinstance(value, str) else value for key, value in row.items()} for row in batch)
         if len(batch) < PAGE_SIZE:
             return rows
         if len(rows) > MAX_ROWS:
@@ -187,7 +188,11 @@ def build(
     orphans = 0
     skipped_ambiguous = 0
     unknown: set[str] = set()
+    no_data = 0
     for row in item_locations:
+        if row.get("location") is None and row.get("x") is None and row.get("y") is None:
+            no_data += 1
+            continue
         if row.get("uid") in left_out:
             skipped_ambiguous += 1
             continue
@@ -200,6 +205,8 @@ def build(
         if act is None:
             unknown.add(str(place))
         item["locations"].append({"location": place, "act": act, "x": row.get("x"), "y": row.get("y")})
+    if no_data:
+        report.append(f"{no_data} location row(s) with no data skipped")
     if skipped_ambiguous:
         report.append(f"{skipped_ambiguous} item location(s) of ambiguous uids skipped")
     if orphans:

@@ -58,6 +58,10 @@ class ExportTest(unittest.TestCase):
             with self.assertRaises(ValueError):
                 fetch.export("t", ["a"], lambda u, b=body: page(b))
 
+    def test_export_decodes_html_entities(self):
+        rows = fetch.export("t", ["a"], lambda u: page([{"a": "Servants&#039; Quarters &amp; Co", "b": 3, "c": None}]))
+        self.assertEqual(rows, [{"a": "Servants' Quarters & Co", "b": 3, "c": None}])
+
     def test_export_empty_first_page(self):
         self.assertEqual(fetch.export("t", ["a"], lambda u: page([])), [])
 
@@ -156,6 +160,18 @@ class BuildTest(unittest.TestCase):
         ):
             with self.assertRaises(ValueError):
                 fetch.build([], [], [], bad)
+
+    def test_location_rows_with_no_data_dropped_and_counted(self):
+        report = []
+        doc = fetch.build(
+            [eq("A")],
+            [],
+            [{"uid": "A", "location": None, "x": None, "y": None}, {"uid": "A", "location": "Inn", "x": None, "y": None}],
+            [{"name": "Inn", "act": "one", "region": "r"}],
+            report=report,
+        )
+        self.assertEqual(len(doc["items"]["A"]["locations"]), 1)
+        self.assertTrue(any("1 location row(s) with no data" in line for line in report))
 
     def test_empty_uid_counted_not_kept(self):
         report = []
