@@ -1,6 +1,7 @@
 # Contexte propre au poste de l'utilisateur : chemins, règles de travail, état de la session
 CLAUDE.local.md
 .claude/settings.local.json
+.superpowers
 
 # Node / Vite
 node_modules/
