@@ -100,7 +100,7 @@ FILES = ["meta.json", "rules.json", "texts.en.json", "texts.fr.json"]
 
 
 # Committed lists that describe the real game; the synthetic game gets empty ones.
-LISTS = ("GAME_TYPOS", "KNOWN_DUPLICATES")
+LISTS = ("GAME_TYPOS", "KNOWN_DUPLICATES", "UNNAMED")
 
 
 class ImporterTest(unittest.TestCase):

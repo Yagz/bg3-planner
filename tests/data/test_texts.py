@@ -71,6 +71,26 @@ class TextsTest(unittest.TestCase):
             self.assertNotIn("feat:Sharpshooter", en)
             self.assertNotIn("feat:Sharpshooter", fr)
 
+    def test_unnamed_not_found_is_an_error(self):
+        r = rules()
+        r["feats"]["Sharpshooter"]["text"]["name"] = None
+        with self.assertRaises(texts.MissingText) as ctx:
+            texts.resolve(r, EN, FR, {"feat:Sharpshooter", "spell:Ghost", "Phantom"})
+        self.assertEqual(len(ctx.exception.errors), 2)
+        joined = "\n".join(ctx.exception.errors)
+        self.assertIn("spell:Ghost: listed as unnamed but not found", joined)
+        self.assertIn("Phantom: listed as unnamed but not found", joined)
+
+    def test_unnamed_with_both_texts_is_an_error(self):
+        with self.assertRaises(texts.MissingText) as ctx:
+            texts.resolve(rules(), EN, FR, {"class:Fighter"})
+        self.assertEqual(ctx.exception.errors,
+                         ["class:Fighter: listed as unnamed but has texts in both languages; remove it"])
+        # Still listed legitimately when one language lacks a text.
+        fr = {k: v for k, v in FR.items() if k != "hFighter"}
+        _, en, _ = texts.resolve(rules(), EN, fr, {"class:Fighter"})
+        self.assertNotIn("class:Fighter", en)
+
     def test_same_id_two_categories(self):
         _, en, fr = texts.resolve(rules(), EN, FR, set())
         self.assertEqual(en["feat:Sharpshooter"]["name"], "Sharpshooter")
