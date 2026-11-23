@@ -35,6 +35,20 @@ class TestEntrees(unittest.TestCase):
             stats.entrees('new entry "A"\ntype "T"\ndata "K" "abc\nsuite\n')
         self.assertIn("ligne 3", str(ctx.exception))
 
+    def test_valeur_non_terminee_avant_une_nouvelle_entree(self):
+        with self.assertRaises(stats.ErreurStats) as ctx:
+            stats.entrees('new entry "A"\ntype "T"\ndata "K" "abc\nnew entry "B"\ntype "T"\n')
+        self.assertIn("ligne 3", str(ctx.exception))
+
+    def test_valeur_non_terminee_avant_un_data(self):
+        with self.assertRaises(stats.ErreurStats) as ctx:
+            stats.entrees('new entry "A"\ntype "T"\ndata "K" "abc\n  data "X" "y"\n')
+        self.assertIn("ligne 3", str(ctx.exception))
+
+    def test_espaces_de_fin_conserves_sur_la_premiere_ligne(self):
+        e = stats.entrees('new entry "A"\ntype "T"\ndata "K" "abc  \nsuite"\n')
+        self.assertEqual(e[0]["data"]["K"], "abc  \nsuite")
+
     def test_ligne_inconnue(self):
         with self.assertRaises(stats.ErreurStats):
             stats.entrees('new entry "A"\ntype "T"\nn_importe_quoi\n')
