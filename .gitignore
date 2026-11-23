@@ -1,0 +1,32 @@
+# Contexte propre au poste de l'utilisateur : chemins, règles de travail, état de la session
+CLAUDE.local.md
+.claude/settings.local.json
+
+# Node / Vite
+node_modules/
+dist/
+.vite/
+coverage/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Caches d'extraction (fichiers du jeu, réponses de bg3.wiki) : seuls les JSON produits sont versionnés
+cache/
+
+# Sauvegardes de jeu : jamais dans le dépôt
+*.lsv
+saves/
+
+# Environnement
+.env
+.env.*
+
+# OS / éditeurs
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
