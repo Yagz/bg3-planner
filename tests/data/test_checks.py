@@ -223,6 +223,39 @@ class ChecksTest(unittest.TestCase):
         self.assertEqual(len(problems), 1)
         self.assertIn("MAG_Boots", problems[0])
 
+    def test_exclusion_must_be_an_obtainable_wiki_item(self):
+        write(self.folder)
+        for uid in ("MAG_Gone", "MAG_Unknown"):
+            problems = verify(self.folder, excluded={uid: "reason"})
+            self.assertEqual(len(problems), 1, problems)
+            self.assertIn(f"items_excluded.txt: {uid} is not an obtainable wiki item", problems[0])
+
+    def with_item(self, **changes):
+        rules = copy.deepcopy(RULES)
+        rules["items"]["MAG_Boots"].update(changes)
+        write(self.folder, rules=rules)
+        return verify(self.folder)
+
+    def test_item_join_is_reverified(self):
+        write(self.folder)
+        self.assertEqual(verify(self.folder), [])
+        problems = self.with_item(root_template="t-other")
+        self.assertEqual(len(problems), 1)
+        self.assertIn("root_template", problems[0])
+        problems = self.with_item(found_by="guess")
+        self.assertEqual(len(problems), 1)
+        self.assertIn("found_by", problems[0])
+        for found_by in ("stats", "template"):
+            self.assertEqual(self.with_item(found_by=found_by), [])
+
+    def test_item_kind_must_match_stats_type(self):
+        problems = self.with_item(stats_type="Weapon")
+        self.assertEqual(len(problems), 1)
+        self.assertIn("does not match the stats type", problems[0])
+        problems = self.with_item(kind="weapon", stats_type="Weapon")
+        self.assertEqual(len(problems), 1)
+        self.assertIn("wiki kind", problems[0])
+
     def test_items_count(self):
         write(self.folder)
         self.assertEqual(verify(self.folder, {"items": 1}), [])

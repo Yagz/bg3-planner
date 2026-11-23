@@ -119,12 +119,32 @@ def _check_references(rules: dict) -> list[str]:
     return problems
 
 
+# Wiki kind -> stats type of the item.
+_KIND_STATS_TYPES = {"equipment": "Armor", "weapon": "Weapon"}
+
+
 def _check_items(rules: dict, wiki: dict[str, dict], excluded: dict[str, str]) -> list[str]:
-    """The items are exactly the obtainable wiki items that are not excluded."""
+    """The items are exactly the obtainable wiki items that are not excluded, each joined to its wiki entry;
+    every exclusion is an obtainable wiki item."""
     expected = set(items.scope(wiki, excluded))
-    actual = set(rules.get("items", {}))
-    return ([f"item:{uid}: obtainable wiki item missing from the items" for uid in sorted(expected - actual)]
-            + [f"item:{uid}: not an obtainable, non-excluded wiki item" for uid in sorted(actual - expected)])
+    actual = rules.get("items", {})
+    problems = ([f"item:{uid}: obtainable wiki item missing from the items" for uid in sorted(expected - set(actual))]
+                + [f"item:{uid}: not an obtainable, non-excluded wiki item" for uid in sorted(set(actual) - expected)]
+                + [f"items_excluded.txt: {uid} is not an obtainable wiki item" for uid in sorted(excluded)
+                   if uid not in wiki or wiki[uid].get("legacy") is not None])
+    for uid, item in sorted(actual.items()):
+        w = wiki.get(uid)
+        if w is None:
+            continue
+        if item.get("root_template") != w.get("uuid"):
+            problems.append(f"item:{uid}: root_template {item.get('root_template')} differs from the wiki uuid {w.get('uuid')}")
+        if item.get("found_by") not in ("stats", "template"):
+            problems.append(f"item:{uid}: unexpected found_by {item.get('found_by')!r}")
+        if _KIND_STATS_TYPES.get(item.get("kind")) != item.get("stats_type"):
+            problems.append(f"item:{uid}: kind {item.get('kind')!r} does not match the stats type {item.get('stats_type')!r}")
+        if item.get("kind") != w.get("kind"):
+            problems.append(f"item:{uid}: kind {item.get('kind')!r} differs from the wiki kind {w.get('kind')!r}")
+    return problems
 
 
 def _check_counts(rules: dict, counts: dict[str, int]) -> list[str]:
