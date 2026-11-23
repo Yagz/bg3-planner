@@ -12,7 +12,15 @@ UNNAMED = Path(__file__).with_name("unnamed.txt")
 KNOWN_DUPLICATES = Path(__file__).with_name("known_duplicates.txt")
 
 COUNTS = {"base_classes": 12, "subclasses": 58, "races": 39, "base_races": 11, "backgrounds": 22,
-          "origin_backgrounds": 11, "feats": 41}
+          "origin_backgrounds": 11, "feats": 41, "progressions": 663, "lists": 342, "spells": 416, "passives": 475}
+# Type of the list each selector function picks from.
+SELECTOR_LIST_TYPES = {"AddSpells": "spells", "SelectSpells": "spells", "SelectPassives": "passives",
+                       "ReplacePassives": "passives", "SelectSkills": "skills", "SelectSkillsExpertise": "skills",
+                       "SelectAbilities": "abilities", "SelectAbilityBonus": "abilities",
+                       "SelectEquipment": "equipment"}
+# Values of the spell selectors' prepare and cooldown fields observed in the game (patch 8).
+PREPARE_VALUES = {None, "AlwaysPrepared"}
+COOLDOWN_VALUES = {None, "UntilRest"}
 
 _CATEGORIES = {"classes": "class", "races": "race", "backgrounds": "background", "feats": "feat",
                "spells": "spell", "passives": "passive"}
@@ -54,8 +62,20 @@ def _check_references(rules: dict) -> list[str]:
 
     def selectors(where, items):
         for s in items:
+            function = s.get("function")
             if s.get("list") is not None and s["list"] not in lists:
                 problems.append(f"{where}: unknown list {s['list']}")
+            if function not in SELECTOR_LIST_TYPES:
+                problems.append(f"{where}: unknown selector function {function}")
+            elif s.get("list") in lists and lists[s["list"]].get("type") != SELECTOR_LIST_TYPES[function]:
+                problems.append(f"{where}: {function} picks from list {s['list']} of type "
+                                f"{lists[s['list']].get('type')}, expected {SELECTOR_LIST_TYPES[function]}")
+            if s.get("class") is not None and s["class"] not in classes:
+                problems.append(f"{where}: {function} references unknown class {s['class']}")
+            if "prepare" in s and s["prepare"] not in PREPARE_VALUES:
+                problems.append(f"{where}: {function} has unexpected prepare value {s['prepare']!r}")
+            if "cooldown" in s and s["cooldown"] not in COOLDOWN_VALUES:
+                problems.append(f"{where}: {function} has unexpected cooldown value {s['cooldown']!r}")
 
     for section, elements in (("class", classes), ("race", races)):
         for ident, e in elements.items():
@@ -101,6 +121,10 @@ def _check_counts(rules: dict, counts: dict[str, int]) -> list[str]:
         "backgrounds": len(rules.get("backgrounds", {})),
         "origin_backgrounds": sum(1 for b in rules.get("backgrounds", {}).values() if b.get("origin")),
         "feats": len(rules.get("feats", {})),
+        "progressions": len(rules.get("progressions", [])),
+        "lists": len(rules.get("lists", {})),
+        "spells": len(rules.get("spells", {})),
+        "passives": len(rules.get("passives", {})),
     }
     return [f"count {key}: expected {expected}, found {actual[key]}"
             for key, expected in counts.items() if actual.get(key) != expected]

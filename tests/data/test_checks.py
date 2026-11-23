@@ -22,7 +22,8 @@ RULES = {
     "feats": {"Alert": {"passives": ["Soldier"], "selectors": [{"function": "AddSpells", "list": "l-spells"}]}},
     "progressions": [
         {"table": "t-wiz", "subclasses": ["Evocation"], "passives_added": ["Soldier"], "passives_removed": [],
-         "selectors": [{"list": "l-spells"}]},
+         "selectors": [{"function": "SelectSpells", "list": "l-spells", "prepare": "AlwaysPrepared",
+                        "cooldown": None, "class": "Wizard"}]},
         {"table": "t-evo", "subclasses": [], "passives_added": [], "passives_removed": [], "selectors": []},
         {"table": "t-elf", "subclasses": [], "passives_added": [], "passives_removed": [], "selectors": []},
         {"table": "t-high", "subclasses": [], "passives_added": [], "passives_removed": [], "selectors": []},
@@ -79,7 +80,7 @@ class ChecksTest(unittest.TestCase):
 
     def test_orphan_list(self):
         rules = copy.deepcopy(RULES)
-        rules["progressions"][0]["selectors"] = [{"list": "l-missing"}]
+        rules["progressions"][0]["selectors"] = [{"function": "AddSpells", "list": "l-missing"}]
         problems = self.problems(rules=rules)
         self.assertEqual(len(problems), 1)
         self.assertIn("l-missing", problems[0])
@@ -123,6 +124,49 @@ class ChecksTest(unittest.TestCase):
         self.assertFalse(any("duplicate" in p for p in checks.verify(self.folder, COUNTS, duplicates=known)))
         stale = checks.verify(self.folder, COUNTS, duplicates=known + [frozenset({"p3", "p9"})])
         self.assertTrue(any("known_duplicates" in p and "p9" in p for p in stale))
+
+    def test_new_counts(self):
+        write(self.folder)
+        counts = {"progressions": 4, "lists": 2, "spells": 1, "passives": 1}
+        self.assertEqual(checks.verify(self.folder, counts, duplicates=[]), [])
+        problems = checks.verify(self.folder, {"progressions": 663, "lists": 342, "spells": 416, "passives": 475},
+                                 duplicates=[])
+        self.assertEqual(len(problems), 4)
+        self.assertEqual(checks.COUNTS["progressions"], 663)
+
+    def test_selector_list_type(self):
+        rules = copy.deepcopy(RULES)
+        rules["feats"]["Alert"]["selectors"] = [{"function": "SelectPassives", "list": "l-spells"}]
+        rules["progressions"][0]["selectors"].append({"function": "SelectMagic", "list": "l-pass"})
+        problems = self.problems(rules=rules)
+        self.assertEqual(len(problems), 2, problems)
+        self.assertTrue(any("feat:Alert" in p and "SelectPassives" in p and "spells" in p for p in problems))
+        self.assertTrue(any("SelectMagic" in p for p in problems))
+
+    def test_every_function_pairing(self):
+        pairs = {"AddSpells": "spells", "SelectSpells": "spells", "SelectPassives": "passives",
+                 "ReplacePassives": "passives", "SelectSkills": "skills", "SelectSkillsExpertise": "skills",
+                 "SelectAbilities": "abilities", "SelectAbilityBonus": "abilities", "SelectEquipment": "equipment"}
+        self.assertEqual(checks.SELECTOR_LIST_TYPES, pairs)
+
+    def test_select_spells_class_must_be_known(self):
+        rules = copy.deepcopy(RULES)
+        rules["progressions"][0]["selectors"][0]["class"] = "Necromancer"
+        problems = self.problems(rules=rules)
+        self.assertEqual(len(problems), 1)
+        self.assertIn("Necromancer", problems[0])
+        rules["progressions"][0]["selectors"][0]["class"] = None
+        self.assertEqual(self.problems(rules=rules), [])
+
+    def test_prepare_and_cooldown_values(self):
+        rules = copy.deepcopy(RULES)
+        rules["progressions"][0]["selectors"][0].update(prepare="AlwaysPrepared)", cooldown="UntilLongRest")
+        problems = self.problems(rules=rules)
+        self.assertEqual(len(problems), 2, problems)
+        self.assertTrue(any("AlwaysPrepared)" in p for p in problems))
+        self.assertTrue(any("UntilLongRest" in p for p in problems))
+        self.assertEqual(checks.PREPARE_VALUES, {None, "AlwaysPrepared"})
+        self.assertEqual(checks.COOLDOWN_VALUES, {None, "UntilRest"})
 
     def test_missing_notice(self):
         problems = self.problems(meta={"game": "1.0", "notice": {"en": "Notice.", "fr": ""}})
