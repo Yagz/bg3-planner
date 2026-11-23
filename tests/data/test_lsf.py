@@ -107,6 +107,20 @@ class TestLsf(unittest.TestCase):
         frame += struct.pack("<I", 0)
         self.assertEqual(lsf.lz4_frame(frame), b"abcdabcdabcdZ")
 
+    def test_lz4_block_overlapping_match(self):
+        # Literal "a", then a match of offset 1 and length 8 (token low nibble 4 + minimum 4) repeats the last byte.
+        block = bytes([0x14]) + b"a" + struct.pack("<H", 1)
+        out = bytearray()
+        lsf._lz4_into(block, out)
+        self.assertEqual(bytes(out), b"aaaaaaaaa")
+
+    def test_lz4_block_non_overlapping_match(self):
+        # Literals "abcd", then a match of offset 4 and length 6 copies "abcdab" from before it.
+        block = bytes([0x42]) + b"abcd" + struct.pack("<H", 4)
+        out = bytearray()
+        lsf._lz4_into(block, out)
+        self.assertEqual(bytes(out), b"abcdabcdab")
+
     def test_lz4_frame_stored_block(self):
         frame = struct.pack("<I", 0x184D2204) + bytes([0x40, 0x40, 0x00])
         frame += struct.pack("<I", 0x80000003) + b"xyz" + struct.pack("<I", 0)
