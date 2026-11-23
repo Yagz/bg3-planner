@@ -79,12 +79,15 @@ def pak_entries(f):
 
 
 def read_pak(path: Path, predicate: Callable[[str], bool]) -> dict[str, bytes]:
-    """Decompressed files of the pak whose name passes the predicate; files from another part are skipped."""
+    """Decompressed files of the pak whose name passes the predicate; such a file stored in another
+    archive part (not read here) raises ValueError."""
     files = {}
     with open(path, "rb") as f:
         for name, position, part, flags, on_disk, size in list(pak_entries(f)):
-            if part != 0 or not predicate(name):
+            if not predicate(name):
                 continue
+            if part != 0:
+                raise ValueError(f"{path.name}: {name} is stored in archive part {part}, which is not read")
             f.seek(position)
             files[name] = decompress(f.read(on_disk), flags, size)
     return files

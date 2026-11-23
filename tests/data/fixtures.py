@@ -31,15 +31,15 @@ def lz4_literals(data: bytes) -> bytes:
     return bytes(out) + data
 
 
-def pak(files: dict[str, bytes]) -> bytes:
-    """LSPK v18 pak: uncompressed files, table in LZ4 "literals only"."""
+def pak(files: dict[str, bytes], parts: dict[str, int] | None = None) -> bytes:
+    """LSPK v18 pak: uncompressed files, table in LZ4 "literals only"; `parts` sets a file's archive part (default 0)."""
     body = bytearray()
     table = bytearray()
     start = 20
     for name, content in files.items():
         position = start + len(body)
         table += name.encode("utf-8").ljust(256, b"\0")
-        table += struct.pack("<IHBBII", position & 0xFFFFFFFF, position >> 32, 0, 0, len(content), len(content))
+        table += struct.pack("<IHBBII", position & 0xFFFFFFFF, position >> 32, (parts or {}).get(name, 0), 0, len(content), len(content))
         body += content
     table_lz4 = lz4_literals(bytes(table))
     header = struct.pack("<4sIQI", b"LSPK", 18, start + len(body), 0)

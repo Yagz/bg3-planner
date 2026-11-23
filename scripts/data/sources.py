@@ -5,7 +5,8 @@ from pathlib import Path
 from scripts.data.pak import read_pak
 
 RULES_PAKS = ("Shared.pak", "Gustav.pak", "GustavX.pak")
-HOTFIX_PAKS = ("Patch8_HotFix9.pak", "Patch8_HotFix10.pak")
+# Hotfix paks (Data/Patch*.pak) must not touch rules files: they are checked, never read.
+HOTFIX_GLOB = "Patch*.pak"
 # Override order taken from the meta.lsx files: the last one wins. Honour and HonourX (Honour mode) are excluded.
 MODULES = ("Shared", "SharedDev", "Gustav", "GustavDev", "GustavX")
 
@@ -27,12 +28,10 @@ def layers(game: Path, pattern: re.Pattern) -> list[tuple[str, str, bytes]]:
     """(module, path relative to the module, content) of the `Public/<module>/<path>` files whose path
     matches the pattern, sorted by module rank in MODULES then by path."""
     data = game / "Data"
-    for name in HOTFIX_PAKS:
-        path = data / name
-        if path.exists():
-            touched = read_pak(path, _filter(pattern, None))
-            if touched:
-                raise UnexpectedSource(f"{name} contains rules files: {sorted(touched)}")
+    for path in sorted(data.glob(HOTFIX_GLOB)):
+        touched = read_pak(path, _filter(pattern, None))
+        if touched:
+            raise UnexpectedSource(f"{path.name} contains rules files: {sorted(touched)}")
     found = []
     for name in RULES_PAKS:
         path = data / name

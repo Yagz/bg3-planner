@@ -9,8 +9,8 @@ from tests.data import fixtures
 PATTERN = re.compile(r"Lists/SpellLists\.lsx$")
 
 
-def _list(module: str, contenu: bytes) -> dict[str, bytes]:
-    return {f"Public/{module}/Lists/SpellLists.lsx": contenu}
+def _list(module: str, content: bytes) -> dict[str, bytes]:
+    return {f"Public/{module}/Lists/SpellLists.lsx": content}
 
 
 class TestSources(unittest.TestCase):
@@ -44,6 +44,13 @@ class TestSources(unittest.TestCase):
         game = self._game(self._base_paks(_list("Shared", b"patch")))
         with self.assertRaises(sources.UnexpectedSource):
             sources.layers(game, PATTERN)
+
+    def test_any_patch_pak_touching_the_rules(self):
+        paks = self._base_paks()
+        paks["Patch9_Foo.pak"] = _list("Gustav", b"patch")
+        with self.assertRaises(sources.UnexpectedSource) as ctx:
+            sources.layers(self._game(paks), PATTERN)
+        self.assertIn("Patch9_Foo.pak", str(ctx.exception))
 
     def test_missing_rules_pak(self):
         paks = self._base_paks()
