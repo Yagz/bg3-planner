@@ -6,4 +6,4 @@ Data from bg3.wiki, https://bg3.wiki, licensed CC BY-NC-SA 4.0; produced by `scr
 
 Command: `python3.14 -m scripts.wiki.fetch --output data/wiki`
 
-Fetched: see the commit that added `items.json`.
+Fetched: 2026-11-23.
