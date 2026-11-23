@@ -30,6 +30,34 @@ class ExportTest(unittest.TestCase):
         self.assertIn("offset=0", urls[0])
         self.assertIn("offset=500", urls[1])
 
+    def test_export_stops_on_repeated_page(self):
+        same = page([{"uid": str(i)} for i in range(500)])
+        calls = []
+
+        def get(url):
+            calls.append(url)
+            return same
+
+        with self.assertRaises(ValueError):
+            fetch.export("t", ["uid"], get)
+        self.assertEqual(len(calls), 2)
+
+    def test_export_stops_above_row_cap(self):
+        counter = [0]
+
+        def get(url):
+            counter[0] += 1
+            return page([{"uid": f"{counter[0]}-{i}"} for i in range(500)])
+
+        with self.assertRaises(ValueError):
+            fetch.export("t", ["uid"], get)
+        self.assertLessEqual(counter[0], 201)
+
+    def test_export_rejects_non_list_pages(self):
+        for body in ({"error": "denied"}, [1, 2], "x"):
+            with self.assertRaises(ValueError):
+                fetch.export("t", ["a"], lambda u, b=body: page(b))
+
     def test_export_empty_first_page(self):
         self.assertEqual(fetch.export("t", ["a"], lambda u: page([])), [])
 
@@ -87,6 +115,15 @@ class BuildTest(unittest.TestCase):
         self.assertEqual(list(doc["items"]), ["A"])
         self.assertTrue(any("Ghost" in line or "1 item location" in line for line in report))
 
+    def test_bad_locations_rows_are_errors(self):
+        for bad in (
+            [{"name": "A", "act": "one"}, {"name": "A", "act": "two"}],
+            [{"name": "A", "act": "four"}],
+            [{"act": "one"}],
+        ):
+            with self.assertRaises(ValueError):
+                fetch.build([], [], [], bad)
+
     def test_empty_uid_counted_not_kept(self):
         report = []
         doc = fetch.build([eq(None), eq("")], [], [], [], report=report)
@@ -107,7 +144,7 @@ class GetTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             calls = []
 
-            def opener(request):
+            def opener(request, timeout=None):
                 calls.append(request)
                 return FakeResponse(b"[1]")
 
@@ -130,7 +167,7 @@ class GetTest(unittest.TestCase):
             now = [100.0]
             get = fetch.make_get(
                 Path(tmp),
-                opener=lambda r: FakeResponse(b"[]"),
+                opener=lambda r, timeout=None: FakeResponse(b"[]"),
                 sleep=lambda s: (sleeps.append(s), now.__setitem__(0, now[0] + s)),
                 clock=lambda: now[0],
             )
@@ -144,7 +181,7 @@ class GetTest(unittest.TestCase):
             sleeps = []
             calls = []
 
-            def opener(request):
+            def opener(request, timeout=None):
                 calls.append(1)
                 raise urllib.error.HTTPError(request.full_url, 429, "Too Many", {}, None)
 
@@ -159,7 +196,7 @@ class GetTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             calls = []
 
-            def opener(request):
+            def opener(request, timeout=None):
                 calls.append(1)
                 if len(calls) == 1:
                     raise urllib.error.HTTPError(request.full_url, 429, "Too Many", {}, None)
@@ -167,6 +204,48 @@ class GetTest(unittest.TestCase):
 
             get = fetch.make_get(Path(tmp), opener=opener, sleep=lambda s: None)
             self.assertEqual(get("https://bg3.wiki/x"), b"[]")
+
+
+    def test_non_429_error_makes_one_call(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            calls = []
+
+            def opener(request, timeout=None):
+                calls.append(1)
+                raise urllib.error.HTTPError(request.full_url, 500, "Boom", {}, None)
+
+            get = fetch.make_get(Path(tmp), opener=opener, sleep=lambda s: None)
+            with self.assertRaises(urllib.error.HTTPError):
+                get("https://bg3.wiki/x")
+            self.assertEqual(len(calls), 1)
+
+    def test_non_json_body_not_cached_and_timeout_passed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            seen = []
+
+            def opener(request, timeout=None):
+                seen.append(timeout)
+                return FakeResponse(b"<html>")
+
+            get = fetch.make_get(Path(tmp), opener=opener, sleep=lambda s: None)
+            with self.assertRaises(ValueError):
+                get("https://bg3.wiki/x")
+            self.assertEqual(seen, [60])
+            self.assertEqual(list(Path(tmp).iterdir()), [])
+
+
+class MainTest(unittest.TestCase):
+    def test_main_exit_code_1_on_os_error(self):
+        def boom(output, get):
+            raise OSError("network down")
+
+        original = fetch.run
+        fetch.run = boom
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                self.assertEqual(fetch.main(["--output", tmp]), 1)
+        finally:
+            fetch.run = original
 
 
 class RunTest(unittest.TestCase):

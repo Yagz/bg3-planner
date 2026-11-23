@@ -20,6 +20,9 @@ from scripts.data.importer import write_json
 BASE = "https://bg3.wiki/w/index.php"
 USER_AGENT = "bg3-planner-data-fetch/1.0"
 PAGE_SIZE = 500
+MAX_ROWS = 100_000
+TIMEOUT = 60
+ACTS = {"prologue", "one", "two", "three"}
 MIN_DELAY = 5.0
 RETRY_DELAY = 60
 MAX_RETRIES = 2
@@ -47,11 +50,19 @@ def export(table: str, fields: list[str], get: Callable[[str], bytes]) -> list[d
     """All rows of a Cargo table, paging until a page is shorter than the page size."""
     rows: list[dict] = []
     offset = 0
+    previous = None
     while True:
         batch = json.loads(get(_url(table, fields, offset)))
+        if not isinstance(batch, list) or not all(isinstance(row, dict) for row in batch):
+            raise ValueError(f"{table}: page at offset {offset} is not a list of objects")
+        if previous is not None and batch == previous:
+            raise ValueError(f"{table}: page at offset {offset} repeats the previous page (offset ignored?)")
         rows.extend(batch)
         if len(batch) < PAGE_SIZE:
             return rows
+        if len(rows) > MAX_ROWS:
+            raise ValueError(f"{table}: more than {MAX_ROWS} rows, giving up")
+        previous = batch
         offset += PAGE_SIZE
 
 
@@ -80,7 +91,7 @@ def make_get(
             wait()
             request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
             try:
-                with opener(request) as response:
+                with opener(request, timeout=TIMEOUT) as response:
                     body = response.read()
                 last[0] = clock()
                 break
@@ -90,8 +101,11 @@ def make_get(
                     raise
                 retries += 1
                 sleep(RETRY_DELAY)
+        json.loads(body)  # never cache a body that is not JSON
         cache_dir.mkdir(parents=True, exist_ok=True)
-        cached.write_bytes(body)
+        temporary = cached.with_suffix(".tmp")
+        temporary.write_bytes(body)
+        temporary.replace(cached)
         return body
 
     return get
@@ -117,7 +131,19 @@ def build(equipment: list[dict], weapons: list[dict], item_locations: list[dict]
         report.append(f"{empty} item row(s) with an empty uid skipped")
     if errors:
         raise ValueError("\n".join(errors))
-    acts = {row["name"]: row.get("act") for row in locations}
+    acts: dict[str, str | None] = {}
+    for row in locations:
+        name = row.get("name") if isinstance(row, dict) else None
+        if not name:
+            errors.append(f"malformed locations row: {row!r}")
+        elif name in acts:
+            errors.append(f"duplicate location name {name!r}")
+        elif row.get("act") is not None and row["act"] not in ACTS:
+            errors.append(f"location {name!r} has unknown act {row['act']!r}")
+        else:
+            acts[name] = row.get("act")
+    if errors:
+        raise ValueError("\n".join(errors))
     orphans = 0
     unknown: set[str] = set()
     for row in item_locations:
@@ -163,7 +189,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         run(args.output, make_get(Path("cache/wiki"), refresh=args.refresh))
-    except (ValueError, urllib.error.URLError) as error:
+    except (ValueError, OSError) as error:
         print(f"error: {error}", file=sys.stderr)
         return 1
     return 0
