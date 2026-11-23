@@ -32,7 +32,7 @@ class TestEntries(unittest.TestCase):
 
     def test_unterminated_value_at_end_of_file(self):
         with self.assertRaises(stats.StatsError) as ctx:
-            stats.entries('new entry "A"\ntype "T"\ndata "K" "abc\nsuite\n')
+            stats.entries('new entry "A"\ntype "T"\ndata "K" "abc\nrest\n')
         self.assertIn("line 3", str(ctx.exception))
 
     def test_unterminated_value_before_a_new_entry(self):
@@ -46,8 +46,8 @@ class TestEntries(unittest.TestCase):
         self.assertIn("line 3", str(ctx.exception))
 
     def test_trailing_spaces_kept_on_the_first_line(self):
-        e = stats.entries('new entry "A"\ntype "T"\ndata "K" "abc  \nsuite"\n')
-        self.assertEqual(e[0]["data"]["K"], "abc  \nsuite")
+        e = stats.entries('new entry "A"\ntype "T"\ndata "K" "abc  \nrest"\n')
+        self.assertEqual(e[0]["data"]["K"], "abc  \nrest")
 
     def test_unknown_line(self):
         with self.assertRaises(stats.StatsError):

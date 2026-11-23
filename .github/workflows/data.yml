@@ -1,4 +1,4 @@
-name: Données
+name: Data
 
 on:
   push:
@@ -14,5 +14,5 @@ jobs:
           python-version: "3.14"
       - name: Tests
         run: python -m unittest discover -s tests -t .
-      - name: Contrôle des données importées
+      - name: Check the imported data
         run: python -m scripts.data.checks data/larian
