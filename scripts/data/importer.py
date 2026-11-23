@@ -17,6 +17,7 @@ from scripts.data import loca, lsx, model, sources, stats, texts
 NOTICE = {"fr": "Projet de fans non commercial ; contenu propriété de Larian Studios.",
           "en": "Non-commercial fan project; content owned by Larian Studios."}
 UNNAMED = Path(__file__).with_name("unnamed.txt")
+GAME_TYPOS = Path(__file__).with_name("game_typos.txt")
 
 # Key expected by model.build -> (path relative to the module, node type).
 LSX_FILES = {
@@ -109,7 +110,7 @@ def build(game: Path, game_version: str) -> dict[str, object]:
     stats_by_name = _stats(game, errors)
     if errors:
         raise SourceErrors(errors)
-    rules = model.build(lsx_by_file, presets, stats_by_name)
+    rules = model.build(lsx_by_file, presets, stats_by_name, typos=model.read_typos(GAME_TYPOS))
     en = loca.table(game / "Data" / ENGLISH_PAK, "English")
     fr = loca.table(game / "Data" / FRENCH_PAK, "French")
     rules, texts_en, texts_fr = texts.resolve(rules, en, fr, texts.read_unnamed(UNNAMED))

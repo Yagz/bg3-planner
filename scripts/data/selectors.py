@@ -27,8 +27,8 @@ _FIELDS = {
 _INTS = {"count", "swaps", "max"}
 
 
-def _segments(string: str) -> list[str]:
-    """Split on ";" outside parentheses; skip empty segments."""
+def segments(string: str) -> list[str]:
+    """Split on ";" outside parentheses, without validating them; strip, skip empty segments."""
     pieces, depth, start = [], 0, 0
     for i, c in enumerate(string):
         if c == "(":
@@ -42,9 +42,22 @@ def _segments(string: str) -> list[str]:
     return [p.strip() for p in pieces if p.strip()]
 
 
+def _balanced(segment: str) -> bool:
+    """Parentheses never close more than they opened and return to depth 0 only at the last character."""
+    depth = 0
+    for i, c in enumerate(segment):
+        if c == "(":
+            depth += 1
+        elif c == ")":
+            depth -= 1
+            if depth < 0 or (depth == 0 and i != len(segment) - 1):
+                return False
+    return depth == 0
+
+
 def _call(segment: str) -> tuple[str, list[str]]:
     m = _CALL.match(segment)
-    if not m:
+    if not m or not _balanced(segment):
         raise UnknownSelector(segment)
     body = m.group(2).strip()
     return m.group(1), [a.strip() for a in body.split(",")] if body else []
@@ -87,7 +100,7 @@ def _selector(segment: str) -> dict:
 
 
 def parse(string: str) -> list[dict]:
-    return [_selector(s) for s in _segments(string)]
+    return [_selector(s) for s in segments(string)]
 
 
 def _text(value: str) -> str:
@@ -104,4 +117,4 @@ def _requirement(segment: str) -> dict:
 
 
 def requirements(string: str) -> list[dict]:
-    return [_requirement(s) for s in _segments(string)]
+    return [_requirement(s) for s in segments(string)]

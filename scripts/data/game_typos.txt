@@ -1,0 +1,6 @@
+# Known typos in the game's own data, corrected before parsing.
+# One per line: `<exact raw selector segment> => <corrected segment>  # reason`; lines starting with `#` are comments.
+# A correction applies only to a segment equal to the listed one; a listed typo found nowhere in the game data stops the import.
+
+AddSpells(480101e7-1fcf-4f02-b6b5-71af428daaa4,,,,AlwaysPrepared)) => AddSpells(480101e7-1fcf-4f02-b6b5-71af428daaa4,,,,AlwaysPrepared)  # extra closing parenthesis in the game (progression eb145ae3-d65e-4a8e-b041-4c34aa1bb199, KnowledgeDomain level 6)
+AddSpells(e95177b1-f243-4837-868e-8e84563f518e,,,,AlwaysPrepared)) => AddSpells(e95177b1-f243-4837-868e-8e84563f518e,,,,AlwaysPrepared)  # extra closing parenthesis in the game (progression 8942a99c-a3f7-43a9-afc3-c0bbb8655903, ShadowMagic level 11)

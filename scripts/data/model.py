@@ -3,6 +3,8 @@
 Every defect (duplicate identifier, orphan reference, unreadable value) is collected; the build
 fails once, with the complete list.
 """
+from pathlib import Path
+
 from scripts.data import selectors
 
 NULL_UUID = "00000000-0000-0000-0000-000000000000"
@@ -48,11 +50,39 @@ def _split(value: str | None, separator: str = ";") -> list[str]:
     return [v.strip() for v in (value or "").split(separator) if v.strip()]
 
 
+def _listed_lines(path: Path) -> list[tuple[int, str, str]]:
+    """(line number, content, reason) of each non-comment line; a line without a reason is refused."""
+    res = []
+    for number, line in enumerate(Path(path).read_text(encoding="utf-8").splitlines(), 1):
+        if not line.strip() or line.lstrip().startswith("#"):
+            continue
+        content, _, reason = line.partition("#")
+        if not reason.strip() or not content.strip():
+            raise ValueError(f"{path}:{number}: expected an entry followed by '# reason': {line!r}")
+        res.append((number, content.strip(), reason.strip()))
+    return res
+
+
+def read_typos(path: Path) -> dict[str, str]:
+    """Known game typos: `<exact raw selector segment> => <corrected segment>  # reason` per line."""
+    res = {}
+    for number, content, _ in _listed_lines(path):
+        raw, arrow, corrected = content.partition(" => ")
+        if not arrow or not raw.strip() or not corrected.strip():
+            raise ValueError(f"{path}:{number}: expected '<raw segment> => <corrected segment>  # reason'")
+        if raw.strip() in res:
+            raise ValueError(f"{path}:{number}: segment listed twice: {raw.strip()!r}")
+        res[raw.strip()] = corrected.strip()
+    return res
+
+
 class _Builder:
-    def __init__(self, lsx_by_file: dict, presets: dict, stats: dict):
+    def __init__(self, lsx_by_file: dict, presets: dict, stats: dict, typos: dict[str, str]):
         self.lsx = lsx_by_file
         self.presets = presets
         self.stats = stats
+        self.typos = typos
+        self.typos_used: set[str] = set()
         self.errors: list[str] = []
 
     def error(self, message: str) -> None:
@@ -98,9 +128,19 @@ class _Builder:
             return None
         return _ABILITIES[code]
 
+    def corrected(self, value: str | None) -> str:
+        """The value with each segment listed in game_typos.txt replaced by its correction (exact match)."""
+        pieces = []
+        for segment in selectors.segments(value or ""):
+            if segment in self.typos:
+                self.typos_used.add(segment)
+                segment = self.typos[segment]
+            pieces.append(segment)
+        return ";".join(pieces)
+
     def parse(self, function, value: str | None, where: str) -> list[dict]:
         try:
-            return function(value or "")
+            return function(self.corrected(value))
         except selectors.UnknownSelector as e:
             self.error(f"{where}: unknown selector or requirement {e.text!r}")
             return []
@@ -358,6 +398,8 @@ class _Builder:
         passives = {name: {"text": _text(s)}
                     for name, s in self.stats_entries(list(passive_refs), "passive", passive_refs).items()}
 
+        for typo in sorted(set(self.typos) - self.typos_used):
+            self.error(f"game_typos.txt: listed typo found nowhere in the game data: {typo!r}")
         if self.errors:
             raise ModelError(self.errors)
         return {
@@ -372,6 +414,11 @@ class _Builder:
         }
 
 
-def build(lsx_by_file: dict[str, dict[str, dict]], presets: dict[str, dict], stats: dict[str, dict]) -> dict:
-    """The rules (schema of `data/larian/rules.json`); raises ModelError with every defect found."""
-    return _Builder(lsx_by_file, presets, stats).build()
+def build(lsx_by_file: dict[str, dict[str, dict]], presets: dict[str, dict], stats: dict[str, dict],
+          typos: dict[str, str] | None = None) -> dict:
+    """The rules (schema of `data/larian/rules.json`); raises ModelError with every defect found.
+
+    `typos` maps an exact raw selector segment to its correction (see `read_typos`); a listed typo
+    found in no parsed selector or requirement is an error.
+    """
+    return _Builder(lsx_by_file, presets, stats, typos or {}).build()

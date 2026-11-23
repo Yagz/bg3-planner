@@ -1,5 +1,7 @@
 import copy
+import tempfile
 import unittest
+from pathlib import Path
 
 from scripts.data import model
 
@@ -103,14 +105,25 @@ def dataset() -> tuple[dict, dict, dict]:
     return lsx_by_file, presets, stats
 
 
-def build(data=None):
-    return model.build(*(data or dataset()))
+def build(data=None, **kwargs):
+    return model.build(*(data or dataset()), **kwargs)
 
 
-def errors_of(data) -> list[str]:
+def errors_of(data, **kwargs) -> list[str]:
     with unittest.TestCase().assertRaises(model.ModelError) as c:
-        model.build(*data)
+        model.build(*data, **kwargs)
     return c.exception.errors
+
+
+def write_text(text: str) -> Path:
+    folder = tempfile.TemporaryDirectory()
+    unittest.addModuleCleanup(folder.cleanup)
+    path = Path(folder.name) / "list.txt"
+    path.write_text(text, encoding="utf-8")
+    return path
+
+
+TYPO = "SelectPassives(l-passives,1))"
 
 
 class TestModel(unittest.TestCase):
@@ -318,6 +331,41 @@ class TestModel(unittest.TestCase):
         self.assertEqual(keys, sorted(keys))
         self.assertEqual([p["uuid"] for p in build()["progressions"]],
                          ["p-ek-3", "p-elf-1", "p-fighter-1", "p-fighter-3"])
+
+    def test_listed_typo_corrected_on_exact_match(self):
+        data = dataset()
+        data[0]["Progressions"]["p-ek-3"]["attributes"]["Selectors"] = f"SelectSpells(l-spells,2,0); {TYPO}"
+        rules = build(data, typos={TYPO: "SelectPassives(l-passives,1)"})
+        p = next(p for p in rules["progressions"] if p["uuid"] == "p-ek-3")
+        self.assertEqual(p["selectors"][1], {"function": "SelectPassives", "list": "l-passives", "count": 1,
+                                             "id": None})
+
+    def test_unlisted_typo_still_raises(self):
+        data = dataset()
+        data[0]["Progressions"]["p-ek-3"]["attributes"]["Selectors"] = TYPO
+        self.assertTrue(any(TYPO in e for e in errors_of(data)))
+        # A listed correction applies to the exact segment only.
+        data[0]["Progressions"]["p-ek-3"]["attributes"]["Selectors"] = "SelectPassives(l-passives,2))"
+        errors = errors_of(data, typos={TYPO: "SelectPassives(l-passives,1)"})
+        self.assertTrue(any("SelectPassives(l-passives,2))" in e for e in errors))
+
+    def test_stale_typo_raises(self):
+        errors = errors_of(dataset(), typos={TYPO: "SelectPassives(l-passives,1)"})
+        self.assertTrue(any("game_typos" in e and TYPO in e for e in errors))
+
+    def test_typo_applies_to_feats(self):
+        data = dataset()
+        data[0]["Feats"]["f-alert"]["attributes"]["Selectors"] = "SelectSkills(l-skills,1))"
+        rules = build(data, typos={"SelectSkills(l-skills,1))": "SelectSkills(l-skills,1)"})
+        self.assertEqual(rules["feats"]["Alert"]["selectors"][0]["list"], "l-skills")
+
+    def test_read_typos(self):
+        path = write_text("# header\n\nA(x)) => A(x)  # Larian typo\n")
+        self.assertEqual(model.read_typos(path), {"A(x))": "A(x)"})
+        for bad in ("A(x)) A(x)  # no arrow\n", "A(x)) => A(x)\n", "A(x)) => A(x)  #  \n",
+                    "A(x)) => A(x)  # r\nA(x)) => A(y)  # r\n"):
+            with self.assertRaises(ValueError, msg=bad):
+                model.read_typos(write_text(bad))
 
     def test_deterministic(self):
         self.assertEqual(build(), build())

@@ -58,6 +58,17 @@ class TestSelectors(unittest.TestCase):
         for f in ("SelectPassives", "ReplacePassives", "SelectEquipment"):
             self.assertEqual(selectors.parse(f"{f}(u,1,i)"), [{"function": f, "list": "u", "count": 1, "id": "i"}])
 
+    def test_unbalanced_parentheses(self):
+        for text in ("AddSpells(abc,,,,AlwaysPrepared))", "AddSpells(abc", "AddSpells(a)(b)", "AddSpells(a)x)",
+                     "AddSpells(a))(b"):
+            with self.assertRaises(selectors.UnknownSelector, msg=text):
+                selectors.parse(text)
+        with self.assertRaises(selectors.UnknownSelector):
+            selectors.requirements("FeatRequirementProficiency('x'))")
+
+    def test_segments_split_without_validating(self):
+        self.assertEqual(selectors.segments(" A(x);B(y)) ;"), ["A(x)", "B(y)) ;"])
+
     def test_requirement(self):
         self.assertEqual(selectors.requirements("FeatRequirementAbilityGreaterEqual('Dexterity',13)"), [{"type": "ability_min", "ability": "Dexterity", "value": 13}])
 

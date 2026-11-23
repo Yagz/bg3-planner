@@ -99,6 +99,10 @@ def make_game(drop_french: str | None = None) -> tuple[Path, tempfile.TemporaryD
 FILES = ["meta.json", "rules.json", "texts.en.json", "texts.fr.json"]
 
 
+# Committed lists that describe the real game; the synthetic game gets empty ones.
+LISTS = ("GAME_TYPOS",)
+
+
 class ImporterTest(unittest.TestCase):
     def setUp(self):
         self.game, folder = make_game()
@@ -106,6 +110,28 @@ class ImporterTest(unittest.TestCase):
         out = tempfile.TemporaryDirectory()
         self.addCleanup(out.cleanup)
         self.out = Path(out.name) / "larian"
+        self.lists = Path(out.name)
+        for name in LISTS:
+            self.set_list(name, "")
+
+    def set_list(self, name: str, text: str) -> None:
+        path = self.lists / f"{name}.txt"
+        path.write_text(text, encoding="utf-8")
+        patcher = mock.patch.object(importer, name, path)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_listed_game_typo_corrected(self):
+        files = rules_files()
+        progressions = "Public/Shared/Progressions/Progressions.lsx"
+        files["Shared.pak"][progressions] = files["Shared.pak"][progressions].replace(
+            b"AddSpells(l-spells)", b"AddSpells(l-spells))")
+        (self.game / "Data" / "Shared.pak").write_bytes(fixtures.pak(files["Shared.pak"]))
+        with self.assertRaises(importer.model.ModelError):
+            importer.build(self.game, "1.2.3")
+        self.set_list("GAME_TYPOS", "AddSpells(l-spells)) => AddSpells(l-spells)  # test typo\n")
+        rules = importer.build(self.game, "1.2.3")["rules.json"]
+        self.assertEqual(rules["progressions"][0]["selectors"][1]["list"], "l-spells")
 
     def test_end_to_end_synthetic(self):
         importer.run(self.game, self.out, "1.2.3")
