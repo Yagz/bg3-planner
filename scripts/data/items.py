@@ -1,8 +1,10 @@
 """Key items: scope from bg3.wiki's item list, rules from the game's item stats, names from its RootTemplates.
 
 Scope: every wiki item whose `legacy` is null (obtainable), minus the entries of `items_excluded.txt`.
-Each item is looked up by its wiki `uid` among the item stats (Armor.txt, Weapon.txt); the stats
-entry's `RootTemplate` gives the template, whose DisplayName and Description are the item's texts.
+Each item is looked up by its wiki `uid` among the item stats (Armor.txt, Weapon.txt), the stats entry's
+`RootTemplate` giving the template; failing that, as the Name of the template given by its wiki `uuid`,
+that template's `Stats` giving the stats entry (`found_by` says which). The template's DisplayName and
+Description are the item's texts.
 """
 import json
 from pathlib import Path
@@ -23,28 +25,52 @@ def scope(wiki: dict[str, dict], excluded: dict[str, str]) -> list[str]:
     return sorted(uid for uid, w in wiki.items() if w.get("legacy") is None and uid not in excluded)
 
 
+def _locate(uid: str, w: dict, item_stats: dict, templates: dict) -> tuple[tuple | None, list[str]]:
+    """(found_by, stats entry, template uuid) of one item, or the errors that prevent finding it.
+
+    By stats name: the uid is an item stats entry, whose RootTemplate must equal the wiki uuid when
+    given. By template: the uid is the Name of the template given by the wiki uuid, and that
+    template's Stats is an item stats entry.
+    """
+    where = f"item {uid}"
+    entry = item_stats.get(uid)
+    if entry is not None:
+        root = entry.get("RootTemplate") or None
+        if root is None:
+            return None, [f"{where}: stats entry has no RootTemplate"]
+        if w.get("uuid") and w["uuid"] != root:
+            return None, [f"{where}: wiki uuid {w['uuid']} differs from the stats RootTemplate {root}"]
+        return ("stats", entry, root), []
+    uuid = w.get("uuid")
+    template = templates.get(uuid) if uuid else None
+    if template is None:
+        return None, [f"{where}: not found in the item stats (Armor.txt, Weapon.txt), and its wiki uuid {uuid} "
+                      "is not a RootTemplate"]
+    if template.get("name") != uid:
+        return None, [f"{where}: not found in the item stats (Armor.txt, Weapon.txt), and its wiki uuid's "
+                      f"template {uuid} is named {template.get('name')!r}"]
+    entry = item_stats.get(template.get("stats") or "")
+    if entry is None:
+        return None, [f"{where}: template {uuid} has Stats {template.get('stats')!r}, not an item stats entry"]
+    return ("template", entry, uuid), []
+
+
 def _item(uid: str, w: dict, item_stats: dict, templates: dict, handle) -> tuple[dict | None, list[str]]:
     """One item's rules, or the errors that prevent them."""
     where = f"item {uid}"
-    entry = item_stats.get(uid)
-    if entry is None:
-        return None, [f"{where}: not found in the item stats (Armor.txt, Weapon.txt)"]
-    root = entry.get("RootTemplate") or None
-    if root is None:
-        return None, [f"{where}: stats entry has no RootTemplate"]
-    errors = []
-    if w.get("uuid") and w["uuid"] != root:
-        errors.append(f"{where}: wiki uuid {w['uuid']} differs from the stats RootTemplate {root}")
+    found, errors = _locate(uid, w, item_stats, templates)
+    if found is None:
+        return None, errors
+    found_by, entry, root = found
     template = templates.get(root)
     if template is None:
-        return None, errors + [f"{where}: RootTemplate {root} not found among the templates"]
+        return None, [f"{where}: RootTemplate {root} not found among the templates"]
     name = handle(template.get("display_name"))
     if name is None:
-        return None, errors + [f"{where}: template {root} has no DisplayName"]
-    if errors:
-        return None, errors
+        return None, [f"{where}: template {root} has no DisplayName"]
     return {
         "kind": w.get("kind"),
+        "found_by": found_by,
         "stats_type": entry.get("type"),
         "slot": entry.get("Slot") or None,
         "rarity": entry.get("Rarity") or None,

@@ -36,3 +36,7 @@ passive:FlurryOfBlowsUnlock
 passive:Monk_SoundSwitch
 passive:Rage_Armour_Message
 passive:Rage_NoHeavyArmour_VFX
+
+# Items whose game description handle is the unknown-handle marker in both languages.
+item:UNI_Karlach_Gloves  # the game's own description is the unknown-handle marker
+item:WPN_HUM_Sword_Shar_A  # the game's own description is the unknown-handle marker

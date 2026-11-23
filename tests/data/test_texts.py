@@ -48,6 +48,22 @@ class TextsTest(unittest.TestCase):
             self.assertEqual(len(ctx.exception.errors), 1)
             self.assertIn(handle, ctx.exception.errors[0])
 
+    def test_unknown_handle_marker_is_missing(self):
+        marker = texts.UNKNOWN_HANDLE
+        r = rules()
+        r["classes"]["Fighter"]["text"]["description"] = marker
+        for table in ({**EN, marker: marker}, EN):
+            with self.assertRaises(texts.MissingText) as ctx:
+                texts.resolve(r, table, {**FR, marker: marker}, set())
+            self.assertEqual(len(ctx.exception.errors), 2, ctx.exception.errors)
+            self.assertTrue(all("class:Fighter" in e for e in ctx.exception.errors))
+        # A text equal to the marker is missing too, whatever its handle.
+        with self.assertRaises(texts.MissingText) as ctx:
+            texts.resolve(rules(), dict(EN, hFighterDesc=marker), FR, set())
+        self.assertEqual(len(ctx.exception.errors), 1)
+        self.assertIn("English", ctx.exception.errors[0])
+        self.assertEqual(marker, "ls::TranslatedStringRepository::s_HandleUnknown")
+
     def test_missing_name_and_description_give_two_errors(self):
         fr = {k: v for k, v in FR.items() if k not in ("hFighter", "hFighterDesc")}
         with self.assertRaises(texts.MissingText) as ctx:

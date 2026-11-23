@@ -1,2 +1,68 @@
 # Obtainable bg3.wiki items (legacy null) kept out of the imported items, one per line: `<uid>  # reason`.
 # An entry that is not an obtainable wiki item is an error, so the list stays exact.
+# Listed from the import of game 4.1.1.7631656; to review with the user case by case.
+
+# Not in the item stats, and the wiki uuid is not a RootTemplate: placed level objects, 36 named S_* (39).
+S_CAMP_StolenInstrument  # placed level object: the wiki uuid is not a RootTemplate
+S_CRE_Abbot4_Weapon  # placed level object: the wiki uuid is not a RootTemplate
+S_CRE_BloodOfLathander  # placed level object: the wiki uuid is not a RootTemplate
+S_DEN_AppCirclet  # placed level object: the wiki uuid is not a RootTemplate
+S_DEN_BardInstrument  # placed level object: the wiki uuid is not a RootTemplate
+S_DEN_NarrativeLoot_NettieGloves  # placed level object: the wiki uuid is not a RootTemplate
+S_DEN_NarrativeLoot_ZevlorSword  # placed level object: the wiki uuid is not a RootTemplate
+S_FOR_Bottomless_MurderWeap  # placed level object: the wiki uuid is not a RootTemplate
+S_FOR_ShovelFlavourItem_Knife  # placed level object: the wiki uuid is not a RootTemplate
+S_GLO_Orin_TeleportRing  # placed level object: the wiki uuid is not a RootTemplate
+S_GOB_WolfPens_BloodFang  # placed level object: the wiki uuid is not a RootTemplate
+S_HAV_AncientFist_ImportantItem_Surgeon  # placed level object: the wiki uuid is not a RootTemplate
+S_LOW_CountingHouse_Vault1_Nymph_Cloak  # placed level object: the wiki uuid is not a RootTemplate
+S_LOW_CountingHouse_Vault2_JannathHat  # placed level object: the wiki uuid is not a RootTemplate
+S_LOW_CountingHouse_Vault3_Crossbow  # placed level object: the wiki uuid is not a RootTemplate
+S_LOW_CountingHouse_Vault4_WaveTrident  # placed level object: the wiki uuid is not a RootTemplate
+S_LOW_CountingHouse_Vault5_MorningStar  # placed level object: the wiki uuid is not a RootTemplate
+S_LOW_CountingHouse_Vault7_PicklocksGloves  # placed level object: the wiki uuid is not a RootTemplate
+S_LOW_Giuldhall_Member_005_Ring  # placed level object: the wiki uuid is not a RootTemplate
+S_LOW_JaheirasHouse_StaffOfTheRam  # placed level object: the wiki uuid is not a RootTemplate
+S_LOW_KurwinCoffin_MausoleumDogCollar_01  # placed level object: the wiki uuid is not a RootTemplate
+S_LOW_KurwinCoffin_MausoleumDogCollar_02  # placed level object: the wiki uuid is not a RootTemplate
+S_LOW_KurwinCoffin_MausoleumDogCollar_03  # placed level object: the wiki uuid is not a RootTemplate
+S_MOO_JailbreakHammer  # placed level object: the wiki uuid is not a RootTemplate
+S_SCL_HarperBlade  # placed level object: the wiki uuid is not a RootTemplate
+S_SCL_OliversDiary_DadsAxe  # placed level object: the wiki uuid is not a RootTemplate
+S_SHA_FalseSpearOfNight  # placed level object: the wiki uuid is not a RootTemplate
+S_TWN_CentralSquare_RitualDagger  # placed level object: the wiki uuid is not a RootTemplate
+S_TWN_ConfiscatedCratesTradersRing  # placed level object: the wiki uuid is not a RootTemplate
+S_UND_CallarduranTrinket  # placed level object: the wiki uuid is not a RootTemplate
+S_UND_DuergarGaleItem  # placed level object: the wiki uuid is not a RootTemplate
+S_UND_MushroomHunter_WeddingRing  # placed level object: the wiki uuid is not a RootTemplate
+S_UND_SharranTargetPractice_Crossbow  # placed level object: the wiki uuid is not a RootTemplate
+S_UND_SwordInStone_SwordReward  # placed level object: the wiki uuid is not a RootTemplate
+S_UNI_LOW_GuildRing  # placed level object: the wiki uuid is not a RootTemplate
+S_WYR_Circus_WheelPrize_ArmorPlusOne  # placed level object: the wiki uuid is not a RootTemplate
+WPN_HUM_Glaive_A_0_Rusty_A  # not an item stats name, and the wiki uuid is not a RootTemplate (likely a placed level object)
+WPN_HUM_Toy_Sword_A_Andrik  # not an item stats name, and the wiki uuid is not a RootTemplate (likely a placed level object)
+WPN_HUM_Toy_Sword_A_Chessa  # not an item stats name, and the wiki uuid is not a RootTemplate (likely a placed level object)
+
+# Not in the item stats, and the wiki uuid's RootTemplate has another Name (11).
+BASE_ARMOR_Cloaks_002  # not an item stats name, and the wiki uuid's template is named 'BASE_ARMOR_Cloaks'
+Generated_ARM_Camp_Cultist_Absolute  # not an item stats name, and the wiki uuid's template is named 'ARM_Camp_Cultist_Absolute'
+Item_ARM_Camp_Shoes_Sandals_A  # not an item stats name, and the wiki uuid's template is named 'ARM_Camp_Shoes_Sandals_A'
+Item_WPN_HUM_Greatsword_B_0  # not an item stats name, and the wiki uuid's template is named 'WPN_HUM_Greatsword_B_0'
+S_CRE_Abbot1_Weapon  # not an item stats name, and the wiki uuid's template is named 'WPN_HUM_Mace_A_1'
+S_CRE_Abbot2_Weapon  # not an item stats name, and the wiki uuid's template is named 'WPN_HUM_Longsword_A_1'
+S_CRE_Abbot3_Weapon  # not an item stats name, and the wiki uuid's template is named 'WPN_HUM_Warhammer_A_1'
+S_HAG_GaleMagicItem  # not an item stats name, and the wiki uuid's template is named 'HAG_HagLair_WPN_HagStaff'
+S_UND_MerregonMask_001  # not an item stats name, and the wiki uuid's template is named 'S_Placeholder_MerregonMask'
+Underwear_Incubus  # not an item stats name, and the wiki uuid's template is named 'Underwear_Incubus '
+WPN_HUM_Maul_A_Pact  # not an item stats name, and the wiki uuid's template is named 'WPN_HUM_Maul_Pact'
+
+# The wiki uuid's RootTemplate has non-equipment Stats (1).
+LOOT_GEN_Locket_Mayrina_Open_A  # the wiki uuid's template has Stats OBJ_GenericLootItem (Object.txt), not an armor or weapon
+
+# Found by stats name, but the wiki uuid differs from the stats RootTemplate (6).
+ARM_Bracers_Barbarian  # wiki uuid differs from the game's stats RootTemplate: to review with the user
+ARM_Shoes_G  # wiki uuid differs from the game's stats RootTemplate: to review with the user
+MOO_Ketheric_Armor  # wiki uuid differs from the game's stats RootTemplate: to review with the user
+QUEST_WYR_RestoredMagicRing  # wiki uuid differs from the game's stats RootTemplate: to review with the user
+SHA_SharSpear  # wiki uuid differs from the game's stats RootTemplate: to review with the user
+TWN_AasimarSurvivor_HazmatSuit  # wiki uuid differs from the game's stats RootTemplate: to review with the user

@@ -90,18 +90,21 @@ def rules_files() -> dict[str, dict[str, bytes]]:
             'data "Slot" "Melee Main Weapon"\n').encode(),
         # Gustav's template inherits its name from Shared's base template.
         "Public/Gustav/RootTemplates/_merged.lsf": templates_lsf(
-            {"MapKey": "t-sword", "Name": "WPN_Sword", "Stats": "WPN_Sword", "ParentTemplateId": "t-base"}),
+            {"MapKey": "t-sword", "Name": "WPN_Sword", "Stats": "WPN_Sword", "ParentTemplateId": "t-base"},
+            # Found by its template name: its stats are WPN_Sword's.
+            {"MapKey": "t-fancy", "Name": "WPN_Sword_Fancy", "Stats": "WPN_Sword", "DisplayName": "hFancy"}),
     }
     gustavx = {"Public/GustavX/Other/Nothing.txt": b"x"}
     return {"Shared.pak": shared, "Gustav.pak": gustav, "GustavX.pak": gustavx}
 
 
 HANDLES = ["hFighter", "hFighterDesc", "hElf", "hElfDesc", "hAcolyte", "hAcolyteDesc", "hAlert", "hAlertDesc",
-           "hFighterPassive", "hAlertPassive", "hFireBolt2", "hBoots", "hBootsDesc", "hBase"]
+           "hFighterPassive", "hAlertPassive", "hFireBolt2", "hBoots", "hBootsDesc", "hBase", "hFancy"]
 FRENCH = {"hFighter": "Guerrier", "hFireBolt2": "Trait de feu", "hBase": "Épée"}
 WIKI = {"source": "https://example.org", "license": "test", "items": {
     "MAG_Boots": {"uuid": "t-boots", "kind": "equipment", "rarity": "rare", "legacy": None, "locations": []},
     "WPN_Sword": {"uuid": None, "kind": "weapon", "rarity": "common", "legacy": None, "locations": []},
+    "WPN_Sword_Fancy": {"uuid": "t-fancy", "kind": "weapon", "rarity": "common", "legacy": None, "locations": []},
     "MAG_Gone": {"uuid": None, "kind": "equipment", "rarity": "rare", "legacy": "unobtainable", "locations": []},
 }}
 
@@ -187,14 +190,17 @@ class ImporterTest(unittest.TestCase):
         importer.run(self.game, self.out, "1.2.3")
         rules = json.loads((self.out / "rules.json").read_text(encoding="utf-8"))
         self.assertEqual(rules["items"], {
-            "MAG_Boots": {"kind": "equipment", "stats_type": "Armor", "slot": "Boots", "rarity": "Rare",
-                          "root_template": "t-boots"},
-            "WPN_Sword": {"kind": "weapon", "stats_type": "Weapon", "slot": "Melee Main Weapon", "rarity": None,
-                          "root_template": "t-sword"}})
+            "MAG_Boots": {"kind": "equipment", "found_by": "stats", "stats_type": "Armor", "slot": "Boots",
+                          "rarity": "Rare", "root_template": "t-boots"},
+            "WPN_Sword": {"kind": "weapon", "found_by": "stats", "stats_type": "Weapon", "slot": "Melee Main Weapon",
+                          "rarity": None, "root_template": "t-sword"},
+            "WPN_Sword_Fancy": {"kind": "weapon", "found_by": "template", "stats_type": "Weapon",
+                                "slot": "Melee Main Weapon", "rarity": None, "root_template": "t-fancy"}})
         en = json.loads((self.out / "texts.en.json").read_text(encoding="utf-8"))
         fr = json.loads((self.out / "texts.fr.json").read_text(encoding="utf-8"))
         self.assertEqual(en["item:MAG_Boots"], {"name": "EN hBoots", "description": "EN hBootsDesc"})
         self.assertEqual(fr["item:WPN_Sword"], {"name": "Épée", "description": None})
+        self.assertEqual(en["item:WPN_Sword_Fancy"], {"name": "EN hFancy", "description": None})
         self.assertNotIn("item:MAG_Gone", en)
 
     def test_wiki_option(self):

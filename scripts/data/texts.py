@@ -10,6 +10,14 @@ from pathlib import Path
 _CATEGORIES = {"classes": "class", "races": "race", "backgrounds": "background", "feats": "feat",
                "spells": "spell", "passives": "passive", "items": "item"}
 
+# The game's marker for an unknown translation handle: as a handle or as a text, it counts as missing.
+UNKNOWN_HANDLE = "ls::TranslatedStringRepository::s_HandleUnknown"
+
+
+def _present(table: dict[str, str], h: str) -> bool:
+    text = table.get(h, "")
+    return h != UNKNOWN_HANDLE and bool(text.strip()) and text != UNKNOWN_HANDLE
+
 
 class MissingText(Exception):
     """Elements without a name, or whose handles are absent from a table; `errors` lists every case."""
@@ -38,7 +46,7 @@ def _entries(key: str, text: dict, en: dict[str, str], fr: dict[str, str]) -> tu
     for language, table in (("English", en), ("French", fr)):
         missing = False
         for kind, h in (("name", name), ("description", description)):
-            if h is not None and not table.get(h, "").strip():
+            if h is not None and not _present(table, h):
                 errors.append(f"{key}: {kind} handle {h} missing or empty in the {language} table")
                 missing = True
         if not missing:

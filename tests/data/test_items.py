@@ -12,6 +12,8 @@ def item_data() -> dict:
     wiki = {
         "MAG_Boots": {"uuid": "t-boots", "kind": "equipment", "rarity": "rare", "legacy": None, "locations": []},
         "WPN_Sword": {"uuid": None, "kind": "weapon", "rarity": "common", "legacy": None, "locations": []},
+        "ARM_Boots_Fancy": {"uuid": "t-fancy", "kind": "equipment", "rarity": "common", "legacy": None,
+                            "locations": []},
         "MAG_Old": {"uuid": "t-old", "kind": "equipment", "rarity": "rare", "legacy": "unobtainable",
                     "locations": []},
     }
@@ -19,12 +21,18 @@ def item_data() -> dict:
         "MAG_Boots": {"type": "Armor", "Slot": "Boots", "Rarity": "Rare", "RootTemplate": "t-boots"},
         "WPN_Sword": {"type": "Weapon", "Slot": "Melee Main Weapon", "RootTemplate": "t-sword"},
         "ARM_Lute": {"type": "Armor", "Slot": "MusicalInstrument", "RootTemplate": "t-lute"},
+        # Shared generic stats, whose own RootTemplate is another template.
+        "ARM_Boots_Generic": {"type": "Armor", "Slot": "Boots", "RootTemplate": "t-generic"},
     }
     templates = {
         "t-boots": {"name": "MAG_Boots", "type": "item", "stats": "MAG_Boots", "display_name": "hBoots;1",
                     "description": "hBootsDesc;2", "parent": None},
         "t-sword": {"name": "WPN_Sword", "type": "item", "stats": "WPN_Sword", "display_name": "hSword",
                     "description": None, "parent": "t-boots"},
+        "t-generic": {"name": "ARM_Boots_Generic", "type": "item", "stats": "ARM_Boots_Generic",
+                      "display_name": "hGeneric", "description": "hGenericDesc", "parent": None},
+        "t-fancy": {"name": "ARM_Boots_Fancy", "type": "item", "stats": "ARM_Boots_Generic",
+                    "display_name": "hFancy", "description": "hFancyDesc", "parent": "t-generic"},
         "t-lute": {"name": "ARM_Lute", "type": "item", "stats": "ARM_Lute", "display_name": "hLute",
                    "description": None, "parent": None},
     }
@@ -53,13 +61,43 @@ def write_text(text: str) -> Path:
 class ItemsTest(unittest.TestCase):
     def test_item_from_wiki_scope(self):
         rules = build()
-        self.assertEqual(sorted(rules["items"]), ["MAG_Boots", "WPN_Sword"])
+        self.assertEqual(sorted(rules["items"]), ["ARM_Boots_Fancy", "MAG_Boots", "WPN_Sword"])
         self.assertEqual(rules["items"]["MAG_Boots"], {
-            "kind": "equipment", "stats_type": "Armor", "slot": "Boots", "rarity": "Rare",
+            "kind": "equipment", "found_by": "stats", "stats_type": "Armor", "slot": "Boots", "rarity": "Rare",
             "root_template": "t-boots", "text": {"name": "hBoots", "description": "hBootsDesc"}})
         self.assertEqual(rules["items"]["WPN_Sword"], {
-            "kind": "weapon", "stats_type": "Weapon", "slot": "Melee Main Weapon", "rarity": None,
+            "kind": "weapon", "found_by": "stats", "stats_type": "Weapon", "slot": "Melee Main Weapon", "rarity": None,
             "root_template": "t-sword", "text": {"name": "hSword", "description": None}})
+
+    def test_item_found_by_template(self):
+        self.assertEqual(build()["items"]["ARM_Boots_Fancy"], {
+            "kind": "equipment", "found_by": "template", "stats_type": "Armor", "slot": "Boots", "rarity": None,
+            "root_template": "t-fancy", "text": {"name": "hFancy", "description": "hFancyDesc"}})
+
+    def test_stats_name_takes_precedence_over_template(self):
+        data = item_data()
+        data["item_stats"]["ARM_Boots_Fancy"] = {"type": "Armor", "Slot": "Gloves", "RootTemplate": "t-fancy"}
+        item = build(**data)["items"]["ARM_Boots_Fancy"]
+        self.assertEqual((item["found_by"], item["slot"]), ("stats", "Gloves"))
+
+    def test_template_path_errors(self):
+        cases = [
+            ("uuid", None, "is not a RootTemplate"),
+            ("uuid", "t-ghost", "t-ghost"),
+            ("uuid", "t-lute", "'ARM_Lute'"),
+            ("stats", "OBJ_Locket", "OBJ_Locket"),
+            ("display_name", None, "DisplayName"),
+        ]
+        for field, value, needle in cases:
+            data = item_data()
+            if field == "uuid":
+                data["wiki"]["ARM_Boots_Fancy"]["uuid"] = value
+            else:
+                data["templates"]["t-fancy"][field] = value
+            errors = errors_of(**data)
+            self.assertEqual(len(errors), 1, (field, value, errors))
+            self.assertIn("item ARM_Boots_Fancy", errors[0])
+            self.assertIn(needle, errors[0])
 
     def test_legacy_item_out_of_scope(self):
         rules = build()
@@ -109,7 +147,7 @@ class ItemsTest(unittest.TestCase):
         data = item_data()
         del data["item_stats"]["WPN_Sword"]
         rules = build(**{**data, "excluded": {"WPN_Sword": "not in the game's item stats"}})
-        self.assertEqual(sorted(rules["items"]), ["MAG_Boots"])
+        self.assertEqual(sorted(rules["items"]), ["ARM_Boots_Fancy", "MAG_Boots"])
 
     def test_stale_exclusion_is_error(self):
         errors = errors_of(excluded={"MAG_Old": "legacy anyway", "MAG_Ghost": "unknown"})
@@ -140,8 +178,8 @@ class ItemsTest(unittest.TestCase):
 
     def test_item_texts_resolved(self):
         rules = build()
-        en = {"hBoots": "Boots", "hBootsDesc": "Fast.", "hSword": "Sword"}
-        fr = {"hBoots": "Bottes", "hBootsDesc": "Rapides.", "hSword": "Épée"}
+        en = {"hBoots": "Boots", "hBootsDesc": "Fast.", "hSword": "Sword", "hFancy": "Fancy", "hFancyDesc": "F."}
+        fr = {"hBoots": "Bottes", "hBootsDesc": "Rapides.", "hSword": "Épée", "hFancy": "Chic", "hFancyDesc": "C."}
         for section in ("classes", "races", "backgrounds", "feats", "spells", "passives"):
             rules[section] = {}
         out, texts_en, texts_fr = texts.resolve(rules, en, fr, set())
@@ -159,8 +197,8 @@ class ItemsTest(unittest.TestCase):
 
     def test_scope(self):
         wiki = item_data()["wiki"]
-        self.assertEqual(items.scope(wiki, {}), ["MAG_Boots", "WPN_Sword"])
-        self.assertEqual(items.scope(wiki, {"WPN_Sword": "r"}), ["MAG_Boots"])
+        self.assertEqual(items.scope(wiki, {}), ["ARM_Boots_Fancy", "MAG_Boots", "WPN_Sword"])
+        self.assertEqual(items.scope(wiki, {"WPN_Sword": "r"}), ["ARM_Boots_Fancy", "MAG_Boots"])
 
     def test_read_excluded(self):
         path = write_text("# header\n\nWPN_Sword  # not a key item\n MAG_Boots # reason\n")
