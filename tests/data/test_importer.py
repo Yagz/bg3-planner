@@ -24,6 +24,14 @@ def lsx(node_type: str, *nodes: dict) -> bytes:
     return xml.encode("utf-8")
 
 
+def templates_lsf(*templates: dict) -> bytes:
+    """RootTemplates `_merged.lsf`: one GameObjects node per template, string attributes."""
+    kinds = {"MapKey": "FixedString", "DisplayName": "TranslatedString", "Description": "TranslatedString"}
+    nodes = [{"id": "GameObjects", "children": [],
+              "attributes": {k: (kinds.get(k, "FixedString"), v) for k, v in t.items()}} for t in templates]
+    return fixtures.lsf({"Templates": nodes})
+
+
 def rules_files() -> dict[str, dict[str, bytes]]:
     """A small consistent set of rules files, split over the three rules paks."""
     shared = {
@@ -52,8 +60,15 @@ def rules_files() -> dict[str, dict[str, bytes]]:
         "Public/Shared/Stats/Generated/Data/Spell_Target.txt": (
             'new entry "Target_FireBolt"\ntype "SpellData"\ndata "SpellType" "Target"\ndata "Level" "0"\n'
             'data "DisplayName" "hFireBolt;1"\n').encode(),
+        "Public/Shared/Stats/Generated/Data/Armor.txt": (
+            'new entry "MAG_Boots"\ntype "Armor"\ndata "RootTemplate" "t-boots"\ndata "Slot" "Boots"\n'
+            'data "Rarity" "Rare"\n').encode(),
         # Another stats format, not read.
-        "Public/Shared/Stats/Generated/Data/Armor.txt": b"garbage that is not stats",
+        "Public/Shared/Stats/Generated/Data/Object.txt": b"garbage that is not stats",
+        "Public/Shared/RootTemplates/_merged.lsf": templates_lsf(
+            {"MapKey": "t-boots", "Name": "MAG_Boots", "Stats": "MAG_Boots", "DisplayName": "hBoots",
+             "Description": "hBootsDesc"},
+            {"MapKey": "t-base", "Name": "BASE_Weapon", "DisplayName": "hBase"}),
     }
     gustav = {
         "Public/Gustav/Backgrounds/Backgrounds.lsx": lsx(
@@ -70,14 +85,25 @@ def rules_files() -> dict[str, dict[str, bytes]]:
         "Public/Gustav/Stats/Generated/Data/Spell_Target.txt": (
             'new entry "Target_FireBolt"\ntype "SpellData"\ndata "SpellType" "Target"\ndata "Level" "0"\n'
             'data "SpellSchool" "Evocation"\ndata "DisplayName" "hFireBolt2;1"\n').encode(),
+        "Public/Gustav/Stats/Generated/Data/Weapon.txt": (
+            'new entry "WPN_Sword"\ntype "Weapon"\ndata "RootTemplate" "t-sword"\n'
+            'data "Slot" "Melee Main Weapon"\n').encode(),
+        # Gustav's template inherits its name from Shared's base template.
+        "Public/Gustav/RootTemplates/_merged.lsf": templates_lsf(
+            {"MapKey": "t-sword", "Name": "WPN_Sword", "Stats": "WPN_Sword", "ParentTemplateId": "t-base"}),
     }
     gustavx = {"Public/GustavX/Other/Nothing.txt": b"x"}
     return {"Shared.pak": shared, "Gustav.pak": gustav, "GustavX.pak": gustavx}
 
 
 HANDLES = ["hFighter", "hFighterDesc", "hElf", "hElfDesc", "hAcolyte", "hAcolyteDesc", "hAlert", "hAlertDesc",
-           "hFighterPassive", "hAlertPassive", "hFireBolt2"]
-FRENCH = {"hFighter": "Guerrier", "hFireBolt2": "Trait de feu"}
+           "hFighterPassive", "hAlertPassive", "hFireBolt2", "hBoots", "hBootsDesc", "hBase"]
+FRENCH = {"hFighter": "Guerrier", "hFireBolt2": "Trait de feu", "hBase": "Épée"}
+WIKI = {"source": "https://example.org", "license": "test", "items": {
+    "MAG_Boots": {"uuid": "t-boots", "kind": "equipment", "rarity": "rare", "legacy": None, "locations": []},
+    "WPN_Sword": {"uuid": None, "kind": "weapon", "rarity": "common", "legacy": None, "locations": []},
+    "MAG_Gone": {"uuid": None, "kind": "equipment", "rarity": "rare", "legacy": "unobtainable", "locations": []},
+}}
 
 
 def make_game(drop_french: str | None = None) -> tuple[Path, tempfile.TemporaryDirectory]:
@@ -100,7 +126,7 @@ FILES = ["meta.json", "rules.json", "texts.en.json", "texts.fr.json"]
 
 
 # Committed lists that describe the real game; the synthetic game gets empty ones.
-LISTS = ("GAME_TYPOS", "KNOWN_DUPLICATES", "UNNAMED")
+LISTS = ("GAME_TYPOS", "KNOWN_DUPLICATES", "UNNAMED", "ITEMS_EXCLUDED")
 
 
 class ImporterTest(unittest.TestCase):
@@ -113,6 +139,14 @@ class ImporterTest(unittest.TestCase):
         self.lists = Path(out.name)
         for name in LISTS:
             self.set_list(name, "")
+        self.wiki = self.lists / "items.json"
+        self.write_wiki(WIKI)
+        patcher = mock.patch.object(importer, "WIKI", self.wiki)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def write_wiki(self, wiki: dict, path: Path | None = None) -> None:
+        (path or self.wiki).write_text(json.dumps(wiki), encoding="utf-8")
 
     def set_list(self, name: str, text: str) -> None:
         path = self.lists / f"{name}.txt"
@@ -148,6 +182,57 @@ class ImporterTest(unittest.TestCase):
         self.assertEqual(meta["modules"], ["Shared", "SharedDev", "Gustav", "GustavDev", "GustavX"])
         self.assertEqual(meta["notice"]["en"], "Non-commercial fan project; content owned by Larian Studios.")
         self.assertEqual(meta["notice"]["fr"], "Projet de fans non commercial ; contenu propriété de Larian Studios.")
+
+    def test_items_end_to_end(self):
+        importer.run(self.game, self.out, "1.2.3")
+        rules = json.loads((self.out / "rules.json").read_text(encoding="utf-8"))
+        self.assertEqual(rules["items"], {
+            "MAG_Boots": {"kind": "equipment", "stats_type": "Armor", "slot": "Boots", "rarity": "Rare",
+                          "root_template": "t-boots"},
+            "WPN_Sword": {"kind": "weapon", "stats_type": "Weapon", "slot": "Melee Main Weapon", "rarity": None,
+                          "root_template": "t-sword"}})
+        en = json.loads((self.out / "texts.en.json").read_text(encoding="utf-8"))
+        fr = json.loads((self.out / "texts.fr.json").read_text(encoding="utf-8"))
+        self.assertEqual(en["item:MAG_Boots"], {"name": "EN hBoots", "description": "EN hBootsDesc"})
+        self.assertEqual(fr["item:WPN_Sword"], {"name": "Épée", "description": None})
+        self.assertNotIn("item:MAG_Gone", en)
+
+    def test_wiki_option(self):
+        other = self.lists / "other.json"
+        self.write_wiki({**WIKI, "items": {"MAG_Boots": WIKI["items"]["MAG_Boots"]}}, other)
+        code = importer.main(["--game", str(self.game), "--game-version", "1.2.3", "--output", str(self.out),
+                              "--wiki", str(other)])
+        self.assertEqual(code, 0)
+        rules = json.loads((self.out / "rules.json").read_text(encoding="utf-8"))
+        self.assertEqual(sorted(rules["items"]), ["MAG_Boots"])
+
+    def test_missing_wiki_file(self):
+        with mock.patch("sys.stderr") as stderr:
+            code = importer.main(["--game", str(self.game), "--game-version", "1.2.3", "--output", str(self.out),
+                                  "--wiki", str(self.lists / "none.json")])
+        self.assertEqual(code, 1)
+        self.assertIn("none.json", "".join(c.args[0] for c in stderr.write.call_args_list))
+        self.assertFalse(self.out.exists())
+
+    def test_item_errors_listed_with_rules_errors(self):
+        wiki = json.loads(json.dumps(WIKI))
+        wiki["items"]["WPN_Axe"] = {"uuid": None, "kind": "weapon", "rarity": None, "legacy": None, "locations": []}
+        wiki["items"]["MAG_Boots"]["uuid"] = "t-other"
+        self.write_wiki(wiki)
+        game, folder = make_game(drop_french="hAlertDesc")
+        self.addCleanup(folder.cleanup)
+        with mock.patch("sys.stderr") as stderr:
+            code = importer.main(["--game", str(game), "--game-version", "1.2.3", "--output", str(self.out)])
+        self.assertEqual(code, 1)
+        printed = "".join(c.args[0] for c in stderr.write.call_args_list)
+        self.assertIn("item WPN_Axe", printed)
+        self.assertIn("t-other", printed)
+        self.assertFalse(self.out.exists())
+        self.set_list("ITEMS_EXCLUDED", "WPN_Axe  # test exclusion\n")
+        wiki["items"]["MAG_Boots"]["uuid"] = "t-boots"
+        self.write_wiki(wiki)
+        importer.run(self.game, self.out, "1.2.3")
+        self.assertNotIn("WPN_Axe", json.loads((self.out / "rules.json").read_text(encoding="utf-8"))["items"])
 
     def test_write_json_format(self):
         path = self.out / "x.json"

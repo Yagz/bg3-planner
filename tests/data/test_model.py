@@ -129,7 +129,7 @@ TYPO = "SelectPassives(l-passives,1))"
 class TestModel(unittest.TestCase):
     def test_valid_dataset_builds(self):
         rules = build()
-        self.assertEqual(set(rules), {"classes", "races", "backgrounds", "feats", "progressions",
+        self.assertEqual(set(rules), {"classes", "races", "backgrounds", "feats", "progressions", "items",
                                       "lists", "spells", "passives"})
 
     def test_class_fields(self):

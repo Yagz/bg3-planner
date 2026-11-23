@@ -6,10 +6,11 @@ import json
 import sys
 from pathlib import Path
 
-from scripts.data import model, texts
+from scripts.data import items, model, texts
 
 UNNAMED = Path(__file__).with_name("unnamed.txt")
 KNOWN_DUPLICATES = Path(__file__).with_name("known_duplicates.txt")
+ITEMS_EXCLUDED = Path(__file__).with_name("items_excluded.txt")
 
 COUNTS = {"base_classes": 12, "subclasses": 58, "races": 39, "base_races": 11, "backgrounds": 22,
           "origin_backgrounds": 11, "feats": 41, "progressions": 663, "lists": 342, "spells": 416, "passives": 475}
@@ -23,7 +24,7 @@ PREPARE_VALUES = {None, "AlwaysPrepared"}
 COOLDOWN_VALUES = {None, "UntilRest"}
 
 _CATEGORIES = {"classes": "class", "races": "race", "backgrounds": "background", "feats": "feat",
-               "spells": "spell", "passives": "passive"}
+               "spells": "spell", "passives": "passive", "items": "item"}
 _LANGUAGES = {"texts.en": "English", "texts.fr": "French"}
 
 
@@ -111,6 +112,14 @@ def _check_references(rules: dict) -> list[str]:
     return problems
 
 
+def _check_items(rules: dict, wiki: dict[str, dict], excluded: dict[str, str]) -> list[str]:
+    """The items are exactly the obtainable wiki items that are not excluded."""
+    expected = set(items.scope(wiki, excluded))
+    actual = set(rules.get("items", {}))
+    return ([f"item:{uid}: obtainable wiki item missing from the items" for uid in sorted(expected - actual)]
+            + [f"item:{uid}: not an obtainable, non-excluded wiki item" for uid in sorted(actual - expected)])
+
+
 def _check_counts(rules: dict, counts: dict[str, int]) -> list[str]:
     classes, races = rules.get("classes", {}), rules.get("races", {})
     actual = {
@@ -125,6 +134,7 @@ def _check_counts(rules: dict, counts: dict[str, int]) -> list[str]:
         "lists": len(rules.get("lists", {})),
         "spells": len(rules.get("spells", {})),
         "passives": len(rules.get("passives", {})),
+        "items": len(rules.get("items", {})),
     }
     return [f"count {key}: expected {expected}, found {actual[key]}"
             for key, expected in counts.items() if actual.get(key) != expected]
@@ -141,17 +151,23 @@ def _check_meta(meta: dict) -> list[str]:
 
 
 def verify(folder: Path, counts: dict[str, int] = COUNTS, unnamed: set[str] | None = None,
-           duplicates: list[frozenset[str]] | None = None) -> list[str]:
-    """Every problem found in the data folder, sorted; empty when everything is fine."""
+           duplicates: list[frozenset[str]] | None = None, wiki: dict[str, dict] | None = None,
+           excluded: dict[str, str] | None = None) -> list[str]:
+    """Every problem found in the data folder, sorted; empty when everything is fine. `wiki` (default: the
+    committed bg3.wiki items) and `excluded` (default: items_excluded.txt) set the expected items."""
     folder = Path(folder)
     if unnamed is None:
         unnamed = texts.read_unnamed(UNNAMED)
     if duplicates is None:
         duplicates = model.read_duplicates(KNOWN_DUPLICATES)
+    if wiki is None:
+        wiki = items.read_wiki(items.WIKI)
+    if excluded is None:
+        excluded = model.read_excluded(ITEMS_EXCLUDED)
     rules = _load(folder, "rules")
     tables = {name: _load(folder, name) for name in _LANGUAGES}
     problems = (_check_texts(rules, tables, unnamed) + _check_references(rules)
-                + _check_counts(rules, counts) + _check_meta(_load(folder, "meta"))
+                + _check_items(rules, wiki, excluded) + _check_counts(rules, counts) + _check_meta(_load(folder, "meta"))
                 + model.duplicate_problems(rules.get("progressions", []), duplicates))
     return sorted(problems)
 

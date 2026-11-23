@@ -5,7 +5,7 @@ fails once, with the complete list.
 """
 from pathlib import Path
 
-from scripts.data import selectors
+from scripts.data import items as items_module, selectors
 
 NULL_UUID = "00000000-0000-0000-0000-000000000000"
 
@@ -76,6 +76,18 @@ def read_typos(path: Path) -> dict[str, str]:
     return res
 
 
+def read_excluded(path: Path) -> dict[str, str]:
+    """Items kept out of the scope: `<uid>  # reason` per line; uid -> reason."""
+    res = {}
+    for number, content, reason in _listed_lines(path):
+        if len(content.split()) != 1:
+            raise ValueError(f"{path}:{number}: expected a single item uid before '# reason': {content!r}")
+        if content in res:
+            raise ValueError(f"{path}:{number}: uid listed twice: {content!r}")
+        res[content] = reason
+    return res
+
+
 def read_duplicates(path: Path) -> list[frozenset[str]]:
     """Known duplicate progressions: one group per line, UUIDs separated by spaces, then `# reason`."""
     res: list[frozenset[str]] = []
@@ -114,8 +126,9 @@ def duplicate_problems(progressions: list[dict], known: list[frozenset[str]]) ->
 
 class _Builder:
     def __init__(self, lsx_by_file: dict, presets: dict, stats: dict, typos: dict[str, str],
-                 duplicates: list[frozenset[str]]):
+                 duplicates: list[frozenset[str]], item_sources: dict):
         self.lsx = lsx_by_file
+        self.item_sources = item_sources
         self.presets = presets
         self.stats = stats
         self.typos = typos
@@ -438,6 +451,12 @@ class _Builder:
         passives = {name: {"boosts": _split(s.get("Boosts")), "text": _text(s)}
                     for name, s in self.stats_entries(list(passive_refs), "passive", passive_refs).items()}
 
+        src = self.item_sources
+        items, problems = items_module.build(src["wiki"], src["item_stats"], src["templates"], src["excluded"],
+                                             handle)
+        self.errors.extend(problems)
+        self.errors.extend(items_module.equipment_problems(lists, src["item_stats"]))
+
         for typo in sorted(set(self.typos) - self.typos_used):
             self.error(f"game_typos.txt: listed typo found nowhere in the game data: {typo!r}")
         if self.errors:
@@ -451,16 +470,25 @@ class _Builder:
             "lists": lists,
             "spells": spells,
             "passives": passives,
+            "items": items,
         }
 
 
 def build(lsx_by_file: dict[str, dict[str, dict]], presets: dict[str, dict], stats: dict[str, dict],
-          typos: dict[str, str] | None = None, duplicates: list[frozenset[str]] | None = None) -> dict:
+          typos: dict[str, str] | None = None, duplicates: list[frozenset[str]] | None = None, *,
+          wiki: dict[str, dict] | None = None, item_stats: dict[str, dict] | None = None,
+          templates: dict[str, dict] | None = None, excluded: dict[str, str] | None = None) -> dict:
     """The rules (schema of `data/larian/rules.json`); raises ModelError with every defect found.
 
     `typos` maps an exact raw selector segment to its correction (see `read_typos`); a listed typo
     found in no parsed selector or requirement is an error. `duplicates` lists the groups of
     progressions allowed to share a table, level and multiclass flag (see `read_duplicates`); they
     are kept unchanged.
+
+    Items (see the `items` module): `wiki` holds the wiki items by uid, `item_stats` the merged Armor and
+    Weapon stats, `templates` the resolved RootTemplates, `excluded` the uids kept out of the scope (see
+    `read_excluded`). The equipment lists' items must be in `item_stats`.
     """
-    return _Builder(lsx_by_file, presets, stats, typos or {}, duplicates or []).build()
+    item_sources = {"wiki": wiki or {}, "item_stats": item_stats or {}, "templates": templates or {},
+                    "excluded": excluded or {}}
+    return _Builder(lsx_by_file, presets, stats, typos or {}, duplicates or [], item_sources).build()

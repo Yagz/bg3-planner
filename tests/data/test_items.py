@@ -1,0 +1,190 @@
+import copy
+import tempfile
+import unittest
+from pathlib import Path
+
+from scripts.data import importer, items, model, texts
+from tests.data.test_model import dataset, node
+
+
+def item_data() -> dict:
+    """Synthetic wiki items, item stats and resolved templates, consistent with each other."""
+    wiki = {
+        "MAG_Boots": {"uuid": "t-boots", "kind": "equipment", "rarity": "rare", "legacy": None, "locations": []},
+        "WPN_Sword": {"uuid": None, "kind": "weapon", "rarity": "common", "legacy": None, "locations": []},
+        "MAG_Old": {"uuid": "t-old", "kind": "equipment", "rarity": "rare", "legacy": "unobtainable",
+                    "locations": []},
+    }
+    item_stats = {
+        "MAG_Boots": {"type": "Armor", "Slot": "Boots", "Rarity": "Rare", "RootTemplate": "t-boots"},
+        "WPN_Sword": {"type": "Weapon", "Slot": "Melee Main Weapon", "RootTemplate": "t-sword"},
+        "ARM_Lute": {"type": "Armor", "Slot": "MusicalInstrument", "RootTemplate": "t-lute"},
+    }
+    templates = {
+        "t-boots": {"name": "MAG_Boots", "type": "item", "stats": "MAG_Boots", "display_name": "hBoots;1",
+                    "description": "hBootsDesc;2", "parent": None},
+        "t-sword": {"name": "WPN_Sword", "type": "item", "stats": "WPN_Sword", "display_name": "hSword",
+                    "description": None, "parent": "t-boots"},
+        "t-lute": {"name": "ARM_Lute", "type": "item", "stats": "ARM_Lute", "display_name": "hLute",
+                   "description": None, "parent": None},
+    }
+    return {"wiki": wiki, "item_stats": item_stats, "templates": templates, "excluded": {}}
+
+
+def build(data=None, **changes):
+    kwargs = {**item_data(), **changes}
+    return model.build(*(data or dataset()), **kwargs)
+
+
+def errors_of(data=None, **changes) -> list[str]:
+    with unittest.TestCase().assertRaises(model.ModelError) as c:
+        build(data, **changes)
+    return c.exception.errors
+
+
+def write_text(text: str) -> Path:
+    folder = tempfile.TemporaryDirectory()
+    unittest.addModuleCleanup(folder.cleanup)
+    path = Path(folder.name) / "list.txt"
+    path.write_text(text, encoding="utf-8")
+    return path
+
+
+class ItemsTest(unittest.TestCase):
+    def test_item_from_wiki_scope(self):
+        rules = build()
+        self.assertEqual(sorted(rules["items"]), ["MAG_Boots", "WPN_Sword"])
+        self.assertEqual(rules["items"]["MAG_Boots"], {
+            "kind": "equipment", "stats_type": "Armor", "slot": "Boots", "rarity": "Rare",
+            "root_template": "t-boots", "text": {"name": "hBoots", "description": "hBootsDesc"}})
+        self.assertEqual(rules["items"]["WPN_Sword"], {
+            "kind": "weapon", "stats_type": "Weapon", "slot": "Melee Main Weapon", "rarity": None,
+            "root_template": "t-sword", "text": {"name": "hSword", "description": None}})
+
+    def test_legacy_item_out_of_scope(self):
+        rules = build()
+        self.assertNotIn("MAG_Old", rules["items"])
+        # Out of scope, so its absence from the stats is not an error either.
+        self.assertNotIn("MAG_Old", item_data()["item_stats"])
+        # An item in the stats but not in the wiki is not imported.
+        self.assertNotIn("ARM_Lute", rules["items"])
+
+    def test_item_missing_from_stats_is_error(self):
+        data = item_data()
+        del data["item_stats"]["WPN_Sword"]
+        errors = errors_of(**data)
+        self.assertEqual(len(errors), 1)
+        self.assertIn("item WPN_Sword", errors[0])
+        self.assertIn("not found", errors[0])
+
+    def test_stats_without_root_template_or_unknown_template_is_error(self):
+        data = item_data()
+        del data["item_stats"]["WPN_Sword"]["RootTemplate"]
+        data["item_stats"]["MAG_Boots"]["RootTemplate"] = "t-ghost"
+        data["wiki"]["MAG_Boots"]["uuid"] = "t-ghost"
+        errors = errors_of(**data)
+        self.assertEqual(len(errors), 2, errors)
+        self.assertTrue(any("WPN_Sword" in e and "RootTemplate" in e for e in errors))
+        self.assertTrue(any("MAG_Boots" in e and "t-ghost" in e for e in errors))
+
+    def test_template_without_name_is_error(self):
+        data = item_data()
+        data["templates"]["t-sword"]["display_name"] = None
+        errors = errors_of(**data)
+        self.assertEqual(len(errors), 1)
+        self.assertIn("item WPN_Sword", errors[0])
+        self.assertIn("t-sword", errors[0])
+        self.assertIn("DisplayName", errors[0])
+
+    def test_uuid_mismatch_is_error(self):
+        data = item_data()
+        data["wiki"]["MAG_Boots"]["uuid"] = "t-other"
+        errors = errors_of(**data)
+        self.assertEqual(len(errors), 1)
+        self.assertIn("item MAG_Boots", errors[0])
+        self.assertIn("t-other", errors[0])
+        self.assertIn("t-boots", errors[0])
+
+    def test_excluded_item(self):
+        data = item_data()
+        del data["item_stats"]["WPN_Sword"]
+        rules = build(**{**data, "excluded": {"WPN_Sword": "not in the game's item stats"}})
+        self.assertEqual(sorted(rules["items"]), ["MAG_Boots"])
+
+    def test_stale_exclusion_is_error(self):
+        errors = errors_of(excluded={"MAG_Old": "legacy anyway", "MAG_Ghost": "unknown"})
+        self.assertEqual(len(errors), 2, errors)
+        self.assertTrue(any("items_excluded" in e and "MAG_Old" in e for e in errors))
+        self.assertTrue(any("items_excluded" in e and "MAG_Ghost" in e for e in errors))
+
+    def test_equipment_list_item_must_exist(self):
+        data = dataset()
+        data[0]["EquipmentLists"]["l-equip"] = node("EquipmentList", UUID="l-equip", Name="Instruments",
+                                                    Items="ARM_Lute;WPN_Missing")
+        data[0]["Feats"]["f-alert"]["attributes"]["Selectors"] = "SelectEquipment(l-equip,1,)"
+        errors = errors_of(data)
+        self.assertEqual(len(errors), 1, errors)
+        self.assertIn("WPN_Missing", errors[0])
+        self.assertIn("l-equip", errors[0])
+        data[0]["EquipmentLists"]["l-equip"]["attributes"]["Items"] = "ARM_Lute"
+        self.assertEqual(build(data)["lists"]["l-equip"]["items"], ["ARM_Lute"])
+
+    def test_item_errors_aggregated_with_rules_errors(self):
+        data = dataset()
+        del data[2]["Shout_Shield"]
+        changes = item_data()
+        del changes["item_stats"]["WPN_Sword"]
+        errors = errors_of(data, **changes)
+        self.assertTrue(any("Shout_Shield" in e for e in errors))
+        self.assertTrue(any("WPN_Sword" in e for e in errors))
+
+    def test_item_texts_resolved(self):
+        rules = build()
+        en = {"hBoots": "Boots", "hBootsDesc": "Fast.", "hSword": "Sword"}
+        fr = {"hBoots": "Bottes", "hBootsDesc": "Rapides.", "hSword": "Épée"}
+        for section in ("classes", "races", "backgrounds", "feats", "spells", "passives"):
+            rules[section] = {}
+        out, texts_en, texts_fr = texts.resolve(rules, en, fr, set())
+        self.assertEqual(texts_en["item:MAG_Boots"], {"name": "Boots", "description": "Fast."})
+        self.assertEqual(texts_fr["item:WPN_Sword"], {"name": "Épée", "description": None})
+        self.assertNotIn("text", out["items"]["MAG_Boots"])
+        with self.assertRaises(texts.MissingText) as c:
+            texts.resolve(rules, en, {k: v for k, v in fr.items() if k != "hBootsDesc"}, set())
+        self.assertEqual(len(c.exception.errors), 1)
+        self.assertIn("item:MAG_Boots", c.exception.errors[0])
+
+    def test_without_items_arguments(self):
+        rules = model.build(*dataset())
+        self.assertEqual(rules["items"], {})
+
+    def test_scope(self):
+        wiki = item_data()["wiki"]
+        self.assertEqual(items.scope(wiki, {}), ["MAG_Boots", "WPN_Sword"])
+        self.assertEqual(items.scope(wiki, {"WPN_Sword": "r"}), ["MAG_Boots"])
+
+    def test_read_excluded(self):
+        path = write_text("# header\n\nWPN_Sword  # not a key item\n MAG_Boots # reason\n")
+        self.assertEqual(model.read_excluded(path), {"WPN_Sword": "not a key item", "MAG_Boots": "reason"})
+        for bad in ("WPN_Sword\n", "WPN_Sword  #  \n", "WPN_Sword  # r\nWPN_Sword  # r\n", "A B  # two ids\n"):
+            with self.assertRaises(ValueError, msg=bad):
+                model.read_excluded(write_text(bad))
+
+    def test_read_wiki(self):
+        path = write_text('{"source": "s", "license": "l", "items": {"A": {"uuid": null, "kind": "weapon", '
+                          '"rarity": null, "legacy": null, "locations": []}}}')
+        self.assertEqual(list(items.read_wiki(path)), ["A"])
+        with self.assertRaises(ValueError):
+            items.read_wiki(write_text('{"source": "s"}'))
+
+    def test_committed_exclusion_file_is_readable(self):
+        self.assertIsInstance(model.read_excluded(importer.ITEMS_EXCLUDED), dict)
+
+    def test_input_untouched(self):
+        data = item_data()
+        before = copy.deepcopy(data)
+        build(**data)
+        self.assertEqual(data, before)
+
+
+if __name__ == "__main__":
+    unittest.main()

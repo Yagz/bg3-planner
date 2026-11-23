@@ -1,0 +1,2 @@
+# Obtainable bg3.wiki items (legacy null) kept out of the imported items, one per line: `<uid>  # reason`.
+# An entry that is not an obtainable wiki item is an error, so the list stays exact.

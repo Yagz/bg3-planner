@@ -8,7 +8,7 @@ from pathlib import Path
 
 # Rules category -> text table category.
 _CATEGORIES = {"classes": "class", "races": "race", "backgrounds": "background", "feats": "feat",
-               "spells": "spell", "passives": "passive"}
+               "spells": "spell", "passives": "passive", "items": "item"}
 
 
 class MissingText(Exception):

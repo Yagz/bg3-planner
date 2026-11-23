@@ -32,9 +32,19 @@ RULES = {
               "l-pass": {"type": "passives", "items": ["Soldier"]}},
     "spells": {"Fireball": {}},
     "passives": {"Soldier": {}},
+    "items": {"MAG_Boots": {"kind": "equipment", "stats_type": "Armor", "slot": "Boots", "rarity": "Rare",
+                            "root_template": "t-boots"}},
 }
 KEYS = ["class:Wizard", "class:Evocation", "race:Elf", "race:HighElf", "background:bg-1", "feat:Alert",
-        "spell:Fireball", "passive:Soldier"]
+        "spell:Fireball", "passive:Soldier", "item:MAG_Boots"]
+WIKI = {"MAG_Boots": {"uuid": "t-boots", "kind": "equipment", "rarity": "rare", "legacy": None, "locations": []},
+        "MAG_Gone": {"uuid": None, "kind": "equipment", "rarity": "rare", "legacy": "unobtainable",
+                     "locations": []}}
+
+
+def verify(folder: Path, counts=COUNTS, **kwargs):
+    """checks.verify on synthetic wiki items, no exclusion and no known duplicate, unless given."""
+    return checks.verify(folder, counts, **{"wiki": WIKI, "excluded": {}, "duplicates": [], **kwargs})
 META = {"game": "1.0", "modules": ["Shared"], "notice": {"en": "Notice.", "fr": "Mention."}}
 
 
@@ -53,7 +63,7 @@ class ChecksTest(unittest.TestCase):
 
     def problems(self, **kwargs):
         write(self.folder, **kwargs)
-        return checks.verify(self.folder, COUNTS, duplicates=[])
+        return verify(self.folder, COUNTS, duplicates=[])
 
     def test_coherent_folder(self):
         self.assertEqual(self.problems(), [])
@@ -70,7 +80,7 @@ class ChecksTest(unittest.TestCase):
         texts = json.loads(path.read_text(encoding="utf-8"))
         texts["spell:Fireball"]["name"] = " "
         path.write_text(json.dumps(texts), encoding="utf-8")
-        problems = checks.verify(self.folder, COUNTS, duplicates=[])
+        problems = verify(self.folder, COUNTS, duplicates=[])
         self.assertEqual(len(problems), 1)
         self.assertIn("spell:Fireball", problems[0])
 
@@ -101,11 +111,11 @@ class ChecksTest(unittest.TestCase):
     def test_unnamed_identifier_is_exempt(self):
         write(self.folder, keys=[k for k in KEYS if k != "passive:Soldier"],
               fr_keys=[k for k in KEYS if k != "passive:Soldier"])
-        self.assertEqual(checks.verify(self.folder, COUNTS, unnamed={"passive:Soldier"}, duplicates=[]), [])
+        self.assertEqual(verify(self.folder, COUNTS, unnamed={"passive:Soldier"}, duplicates=[]), [])
 
     def test_wrong_count(self):
         write(self.folder)
-        problems = checks.verify(self.folder, {**COUNTS, "feats": 41}, duplicates=[])
+        problems = verify(self.folder, {**COUNTS, "feats": 41}, duplicates=[])
         self.assertEqual(len(problems), 1)
         self.assertIn("feats", problems[0])
 
@@ -117,19 +127,19 @@ class ChecksTest(unittest.TestCase):
         rules["progressions"].append({**rules["progressions"][1], "table": "t-evo", "uuid": "p5",
                                       "multiclass": True})
         write(self.folder, rules=rules)
-        problems = checks.verify(self.folder, COUNTS, duplicates=[])
+        problems = verify(self.folder, COUNTS, duplicates=[])
         self.assertTrue(any("p1" in p and "p2" in p for p in problems), problems)
         self.assertFalse(any("p5" in p for p in problems))
         known = [frozenset({"p1", "p2"})]
-        self.assertFalse(any("duplicate" in p for p in checks.verify(self.folder, COUNTS, duplicates=known)))
-        stale = checks.verify(self.folder, COUNTS, duplicates=known + [frozenset({"p3", "p9"})])
+        self.assertFalse(any("duplicate" in p for p in verify(self.folder, COUNTS, duplicates=known)))
+        stale = verify(self.folder, COUNTS, duplicates=known + [frozenset({"p3", "p9"})])
         self.assertTrue(any("known_duplicates" in p and "p9" in p for p in stale))
 
     def test_new_counts(self):
         write(self.folder)
         counts = {"progressions": 4, "lists": 2, "spells": 1, "passives": 1}
-        self.assertEqual(checks.verify(self.folder, counts, duplicates=[]), [])
-        problems = checks.verify(self.folder, {"progressions": 663, "lists": 342, "spells": 416, "passives": 475},
+        self.assertEqual(verify(self.folder, counts, duplicates=[]), [])
+        problems = verify(self.folder, {"progressions": 663, "lists": 342, "spells": 416, "passives": 475},
                                  duplicates=[])
         self.assertEqual(len(problems), 4)
         self.assertEqual(checks.COUNTS["progressions"], 663)
@@ -167,6 +177,36 @@ class ChecksTest(unittest.TestCase):
         self.assertTrue(any("UntilLongRest" in p for p in problems))
         self.assertEqual(checks.PREPARE_VALUES, {None, "AlwaysPrepared"})
         self.assertEqual(checks.COOLDOWN_VALUES, {None, "UntilRest"})
+
+    def test_item_needs_texts_in_both_languages(self):
+        problems = self.problems(fr_keys=[k for k in KEYS if k != "item:MAG_Boots"])
+        self.assertEqual(len(problems), 1)
+        self.assertIn("item:MAG_Boots", problems[0])
+        self.assertIn("French", problems[0])
+
+    def test_every_obtainable_wiki_item_is_an_item(self):
+        write(self.folder)
+        wiki = {**WIKI, "WPN_Sword": {**WIKI["MAG_Boots"], "uuid": None}}
+        problems = verify(self.folder, wiki=wiki)
+        self.assertEqual(len(problems), 1)
+        self.assertIn("WPN_Sword", problems[0])
+        self.assertEqual(verify(self.folder, wiki=wiki, excluded={"WPN_Sword": "reason"}), [])
+
+    def test_item_outside_the_scope(self):
+        write(self.folder)
+        problems = verify(self.folder, wiki={"MAG_Gone": WIKI["MAG_Gone"]})
+        self.assertEqual(len(problems), 1)
+        self.assertIn("MAG_Boots", problems[0])
+        problems = verify(self.folder, excluded={"MAG_Boots": "reason"})
+        self.assertEqual(len(problems), 1)
+        self.assertIn("MAG_Boots", problems[0])
+
+    def test_items_count(self):
+        write(self.folder)
+        self.assertEqual(verify(self.folder, {"items": 1}), [])
+        problems = verify(self.folder, {"items": 2})
+        self.assertEqual(len(problems), 1)
+        self.assertIn("items", problems[0])
 
     def test_missing_notice(self):
         problems = self.problems(meta={"game": "1.0", "notice": {"en": "Notice.", "fr": ""}})
