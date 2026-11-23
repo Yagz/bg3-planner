@@ -7272,481 +7272,2453 @@
   }
  },
  "passives": {
-  "AccursedSpecter": {},
-  "AcolyteOfNature": {},
-  "Actor": {},
-  "AgonizingBlast": {},
-  "Alert": {},
-  "ArcaneShot": {},
-  "ArcaneWard": {},
-  "ArcaneWard_Cast": {},
-  "ArmorOfHexes": {},
-  "ArmorOfShadows": {},
-  "AspectOfTheBeast_Bear": {},
-  "AspectOfTheBeast_Chimpanzee": {},
-  "AspectOfTheBeast_Crocodile": {},
-  "AspectOfTheBeast_Eagle": {},
-  "AspectOfTheBeast_Elk": {},
-  "AspectOfTheBeast_HoneyBadger": {},
-  "AspectOfTheBeast_Stallion": {},
-  "AspectOfTheBeast_Tiger": {},
-  "AspectOfTheBeast_Wolf": {},
-  "AspectOfTheBeast_Wolverine": {},
-  "Assassinate_Ambush": {},
-  "Assassinate_Initiative": {},
-  "Assassinate_Resource": {},
-  "Athlete_StandUp": {},
-  "Background_Acolyte": {},
-  "Background_AstralZealot": {},
-  "Background_BladeOfFrontiers": {},
-  "Background_BloodWarVeteran": {},
-  "Background_Charlatan": {},
-  "Background_CloisteredStray": {},
-  "Background_Criminal": {},
-  "Background_Entertainer": {},
-  "Background_FolkHero": {},
-  "Background_GroveKeeper": {},
-  "Background_GuildArtisan": {},
-  "Background_HauntedOne": {},
-  "Background_LegendOfBaldur'sGate": {},
-  "Background_Noble": {},
-  "Background_Outlander": {},
-  "Background_Sage": {},
-  "Background_Soldier": {},
-  "Background_TricksterHedonist": {},
-  "Background_UnderdarkExile": {},
-  "Background_Urchin": {},
-  "Background_VeteranMentor": {},
-  "Background_WaterdavianMagus": {},
-  "BardSpellcasting": {},
-  "BardicInspiration": {},
-  "BardicInspiration_d10": {},
-  "BardicInspiration_d8": {},
-  "BeastSpeech": {},
-  "BeguilingDefenses": {},
-  "BeguilingInfluence": {},
-  "BendLuck": {},
-  "BestialFury": {},
-  "Bladesong_Armor_Message": {},
-  "Bladesong_Shield": {},
-  "Bladesong_Shield_Message": {},
-  "Bladesong_Unarmed": {},
-  "Bladesong_Weapon": {},
-  "Bladesong_Weapon_Message": {},
-  "BlessedHealer": {},
-  "BookOfAncientSecrets": {},
-  "BrutalCritical": {},
-  "Charger": {},
-  "CheekyTipple": {},
-  "CheekyTipple_Drunk": {},
-  "ClarifiedMortality": {},
-  "ColossusSlayer": {},
-  "CombatInspiration": {},
-  "CommanderStrike_Maneuver": {},
-  "CompanionsBond": {},
-  "ControlledChaos": {},
-  "CosmicOmen": {},
-  "CosmicOmen_Ability": {},
-  "CosmicOmen_Rest": {},
-  "CrossbowExpert_PointBlank": {},
-  "CrossbowExpert_Wounding": {},
-  "CurvingShot": {},
-  "CuttingWords": {},
-  "DampenElements": {},
-  "DangerSense": {},
-  "DarkOnesBlessing": {},
-  "DarkOnesOwnLuck": {},
-  "Darkvision": {},
-  "DeepGnome_StoneCamouflage": {},
-  "DefensiveDuelist": {},
-  "DeflectMissiles": {},
-  "DestroyUndead": {},
-  "DestructiveWrath": {},
-  "DevilsSight": {},
-  "DisarmingAttack": {},
-  "DiscipleOfLife": {},
-  "DistractingStrike": {},
-  "DivineAllegiance": {},
-  "DivineHealth": {},
-  "DivineIntervention": {},
-  "Divine_Strike_Death": {},
-  "Divine_Strike_Life_Toggle": {},
-  "Divine_Strike_Nature_Toggle": {},
-  "Divine_Strike_Tempest_Toggle": {},
-  "Divine_Strike_Trickery_Toggle": {},
-  "Divine_Strike_War_Toggle": {},
-  "DomainSpells": {},
-  "DraconicAncestry_Black": {},
-  "DraconicAncestry_Blue": {},
-  "DraconicAncestry_Brass": {},
-  "DraconicAncestry_Bronze": {},
-  "DraconicAncestry_Copper": {},
-  "DraconicAncestry_Gold": {},
-  "DraconicAncestry_Green": {},
-  "DraconicAncestry_Red": {},
-  "DraconicAncestry_Silver": {},
-  "DraconicAncestry_White": {},
-  "DraconicResilience": {},
-  "Dragonborn_Resistance_Acid": {},
-  "Dragonborn_Resistance_Cold": {},
-  "Dragonborn_Resistance_Fire": {},
-  "Dragonborn_Resistance_Lightning": {},
-  "Dragonborn_Resistance_Poison": {},
-  "DreadAmbusher": {},
-  "DreadfulWord": {},
-  "Drow_DrowWeaponTraining": {},
-  "DrunkardsLuck": {},
-  "DrunkenPerformance": {},
-  "DualWielder_BonusAC": {},
-  "DualWielder_PassiveBonuses": {},
-  "Duergar_DuergarResilience": {},
-  "DungeonDelver_Perception": {},
-  "DungeonDelver_ResistTraps": {},
-  "Durable": {},
-  "Dwarf_DwarvenCombatTraining": {},
-  "Dwarf_DwarvenResilience": {},
-  "EldritchStrike": {},
-  "ElementalAdept_Acid": {},
-  "ElementalAdept_Cold": {},
-  "ElementalAdept_Fire": {},
-  "ElementalAdept_Lightning": {},
-  "ElementalAdept_Thunder": {},
-  "ElementalAffinity_Damage": {},
-  "ElementalAffinity_Resistance_Check": {},
-  "Elf_WeaponTraining": {},
-  "EmpoweredEvocation": {},
-  "EntropicWard": {},
-  "EscapeTheHorde": {},
-  "Evasion": {},
-  "EvasiveFootwork": {},
-  "ExceptionalTraining": {},
-  "ExperimentalAlchemy": {},
-  "ExpertDivination": {},
-  "ExtraAttack": {},
-  "ExtraAttack_2": {},
-  "EyesOfTheDark": {},
-  "FancyFootwork": {},
-  "FastHands": {},
-  "FastMovement": {},
-  "FavoredEnemy_BountyHunter": {},
-  "FavoredEnemy_KeeperOfTheVeil": {},
-  "FavoredEnemy_MageBreaker": {},
-  "FavoredEnemy_RangerKnight": {},
-  "FavoredEnemy_SanctifiedStalker": {},
-  "FeintingAttack": {},
-  "FeralInstinct": {},
-  "FeyAncestry": {},
-  "FiendishResilience": {},
-  "FiendishVigor": {},
-  "FightingStyle_Archery": {},
-  "FightingStyle_Defense": {},
-  "FightingStyle_Dueling": {},
-  "FightingStyle_GreatWeaponFighting": {},
-  "FightingStyle_Protection": {},
-  "FightingStyle_TwoWeaponFighting": {},
-  "FlurryOfBlowsUnlock": {},
-  "FocusedConjuration": {},
-  "FontOfInspiration": {},
-  "FungalInfestation": {},
-  "GiantKiller": {},
-  "Giants_CarryCapacity": {},
-  "Gith_MartialProdigy": {},
-  "Gnome_Cunning": {},
-  "GoadingAttack": {},
-  "GreatWeaponMaster_BonusAttack": {},
-  "GreatWeaponMaster_BonusDamage": {},
-  "GrimHarvest": {},
-  "Halfling_Brave": {},
-  "Halfling_LightfootStealth": {},
-  "Halfling_Lucky": {},
-  "Halfling_StoutResilience": {},
-  "HeartOfTheStorm": {},
-  "HeartOfTheStorm_Resistance": {},
-  "HeavilyArmored": {},
-  "HeavyArmorMaster": {},
-  "HexWarrior": {},
-  "HexbladesCurse": {},
-  "HordeBreaker": {},
-  "HumanMilitia": {},
-  "HumanVersatility": {},
-  "HuntersMark_Swarmkeeper": {},
-  "IllusorySelf": {},
-  "ImprovedAbjuration": {},
-  "ImprovedCombatSuperiority": {},
-  "ImprovedCritical": {},
-  "ImprovedDivineSmite": {},
-  "ImprovedElementalCasting": {},
-  "ImprovedMinorIllusion": {},
-  "Indomitable": {},
-  "InescapableDestruction": {},
-  "InstinctiveCharm": {},
-  "InuredtoUndeath": {},
-  "IronMind": {},
-  "JackOfAllTrades": {},
-  "KiEmpoweredStrikes": {},
-  "Land_Arctic": {},
-  "Land_Arctic_2": {},
-  "Land_Arctic_3": {},
-  "Land_Arctic_4": {},
-  "Land_Coast": {},
-  "Land_Coast_2": {},
-  "Land_Coast_3": {},
-  "Land_Coast_4": {},
-  "Land_Desert": {},
-  "Land_Desert_2": {},
-  "Land_Desert_3": {},
-  "Land_Desert_4": {},
-  "Land_Forest": {},
-  "Land_Forest_2": {},
-  "Land_Forest_3": {},
-  "Land_Forest_4": {},
-  "Land_Grassland": {},
-  "Land_Grassland_2": {},
-  "Land_Grassland_3": {},
-  "Land_Grassland_4": {},
-  "Land_Mountain": {},
-  "Land_Mountain_2": {},
-  "Land_Mountain_3": {},
-  "Land_Mountain_4": {},
-  "Land_Swamp": {},
-  "Land_Swamp_2": {},
-  "Land_Swamp_3": {},
-  "Land_Swamp_4": {},
-  "Land_Underdark": {},
-  "Land_Underdark_2": {},
-  "Land_Underdark_3": {},
-  "Land_Underdark_4": {},
-  "LandsStride_Advantage": {},
-  "LandsStride_DifficultTerrain": {},
-  "LandsStride_Surfaces": {},
-  "LeapToYourFeet": {},
-  "LifeOfTheParty": {},
-  "Lifedrinker": {},
-  "LightlyArmored": {},
-  "Lucky": {},
-  "Lucky_Unlock": {},
-  "MageHandLegerdemain": {},
-  "MageSlayer_Advantage": {},
-  "MageSlayer_AttackCaster": {},
-  "MageSlayer_BreakConcentration": {},
-  "MagicArrow": {},
-  "MagicInitiate_Bard": {},
-  "MagicInitiate_Cleric": {},
-  "MagicInitiate_Druid": {},
-  "MagicInitiate_Sorcerer": {},
-  "MagicInitiate_Warlock": {},
-  "MagicInitiate_Wizard": {},
-  "MagicalAmbush": {},
-  "ManeuveringAttack": {},
-  "Manifestation_of_Body": {},
-  "Manifestation_of_Mind": {},
-  "Manifestation_of_Soul": {},
-  "MantleOfInspiration_Unlock": {},
-  "MantleOfInspiration_Unlock2": {},
-  "MantleOfInspiration_Unlock3": {},
-  "MartialAdept": {},
-  "MartialArts_BonusUnarmedStrike": {},
-  "MartialArts_DextrousUnarmedAttacks": {},
-  "MartialArts_UnarmedDamage": {},
-  "MaskOfManyFaces": {},
-  "MediumArmorMaster": {},
-  "MenacingAttack": {},
-  "Metamagic_Careful": {},
-  "Metamagic_Distant": {},
-  "Metamagic_Extended": {},
-  "Metamagic_Heightened": {},
-  "Metamagic_Quickened": {},
-  "Metamagic_Subtle": {},
-  "Metamagic_Twinned": {},
-  "MightySwarm": {},
-  "MindlessRage": {},
-  "MinionsOfChaos": {},
-  "MireTheMind": {},
-  "MistyEscape": {},
-  "Mobile_CounterAttackOfOpportunity": {},
-  "Mobile_DashAcrossDifficultTerrain": {},
-  "Mobile_PassiveBonuses": {},
-  "ModeratelyArmored": {},
-  "Monk_SoundSwitch": {},
-  "MountainDwarf_DwarvenArmorTraining": {},
-  "MultiattackDefense": {},
-  "NaturalExplorer_BeastTamer": {},
-  "NaturalExplorer_UrbanTracker": {},
-  "NaturalExplorer_WastelandWander_Cold": {},
-  "NaturalExplorer_WastelandWander_Fire": {},
-  "NaturalExplorer_WastelandWander_Poison": {},
-  "NaturesWard": {},
-  "Oath_Ancients_Tenents": {},
-  "Oath_Crown_Tenents": {},
-  "Oath_Devotion_Tenents": {},
-  "Oath_Vengeance_Tenents": {},
-  "OneWithShadows": {},
-  "OtherworldlyLeap": {},
-  "PactOfTheBlade_Hex": {},
-  "PactOfTheChain": {},
-  "PactOfTheTome": {},
-  "Performer": {},
-  "PolearmMaster_AttackOfOpportunity": {},
-  "PolearmMaster_BonusAttack": {},
-  "Portent": {},
-  "PotentCantrip": {},
-  "PotentSpellcasting": {},
-  "PrecisionAttack": {},
-  "PrimalStrike": {},
-  "Proficiency_Battleaxes": {},
-  "Proficiency_Clubs": {},
-  "Proficiency_Daggers": {},
-  "Proficiency_Flails": {},
-  "Proficiency_Glaives": {},
-  "Proficiency_Greataxe": {},
-  "Proficiency_Greatclub": {},
-  "Proficiency_Greatswords": {},
-  "Proficiency_Halberds": {},
-  "Proficiency_HandCrossbows": {},
-  "Proficiency_Handaxes": {},
-  "Proficiency_HeavyCrossbows": {},
-  "Proficiency_Javelins": {},
-  "Proficiency_LightCrossbows": {},
-  "Proficiency_LightHammers": {},
-  "Proficiency_Longbows": {},
-  "Proficiency_Longswords": {},
-  "Proficiency_Maces": {},
-  "Proficiency_Mauls": {},
-  "Proficiency_Morningstars": {},
-  "Proficiency_Pikes": {},
-  "Proficiency_Quarterstaffs": {},
-  "Proficiency_Rapiers": {},
-  "Proficiency_Scimitars": {},
-  "Proficiency_Shortbows": {},
-  "Proficiency_Shortswords": {},
-  "Proficiency_Sickles": {},
-  "Proficiency_Spears": {},
-  "Proficiency_Tridents": {},
-  "Proficiency_Warhammers": {},
-  "Proficiency_Warpicks": {},
-  "ProjectedWard": {},
-  "PurityOfBody": {},
-  "PushingAttack": {},
-  "RageFrenzyUnlock": {},
-  "RageGiantUnlock": {},
-  "RageUnlock": {},
-  "Rage_Armour_Message": {},
-  "Rage_NoHeavyArmour_VFX": {},
-  "RakishAudacity": {},
-  "Rally": {},
-  "Reaper": {},
-  "RecklessAttack": {},
-  "RedirectAttack_Unlock": {},
-  "RelentlessAvenger": {},
-  "RelentlessEndurance": {},
-  "RelentlessRage": {},
-  "ReliableTalent": {},
-  "RemarkableAthlete_Jump": {},
-  "RemarkableAthlete_Proficiency": {},
-  "RepellingBlast": {},
-  "Resilient_Charisma": {},
-  "Resilient_Constitution": {},
-  "Resilient_Dexterity": {},
-  "Resilient_Intelligence": {},
-  "Resilient_Strength": {},
-  "Resilient_Wisdom": {},
-  "Riposte": {},
-  "RitualCaster_FreeSpells": {},
-  "RockGnome_ArtificersLore": {},
-  "SavageAttacker": {},
-  "SavageAttacks": {},
-  "SculptSpells": {},
-  "SculptorOfFlesh": {},
-  "SecondStoryWork": {},
-  "Sentinel_Attack": {},
-  "Sentinel_OpportunityAdvantage": {},
-  "Sentinel_ZeroSpeed": {},
-  "Shapechanger": {},
-  "Sharpshooter_AllIn": {},
-  "Sharpshooter_Bonuses": {},
-  "ShieldMaster_Block": {},
-  "ShieldMaster_PassiveBonuses": {},
-  "SignOfIllOmen": {},
-  "Skilled": {},
-  "SlowFall": {},
-  "Smite_Divine": {},
-  "SneakAttackSwitch": {},
-  "SneakAttack_Unlock": {},
-  "SongOfDefense": {},
-  "SongOfDefense_6": {},
-  "SpellSniper_Critical": {},
-  "SplitEnchantment": {},
-  "SpreadingSpores": {},
-  "StalkersFlurry": {},
-  "StarryForm": {},
-  "SteelWill": {},
-  "StillnessOfMind": {},
-  "StormsFury": {},
-  "StrengthOfTheGrave": {},
-  "SuperiorDarkvision": {},
-  "Swarmkeeper_Bee": {},
-  "Swarmkeeper_Jellyfish": {},
-  "Swarmkeeper_Moth": {},
-  "SweepingAttack": {},
-  "TavernBrawler": {},
-  "TempestuousMagic": {},
-  "ThiefOfFiveFates": {},
-  "ThirstingBlade_Blade": {},
-  "ThirstingBlade_Check": {},
-  "ThirstingBlade_Tome": {},
-  "Thought_Shield_Psychic_Reflection": {},
-  "Thought_Shield_Psychic_Resistance": {},
-  "ThunderboltStrike": {},
-  "TidesOfChaos": {},
-  "TidesOfChaos_Unlock": {},
-  "Tiefling_HellishResistance": {},
-  "TotemSpirit_Bear": {},
-  "TotemSpirit_Eagle": {},
-  "TotemSpirit_Elk": {},
-  "TotemSpirit_Tiger": {},
-  "TotemSpirit_Wolf": {},
-  "TouchOfDeath": {},
-  "Tough": {},
-  "TraininginWarandSong": {},
-  "Tranquility": {},
-  "TransmutationStone": {},
-  "TransmutationStone_Activation": {},
-  "TripAttack": {},
-  "TwinklingConstellations": {},
-  "UnarmoredDefense_Monk": {},
-  "UnarmoredMovement_1": {},
-  "UnarmoredMovement_2": {},
-  "UnarmoredMovement_3": {},
-  "UnarmoredMovement_DifficultTerrain": {},
-  "UnarmouredDefence_Barbarian": {},
-  "UncannyDodge": {},
-  "UndeadThrall_BetterSummon": {},
-  "UndeadThrall_ExtraSummon": {},
-  "UndeadThrall_FreeSpell": {},
-  "UnlockedSpellSlotLevel1": {},
-  "UnlockedSpellSlotLevel2": {},
-  "UnlockedSpellSlotLevel3": {},
-  "UnlockedWarlockSpellSlotLevel1": {},
-  "UnlockedWarlockSpellSlotLevel2": {},
-  "UnlockedWarlockSpellSlotLevel3": {},
-  "Unstable_Backlash": {},
-  "WarCaster_Bonuses": {},
-  "WarCaster_OpportunitySpell": {},
-  "WarGodsBlessing": {},
-  "WarMagic": {},
-  "WarPriest": {},
-  "WardingFlare": {},
-  "WardingFlare_Improved": {},
-  "WeaponMaster": {},
-  "WhispersOfTheGrave": {},
-  "WildMagic": {},
-  "WildMagicRage": {},
-  "WildShape_Combat": {},
-  "WildStrike": {},
-  "WildStrike_2": {},
-  "WrathOfTheStorm": {},
-  "WrithingTide": {},
-  "WrithingTide_Technical": {}
+  "AccursedSpecter": {
+   "boosts": [
+    "UnlockInterrupt(Interrupt_AccursedSpecter)"
+   ]
+  },
+  "AcolyteOfNature": {
+   "boosts": []
+  },
+  "Actor": {
+   "boosts": [
+    "ProficiencyBonus(Skill,Deception)",
+    "ExpertiseBonus(Deception)",
+    "ProficiencyBonus(Skill,Performance)",
+    "ExpertiseBonus(Performance)",
+    "Ability(Charisma, 1)"
+   ]
+  },
+  "AgonizingBlast": {
+   "boosts": [
+    "IF(SpellId('Projectile_EldritchBlast') and IsCharismaModifierPositive()):DamageBonus(CharismaModifier,Force)"
+   ]
+  },
+  "Alert": {
+   "boosts": [
+    "Initiative(5)",
+    "StatusImmunity(SURPRISED)"
+   ]
+  },
+  "ArcaneShot": {
+   "boosts": [
+    "IF(SpellId('Projectile_ArcaneShot_BeguilingArrow') and not TotalDamageDoneGreaterThan(0)):DamageBonus(2d6,Psychic,Magical)",
+    "IF(SpellId('Projectile_ArcaneShot_ShadowArrow') and not TotalDamageDoneGreaterThan(0)):DamageBonus(2d6,Psychic,Magical)",
+    "IF(SpellId('Projectile_ArcaneShot_EnfeeblingArrow') and not TotalDamageDoneGreaterThan(0)):DamageBonus(2d6,Necrotic,Magical)",
+    "IF(SpellId('Projectile_ArcaneShot_GraspingArrow') and not TotalDamageDoneGreaterThan(0)):DamageBonus(2d6,Poison,Magical)",
+    "IF(SpellId('Projectile_ArcaneShot_SeekingArrow') and not TotalDamageDoneGreaterThan(0)):DamageBonus(1d6,Force,Magical)"
+   ]
+  },
+  "ArcaneWard": {
+   "boosts": []
+  },
+  "ArcaneWard_Cast": {
+   "boosts": []
+  },
+  "ArmorOfHexes": {
+   "boosts": [
+    "UnlockInterrupt(Interrupt_ArmorOfHexes)"
+   ]
+  },
+  "ArmorOfShadows": {
+   "boosts": [
+    "UnlockSpell(Shout_MageArmor_ArmorOfShadows,Singular)"
+   ]
+  },
+  "AspectOfTheBeast_Bear": {
+   "boosts": [
+    "CarryCapacityMultiplier(2)",
+    "Advantage(Ability, Strength)"
+   ]
+  },
+  "AspectOfTheBeast_Chimpanzee": {
+   "boosts": [
+    "FallDamageMultiplier(0.5)"
+   ]
+  },
+  "AspectOfTheBeast_Crocodile": {
+   "boosts": [
+    "ActionResource(Movement,3,0)",
+    "Tag(SLIPPING_ADV)"
+   ]
+  },
+  "AspectOfTheBeast_Eagle": {
+   "boosts": [
+    "DarkvisionRangeMin(12)",
+    "ActiveCharacterLight(051648e6-f05a-e41f-e398-ffd5cd148989)",
+    "Advantage(Skill,Perception)"
+   ]
+  },
+  "AspectOfTheBeast_Elk": {
+   "boosts": [
+    "UnlockSpell(Shout_AspectOfTheElk)"
+   ]
+  },
+  "AspectOfTheBeast_HoneyBadger": {
+   "boosts": []
+  },
+  "AspectOfTheBeast_Stallion": {
+   "boosts": []
+  },
+  "AspectOfTheBeast_Tiger": {
+   "boosts": [
+    "ProficiencyBonus(Skill,Survival)",
+    "IF(HasStatus('BLEEDING',context.Target)):RollBonus(Attack, StrengthModifier)",
+    "IF(HasStatus('SG_Poisoned',context.Target)):RollBonus(Attack, StrengthModifier)"
+   ]
+  },
+  "AspectOfTheBeast_Wolf": {
+   "boosts": [
+    "ProficiencyBonus(Skill,Stealth)",
+    "UnlockSpell(Shout_AspectOfTheWolf)"
+   ]
+  },
+  "AspectOfTheBeast_Wolverine": {
+   "boosts": []
+  },
+  "Assassinate_Ambush": {
+   "boosts": [
+    "IF(HasStatus('SURPRISED')):CriticalDamageOnHit()"
+   ]
+  },
+  "Assassinate_Initiative": {
+   "boosts": [
+    "IF(Combat(context.Source) and Combat() and not HadTurnInCombat()):Advantage(AttackRoll)"
+   ]
+  },
+  "Assassinate_Resource": {
+   "boosts": []
+  },
+  "Athlete_StandUp": {
+   "boosts": [
+    "JumpMaxDistanceMultiplier(1.5)"
+   ]
+  },
+  "Background_Acolyte": {
+   "boosts": [
+    "ProficiencyBonus(Skill,Insight)",
+    "ProficiencyBonus(Skill,Religion)"
+   ]
+  },
+  "Background_AstralZealot": {
+   "boosts": [
+    "ProficiencyBonus(Skill,Athletics)",
+    "ProficiencyBonus(Skill,Intimidation)"
+   ]
+  },
+  "Background_BladeOfFrontiers": {
+   "boosts": [
+    "ProficiencyBonus(Skill,Athletics)",
+    "ProficiencyBonus(Skill,Persuasion)"
+   ]
+  },
+  "Background_BloodWarVeteran": {
+   "boosts": [
+    "ProficiencyBonus(Skill,Athletics)",
+    "ProficiencyBonus(Skill,Survival)"
+   ]
+  },
+  "Background_Charlatan": {
+   "boosts": [
+    "ProficiencyBonus(Skill,Deception)",
+    "ProficiencyBonus(Skill,SleightOfHand)"
+   ]
+  },
+  "Background_CloisteredStray": {
+   "boosts": [
+    "ProficiencyBonus(Skill,Religion)",
+    "ProficiencyBonus(Skill,Survival)"
+   ]
+  },
+  "Background_Criminal": {
+   "boosts": [
+    "ProficiencyBonus(Skill,Deception)",
+    "ProficiencyBonus(Skill,Stealth)"
+   ]
+  },
+  "Background_Entertainer": {
+   "boosts": [
+    "ProficiencyBonus(Skill,Acrobatics)",
+    "ProficiencyBonus(Skill,Performance)"
+   ]
+  },
+  "Background_FolkHero": {
+   "boosts": [
+    "ProficiencyBonus(Skill,AnimalHandling)",
+    "ProficiencyBonus(Skill,Survival)"
+   ]
+  },
+  "Background_GroveKeeper": {
+   "boosts": [
+    "ProficiencyBonus(Skill,AnimalHandling)",
+    "ProficiencyBonus(Skill,Nature)"
+   ]
+  },
+  "Background_GuildArtisan": {
+   "boosts": [
+    "ProficiencyBonus(Skill,Insight)",
+    "ProficiencyBonus(Skill,Persuasion)"
+   ]
+  },
+  "Background_HauntedOne": {
+   "boosts": [
+    "ProficiencyBonus(Skill,Medicine)",
+    "ProficiencyBonus(Skill,Intimidation)"
+   ]
+  },
+  "Background_LegendOfBaldur'sGate": {
+   "boosts": [
+    "ProficiencyBonus(Skill,AnimalHandling)",
+    "ProficiencyBonus(Skill,Perception)"
+   ]
+  },
+  "Background_Noble": {
+   "boosts": [
+    "ProficiencyBonus(Skill,History)",
+    "ProficiencyBonus(Skill,Persuasion)"
+   ]
+  },
+  "Background_Outlander": {
+   "boosts": [
+    "ProficiencyBonus(Skill,Athletics)",
+    "ProficiencyBonus(Skill,Survival)"
+   ]
+  },
+  "Background_Sage": {
+   "boosts": [
+    "ProficiencyBonus(Skill,Arcana)",
+    "ProficiencyBonus(Skill,History)"
+   ]
+  },
+  "Background_Soldier": {
+   "boosts": [
+    "ProficiencyBonus(Skill,Athletics)",
+    "ProficiencyBonus(Skill,Intimidation)"
+   ]
+  },
+  "Background_TricksterHedonist": {
+   "boosts": [
+    "ProficiencyBonus(Skill,Deception)",
+    "ProficiencyBonus(Skill,Stealth)"
+   ]
+  },
+  "Background_UnderdarkExile": {
+   "boosts": [
+    "ProficiencyBonus(Skill,Deception)",
+    "ProficiencyBonus(Skill,Intimidation)"
+   ]
+  },
+  "Background_Urchin": {
+   "boosts": [
+    "ProficiencyBonus(Skill,SleightOfHand)",
+    "ProficiencyBonus(Skill,Stealth)"
+   ]
+  },
+  "Background_VeteranMentor": {
+   "boosts": [
+    "ProficiencyBonus(Skill,Insight)",
+    "ProficiencyBonus(Skill,Intimidation)"
+   ]
+  },
+  "Background_WaterdavianMagus": {
+   "boosts": [
+    "ProficiencyBonus(Skill,Arcana)",
+    "ProficiencyBonus(Skill,History)"
+   ]
+  },
+  "BardSpellcasting": {
+   "boosts": [
+    "UnlockSpellVariant(IsAnInstrumentRequired(),ModifyTargetRadius(Multiplicative,1))"
+   ]
+  },
+  "BardicInspiration": {
+   "boosts": [
+    "UnlockSpell(Target_BardicInspiration)"
+   ]
+  },
+  "BardicInspiration_d10": {
+   "boosts": []
+  },
+  "BardicInspiration_d8": {
+   "boosts": []
+  },
+  "BeastSpeech": {
+   "boosts": [
+    "UnlockSpell(Shout_SpeakWithAnimals_BeastSpeech)"
+   ]
+  },
+  "BeguilingDefenses": {
+   "boosts": [
+    "StatusImmunity(SG_Charmed)"
+   ]
+  },
+  "BeguilingInfluence": {
+   "boosts": [
+    "ProficiencyBonus(Skill,Deception)",
+    "ProficiencyBonus(Skill,Persuasion)"
+   ]
+  },
+  "BendLuck": {
+   "boosts": [
+    "UnlockSpell(Target_BendLuck)",
+    "UnlockInterrupt(Interrupt_BendLuck_Bonus)",
+    "UnlockInterrupt(Interrupt_BendLuck_Malus)"
+   ]
+  },
+  "BestialFury": {
+   "boosts": []
+  },
+  "Bladesong_Armor_Message": {
+   "boosts": []
+  },
+  "Bladesong_Shield": {
+   "boosts": []
+  },
+  "Bladesong_Shield_Message": {
+   "boosts": []
+  },
+  "Bladesong_Unarmed": {
+   "boosts": []
+  },
+  "Bladesong_Weapon": {
+   "boosts": []
+  },
+  "Bladesong_Weapon_Message": {
+   "boosts": []
+  },
+  "BlessedHealer": {
+   "boosts": []
+  },
+  "BookOfAncientSecrets": {
+   "boosts": [
+    "UnlockSpell(Target_Silence_BookOfAncientSecrets)",
+    "UnlockSpell(Projectile_RayOfSickness_BookOfAnceintSecrets)",
+    "UnlockSpell(Projectile_ChromaticOrb_BookOfAncientSecrets)"
+   ]
+  },
+  "BrutalCritical": {
+   "boosts": [
+    "CriticalHitExtraDice(1, MeleeWeaponAttack)",
+    "CriticalHitExtraDice(1, MeleeUnarmedAttack)"
+   ]
+  },
+  "Charger": {
+   "boosts": [
+    "UnlockSpell(Rush_Charger_Attack)",
+    "UnlockSpell(Rush_Charger_Push)"
+   ]
+  },
+  "CheekyTipple": {
+   "boosts": []
+  },
+  "CheekyTipple_Drunk": {
+   "boosts": []
+  },
+  "ClarifiedMortality": {
+   "boosts": []
+  },
+  "ColossusSlayer": {
+   "boosts": []
+  },
+  "CombatInspiration": {
+   "boosts": [
+    "UnlockSpell(Target_BardicInspiration_Combat)"
+   ]
+  },
+  "CommanderStrike_Maneuver": {
+   "boosts": [
+    "UnlockSpell(Target_CommandersStrike)"
+   ]
+  },
+  "CompanionsBond": {
+   "boosts": []
+  },
+  "ControlledChaos": {
+   "boosts": [
+    "UnlockInterrupt(Interrupt_ControlledChaos)"
+   ]
+  },
+  "CosmicOmen": {
+   "boosts": []
+  },
+  "CosmicOmen_Ability": {
+   "boosts": [
+    "UnlockSpell(Target_CosmicOmen_AbilityCheck)"
+   ]
+  },
+  "CosmicOmen_Rest": {
+   "boosts": []
+  },
+  "CrossbowExpert_PointBlank": {
+   "boosts": [
+    "IgnorePointBlankDisadvantage(Loading)"
+   ]
+  },
+  "CrossbowExpert_Wounding": {
+   "boosts": [
+    "UnlockSpellVariant(SpellId('Projectile_PiercingShot'), ModifyTooltipDescription())"
+   ]
+  },
+  "CurvingShot": {
+   "boosts": [
+    "UnlockInterrupt(Interrupt_CurvingShot)",
+    "ActionResource(CurvingShot_Charge,1,0)"
+   ]
+  },
+  "CuttingWords": {
+   "boosts": [
+    "UnlockInterrupt(Interrupt_CuttingWords)"
+   ]
+  },
+  "DampenElements": {
+   "boosts": [
+    "UnlockInterrupt(Interrupt_DampenElements)"
+   ]
+  },
+  "DangerSense": {
+   "boosts": [
+    "Advantage(SavingThrow,Dexterity)"
+   ]
+  },
+  "DarkOnesBlessing": {
+   "boosts": []
+  },
+  "DarkOnesOwnLuck": {
+   "boosts": [
+    "RollBonus(SkillCheck,1d10)",
+    "RollBonus(RawAbility,1d10)"
+   ]
+  },
+  "Darkvision": {
+   "boosts": [
+    "DarkvisionRangeMin(12)",
+    "ActiveCharacterLight(051648e6-f05a-e41f-e398-ffd5cd148989)"
+   ]
+  },
+  "DeepGnome_StoneCamouflage": {
+   "boosts": [
+    "Advantage(Skill,Stealth)"
+   ]
+  },
+  "DefensiveDuelist": {
+   "boosts": [
+    "UnlockInterrupt(Interrupt_DefensiveDuelist)"
+   ]
+  },
+  "DeflectMissiles": {
+   "boosts": [
+    "IF(not HasStatus('SG_Polymorph_BeastShape')):UnlockInterrupt(Interrupt_DeflectMissiles)",
+    "UnlockInterrupt(Interrupt_DeflectMissiles_Return)"
+   ]
+  },
+  "DestroyUndead": {
+   "boosts": []
+  },
+  "DestructiveWrath": {
+   "boosts": [
+    "UnlockInterrupt(Interrupt_DestructiveWrath)"
+   ]
+  },
+  "DevilsSight": {
+   "boosts": [
+    "DarkvisionRangeMin(24)",
+    "ActiveCharacterLight(c46e7ba8-e746-7020-5146-287474d7b9f7)",
+    "StatusImmunity(BLINDED_DARKNESS)",
+    "IgnoreSurfaceCover(SurfaceDarknessCloud)"
+   ]
+  },
+  "DisarmingAttack": {
+   "boosts": [
+    "UnlockSpell(Target_DisarmingAttack)",
+    "UnlockSpell(Projectile_DisarmingAttack)"
+   ]
+  },
+  "DiscipleOfLife": {
+   "boosts": []
+  },
+  "DistractingStrike": {
+   "boosts": [
+    "UnlockSpell(Target_DistractingStrike)",
+    "UnlockSpell(Projectile_DistractingStrike)"
+   ]
+  },
+  "DivineAllegiance": {
+   "boosts": [
+    "UnlockInterrupt(Interrupt_DivineAllegiance)"
+   ]
+  },
+  "DivineHealth": {
+   "boosts": [
+    "StatusImmunity(SG_Disease)"
+   ]
+  },
+  "DivineIntervention": {
+   "boosts": [
+    "Tag(DIVINE_INTERVENTION)"
+   ]
+  },
+  "Divine_Strike_Death": {
+   "boosts": [
+    "UnlockInterrupt(Interrupt_DivineStrike_Necrotic)",
+    "UnlockInterrupt(Interrupt_DivineStrike_Necrotic_Critical)",
+    "ActionResource(Interrupt_DivineStrike,1,0)"
+   ]
+  },
+  "Divine_Strike_Life_Toggle": {
+   "boosts": [
+    "UnlockInterrupt(Interrupt_DivineStrike_Radiant)",
+    "UnlockInterrupt(Interrupt_DivineStrike_Radiant_Critical)",
+    "ActionResource(Interrupt_DivineStrike,1,0)"
+   ]
+  },
+  "Divine_Strike_Nature_Toggle": {
+   "boosts": [
+    "UnlockInterrupt(Interrupt_DivineStrike_Cold)",
+    "UnlockInterrupt(Interrupt_DivineStrike_Cold_Critical)",
+    "UnlockInterrupt(Interrupt_DivineStrike_Fire)",
+    "UnlockInterrupt(Interrupt_DivineStrike_Fire_Critical)",
+    "UnlockInterrupt(Interrupt_DivineStrike_Lightning)",
+    "UnlockInterrupt(Interrupt_DivineStrike_Lightning_Critical)",
+    "ActionResource(Interrupt_DivineStrike,1,0)"
+   ]
+  },
+  "Divine_Strike_Tempest_Toggle": {
+   "boosts": [
+    "UnlockInterrupt(Interrupt_DivineStrike_Thunder)",
+    "UnlockInterrupt(Interrupt_DivineStrike_Thunder_Critical)",
+    "ActionResource(Interrupt_DivineStrike,1,0)"
+   ]
+  },
+  "Divine_Strike_Trickery_Toggle": {
+   "boosts": [
+    "UnlockInterrupt(Interrupt_DivineStrike_Poison)",
+    "UnlockInterrupt(Interrupt_DivineStrike_Poison_Critical)",
+    "ActionResource(Interrupt_DivineStrike,1,0)"
+   ]
+  },
+  "Divine_Strike_War_Toggle": {
+   "boosts": [
+    "UnlockInterrupt(Interrupt_DivineStrike_MeleeWeapon)",
+    "UnlockInterrupt(Interrupt_DivineStrike_MeleeWeapon_Critical)",
+    "UnlockInterrupt(Interrupt_DivineStrike_RangedWeapon)",
+    "UnlockInterrupt(Interrupt_DivineStrike_RangedWeapon_Critical)",
+    "ActionResource(Interrupt_DivineStrike,1,0)"
+   ]
+  },
+  "DomainSpells": {
+   "boosts": []
+  },
+  "DraconicAncestry_Black": {
+   "boosts": [
+    "UnlockSpell(Target_Grease,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Charisma)"
+   ]
+  },
+  "DraconicAncestry_Blue": {
+   "boosts": [
+    "UnlockSpell(Projectile_WitchBolt,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Charisma)"
+   ]
+  },
+  "DraconicAncestry_Brass": {
+   "boosts": [
+    "UnlockSpell(Target_Sleep,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Charisma)"
+   ]
+  },
+  "DraconicAncestry_Bronze": {
+   "boosts": [
+    "UnlockSpell(Target_FogCloud,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Charisma)"
+   ]
+  },
+  "DraconicAncestry_Copper": {
+   "boosts": [
+    "UnlockSpell(Target_HideousLaughter,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Charisma)"
+   ]
+  },
+  "DraconicAncestry_Gold": {
+   "boosts": [
+    "UnlockSpell(Shout_DisguiseSelf,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Charisma)"
+   ]
+  },
+  "DraconicAncestry_Green": {
+   "boosts": [
+    "UnlockSpell(Projectile_RayOfSickness,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Charisma)"
+   ]
+  },
+  "DraconicAncestry_Red": {
+   "boosts": [
+    "UnlockSpell(Zone_BurningHands,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Charisma)"
+   ]
+  },
+  "DraconicAncestry_Silver": {
+   "boosts": [
+    "UnlockSpell(Shout_FeatherFall,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Charisma)"
+   ]
+  },
+  "DraconicAncestry_White": {
+   "boosts": [
+    "UnlockSpell(Shout_ArmorOfAgathys,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Charisma)"
+   ]
+  },
+  "DraconicResilience": {
+   "boosts": [
+    "ACOverrideFormula(13,true,Dexterity)"
+   ]
+  },
+  "Dragonborn_Resistance_Acid": {
+   "boosts": [
+    "Resistance(Acid,Resistant)"
+   ]
+  },
+  "Dragonborn_Resistance_Cold": {
+   "boosts": [
+    "Resistance(Cold,Resistant)"
+   ]
+  },
+  "Dragonborn_Resistance_Fire": {
+   "boosts": [
+    "Resistance(Fire,Resistant)"
+   ]
+  },
+  "Dragonborn_Resistance_Lightning": {
+   "boosts": [
+    "Resistance(Lightning,Resistant)"
+   ]
+  },
+  "Dragonborn_Resistance_Poison": {
+   "boosts": [
+    "Resistance(Poison,Resistant)"
+   ]
+  },
+  "DreadAmbusher": {
+   "boosts": [
+    "Initiative(3)"
+   ]
+  },
+  "DreadfulWord": {
+   "boosts": [
+    "UnlockSpell(Target_Confusion,MostPowerful,e9127b70-22b7-42a1-b172-d02f828f260a)"
+   ]
+  },
+  "Drow_DrowWeaponTraining": {
+   "boosts": [
+    "Proficiency(Rapiers)",
+    "Proficiency(Shortswords)",
+    "Proficiency(HandCrossbows)"
+   ]
+  },
+  "DrunkardsLuck": {
+   "boosts": [
+    "UnlockInterrupt(Interupt_DrunkardsLuck)"
+   ]
+  },
+  "DrunkenPerformance": {
+   "boosts": []
+  },
+  "DualWielder_BonusAC": {
+   "boosts": [
+    "AC(1)"
+   ]
+  },
+  "DualWielder_PassiveBonuses": {
+   "boosts": [
+    "DualWielding(true)",
+    "DualWielding(false)"
+   ]
+  },
+  "Duergar_DuergarResilience": {
+   "boosts": [
+    "Tag(CHARMED_ADV)",
+    "Tag(PARALYZED_ADV)"
+   ]
+  },
+  "DungeonDelver_Perception": {
+   "boosts": [
+    "IF(Item()):Advantage(Skill,Perception)"
+   ]
+  },
+  "DungeonDelver_ResistTraps": {
+   "boosts": [
+    "IF(IsTrap()):Advantage(SavingThrow, Strength)",
+    "IF(IsTrap()):Advantage(SavingThrow, Wisdom)",
+    "IF(IsTrap()):Advantage(SavingThrow, Constitution)",
+    "IF(IsTrap()):Advantage(SavingThrow, Dexterity)",
+    "IF(IsTrap()):Advantage(SavingThrow, Intelligence)",
+    "IF(IsTrap()):Advantage(SavingThrow, Charisma)",
+    "IF(IsTrap()):DamageReduction(All,Half)"
+   ]
+  },
+  "Durable": {
+   "boosts": [
+    "Ability(Constitution,1,20)"
+   ]
+  },
+  "Dwarf_DwarvenCombatTraining": {
+   "boosts": [
+    "Proficiency(Battleaxes)",
+    "Proficiency(Handaxes)",
+    "Proficiency(LightHammers)",
+    "Proficiency(Warhammers)"
+   ]
+  },
+  "Dwarf_DwarvenResilience": {
+   "boosts": [
+    "Resistance(Poison, Resistant)",
+    "Tag(POISONED_ADV)"
+   ]
+  },
+  "EldritchStrike": {
+   "boosts": []
+  },
+  "ElementalAdept_Acid": {
+   "boosts": [
+    "IF(MainDamageTypeIs(DamageType.Acid)):MinimumRollResult(Damage,2)",
+    "IgnoreResistance(Acid,Resistant)"
+   ]
+  },
+  "ElementalAdept_Cold": {
+   "boosts": [
+    "IF(MainDamageTypeIs(DamageType.Cold)):MinimumRollResult(Damage,2)",
+    "IgnoreResistance(Cold,Resistant)"
+   ]
+  },
+  "ElementalAdept_Fire": {
+   "boosts": [
+    "IF(MainDamageTypeIs(DamageType.Fire)):MinimumRollResult(Damage,2)",
+    "IgnoreResistance(Fire,Resistant)"
+   ]
+  },
+  "ElementalAdept_Lightning": {
+   "boosts": [
+    "IF(MainDamageTypeIs(DamageType.Lightning)):MinimumRollResult(Damage,2)",
+    "IgnoreResistance(Lightning,Resistant)"
+   ]
+  },
+  "ElementalAdept_Thunder": {
+   "boosts": [
+    "IF(MainDamageTypeIs(DamageType.Thunder)):MinimumRollResult(Damage,2)",
+    "IgnoreResistance(Thunder,Resistant)"
+   ]
+  },
+  "ElementalAffinity_Damage": {
+   "boosts": []
+  },
+  "ElementalAffinity_Resistance_Check": {
+   "boosts": [
+    "UnlockInterrupt(Interrupt_ElementalAffinity)"
+   ]
+  },
+  "Elf_WeaponTraining": {
+   "boosts": [
+    "Proficiency(Longswords)",
+    "Proficiency(Shortswords)",
+    "Proficiency(Longbows)",
+    "Proficiency(Shortbows)"
+   ]
+  },
+  "EmpoweredEvocation": {
+   "boosts": [
+    "IF(IsSpell() and IsSpellSchool(SpellSchool.Evocation)):DamageBonus(max(0, IntelligenceModifier))"
+   ]
+  },
+  "EntropicWard": {
+   "boosts": [
+    "UnlockInterrupt(Interrupt_EntropicWard)",
+    "ActionResource(Interrupt_EntropicWard_Charge,1,0)"
+   ]
+  },
+  "EscapeTheHorde": {
+   "boosts": [
+    "IF(IsReactionAttack(context.Source)):Disadvantage(AttackTarget)"
+   ]
+  },
+  "Evasion": {
+   "boosts": [
+    "AreaDamageEvade()"
+   ]
+  },
+  "EvasiveFootwork": {
+   "boosts": [
+    "UnlockSpell(Shout_EvasiveFootwork)"
+   ]
+  },
+  "ExceptionalTraining": {
+   "boosts": []
+  },
+  "ExperimentalAlchemy": {
+   "boosts": [
+    "Tag(DOUBLE_ALCHEMY)"
+   ]
+  },
+  "ExpertDivination": {
+   "boosts": []
+  },
+  "ExtraAttack": {
+   "boosts": []
+  },
+  "ExtraAttack_2": {
+   "boosts": []
+  },
+  "EyesOfTheDark": {
+   "boosts": [
+    "DarkvisionRangeMin(24)",
+    "ActiveCharacterLight(c46e7ba8-e746-7020-5146-287474d7b9f7)"
+   ]
+  },
+  "FancyFootwork": {
+   "boosts": []
+  },
+  "FastHands": {
+   "boosts": [
+    "ActionResource(BonusActionPoint,1,0)"
+   ]
+  },
+  "FastMovement": {
+   "boosts": [
+    "ActionResource(Movement, 3, 0)"
+   ]
+  },
+  "FavoredEnemy_BountyHunter": {
+   "boosts": [
+    "ProficiencyBonus(Skill,Investigation)"
+   ]
+  },
+  "FavoredEnemy_KeeperOfTheVeil": {
+   "boosts": [
+    "ProficiencyBonus(Skill,Arcana)",
+    "UnlockSpell(Target_ProtectionFromEvilAndGood,Singular,None,UntilRest,Wisdom)"
+   ]
+  },
+  "FavoredEnemy_MageBreaker": {
+   "boosts": [
+    "ProficiencyBonus(Skill,Arcana)",
+    "UnlockSpell(Target_TrueStrike,,,,Wisdom)"
+   ]
+  },
+  "FavoredEnemy_RangerKnight": {
+   "boosts": [
+    "ProficiencyBonus(Skill,History)",
+    "Proficiency(HeavyArmor)"
+   ]
+  },
+  "FavoredEnemy_SanctifiedStalker": {
+   "boosts": [
+    "ProficiencyBonus(Skill,Religion)",
+    "UnlockSpell(Target_SacredFlame,,,,Wisdom)"
+   ]
+  },
+  "FeintingAttack": {
+   "boosts": [
+    "UnlockSpell(Target_FeintingAttack)"
+   ]
+  },
+  "FeralInstinct": {
+   "boosts": [
+    "Initiative(3)",
+    "StatusImmunity(SURPRISED)"
+   ]
+  },
+  "FeyAncestry": {
+   "boosts": [
+    "StatusImmunity(SLEEP)",
+    "StatusImmunity(POISON_DROW_CONDITION)",
+    "Tag(CHARMED_ADV)",
+    "StatusImmunity(SG_Sleeping_Magical)"
+   ]
+  },
+  "FiendishResilience": {
+   "boosts": [
+    "UnlockSpell(Target_Fiendish_Resilience_Container)"
+   ]
+  },
+  "FiendishVigor": {
+   "boosts": [
+    "UnlockSpell(Shout_FalseLife_FiendishVigor,Singular)"
+   ]
+  },
+  "FightingStyle_Archery": {
+   "boosts": [
+    "RollBonus(RangedWeaponAttack, 2)",
+    "RollBonus(RangedOffHandWeaponAttack, 2)"
+   ]
+  },
+  "FightingStyle_Defense": {
+   "boosts": [
+    "AC(1)"
+   ]
+  },
+  "FightingStyle_Dueling": {
+   "boosts": [
+    "IF(FightingStyle_Dueling(context.Source)):CharacterWeaponDamage(2)"
+   ]
+  },
+  "FightingStyle_GreatWeaponFighting": {
+   "boosts": [
+    "IF(FightingStyle_GreatWeapon(context.Source)):Reroll(MeleeWeaponDamage,2,true)"
+   ]
+  },
+  "FightingStyle_Protection": {
+   "boosts": [
+    "UnlockInterrupt(Interrupt_FightingStyle_Protection)"
+   ]
+  },
+  "FightingStyle_TwoWeaponFighting": {
+   "boosts": [
+    "TwoWeaponFighting()"
+   ]
+  },
+  "FlurryOfBlowsUnlock": {
+   "boosts": [
+    "UnlockSpell(Target_FlurryOfBlows)"
+   ]
+  },
+  "FocusedConjuration": {
+   "boosts": [
+    "ConcentrationIgnoreDamage(Conjuration)"
+   ]
+  },
+  "FontOfInspiration": {
+   "boosts": [
+    "ActionResourceReplenishTypeOverride(BardicInspiration,ShortRest)"
+   ]
+  },
+  "FungalInfestation": {
+   "boosts": [
+    "UnlockInterrupt(Interrupt_FungalInfestation)"
+   ]
+  },
+  "GiantKiller": {
+   "boosts": [
+    "UnlockInterrupt(Interrupt_GiantKiller)"
+   ]
+  },
+  "Giants_CarryCapacity": {
+   "boosts": [
+    "IF(Tagged('HUMAN')):CarryCapacityMultiplier(1.50)",
+    "IF(not Tagged('HUMAN')):CarryCapacityMultiplier(1.25)"
+   ]
+  },
+  "Gith_MartialProdigy": {
+   "boosts": [
+    "Proficiency(LightArmor)",
+    "Proficiency(MediumArmor)",
+    "Proficiency(Shortswords)",
+    "Proficiency(Longswords)",
+    "Proficiency(Greatswords)"
+   ]
+  },
+  "Gnome_Cunning": {
+   "boosts": [
+    "Advantage(SavingThrow, Intelligence)",
+    "Advantage(SavingThrow, Wisdom)",
+    "Advantage(SavingThrow, Charisma)"
+   ]
+  },
+  "GoadingAttack": {
+   "boosts": [
+    "UnlockSpell(Target_GoadingAttack)",
+    "UnlockSpell(Projectile_GoadingAttack)"
+   ]
+  },
+  "GreatWeaponMaster_BonusAttack": {
+   "boosts": []
+  },
+  "GreatWeaponMaster_BonusDamage": {
+   "boosts": [
+    "IF(GreatWeaponMaster(context.Source)):RollBonus(MeleeWeaponAttack, -5)",
+    "IF(GreatWeaponMaster(context.Source)):CharacterWeaponDamage(10)"
+   ]
+  },
+  "GrimHarvest": {
+   "boosts": []
+  },
+  "Halfling_Brave": {
+   "boosts": [
+    "Tag(FRIGHTENED_ADV)"
+   ]
+  },
+  "Halfling_LightfootStealth": {
+   "boosts": [
+    "Advantage(Skill,Stealth)"
+   ]
+  },
+  "Halfling_Lucky": {
+   "boosts": [
+    "Reroll(Attack,1,true)",
+    "Reroll(SkillCheck,1,true)",
+    "Reroll(RawAbility,1,true)",
+    "Reroll(SavingThrow,1,true)"
+   ]
+  },
+  "Halfling_StoutResilience": {
+   "boosts": [
+    "Resistance(Poison,Resistant)",
+    "Tag(POISONED_ADV)"
+   ]
+  },
+  "HeartOfTheStorm": {
+   "boosts": [
+    "UnlockInterrupt(Interrupt_HeartOfTheStorm_Lightning)",
+    "UnlockInterrupt(Interrupt_HeartOfTheStorm_Thunder)"
+   ]
+  },
+  "HeartOfTheStorm_Resistance": {
+   "boosts": [
+    "Resistance(Lightning, Resistant)",
+    "Resistance(Thunder, Resistant)"
+   ]
+  },
+  "HeavilyArmored": {
+   "boosts": [
+    "Ability(Strength, 1, 20)",
+    "Proficiency(HeavyArmor)"
+   ]
+  },
+  "HeavyArmorMaster": {
+   "boosts": [
+    "Ability(Strength, 1, 20)",
+    "IF(HasHeavyArmor() and not HasDamageEffectFlag(DamageFlags.Magical)):DamageReduction(Slashing, Flat, 3)",
+    "IF(HasHeavyArmor() and not HasDamageEffectFlag(DamageFlags.Magical)):DamageReduction(Bludgeoning, Flat, 3)",
+    "IF(HasHeavyArmor() and not HasDamageEffectFlag(DamageFlags.Magical)):DamageReduction(Piercing, Flat, 3)"
+   ]
+  },
+  "HexWarrior": {
+   "boosts": [
+    "Proficiency(MediumArmor)",
+    "Proficiency(Shields)",
+    "Proficiency(MartialWeapons)",
+    "UnlockSpell(Shout_Hexblade_Bind)"
+   ]
+  },
+  "HexbladesCurse": {
+   "boosts": [
+    "IF(HasStatus('HEXBLADES_CURSE',context.Target,context.Source)):DamageBonus(ProficiencyBonus)",
+    "IF(HasStatus('HEXBLADES_CURSE',context.Target,context.Source)):ReduceCriticalAttackThreshold(1)\""
+   ]
+  },
+  "HordeBreaker": {
+   "boosts": [
+    "UnlockSpell(Target_HordeBreaker,Singular)",
+    "UnlockSpell(Projectile_HordeBreaker,Singular)"
+   ]
+  },
+  "HumanMilitia": {
+   "boosts": [
+    "Proficiency(Spears)",
+    "Proficiency(Pikes)",
+    "Proficiency(Halberds)",
+    "Proficiency(Glaives)",
+    "Proficiency(LightArmor)",
+    "Proficiency(Shields)"
+   ]
+  },
+  "HumanVersatility": {
+   "boosts": [
+    "CarryCapacityMultiplier(1.25)"
+   ]
+  },
+  "HuntersMark_Swarmkeeper": {
+   "boosts": []
+  },
+  "IllusorySelf": {
+   "boosts": [
+    "UnlockInterrupt(Interrupt_IllusorySelf)",
+    "ActionResource(Interrupt_IllusorySelf_Charge,1,0)"
+   ]
+  },
+  "ImprovedAbjuration": {
+   "boosts": []
+  },
+  "ImprovedCombatSuperiority": {
+   "boosts": []
+  },
+  "ImprovedCritical": {
+   "boosts": [
+    "ReduceCriticalAttackThreshold(1)"
+   ]
+  },
+  "ImprovedDivineSmite": {
+   "boosts": [
+    "IF(IsMeleeAttack()):CharacterWeaponDamage(1d8,Radiant)"
+   ]
+  },
+  "ImprovedElementalCasting": {
+   "boosts": []
+  },
+  "ImprovedMinorIllusion": {
+   "boosts": [
+    "UnlockSpell(Target_ImprovedMinorIllusion)"
+   ]
+  },
+  "Indomitable": {
+   "boosts": [
+    "UnlockInterrupt(Interrupt_Indomitable)",
+    "ActionResource(Interrupt_Indomitable,1,0)"
+   ]
+  },
+  "InescapableDestruction": {
+   "boosts": [
+    "IgnoreResistance(Necrotic,Resistant)"
+   ]
+  },
+  "InstinctiveCharm": {
+   "boosts": [
+    "UnlockInterrupt(Interrupt_InstinctiveCharm)"
+   ]
+  },
+  "InuredtoUndeath": {
+   "boosts": [
+    "Resistance(Necrotic,Resistant)",
+    "StatusImmunity(HARM)",
+    "StatusImmunity(CURSE_MUMMY)",
+    "StatusImmunity(INCUBUS_DRAININGKISS)",
+    "StatusImmunity(HP_REDUCTION_VAMPIRE)",
+    "StatusImmunity(LIFE_DRAIN)",
+    "StatusImmunity(MOO_ABSOLUTES_CURSE)",
+    "StatusImmunity(MOO_BALTHAZARSSECRETS_HEARTALTAR)",
+    "StatusImmunity(LOW_ANCIENTLAIR_CURSE)"
+   ]
+  },
+  "IronMind": {
+   "boosts": [
+    "ProficiencyBonus(SavingThrow,Wisdom)",
+    "ProficiencyBonus(SavingThrow,Intelligence)"
+   ]
+  },
+  "JackOfAllTrades": {
+   "boosts": [
+    "IF(not HasProficiencyBonus(context.CheckedAbility,context.CheckedSkill,context.Source)):RollBonus(SkillCheck,ProficiencyBonus/2)",
+    "IF(not HasProficiencyBonus(context.CheckedAbility,context.CheckedSkill,context.Source)):RollBonus(RawAbility,ProficiencyBonus/2)"
+   ]
+  },
+  "KiEmpoweredStrikes": {
+   "boosts": [
+    "UnarmedMagicalProperty()"
+   ]
+  },
+  "Land_Arctic": {
+   "boosts": [
+    "UnlockSpell(Target_HoldPerson,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
+    "UnlockSpell(Target_SpikeGrowth,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
+   ]
+  },
+  "Land_Arctic_2": {
+   "boosts": [
+    "UnlockSpell(Target_SleetStorm,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
+    "UnlockSpell(Target_Haste,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
+   ]
+  },
+  "Land_Arctic_3": {
+   "boosts": [
+    "UnlockSpell(Target_ConjureElementals_Minor_Container,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
+    "UnlockSpell(Target_IceStorm,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
+   ]
+  },
+  "Land_Arctic_4": {
+   "boosts": [
+    "UnlockSpell(Zone_ConeOfCold,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
+    "UnlockSpell(Target_Contagion,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
+   ]
+  },
+  "Land_Coast": {
+   "boosts": [
+    "UnlockSpell(Shout_MirrorImage,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
+    "UnlockSpell(Target_MistyStep,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
+   ]
+  },
+  "Land_Coast_2": {
+   "boosts": [
+    "UnlockSpell(Target_SleetStorm,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
+    "UnlockSpell(Target_CallLightning,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
+   ]
+  },
+  "Land_Coast_3": {
+   "boosts": [
+    "UnlockSpell(Target_FreedomOfMovement,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
+    "UnlockSpell(Target_Confusion,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
+   ]
+  },
+  "Land_Coast_4": {
+   "boosts": [
+    "UnlockSpell(Target_ConjureElemental_Container,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
+    "UnlockSpell(Target_GreaterRestoration,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
+   ]
+  },
+  "Land_Desert": {
+   "boosts": [
+    "UnlockSpell(Shout_Blur,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
+    "UnlockSpell(Target_Silence,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
+   ]
+  },
+  "Land_Desert_2": {
+   "boosts": [
+    "UnlockSpell(Target_ProtectionFromEnergy,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
+    "UnlockSpell(Target_HypnoticPattern,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
+   ]
+  },
+  "Land_Desert_3": {
+   "boosts": [
+    "UnlockSpell(Target_Blight,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
+    "UnlockSpell(Wall_WallOfFire,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
+   ]
+  },
+  "Land_Desert_4": {
+   "boosts": [
+    "UnlockSpell(Wall_WallOfStone,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
+    "UnlockSpell(Target_InsectPlague,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
+   ]
+  },
+  "Land_Forest": {
+   "boosts": [
+    "UnlockSpell(Target_Barkskin,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
+    "UnlockSpell(Target_HoldPerson,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
+   ]
+  },
+  "Land_Forest_2": {
+   "boosts": [
+    "UnlockSpell(Target_CallLightning,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
+    "UnlockSpell(Target_PlantGrowth,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
+   ]
+  },
+  "Land_Forest_3": {
+   "boosts": [
+    "UnlockSpell(Target_ConjureElementals_Minor_Container,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
+    "UnlockSpell(Target_GraspingVine,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
+   ]
+  },
+  "Land_Forest_4": {
+   "boosts": [
+    "UnlockSpell(Target_CureWounds_Mass,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
+    "UnlockSpell(Target_Contagion,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
+   ]
+  },
+  "Land_Grassland": {
+   "boosts": [
+    "UnlockSpell(Target_Invisibility,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
+    "UnlockSpell(Shout_PassWithoutTrace,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
+   ]
+  },
+  "Land_Grassland_2": {
+   "boosts": [
+    "UnlockSpell(Target_Daylight_Container,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
+    "UnlockSpell(Target_Haste,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
+   ]
+  },
+  "Land_Grassland_3": {
+   "boosts": [
+    "UnlockSpell(Target_FreedomOfMovement,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
+    "UnlockSpell(Target_Polymorph,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
+   ]
+  },
+  "Land_Grassland_4": {
+   "boosts": [
+    "UnlockSpell(Target_GreaterRestoration,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
+    "UnlockSpell(Target_InsectPlague,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
+   ]
+  },
+  "Land_Mountain": {
+   "boosts": [
+    "UnlockSpell(Shout_MirrorImage,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
+    "UnlockSpell(Target_SpikeGrowth,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
+   ]
+  },
+  "Land_Mountain_2": {
+   "boosts": [
+    "UnlockSpell(Zone_LightningBolt,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
+    "UnlockSpell(Target_Fly,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
+   ]
+  },
+  "Land_Mountain_3": {
+   "boosts": [
+    "UnlockSpell(Target_Stoneskin,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
+    "UnlockSpell(Target_DominateBeast,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
+   ]
+  },
+  "Land_Mountain_4": {
+   "boosts": [
+    "UnlockSpell(Wall_WallOfStone,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
+    "UnlockSpell(Target_ConjureElemental_Container,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
+   ]
+  },
+  "Land_Swamp": {
+   "boosts": [
+    "UnlockSpell(Projectile_AcidArrow,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
+    "UnlockSpell(Target_Darkness,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
+   ]
+  },
+  "Land_Swamp_2": {
+   "boosts": [
+    "UnlockSpell(Target_StinkingCloud,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
+    "UnlockSpell(Target_VampiricTouch,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
+   ]
+  },
+  "Land_Swamp_3": {
+   "boosts": [
+    "UnlockSpell(Target_Blight,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
+    "UnlockSpell(Target_GraspingVine,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
+   ]
+  },
+  "Land_Swamp_4": {
+   "boosts": [
+    "UnlockSpell(Target_InsectPlague,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
+    "UnlockSpell(Target_Cloudkill,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
+   ]
+  },
+  "Land_Underdark": {
+   "boosts": [
+    "UnlockSpell(Target_Web,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
+    "UnlockSpell(Target_MistyStep,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
+   ]
+  },
+  "Land_Underdark_2": {
+   "boosts": [
+    "UnlockSpell(Target_GaseousForm,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
+    "UnlockSpell(Target_StinkingCloud,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
+   ]
+  },
+  "Land_Underdark_3": {
+   "boosts": [
+    "UnlockSpell(Target_Invisibility_Greater,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
+    "UnlockSpell(Target_DominateBeast,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
+   ]
+  },
+  "Land_Underdark_4": {
+   "boosts": [
+    "UnlockSpell(Target_Contagion,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
+    "UnlockSpell(Target_Cloudkill,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
+   ]
+  },
+  "LandsStride_Advantage": {
+   "boosts": [
+    "Tag(PLANT_IMPEDE_ADV)"
+   ]
+  },
+  "LandsStride_DifficultTerrain": {
+   "boosts": [
+    "StatusImmunity(SG_DifficultTerrain)"
+   ]
+  },
+  "LandsStride_Surfaces": {
+   "boosts": [
+    "StatusImmunity(SHADOW_CURSED_VINES)",
+    "StatusImmunity(SPIKE_GROWTH)",
+    "StatusImmunity(BLIGHT_ENTANGLE)",
+    "StatusImmunity(PLANT_GROWTH)",
+    "StatusImmunity(DIFFICULT_TERRAIN_VINES)",
+    "StatusImmunity(DIFFICULT_TERRAIN_OVERGROWTH)",
+    "StatusImmunity(ENSNARED_VINES)",
+    "StatusImmunity(TWN_ARABELLAPOWERS_ARABELLAVINES)"
+   ]
+  },
+  "LeapToYourFeet": {
+   "boosts": []
+  },
+  "LifeOfTheParty": {
+   "boosts": []
+  },
+  "Lifedrinker": {
+   "boosts": []
+  },
+  "LightlyArmored": {
+   "boosts": [
+    "Proficiency(LightArmor)"
+   ]
+  },
+  "Lucky": {
+   "boosts": [
+    "Advantage(AllAbilities)"
+   ]
+  },
+  "Lucky_Unlock": {
+   "boosts": [
+    "UnlockInterrupt(Interrupt_Lucky_RollAdditionalDie)",
+    "UnlockInterrupt(Interrupt_Lucky_ReplaceAttackersDie)",
+    "ActionResource(LuckPoint,3,0)"
+   ]
+  },
+  "MageHandLegerdemain": {
+   "boosts": [
+    "UnlockSpellVariant(SpellId('Target_MageHand'),ModifyTooltipDescription())"
+   ]
+  },
+  "MageSlayer_Advantage": {
+   "boosts": [
+    "IF(InMeleeRange() and IsSpell()):Advantage(AllSavingThrows)"
+   ]
+  },
+  "MageSlayer_AttackCaster": {
+   "boosts": [
+    "UnlockInterrupt(Interrupt_MageSlayer)"
+   ]
+  },
+  "MageSlayer_BreakConcentration": {
+   "boosts": []
+  },
+  "MagicArrow": {
+   "boosts": [
+    "Tag(MAGICARROW_PASSIVE)"
+   ]
+  },
+  "MagicInitiate_Bard": {
+   "boosts": []
+  },
+  "MagicInitiate_Cleric": {
+   "boosts": [
+    "ArmorAbilityModifierCapOverride(Hide, 3)",
+    "ArmorAbilityModifierCapOverride(ChainShirt, 3)",
+    "ArmorAbilityModifierCapOverride(ScaleMail, 3)",
+    "ArmorAbilityModifierCapOverride(BreastPlate, 3)",
+    "ArmorAbilityModifierCapOverride(HalfPlate, 3)"
+   ]
+  },
+  "MagicInitiate_Druid": {
+   "boosts": []
+  },
+  "MagicInitiate_Sorcerer": {
+   "boosts": []
+  },
+  "MagicInitiate_Warlock": {
+   "boosts": [
+    "ActionResourceOverride(Interrupt_HellishRebukeWarlockMI_Charge,1,0)"
+   ]
+  },
+  "MagicInitiate_Wizard": {
+   "boosts": []
+  },
+  "MagicalAmbush": {
+   "boosts": []
+  },
+  "ManeuveringAttack": {
+   "boosts": [
+    "UnlockSpell(Target_ManeuveringAttack)",
+    "UnlockSpell(Projectile_ManeuveringAttack)"
+   ]
+  },
+  "Manifestation_of_Body": {
+   "boosts": [
+    "IF(IsMeleeUnarmedAttack()):CharacterUnarmedDamage(1d4+WisdomModifier, Necrotic)",
+    "UnlockSpellVariant(MeleeUnarmedAttackCheck(),ModifyTargetRadius(Multiplicative,1))"
+   ]
+  },
+  "Manifestation_of_Mind": {
+   "boosts": [
+    "IF(IsMeleeUnarmedAttack()):CharacterUnarmedDamage(1d4+WisdomModifier, Psychic)",
+    "UnlockSpellVariant(MeleeUnarmedAttackCheck(),ModifyTargetRadius(Multiplicative,1))"
+   ]
+  },
+  "Manifestation_of_Soul": {
+   "boosts": [
+    "IF(IsMeleeUnarmedAttack()):CharacterUnarmedDamage(1d4+WisdomModifier, Radiant)",
+    "UnlockSpellVariant(MeleeUnarmedAttackCheck(),ModifyTargetRadius(Multiplicative,1))"
+   ]
+  },
+  "MantleOfInspiration_Unlock": {
+   "boosts": [
+    "UnlockSpell(Target_MantleOfInspiration)"
+   ]
+  },
+  "MantleOfInspiration_Unlock2": {
+   "boosts": [
+    "UnlockSpell(Target_MantleOfInspiration_2)"
+   ]
+  },
+  "MantleOfInspiration_Unlock3": {
+   "boosts": [
+    "UnlockSpell(Target_MantleOfInspiration_3)"
+   ]
+  },
+  "MartialAdept": {
+   "boosts": [
+    "ActionResource(SuperiorityDie,1,0)"
+   ]
+  },
+  "MartialArts_BonusUnarmedStrike": {
+   "boosts": []
+  },
+  "MartialArts_DextrousUnarmedAttacks": {
+   "boosts": [
+    "MonkWeaponAttackOverride()"
+   ]
+  },
+  "MartialArts_UnarmedDamage": {
+   "boosts": [
+    "MonkWeaponDamageDiceOverride(LevelMapValue(MartialArts))"
+   ]
+  },
+  "MaskOfManyFaces": {
+   "boosts": [
+    "UnlockSpell(Shout_DisguiseSelf_MaskOfManyFaces,Singular)"
+   ]
+  },
+  "MediumArmorMaster": {
+   "boosts": [
+    "IF(not HasStatus('MAG_EXOTIC_MATERIAL_ARMOR_TECHNICAL', context.Source)):ArmorAbilityModifierCapOverride(Hide, 3)",
+    "IF(not HasStatus('MAG_EXOTIC_MATERIAL_ARMOR_TECHNICAL', context.Source)):ArmorAbilityModifierCapOverride(ChainShirt, 3)",
+    "IF(not HasStatus('MAG_EXOTIC_MATERIAL_ARMOR_TECHNICAL', context.Source)):ArmorAbilityModifierCapOverride(ScaleMail, 3)",
+    "IF(not HasStatus('MAG_EXOTIC_MATERIAL_ARMOR_TECHNICAL', context.Source)):ArmorAbilityModifierCapOverride(BreastPlate, 3)",
+    "IF(not HasStatus('MAG_EXOTIC_MATERIAL_ARMOR_TECHNICAL', context.Source)):ArmorAbilityModifierCapOverride(HalfPlate, 3)"
+   ]
+  },
+  "MenacingAttack": {
+   "boosts": [
+    "UnlockSpell(Target_MenacingAttack)",
+    "UnlockSpell(Projectile_MenacingAttack)"
+   ]
+  },
+  "Metamagic_Careful": {
+   "boosts": [
+    "UnlockSpellVariant(CarefulSpellCheck(),ModifySpellRoll('not SavingThrow','SpellAutoResolveOnAlly'),ModifyUseCosts(Add,SorceryPoint,1,0))"
+   ]
+  },
+  "Metamagic_Distant": {
+   "boosts": [
+    "UnlockSpellVariant(DistantSpellCheck(),ModifyTargetRadius(Multiplicative,1.5),ModifyUseCosts(Add,SorceryPoint,1,0))",
+    "UnlockSpellVariant(DistantTouchSpellCheck(),ModifyTargetRadius(Override,9),ModifySpellFlags(Melee,0),ModifyUseCosts(Add,SorceryPoint,1,0))"
+   ]
+  },
+  "Metamagic_Extended": {
+   "boosts": [
+    "UnlockSpellVariant(ExtendedSpellCheck(),ModifyUseCosts(Add,SorceryPoint,1,0),ModifyStatusDuration(Multiplicative,2),ModifySummonDuration(Multiplicative,2),ModifySurfaceDuration(Multiplicative,2))"
+   ]
+  },
+  "Metamagic_Heightened": {
+   "boosts": [
+    "UnlockSpellVariant(HeightenedSpellCheck(),ModifyUseCosts(Add,SorceryPoint,3,0),ModifySavingThrowDisadvantage())"
+   ]
+  },
+  "Metamagic_Quickened": {
+   "boosts": [
+    "UnlockSpellVariant(QuickenedSpellCheck(),ModifyUseCosts(Add,SorceryPoint,3,0),ModifyUseCosts(Replace,BonusActionPoint,1,0,ActionPoint))"
+   ]
+  },
+  "Metamagic_Subtle": {
+   "boosts": [
+    "UnlockSpellVariant(SubtleSpellCheck(),ModifyUseCosts(Add,SorceryPoint,1,0),ModifySpellFlags(Verbal,0),ModifySpellFlags(Stealth,1))"
+   ]
+  },
+  "Metamagic_Twinned": {
+   "boosts": [
+    "IF(not HasPassive('Reaper', context.Source)):UnlockSpellVariant(TwinnedProjectileSpellCheck(),ModifyNumberOfTargets(AdditiveBase,1,false),ModifyUseCosts(Add,SorceryPoint,SpellPowerLevel,0))",
+    "IF(not HasPassive('Reaper', context.Source)):UnlockSpellVariant(TwinnedTargetSpellCheck(),ModifyNumberOfTargets(AdditiveBase,1,false),ModifyUseCosts(Add,SorceryPoint,SpellPowerLevel,0))",
+    "IF(not HasPassive('Reaper', context.Source)):UnlockSpellVariant(TwinnedTargetTouchSpellCheck(),ModifyNumberOfTargets(AdditiveBase,1,false),ModifyUseCosts(Add,SorceryPoint,SpellPowerLevel,0))",
+    "IF(HasPassive('Reaper', context.Source)):UnlockSpellVariant(TwinnedProjectileSpellCheckReaper(),ModifyNumberOfTargets(AdditiveBase,1,false),ModifyUseCosts(Add,SorceryPoint,SpellPowerLevel,0))",
+    "IF(HasPassive('Reaper', context.Source)):UnlockSpellVariant(TwinnedTargetSpellCheckReaper(),ModifyNumberOfTargets(AdditiveBase,1,false),ModifyUseCosts(Add,SorceryPoint,SpellPowerLevel,0))",
+    "IF(HasPassive('Reaper', context.Source)):UnlockSpellVariant(TwinnedTargetTouchSpellCheckReaper(),ModifyNumberOfTargets(AdditiveBase,1,false),ModifyUseCosts(Add,SorceryPoint,SpellPowerLevel,0))"
+   ]
+  },
+  "MightySwarm": {
+   "boosts": []
+  },
+  "MindlessRage": {
+   "boosts": []
+  },
+  "MinionsOfChaos": {
+   "boosts": [
+    "UnlockSpell(Target_ConjureElemental_Container,MostPowerful,e9127b70-22b7-42a1-b172-d02f828f260a)"
+   ]
+  },
+  "MireTheMind": {
+   "boosts": [
+    "UnlockSpell(Target_Slow,MostPowerful,e9127b70-22b7-42a1-b172-d02f828f260a)"
+   ]
+  },
+  "MistyEscape": {
+   "boosts": [
+    "UnlockInterrupt(Interrupt_MistyEscape)",
+    "ActionResource(Interrupt_MistyEscape,1,0)"
+   ]
+  },
+  "Mobile_CounterAttackOfOpportunity": {
+   "boosts": []
+  },
+  "Mobile_DashAcrossDifficultTerrain": {
+   "boosts": []
+  },
+  "Mobile_PassiveBonuses": {
+   "boosts": [
+    "ActionResource(Movement,3,0)"
+   ]
+  },
+  "ModeratelyArmored": {
+   "boosts": [
+    "Proficiency(MediumArmor)",
+    "Proficiency(Shields)"
+   ]
+  },
+  "Monk_SoundSwitch": {
+   "boosts": []
+  },
+  "MountainDwarf_DwarvenArmorTraining": {
+   "boosts": [
+    "Proficiency(LightArmor)",
+    "Proficiency(MediumArmor)"
+   ]
+  },
+  "MultiattackDefense": {
+   "boosts": []
+  },
+  "NaturalExplorer_BeastTamer": {
+   "boosts": [
+    "UnlockSpell(Target_FindFamiliar_Ritual)"
+   ]
+  },
+  "NaturalExplorer_UrbanTracker": {
+   "boosts": [
+    "ProficiencyBonus(Skill,SleightOfHand)"
+   ]
+  },
+  "NaturalExplorer_WastelandWander_Cold": {
+   "boosts": [
+    "Resistance(Cold, Resistant)"
+   ]
+  },
+  "NaturalExplorer_WastelandWander_Fire": {
+   "boosts": [
+    "Resistance(Fire, Resistant)"
+   ]
+  },
+  "NaturalExplorer_WastelandWander_Poison": {
+   "boosts": [
+    "Resistance(Poison, Resistant)"
+   ]
+  },
+  "NaturesWard": {
+   "boosts": [
+    "StatusImmunity(SG_Disease)",
+    "StatusImmunity(SG_Poisoned)",
+    "StatusImmunity(SG_Charmed,ELEMENTAL,FEY)",
+    "StatusImmunity(SG_Frightened,ELEMENTAL,FEY)"
+   ]
+  },
+  "Oath_Ancients_Tenents": {
+   "boosts": []
+  },
+  "Oath_Crown_Tenents": {
+   "boosts": []
+  },
+  "Oath_Devotion_Tenents": {
+   "boosts": []
+  },
+  "Oath_Vengeance_Tenents": {
+   "boosts": []
+  },
+  "OneWithShadows": {
+   "boosts": [
+    "UnlockSpell(Shout_OneWithShadows)"
+   ]
+  },
+  "OtherworldlyLeap": {
+   "boosts": [
+    "UnlockSpell(Target_Jump,MostPowerful,e9127b70-22b7-42a1-b172-d02f828f260a)"
+   ]
+  },
+  "PactOfTheBlade_Hex": {
+   "boosts": [
+    "IF(not HasPassive('HexWarrior',context.Source)):UnlockSpell(Shout_PactOfTheBlade)",
+    "IF(not HasPassive('HexWarrior',context.Source)):UnlockSpell(Shout_PactOfTheBlade_Bind)"
+   ]
+  },
+  "PactOfTheChain": {
+   "boosts": [
+    "UnlockSpell(Target_FindFamiliar_Ritual)",
+    "UnlockSpell(Target_PactOfTheChain_Imp)",
+    "UnlockSpell(Target_PactOfTheChain_Quasit)"
+   ]
+  },
+  "PactOfTheTome": {
+   "boosts": [
+    "UnlockSpell(Target_Guidance)",
+    "UnlockSpell(Target_ViciousMockery)",
+    "UnlockSpell(Target_ThornWhip)"
+   ]
+  },
+  "Performer": {
+   "boosts": [
+    "Proficiency(MusicalInstrument)"
+   ]
+  },
+  "PolearmMaster_AttackOfOpportunity": {
+   "boosts": [
+    "UnlockInterrupt(Interrupt_PolearmMaster)"
+   ]
+  },
+  "PolearmMaster_BonusAttack": {
+   "boosts": []
+  },
+  "Portent": {
+   "boosts": []
+  },
+  "PotentCantrip": {
+   "boosts": []
+  },
+  "PotentSpellcasting": {
+   "boosts": [
+    "IF(IsClericCantrip()):DamageBonus(max(0, WisdomModifier))"
+   ]
+  },
+  "PrecisionAttack": {
+   "boosts": [
+    "UnlockSpell(Shout_PrecisionAttack)"
+   ]
+  },
+  "PrimalStrike": {
+   "boosts": [
+    "UnarmedMagicalProperty()"
+   ]
+  },
+  "Proficiency_Battleaxes": {
+   "boosts": [
+    "Proficiency(Battleaxes)"
+   ]
+  },
+  "Proficiency_Clubs": {
+   "boosts": [
+    "Proficiency(Clubs)"
+   ]
+  },
+  "Proficiency_Daggers": {
+   "boosts": [
+    "Proficiency(Daggers)"
+   ]
+  },
+  "Proficiency_Flails": {
+   "boosts": [
+    "Proficiency(Flails)"
+   ]
+  },
+  "Proficiency_Glaives": {
+   "boosts": [
+    "Proficiency(Glaives)"
+   ]
+  },
+  "Proficiency_Greataxe": {
+   "boosts": [
+    "Proficiency(Greataxes)"
+   ]
+  },
+  "Proficiency_Greatclub": {
+   "boosts": [
+    "Proficiency(Greatclubs)"
+   ]
+  },
+  "Proficiency_Greatswords": {
+   "boosts": [
+    "Proficiency(Greatswords)"
+   ]
+  },
+  "Proficiency_Halberds": {
+   "boosts": [
+    "Proficiency(Halberds)"
+   ]
+  },
+  "Proficiency_HandCrossbows": {
+   "boosts": [
+    "Proficiency(HandCrossbows)"
+   ]
+  },
+  "Proficiency_Handaxes": {
+   "boosts": [
+    "Proficiency(Handaxes)"
+   ]
+  },
+  "Proficiency_HeavyCrossbows": {
+   "boosts": [
+    "Proficiency(HeavyCrossbows)"
+   ]
+  },
+  "Proficiency_Javelins": {
+   "boosts": [
+    "Proficiency(Javelins)"
+   ]
+  },
+  "Proficiency_LightCrossbows": {
+   "boosts": [
+    "Proficiency(LightCrossbows)"
+   ]
+  },
+  "Proficiency_LightHammers": {
+   "boosts": [
+    "Proficiency(LightHammers)"
+   ]
+  },
+  "Proficiency_Longbows": {
+   "boosts": [
+    "Proficiency(Longbows)"
+   ]
+  },
+  "Proficiency_Longswords": {
+   "boosts": [
+    "Proficiency(Longswords)"
+   ]
+  },
+  "Proficiency_Maces": {
+   "boosts": [
+    "Proficiency(Maces)"
+   ]
+  },
+  "Proficiency_Mauls": {
+   "boosts": [
+    "Proficiency(Mauls)"
+   ]
+  },
+  "Proficiency_Morningstars": {
+   "boosts": [
+    "Proficiency(Morningstars)"
+   ]
+  },
+  "Proficiency_Pikes": {
+   "boosts": [
+    "Proficiency(Pikes)"
+   ]
+  },
+  "Proficiency_Quarterstaffs": {
+   "boosts": [
+    "Proficiency(Quarterstaffs)"
+   ]
+  },
+  "Proficiency_Rapiers": {
+   "boosts": [
+    "Proficiency(Rapiers)"
+   ]
+  },
+  "Proficiency_Scimitars": {
+   "boosts": [
+    "Proficiency(Scimitars)"
+   ]
+  },
+  "Proficiency_Shortbows": {
+   "boosts": [
+    "Proficiency(Shortbows)"
+   ]
+  },
+  "Proficiency_Shortswords": {
+   "boosts": [
+    "Proficiency(Shortswords)"
+   ]
+  },
+  "Proficiency_Sickles": {
+   "boosts": [
+    "Proficiency(Sickles)"
+   ]
+  },
+  "Proficiency_Spears": {
+   "boosts": [
+    "Proficiency(Spears)"
+   ]
+  },
+  "Proficiency_Tridents": {
+   "boosts": [
+    "Proficiency(Tridents)"
+   ]
+  },
+  "Proficiency_Warhammers": {
+   "boosts": [
+    "Proficiency(Warhammers)"
+   ]
+  },
+  "Proficiency_Warpicks": {
+   "boosts": [
+    "Proficiency(Warpicks)"
+   ]
+  },
+  "ProjectedWard": {
+   "boosts": [
+    "UnlockInterrupt(Interrupt_ProjectedWard)"
+   ]
+  },
+  "PurityOfBody": {
+   "boosts": [
+    "StatusImmunity(SG_Disease)",
+    "StatusImmunity(SG_Poisoned)",
+    "Resistance(Poison, Immune)"
+   ]
+  },
+  "PushingAttack": {
+   "boosts": [
+    "UnlockSpell(Target_PushingAttack)",
+    "UnlockSpell(Projectile_PushingAttack)"
+   ]
+  },
+  "RageFrenzyUnlock": {
+   "boosts": [
+    "UnlockSpell(Shout_Rage_Frenzy)"
+   ]
+  },
+  "RageGiantUnlock": {
+   "boosts": [
+    "UnlockSpell(Shout_Rage_Giant)"
+   ]
+  },
+  "RageUnlock": {
+   "boosts": [
+    "UnlockSpell(Shout_Rage)"
+   ]
+  },
+  "Rage_Armour_Message": {
+   "boosts": []
+  },
+  "Rage_NoHeavyArmour_VFX": {
+   "boosts": []
+  },
+  "RakishAudacity": {
+   "boosts": [
+    "IF(not ClassLevelHigherOrEqualThan(5,'Rogue')):Initiative(2)",
+    "IF(ClassLevelHigherOrEqualThan(5,'Rogue') and not ClassLevelHigherOrEqualThan(10,'Rogue')):Initiative(3)",
+    "IF(ClassLevelHigherOrEqualThan(10,'Rogue')):Initiative(4)"
+   ]
+  },
+  "Rally": {
+   "boosts": [
+    "UnlockSpell(Target_Rally)"
+   ]
+  },
+  "Reaper": {
+   "boosts": [
+    "UnlockSpellVariant(SpellId('Target_ChillTouch'),ModifyNumberOfTargets(AdditiveBase,1,false))",
+    "UnlockSpellVariant(SpellId('Target_BurstingSinew'),ModifyNumberOfTargets(AdditiveBase,1,false))",
+    "UnlockSpellVariant(SpellId('Target_TollTheDead'),ModifyNumberOfTargets(AdditiveBase,1,false))"
+   ]
+  },
+  "RecklessAttack": {
+   "boosts": [
+    "UnlockInterrupt(Interrupt_RecklessAttack)",
+    "UnlockSpell(Target_RecklessAttack)"
+   ]
+  },
+  "RedirectAttack_Unlock": {
+   "boosts": [
+    "UnlockInterrupt(Interrupt_RedirectAttack)"
+   ]
+  },
+  "RelentlessAvenger": {
+   "boosts": []
+  },
+  "RelentlessEndurance": {
+   "boosts": []
+  },
+  "RelentlessRage": {
+   "boosts": []
+  },
+  "ReliableTalent": {
+   "boosts": [
+    "IF(HasProficiencyBonus(context.CheckedAbility,context.CheckedSkill,context.Source)):MinimumRollResult(RawAbility,10)",
+    "IF(HasProficiencyBonus(context.CheckedAbility,context.CheckedSkill,context.Source)):MinimumRollResult(SkillCheck,10)",
+    "IF(HasProficiencyBonus(context.CheckedAbility,context.CheckedSkill,context.Source)):MinimumRollResult(SavingThrow,10)"
+   ]
+  },
+  "RemarkableAthlete_Jump": {
+   "boosts": [
+    "JumpMaxDistanceBonus(3)"
+   ]
+  },
+  "RemarkableAthlete_Proficiency": {
+   "boosts": [
+    "IF(not HasProficiencyBonus(context.CheckedAbility,context.CheckedSkill,context.Source) and CheckedPhysicalAbility(context.Source)):RollBonus(SkillCheck,ProficiencyBonus/2)",
+    "IF(not HasProficiencyBonus(context.CheckedAbility,context.CheckedSkill,context.Source) and CheckedPhysicalAbility(context.Source)):RollBonus(RawAbility,ProficiencyBonus/2)"
+   ]
+  },
+  "RepellingBlast": {
+   "boosts": []
+  },
+  "Resilient_Charisma": {
+   "boosts": [
+    "Ability(Charisma,1,20)",
+    "ProficiencyBonus(SavingThrow,Charisma)"
+   ]
+  },
+  "Resilient_Constitution": {
+   "boosts": [
+    "Ability(Constitution,1,20)",
+    "ProficiencyBonus(SavingThrow,Constitution)"
+   ]
+  },
+  "Resilient_Dexterity": {
+   "boosts": [
+    "Ability(Dexterity,1,20)",
+    "ProficiencyBonus(SavingThrow,Dexterity)"
+   ]
+  },
+  "Resilient_Intelligence": {
+   "boosts": [
+    "Ability(Intelligence,1,20)",
+    "ProficiencyBonus(SavingThrow,Intelligence)"
+   ]
+  },
+  "Resilient_Strength": {
+   "boosts": [
+    "Ability(Strength,1,20)",
+    "ProficiencyBonus(SavingThrow,Strength)"
+   ]
+  },
+  "Resilient_Wisdom": {
+   "boosts": [
+    "Ability(Wisdom,1,20)",
+    "ProficiencyBonus(SavingThrow,Wisdom)"
+   ]
+  },
+  "Riposte": {
+   "boosts": [
+    "UnlockInterrupt(Interrupt_Riposte)"
+   ]
+  },
+  "RitualCaster_FreeSpells": {
+   "boosts": []
+  },
+  "RockGnome_ArtificersLore": {
+   "boosts": [
+    "ProficiencyBonus(Skill,History)",
+    "ExpertiseBonus(History)"
+   ]
+  },
+  "SavageAttacker": {
+   "boosts": [
+    "Reroll(MeleeWeaponDamage,20,false)"
+   ]
+  },
+  "SavageAttacks": {
+   "boosts": [
+    "CriticalHitExtraDice(1,MeleeWeaponAttack)",
+    "CriticalHitExtraDice(1,MeleeOffHandWeaponAttack)"
+   ]
+  },
+  "SculptSpells": {
+   "boosts": []
+  },
+  "SculptorOfFlesh": {
+   "boosts": [
+    "UnlockSpell(Target_Polymorph,MostPowerful,e9127b70-22b7-42a1-b172-d02f828f260a)"
+   ]
+  },
+  "SecondStoryWork": {
+   "boosts": [
+    "FallDamageMultiplier(0.5)"
+   ]
+  },
+  "Sentinel_Attack": {
+   "boosts": [
+    "UnlockInterrupt(Interrupt_Sentinel)"
+   ]
+  },
+  "Sentinel_OpportunityAdvantage": {
+   "boosts": [
+    "IF(SpellId('Target_Sentinel_AttackOfOpportunity')):Advantage(AttackRoll)"
+   ]
+  },
+  "Sentinel_ZeroSpeed": {
+   "boosts": []
+  },
+  "Shapechanger": {
+   "boosts": [
+    "UnlockSpell(Target_Polymorph_Shapechanger)"
+   ]
+  },
+  "Sharpshooter_AllIn": {
+   "boosts": [
+    "IF(Sharpshooter(context.Source)):RollBonus(RangedWeaponAttack, -5)",
+    "IF(Sharpshooter(context.Source)):RollBonus(RangedOffHandWeaponAttack, -5)",
+    "IF(Sharpshooter(context.Source)):CharacterWeaponDamage(10)"
+   ]
+  },
+  "Sharpshooter_Bonuses": {
+   "boosts": [
+    "IgnoreLowGroundPenalty(RangedWeaponAttack)",
+    "IgnoreLowGroundPenalty(RangedOffHandWeaponAttack)"
+   ]
+  },
+  "ShieldMaster_Block": {
+   "boosts": [
+    "UnlockInterrupt(Interrupt_ShieldMaster)"
+   ]
+  },
+  "ShieldMaster_PassiveBonuses": {
+   "boosts": [
+    "IF(HasShieldEquipped() and not HasStatus('SG_Incapacitated')):RollBonus(SavingThrow,2,Dexterity)"
+   ]
+  },
+  "SignOfIllOmen": {
+   "boosts": [
+    "UnlockSpell(Target_BestowCurse,MostPowerful,e9127b70-22b7-42a1-b172-d02f828f260a)"
+   ]
+  },
+  "Skilled": {
+   "boosts": []
+  },
+  "SlowFall": {
+   "boosts": []
+  },
+  "Smite_Divine": {
+   "boosts": [
+    "UnlockInterrupt(Interrupt_Smite_Divine)",
+    "UnlockInterrupt(Interrupt_Smite_Divine_Critical)"
+   ]
+  },
+  "SneakAttackSwitch": {
+   "boosts": [
+    "UnlockInterrupt(Interrupt_SneakAttack_Rakish)",
+    "UnlockInterrupt(Interrupt_SneakAttack_Rakish_Critical)",
+    "UnlockSpell(Target_SneakAttack_Rakish)",
+    "UnlockSpell(Projectile_SneakAttack_Rakish)"
+   ]
+  },
+  "SneakAttack_Unlock": {
+   "boosts": [
+    "UnlockInterrupt(Interrupt_SneakAttack)",
+    "UnlockInterrupt(Interrupt_SneakAttack_Critical)",
+    "UnlockSpell(Target_SneakAttack)",
+    "UnlockSpell(Projectile_SneakAttack)"
+   ]
+  },
+  "SongOfDefense": {
+   "boosts": [
+    "UnlockInterrupt(Interrupt_SongOfDefense_1)",
+    "UnlockInterrupt(Interrupt_SongOfDefense_2)",
+    "UnlockInterrupt(Interrupt_SongOfDefense_3)",
+    "UnlockInterrupt(Interrupt_SongOfDefense_4)",
+    "UnlockInterrupt(Interrupt_SongOfDefense_5)"
+   ]
+  },
+  "SongOfDefense_6": {
+   "boosts": [
+    "UnlockInterrupt(Interrupt_SongOfDefense_6)"
+   ]
+  },
+  "SpellSniper_Critical": {
+   "boosts": [
+    "IF(IsSpell() and IsSpellAttack()):ReduceCriticalAttackThreshold(1)"
+   ]
+  },
+  "SplitEnchantment": {
+   "boosts": [
+    "UnlockSpellVariant(SplitEnchantmentProjectileSpellCheck(),ModifyNumberOfTargets(AdditiveBase,1,false),ModifyTooltipDescription(),ModifyIconGlow())",
+    "UnlockSpellVariant(SplitEnchantmentTargetSpellCheck(),ModifyNumberOfTargets(AdditiveBase,1,false),ModifyMaximumTargets(Override,2),ModifyTooltipDescription(),ModifyIconGlow())",
+    "UnlockSpellVariant(SplitEnchantmentTargetTouchSpellCheck(),ModifyNumberOfTargets(AdditiveBase,1,false),ModifyMaximumTargets(Override,2),ModifyTooltipDescription(),ModifyIconGlow())"
+   ]
+  },
+  "SpreadingSpores": {
+   "boosts": []
+  },
+  "StalkersFlurry": {
+   "boosts": []
+  },
+  "StarryForm": {
+   "boosts": []
+  },
+  "SteelWill": {
+   "boosts": [
+    "Tag(FRIGHTENED_ADV)"
+   ]
+  },
+  "StillnessOfMind": {
+   "boosts": []
+  },
+  "StormsFury": {
+   "boosts": [
+    "UnlockInterrupt(Interrupt_StormsFury)"
+   ]
+  },
+  "StrengthOfTheGrave": {
+   "boosts": []
+  },
+  "SuperiorDarkvision": {
+   "boosts": [
+    "DarkvisionRangeMin(24)",
+    "ActiveCharacterLight(c46e7ba8-e746-7020-5146-287474d7b9f7)"
+   ]
+  },
+  "Swarmkeeper_Bee": {
+   "boosts": [
+    "UnlockInterrupt(Interrupt_GatheredSwarm_Bee_Knockback)",
+    "UnlockInterrupt(Interrupt_GatheredSwarm_Bee_Attack)",
+    "UnlockInterrupt(Interrupt_GatheredSwarm_Bee_Teleport)"
+   ]
+  },
+  "Swarmkeeper_Jellyfish": {
+   "boosts": [
+    "UnlockInterrupt(Interrupt_GatheredSwarm_Jellyfish_Shock)",
+    "UnlockInterrupt(Interrupt_GatheredSwarm_Jellyfish_Attack)",
+    "UnlockInterrupt(Interrupt_GatheredSwarm_Jellyfish_Teleport)"
+   ]
+  },
+  "Swarmkeeper_Moth": {
+   "boosts": [
+    "UnlockInterrupt(Interrupt_GatheredSwarm_Moth_Blind)",
+    "UnlockInterrupt(Interrupt_GatheredSwarm_Moth_Attack)",
+    "UnlockInterrupt(Interrupt_GatheredSwarm_Moth_Teleport)"
+   ]
+  },
+  "SweepingAttack": {
+   "boosts": [
+    "UnlockSpell(Zone_SweepingAttack)"
+   ]
+  },
+  "TavernBrawler": {
+   "boosts": [
+    "IF(IsMeleeUnarmedAttack()):RollBonus(Attack, StrengthModifier)",
+    "IF(IsMeleeUnarmedAttack()):CharacterUnarmedDamage(StrengthModifier)",
+    "IF(IsRangedUnarmedAttack()):RollBonus(Attack, StrengthModifier)",
+    "IF(HasStatus('SG_Polymorph_BeastShape',context.Source) and not (Tagged('MYRMIDON_AIR',context.Source) or Tagged('MYRMIDON_FIRE',context.Source) or Tagged('MYRMIDON_WATER',context.Source))):DamageBonus(StrengthModifier)"
+   ]
+  },
+  "TempestuousMagic": {
+   "boosts": []
+  },
+  "ThiefOfFiveFates": {
+   "boosts": [
+    "UnlockSpell(Target_Bane_ThiefOfFiveFates,MostPowerful,e9127b70-22b7-42a1-b172-d02f828f260a,UntilRest)"
+   ]
+  },
+  "ThirstingBlade_Blade": {
+   "boosts": []
+  },
+  "ThirstingBlade_Check": {
+   "boosts": []
+  },
+  "ThirstingBlade_Tome": {
+   "boosts": [
+    "UnlockSpell(Target_AnimateDead,Singular,,UntilRest,Charisma)",
+    "UnlockSpell(Target_CallLightning,Singular,,UntilRest,Charisma)",
+    "UnlockSpell(Target_Haste,Singular,,UntilRest,Charisma)"
+   ]
+  },
+  "Thought_Shield_Psychic_Reflection": {
+   "boosts": [
+    "RedirectDamage(1,,Psychic,true)"
+   ]
+  },
+  "Thought_Shield_Psychic_Resistance": {
+   "boosts": [
+    "Resistance(Psychic,Resistant)"
+   ]
+  },
+  "ThunderboltStrike": {
+   "boosts": []
+  },
+  "TidesOfChaos": {
+   "boosts": [
+    "Advantage(AllAbilities)"
+   ]
+  },
+  "TidesOfChaos_Unlock": {
+   "boosts": [
+    "UnlockInterrupt(Interrupt_TidesOfChaos)"
+   ]
+  },
+  "Tiefling_HellishResistance": {
+   "boosts": [
+    "Resistance(Fire, Resistant)"
+   ]
+  },
+  "TotemSpirit_Bear": {
+   "boosts": [
+    "UnlockSpell(Shout_Rage_Totem_Bear)",
+    "UnlockSpell(Shout_FerociousAppetite)"
+   ]
+  },
+  "TotemSpirit_Eagle": {
+   "boosts": [
+    "UnlockSpell(Shout_Rage_Totem_Eagle)",
+    "UnlockSpell(Projectile_DivingStrike)"
+   ]
+  },
+  "TotemSpirit_Elk": {
+   "boosts": [
+    "UnlockSpell(Shout_Rage_Totem_Elk)",
+    "UnlockSpell(Rush_Primal_Stampede)"
+   ]
+  },
+  "TotemSpirit_Tiger": {
+   "boosts": [
+    "UnlockSpell(Shout_Rage_Totem_Tiger)",
+    "UnlockSpell(Zone_TigersBloodlust)"
+   ]
+  },
+  "TotemSpirit_Wolf": {
+   "boosts": [
+    "UnlockSpell(Shout_Rage_Totem_Wolf)",
+    "UnlockSpell(Shout_PackHowl_Barbarian)"
+   ]
+  },
+  "TouchOfDeath": {
+   "boosts": [
+    "UnlockInterrupt(Interrupt_ChannelDivinity_TouchOfDeath)"
+   ]
+  },
+  "Tough": {
+   "boosts": [
+    "IncreaseMaxHP(Level*2)"
+   ]
+  },
+  "TraininginWarandSong": {
+   "boosts": []
+  },
+  "Tranquility": {
+   "boosts": []
+  },
+  "TransmutationStone": {
+   "boosts": [
+    "UnlockSpell(Target_TransmutersStone)"
+   ]
+  },
+  "TransmutationStone_Activation": {
+   "boosts": []
+  },
+  "TripAttack": {
+   "boosts": [
+    "UnlockSpell(Target_TripAttack)",
+    "UnlockSpell(Projectile_TripAttack)"
+   ]
+  },
+  "TwinklingConstellations": {
+   "boosts": [
+    "ActionResource(TwinklingConstitution_Charge,1,0)"
+   ]
+  },
+  "UnarmoredDefense_Monk": {
+   "boosts": [
+    "ACOverrideFormula(10,true,Dexterity,Wisdom)"
+   ]
+  },
+  "UnarmoredMovement_1": {
+   "boosts": [
+    "ActionResource(Movement, 3, 0)"
+   ]
+  },
+  "UnarmoredMovement_2": {
+   "boosts": [
+    "ActionResource(Movement, 4.5, 0)"
+   ]
+  },
+  "UnarmoredMovement_3": {
+   "boosts": [
+    "ActionResource(Movement, 6, 0)"
+   ]
+  },
+  "UnarmoredMovement_DifficultTerrain": {
+   "boosts": [
+    "StatusImmunity(SG_DifficultTerrain)",
+    "JumpMaxDistanceBonus(6)"
+   ]
+  },
+  "UnarmouredDefence_Barbarian": {
+   "boosts": [
+    "ACOverrideFormula(10,true,Dexterity,Constitution)"
+   ]
+  },
+  "UncannyDodge": {
+   "boosts": [
+    "DamageReduction(All,Half,)"
+   ]
+  },
+  "UndeadThrall_BetterSummon": {
+   "boosts": []
+  },
+  "UndeadThrall_ExtraSummon": {
+   "boosts": [
+    "UnlockSpellVariant(UndeadThrallAnimateDeadSpellVariation(),ModifyNumberOfTargets(AdditiveFinal,1,false),ModifyTargetRadius(Override,6))",
+    "UnlockSpellVariant(SpellId('Target_CursedTome_WakeTheDead'),ModifyNumberOfTargets(AdditiveFinal,1,false))"
+   ]
+  },
+  "UndeadThrall_FreeSpell": {
+   "boosts": [
+    "UnlockSpell(Target_AnimateDead,AddChildren ,d136c5d9-0ff0-43da-acce-a74a07f8d6bf)"
+   ]
+  },
+  "UnlockedSpellSlotLevel1": {
+   "boosts": []
+  },
+  "UnlockedSpellSlotLevel2": {
+   "boosts": []
+  },
+  "UnlockedSpellSlotLevel3": {
+   "boosts": []
+  },
+  "UnlockedWarlockSpellSlotLevel1": {
+   "boosts": []
+  },
+  "UnlockedWarlockSpellSlotLevel2": {
+   "boosts": []
+  },
+  "UnlockedWarlockSpellSlotLevel3": {
+   "boosts": []
+  },
+  "Unstable_Backlash": {
+   "boosts": [
+    "UnlockInterrupt(Interrupt_Unstable_Backlash)"
+   ]
+  },
+  "WarCaster_Bonuses": {
+   "boosts": [
+    "Advantage(Concentration)"
+   ]
+  },
+  "WarCaster_OpportunitySpell": {
+   "boosts": [
+    "UnlockInterrupt(Interrupt_WarCaster)"
+   ]
+  },
+  "WarGodsBlessing": {
+   "boosts": [
+    "UnlockInterrupt(Interrupt_WarGodsBlessing)"
+   ]
+  },
+  "WarMagic": {
+   "boosts": []
+  },
+  "WarPriest": {
+   "boosts": []
+  },
+  "WardingFlare": {
+   "boosts": [
+    "UnlockInterrupt(Interrupt_WardingFlare)"
+   ]
+  },
+  "WardingFlare_Improved": {
+   "boosts": [
+    "UnlockInterrupt(Interrupt_WardingFlare_Improved)"
+   ]
+  },
+  "WeaponMaster": {
+   "boosts": []
+  },
+  "WhispersOfTheGrave": {
+   "boosts": [
+    "UnlockSpell(Target_SpeakWithDead_WhispersOfTheGrave)"
+   ]
+  },
+  "WildMagic": {
+   "boosts": []
+  },
+  "WildMagicRage": {
+   "boosts": [
+    "UnlockSpell(Shout_Rage_WildMagic)"
+   ]
+  },
+  "WildShape_Combat": {
+   "boosts": [
+    "IF(ConditionResult(false)):UnlockSpell(Shout_WildShape_Combat_Heal,,d136c5d9-0ff0-43da-acce-a74a07f8d6bf)",
+    "UnlockSpellVariant(SpellId('Shout_AberrantShape'),ModifyUseCosts(Replace,BonusActionPoint,1,0,ActionPoint))"
+   ]
+  },
+  "WildStrike": {
+   "boosts": []
+  },
+  "WildStrike_2": {
+   "boosts": []
+  },
+  "WrathOfTheStorm": {
+   "boosts": [
+    "UnlockInterrupt(Interrupt_WrathOfTheStorm_Lightning)",
+    "UnlockInterrupt(Interrupt_WrathOfTheStorm_Thunder)"
+   ]
+  },
+  "WrithingTide": {
+   "boosts": []
+  },
+  "WrithingTide_Technical": {
+   "boosts": [
+    "IF(HasPassive('Swarmkeeper_Bee',context.Source)):UnlockSpell(Projectile_Fly_WrithingTide_Bee)",
+    "IF(HasPassive('Swarmkeeper_Jellyfish',context.Source)):UnlockSpell(Projectile_Fly_WrithingTide_Jellyfish)",
+    "IF(HasPassive('Swarmkeeper_Moth',context.Source)):UnlockSpell(Projectile_Fly_WrithingTide_Moth)"
+   ]
+  }
  },
  "progressions": [
   {
@@ -7829,7 +9801,7 @@
      "function": "AddSpells",
      "id": null,
      "list": "e95177b1-f243-4837-868e-8e84563f518e",
-     "prepare": "AlwaysPrepared)",
+     "prepare": "AlwaysPrepared",
      "resource": null
     }
    ],
@@ -11936,7 +13908,7 @@
      "function": "AddSpells",
      "id": null,
      "list": "480101e7-1fcf-4f02-b6b5-71af428daaa4",
-     "prepare": "AlwaysPrepared)",
+     "prepare": "AlwaysPrepared",
      "resource": null
     }
    ],
