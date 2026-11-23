@@ -15572,5 +15572,7 @@
   }
  },
  "license": "CC BY-NC-SA 4.0",
+ "license_url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+ "modified": "the wiki's equipment, weapons, item_locations and locations tables are joined by uid; identical rows merged; ambiguous uids and empty rows dropped; HTML entities decoded.",
  "source": "https://bg3.wiki"
 }

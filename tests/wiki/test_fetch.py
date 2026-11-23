@@ -1,3 +1,4 @@
+import contextlib
 import io
 import json
 import tempfile
@@ -86,6 +87,9 @@ class BuildTest(unittest.TestCase):
         )
         self.assertEqual(doc["source"], "https://bg3.wiki")
         self.assertEqual(doc["license"], "CC BY-NC-SA 4.0")
+        self.assertEqual(doc["license_url"], "https://creativecommons.org/licenses/by-nc-sa/4.0/")
+        self.assertIn("joined by uid", doc["modified"])
+        self.assertIn("HTML entities decoded", doc["modified"])
         items = doc["items"]
         self.assertEqual(items["A"]["kind"], "equipment")
         self.assertEqual(items["W"]["kind"], "weapon")
@@ -235,11 +239,33 @@ class GetTest(unittest.TestCase):
                 raise urllib.error.HTTPError(request.full_url, 429, "Too Many", {}, io.BytesIO(b""))
 
             get = fetch.make_get(Path(tmp), opener=opener, sleep=sleeps.append)
-            with self.assertRaises(urllib.error.HTTPError):
+            with self.assertRaises(urllib.error.HTTPError) as cm:
                 get("https://bg3.wiki/x")
+            cm.exception.close()
             self.assertEqual(len(calls), 3)
             self.assertEqual(sleeps.count(60), 2)
             self.assertEqual(list(Path(tmp).glob("*.json")), [])
+
+    def test_retried_429_is_closed_before_sleeping_and_final_one_stays_open(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            errors = []
+            closed_at_sleep = []
+
+            def opener(request, timeout=None):
+                error = urllib.error.HTTPError(request.full_url, 429, "Too Many", {}, io.BytesIO(b""))
+                errors.append(error)
+                raise error
+
+            def sleep(seconds):
+                if seconds == fetch.RETRY_DELAY:
+                    closed_at_sleep.append(errors[-1].fp.closed)
+
+            get = fetch.make_get(Path(tmp), opener=opener, sleep=sleep)
+            with self.assertRaises(urllib.error.HTTPError) as cm:
+                get("https://bg3.wiki/x")
+            self.assertEqual(closed_at_sleep, [True, True])
+            self.assertFalse(cm.exception.fp.closed)
+            cm.exception.close()
 
     def test_429_then_success(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -264,8 +290,9 @@ class GetTest(unittest.TestCase):
                 raise urllib.error.HTTPError(request.full_url, 500, "Boom", {}, io.BytesIO(b""))
 
             get = fetch.make_get(Path(tmp), opener=opener, sleep=lambda s: None)
-            with self.assertRaises(urllib.error.HTTPError):
+            with self.assertRaises(urllib.error.HTTPError) as cm:
                 get("https://bg3.wiki/x")
+            cm.exception.close()
             self.assertEqual(len(calls), 1)
 
     def test_non_json_body_not_cached_and_timeout_passed(self):
@@ -291,8 +318,9 @@ class MainTest(unittest.TestCase):
         original = fetch.run
         fetch.run = boom
         try:
-            with tempfile.TemporaryDirectory() as tmp:
+            with tempfile.TemporaryDirectory() as tmp, contextlib.redirect_stderr(io.StringIO()) as err:
                 self.assertEqual(fetch.main(["--output", tmp]), 1)
+            self.assertIn("network down", err.getvalue())
         finally:
             fetch.run = original
 
@@ -312,8 +340,9 @@ class RunTest(unittest.TestCase):
                     return page(rows)
             raise AssertionError(url)
 
-        with tempfile.TemporaryDirectory() as tmp:
+        with tempfile.TemporaryDirectory() as tmp, contextlib.redirect_stdout(io.StringIO()) as out:
             fetch.run(Path(tmp), get, set())
+            self.assertIn("1 items", out.getvalue())
             doc = json.loads((Path(tmp) / "items.json").read_text(encoding="utf-8"))
             self.assertEqual(doc["items"]["A"]["locations"][0]["act"], "one")
         data["weapons"] = [eq("A")]

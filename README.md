@@ -24,7 +24,7 @@ Code licensed under the GNU GPL v3 or later, see [`LICENSE`](LICENSE). Data has 
 ## Data
 
 - Game names and descriptions are the property of Larian Studios; this is a free, non-commercial fan project.
-- Item rarity, legacy status and locations (with their act) come from [bg3.wiki](https://bg3.wiki), under CC BY-NC-SA 4.0, in `data/wiki/`. They are fetched once by script and shipped with the site; the wiki is never called from the app.
+- Item rarity, legacy status and locations (with their act) come from [bg3.wiki](https://bg3.wiki), under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/), in `data/wiki/`. They are fetched once by script and shipped with the site; the wiki is never called from the app. Modified: the wiki's equipment, weapons, item_locations and locations tables are joined by uid; identical rows merged; ambiguous uids and empty rows dropped; HTML entities decoded.
 - `scripts/data/lsf.py` is a port of parts of LSLib (MIT), see [`THIRD_PARTY.md`](THIRD_PARTY.md).
 
 Baldur's Gate 3 is a trademark of Larian Studios. Not affiliated with Larian Studios or Wizards of the Coast.

@@ -31,6 +31,11 @@ ITEM_FIELDS = ["name", "uid", "uuid", "rarity", "type", "legacy"]
 LOCATION_FIELDS = ["uid", "location", "x", "y"]
 AMBIGUOUS_FILE = Path(__file__).with_name("ambiguous_uids.txt")
 ZONE_FIELDS = ["name", "act", "region"]
+LICENSE_URL = "https://creativecommons.org/licenses/by-nc-sa/4.0/"
+MODIFIED = (
+    "the wiki's equipment, weapons, item_locations and locations tables are joined by uid; identical rows merged; "
+    "ambiguous uids and empty rows dropped; HTML entities decoded."
+)
 
 
 def _url(table: str, fields: list[str], offset: int) -> str:
@@ -102,6 +107,7 @@ def make_get(
                 if error.code != 429 or retries >= MAX_RETRIES:
                     raise
                 retries += 1
+                error.close()  # a retried error is dropped; the one finally raised stays open for the caller
                 sleep(RETRY_DELAY)
         json.loads(body)  # never cache a body that is not JSON
         cache_dir.mkdir(parents=True, exist_ok=True)
@@ -215,7 +221,7 @@ def build(
         report.append(f"location {place!r} has no act")
     for item in items.values():
         item["locations"].sort(key=lambda loc: (str(loc["location"]), loc["x"] is None, loc["x"] or 0, loc["y"] is None, loc["y"] or 0))
-    return {"source": "https://bg3.wiki", "license": "CC BY-NC-SA 4.0", "items": items}
+    return {"source": "https://bg3.wiki", "license": "CC BY-NC-SA 4.0", "license_url": LICENSE_URL, "modified": MODIFIED, "items": items}
 
 
 def run(output: Path, get: Callable[[str], bytes], ambiguous: set[str] | None = None) -> None:
