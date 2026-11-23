@@ -76,13 +76,51 @@ def read_typos(path: Path) -> dict[str, str]:
     return res
 
 
+def read_duplicates(path: Path) -> list[frozenset[str]]:
+    """Known duplicate progressions: one group per line, UUIDs separated by spaces, then `# reason`."""
+    res: list[frozenset[str]] = []
+    seen: set[str] = set()
+    for number, content, _ in _listed_lines(path):
+        uuids = content.split()
+        if len(uuids) < 2 or len(set(uuids)) != len(uuids) or seen & set(uuids):
+            raise ValueError(f"{path}:{number}: expected two or more distinct UUIDs listed in no other group")
+        seen.update(uuids)
+        res.append(frozenset(uuids))
+    return res
+
+
+def duplicate_problems(progressions: list[dict], known: list[frozenset[str]]) -> list[str]:
+    """Progressions sharing (table, level, multiclass), unless that exact group of UUIDs is listed in
+    known_duplicates.txt; a listed group that does not exist is also reported."""
+    groups: dict[tuple, list[str]] = {}
+    for p in progressions:
+        groups.setdefault((p.get("table"), p.get("level"), p.get("multiclass")), []).append(p.get("uuid"))
+    actual = set()
+    problems = []
+    for (table, level, multiclass), uuids in groups.items():
+        if len(uuids) < 2:
+            continue
+        group = frozenset(uuids)
+        actual.add(group)
+        if group not in known:
+            problems.append(f"duplicate progression for table {table} level {level} multiclass {multiclass}: "
+                            f"{', '.join(sorted(uuids))}")
+    for group in known:
+        if group not in actual:
+            problems.append(f"known_duplicates.txt: listed group is not a duplicate in the data: "
+                            f"{' '.join(sorted(group))}")
+    return problems
+
+
 class _Builder:
-    def __init__(self, lsx_by_file: dict, presets: dict, stats: dict, typos: dict[str, str]):
+    def __init__(self, lsx_by_file: dict, presets: dict, stats: dict, typos: dict[str, str],
+                 duplicates: list[frozenset[str]]):
         self.lsx = lsx_by_file
         self.presets = presets
         self.stats = stats
         self.typos = typos
         self.typos_used: set[str] = set()
+        self.duplicates = duplicates
         self.errors: list[str] = []
 
     def error(self, message: str) -> None:
@@ -319,6 +357,8 @@ class _Builder:
                 "subclasses": subclasses,
             })
         res.sort(key=lambda p: (p["table"], p["level"] or 0, p["multiclass"], p["uuid"]))
+        for problem in duplicate_problems(res, self.duplicates):
+            self.error(problem)
         return res
 
     def lists(self, referencing: list[tuple[str, str, str | None, str | None]]) -> dict:
@@ -415,10 +455,12 @@ class _Builder:
 
 
 def build(lsx_by_file: dict[str, dict[str, dict]], presets: dict[str, dict], stats: dict[str, dict],
-          typos: dict[str, str] | None = None) -> dict:
+          typos: dict[str, str] | None = None, duplicates: list[frozenset[str]] | None = None) -> dict:
     """The rules (schema of `data/larian/rules.json`); raises ModelError with every defect found.
 
     `typos` maps an exact raw selector segment to its correction (see `read_typos`); a listed typo
-    found in no parsed selector or requirement is an error.
+    found in no parsed selector or requirement is an error. `duplicates` lists the groups of
+    progressions allowed to share a table, level and multiclass flag (see `read_duplicates`); they
+    are kept unchanged.
     """
-    return _Builder(lsx_by_file, presets, stats, typos or {}).build()
+    return _Builder(lsx_by_file, presets, stats, typos or {}, duplicates or []).build()

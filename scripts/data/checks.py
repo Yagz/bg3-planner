@@ -6,9 +6,10 @@ import json
 import sys
 from pathlib import Path
 
-from scripts.data import texts
+from scripts.data import model, texts
 
 UNNAMED = Path(__file__).with_name("unnamed.txt")
+KNOWN_DUPLICATES = Path(__file__).with_name("known_duplicates.txt")
 
 COUNTS = {"base_classes": 12, "subclasses": 58, "races": 39, "base_races": 11, "backgrounds": 22,
           "origin_backgrounds": 11, "feats": 41}
@@ -115,15 +116,19 @@ def _check_meta(meta: dict) -> list[str]:
     return problems
 
 
-def verify(folder: Path, counts: dict[str, int] = COUNTS, unnamed: set[str] | None = None) -> list[str]:
+def verify(folder: Path, counts: dict[str, int] = COUNTS, unnamed: set[str] | None = None,
+           duplicates: list[frozenset[str]] | None = None) -> list[str]:
     """Every problem found in the data folder, sorted; empty when everything is fine."""
     folder = Path(folder)
     if unnamed is None:
         unnamed = texts.read_unnamed(UNNAMED)
+    if duplicates is None:
+        duplicates = model.read_duplicates(KNOWN_DUPLICATES)
     rules = _load(folder, "rules")
     tables = {name: _load(folder, name) for name in _LANGUAGES}
     problems = (_check_texts(rules, tables, unnamed) + _check_references(rules)
-                + _check_counts(rules, counts) + _check_meta(_load(folder, "meta")))
+                + _check_counts(rules, counts) + _check_meta(_load(folder, "meta"))
+                + model.duplicate_problems(rules.get("progressions", []), duplicates))
     return sorted(problems)
 
 

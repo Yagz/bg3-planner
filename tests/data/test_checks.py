@@ -52,7 +52,7 @@ class ChecksTest(unittest.TestCase):
 
     def problems(self, **kwargs):
         write(self.folder, **kwargs)
-        return checks.verify(self.folder, COUNTS)
+        return checks.verify(self.folder, COUNTS, duplicates=[])
 
     def test_coherent_folder(self):
         self.assertEqual(self.problems(), [])
@@ -69,7 +69,7 @@ class ChecksTest(unittest.TestCase):
         texts = json.loads(path.read_text(encoding="utf-8"))
         texts["spell:Fireball"]["name"] = " "
         path.write_text(json.dumps(texts), encoding="utf-8")
-        problems = checks.verify(self.folder, COUNTS)
+        problems = checks.verify(self.folder, COUNTS, duplicates=[])
         self.assertEqual(len(problems), 1)
         self.assertIn("spell:Fireball", problems[0])
 
@@ -100,13 +100,29 @@ class ChecksTest(unittest.TestCase):
     def test_unnamed_identifier_is_exempt(self):
         write(self.folder, keys=[k for k in KEYS if k != "passive:Soldier"],
               fr_keys=[k for k in KEYS if k != "passive:Soldier"])
-        self.assertEqual(checks.verify(self.folder, COUNTS, unnamed={"passive:Soldier"}), [])
+        self.assertEqual(checks.verify(self.folder, COUNTS, unnamed={"passive:Soldier"}, duplicates=[]), [])
 
     def test_wrong_count(self):
         write(self.folder)
-        problems = checks.verify(self.folder, {**COUNTS, "feats": 41})
+        problems = checks.verify(self.folder, {**COUNTS, "feats": 41}, duplicates=[])
         self.assertEqual(len(problems), 1)
         self.assertIn("feats", problems[0])
+
+    def test_duplicate_progression(self):
+        rules = copy.deepcopy(RULES)
+        for p, uuid in zip(rules["progressions"], ("p1", "p2", "p3", "p4")):
+            p.update(uuid=uuid, level=1, multiclass=False)
+        rules["progressions"][1].update(table="t-wiz")
+        rules["progressions"].append({**rules["progressions"][1], "table": "t-evo", "uuid": "p5",
+                                      "multiclass": True})
+        write(self.folder, rules=rules)
+        problems = checks.verify(self.folder, COUNTS, duplicates=[])
+        self.assertTrue(any("p1" in p and "p2" in p for p in problems), problems)
+        self.assertFalse(any("p5" in p for p in problems))
+        known = [frozenset({"p1", "p2"})]
+        self.assertFalse(any("duplicate" in p for p in checks.verify(self.folder, COUNTS, duplicates=known)))
+        stale = checks.verify(self.folder, COUNTS, duplicates=known + [frozenset({"p3", "p9"})])
+        self.assertTrue(any("known_duplicates" in p and "p9" in p for p in stale))
 
     def test_missing_notice(self):
         problems = self.problems(meta={"game": "1.0", "notice": {"en": "Notice.", "fr": ""}})

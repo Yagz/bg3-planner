@@ -1,0 +1,6 @@
+# Groups of progressions allowed to share the same table, level and multiclass flag; they are kept unchanged in rules.json.
+# One group per line: the full UUIDs separated by spaces, then `# reason`; lines starting with `#` are comments.
+# A group must match the duplicates found exactly; a listed group that no longer exists stops the import and the checks.
+
+2b249feb-bba5-4922-8385-c2dd9baaa049 366cde9c-db0c-43ce-a49c-fb140e084b3c  # Cleric multiclass level 1: the game itself has two nodes for this table and level; which one applies is to be settled in plan 3
+01115231-fa37-4cd2-b750-5f282c8ab667 59505762-9251-463c-a81b-420e9a14c8cd  # BattleMaster level 3: the game itself has two nodes for this table and level; which one applies is to be settled in plan 3

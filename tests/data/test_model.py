@@ -367,6 +367,46 @@ class TestModel(unittest.TestCase):
             with self.assertRaises(ValueError, msg=bad):
                 model.read_typos(write_text(bad))
 
+    def duplicated(self):
+        data = dataset()
+        data[0]["Progressions"]["p-fighter-3b"] = node(
+            "Progression", Name="Fighter", UUID="p-fighter-3b", TableUUID="t-fighter", Level="3",
+            ProgressionType="0")
+        return data
+
+    def test_duplicate_progression_is_an_error(self):
+        errors = errors_of(self.duplicated())
+        self.assertTrue(any("p-fighter-3" in e and "p-fighter-3b" in e for e in errors))
+        # Same table and level but another multiclass flag: not a duplicate.
+        data = self.duplicated()
+        data[0]["Progressions"]["p-fighter-3b"]["attributes"]["IsMulticlass"] = "true"
+        build(data)
+
+    def test_known_duplicate_kept_unchanged(self):
+        rules = build(self.duplicated(), duplicates=[frozenset({"p-fighter-3", "p-fighter-3b"})])
+        self.assertEqual([p["uuid"] for p in rules["progressions"] if p["table"] == "t-fighter"],
+                         ["p-fighter-1", "p-fighter-3", "p-fighter-3b"])
+
+    def test_known_duplicate_must_match_the_whole_group(self):
+        data = self.duplicated()
+        data[0]["Progressions"]["p-fighter-3c"] = node(
+            "Progression", Name="Fighter", UUID="p-fighter-3c", TableUUID="t-fighter", Level="3",
+            ProgressionType="0")
+        errors = errors_of(data, duplicates=[frozenset({"p-fighter-3", "p-fighter-3b"})])
+        self.assertTrue(any("p-fighter-3c" in e for e in errors))
+
+    def test_stale_known_duplicate_raises(self):
+        errors = errors_of(dataset(), duplicates=[frozenset({"p-fighter-3", "p-ghost"})])
+        self.assertTrue(any("known_duplicates" in e and "p-ghost" in e for e in errors))
+
+    def test_read_duplicates(self):
+        path = write_text("# header\n\nu1 u2  # the game has two nodes\n u3  u4 u5 # reason\n")
+        self.assertEqual(model.read_duplicates(path), [frozenset({"u1", "u2"}), frozenset({"u3", "u4", "u5"})])
+        for bad in ("u1 u2\n", "u1  # one UUID is not a group\n", "u1 u1  # repeated\n",
+                    "u1 u2  # r\nu2 u3  # r\n"):
+            with self.assertRaises(ValueError, msg=bad):
+                model.read_duplicates(write_text(bad))
+
     def test_deterministic(self):
         self.assertEqual(build(), build())
 
