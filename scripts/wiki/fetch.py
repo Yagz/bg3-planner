@@ -28,6 +28,7 @@ RETRY_DELAY = 60
 MAX_RETRIES = 2
 ITEM_FIELDS = ["name", "uid", "uuid", "rarity", "type", "legacy"]
 LOCATION_FIELDS = ["uid", "location", "x", "y"]
+AMBIGUOUS_FILE = Path(__file__).with_name("ambiguous_uids.txt")
 ZONE_FIELDS = ["name", "act", "region"]
 
 
@@ -111,22 +112,61 @@ def make_get(
     return get
 
 
-def build(equipment: list[dict], weapons: list[dict], item_locations: list[dict], locations: list[dict], report: list[str] | None = None) -> dict:
-    """Join items, their locations and the act of each location. Raises ValueError listing every error."""
+def load_ambiguous(path: Path = AMBIGUOUS_FILE) -> set[str]:
+    """Uids listed in ambiguous_uids.txt: one per line, '#' starts a comment."""
+    uids = set()
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.split("#", 1)[0].strip()
+        if line:
+            uids.add(line)
+    return uids
+
+
+def build(
+    equipment: list[dict],
+    weapons: list[dict],
+    item_locations: list[dict],
+    locations: list[dict],
+    report: list[str] | None = None,
+    ambiguous: set[str] | frozenset[str] = frozenset(),
+) -> dict:
+    """Join items, their locations and the act of each location. Raises ValueError listing every error.
+
+    Identical rows of one table are merged. A uid with differing rows is an error unless listed in `ambiguous`,
+    in which case it is left out together with its locations; a listed uid that is not ambiguous is an error.
+    """
     report = report if report is not None else []
     errors: list[str] = []
-    items: dict[str, dict] = {}
+    seen: dict[str, list[tuple[str, dict]]] = {}
     empty = 0
+    merged = 0
     for kind, rows in (("equipment", equipment), ("weapon", weapons)):
         for row in rows:
             uid = row.get("uid")
             if not uid:
                 empty += 1
                 continue
-            if uid in items:
-                errors.append(f"duplicate uid {uid!r} ({kind}, already seen as {items[uid]['kind']})")
-                continue
+            variants = seen.setdefault(uid, [])
+            if (kind, row) in variants:
+                merged += 1
+            else:
+                variants.append((kind, row))
+    items: dict[str, dict] = {}
+    left_out: set[str] = set()
+    for uid, variants in seen.items():
+        if len(variants) == 1:
+            kind, row = variants[0]
             items[uid] = {"uuid": row.get("uuid"), "kind": kind, "rarity": row.get("rarity"), "legacy": row.get("legacy"), "locations": []}
+        elif uid in ambiguous:
+            left_out.add(uid)
+        else:
+            errors.append(f"ambiguous uid {uid!r}: {len(variants)} differing rows, not listed in ambiguous_uids.txt")
+    for uid in sorted(set(ambiguous) - left_out):
+        errors.append(f"stale ambiguous_uids.txt entry {uid!r}: not ambiguous in the data")
+    if merged:
+        report.append(f"{merged} identical duplicate row(s) merged")
+    if left_out:
+        report.append(f"{len(left_out)} ambiguous uid(s) left out: {', '.join(sorted(left_out))}")
     if empty:
         report.append(f"{empty} item row(s) with an empty uid skipped")
     if errors:
@@ -145,8 +185,12 @@ def build(equipment: list[dict], weapons: list[dict], item_locations: list[dict]
     if errors:
         raise ValueError("\n".join(errors))
     orphans = 0
+    skipped_ambiguous = 0
     unknown: set[str] = set()
     for row in item_locations:
+        if row.get("uid") in left_out:
+            skipped_ambiguous += 1
+            continue
         item = items.get(row.get("uid"))
         if item is None:
             orphans += 1
@@ -156,6 +200,8 @@ def build(equipment: list[dict], weapons: list[dict], item_locations: list[dict]
         if act is None:
             unknown.add(str(place))
         item["locations"].append({"location": place, "act": act, "x": row.get("x"), "y": row.get("y")})
+    if skipped_ambiguous:
+        report.append(f"{skipped_ambiguous} item location(s) of ambiguous uids skipped")
     if orphans:
         report.append(f"{orphans} item location(s) whose uid is in neither table skipped")
     for place in sorted(unknown):
@@ -165,13 +211,13 @@ def build(equipment: list[dict], weapons: list[dict], item_locations: list[dict]
     return {"source": "https://bg3.wiki", "license": "CC BY-NC-SA 4.0", "items": items}
 
 
-def run(output: Path, get: Callable[[str], bytes]) -> None:
+def run(output: Path, get: Callable[[str], bytes], ambiguous: set[str] | None = None) -> None:
     equipment = export("equipment", ITEM_FIELDS, get)
     weapons = export("weapons", ITEM_FIELDS, get)
     item_locations = export("item_locations", LOCATION_FIELDS, get)
     locations = export("locations", ZONE_FIELDS, get)
     report: list[str] = []
-    doc = build(equipment, weapons, item_locations, locations, report)
+    doc = build(equipment, weapons, item_locations, locations, report, load_ambiguous() if ambiguous is None else ambiguous)
     output.mkdir(parents=True, exist_ok=True)
     write_json(output / "items.json", doc)
     items = doc["items"]

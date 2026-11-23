@@ -1,0 +1,11 @@
+# Wiki uids whose rows differ (within or across the equipment and weapons tables) and are left out of items.json
+# with their locations. One uid per line; '#' starts a comment. A listed uid that is no longer ambiguous is an error.
+#
+# Several wiki items (different RootTemplates) share this game stats entry; generic common items, not key items,
+# and their locations cannot be told apart by uid.
+ARM_Camp_Rich_G
+ARM_Robe_Body
+ARM_Shoes_E
+LOOT_GEN_Ring_B_Gem_A_Gold
+LOOT_GEN_Ring_B_Gem_A_Gold_1
+Underwear_Elves_A_Blue

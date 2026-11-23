@@ -103,11 +103,44 @@ class BuildTest(unittest.TestCase):
         self.assertIsNone(doc["items"]["A"]["locations"][0]["act"])
         self.assertTrue(any("Nowhere" in line for line in report))
 
+    def test_identical_rows_merged_and_reported(self):
+        report = []
+        doc = fetch.build([eq("A"), eq("A")], [], [], [], report=report)
+        self.assertEqual(list(doc["items"]), ["A"])
+        self.assertTrue(any("1 identical" in line for line in report))
+
+    def test_listed_ambiguous_uid_left_out_with_locations(self):
+        report = []
+        doc = fetch.build(
+            [eq("A"), eq("A", uuid="other"), eq("B")],
+            [],
+            [{"uid": "A", "location": "Inn", "x": 0, "y": 0}],
+            [{"name": "Inn", "act": "one", "region": "r"}],
+            report=report,
+            ambiguous={"A"},
+        )
+        self.assertEqual(list(doc["items"]), ["B"])
+        self.assertTrue(any("ambiguous" in line and "A" in line for line in report))
+        self.assertFalse(any("neither table" in line for line in report))
+
+    def test_unlisted_ambiguous_uid_is_error(self):
+        with self.assertRaises(ValueError):
+            fetch.build([eq("A"), eq("A", uuid="other")], [], [], [])
+
+    def test_stale_ambiguous_entry_is_error(self):
+        with self.assertRaises(ValueError):
+            fetch.build([eq("A")], [], [], [], ambiguous={"A"})
+        with self.assertRaises(ValueError):
+            fetch.build([eq("A")], [], [], [], ambiguous={"Gone"})
+
+    def test_committed_ambiguous_file_parses(self):
+        uids = fetch.load_ambiguous()
+        self.assertIn("ARM_Robe_Body", uids)
+        self.assertEqual(len(uids), 6)
+
     def test_duplicate_uid_is_error(self):
         with self.assertRaises(ValueError):
             fetch.build([eq("A")], [eq("A")], [], [])
-        with self.assertRaises(ValueError):
-            fetch.build([eq("A"), eq("A")], [], [], [])
 
     def test_location_without_item_reported(self):
         report = []
@@ -183,7 +216,7 @@ class GetTest(unittest.TestCase):
 
             def opener(request, timeout=None):
                 calls.append(1)
-                raise urllib.error.HTTPError(request.full_url, 429, "Too Many", {}, None)
+                raise urllib.error.HTTPError(request.full_url, 429, "Too Many", {}, io.BytesIO(b""))
 
             get = fetch.make_get(Path(tmp), opener=opener, sleep=sleeps.append)
             with self.assertRaises(urllib.error.HTTPError):
@@ -199,7 +232,7 @@ class GetTest(unittest.TestCase):
             def opener(request, timeout=None):
                 calls.append(1)
                 if len(calls) == 1:
-                    raise urllib.error.HTTPError(request.full_url, 429, "Too Many", {}, None)
+                    raise urllib.error.HTTPError(request.full_url, 429, "Too Many", {}, io.BytesIO(b""))
                 return FakeResponse(b"[]")
 
             get = fetch.make_get(Path(tmp), opener=opener, sleep=lambda s: None)
@@ -212,7 +245,7 @@ class GetTest(unittest.TestCase):
 
             def opener(request, timeout=None):
                 calls.append(1)
-                raise urllib.error.HTTPError(request.full_url, 500, "Boom", {}, None)
+                raise urllib.error.HTTPError(request.full_url, 500, "Boom", {}, io.BytesIO(b""))
 
             get = fetch.make_get(Path(tmp), opener=opener, sleep=lambda s: None)
             with self.assertRaises(urllib.error.HTTPError):
@@ -264,13 +297,13 @@ class RunTest(unittest.TestCase):
             raise AssertionError(url)
 
         with tempfile.TemporaryDirectory() as tmp:
-            fetch.run(Path(tmp), get)
+            fetch.run(Path(tmp), get, set())
             doc = json.loads((Path(tmp) / "items.json").read_text(encoding="utf-8"))
             self.assertEqual(doc["items"]["A"]["locations"][0]["act"], "one")
         data["weapons"] = [eq("A")]
         with tempfile.TemporaryDirectory() as tmp:
             with self.assertRaises(ValueError):
-                fetch.run(Path(tmp), get)
+                fetch.run(Path(tmp), get, set())
             self.assertFalse((Path(tmp) / "items.json").exists())
 
 
