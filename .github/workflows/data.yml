@@ -1,0 +1,18 @@
+name: Données
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  data:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - name: Tests
+        run: python -m unittest discover -s tests -t .
+      - name: Contrôle des données importées
+        run: python -m scripts.data.checks data/larian
