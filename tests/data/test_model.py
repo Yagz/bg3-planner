@@ -1,0 +1,286 @@
+import copy
+import unittest
+
+from scripts.data import model
+
+NULL = "00000000-0000-0000-0000-000000000000"
+
+
+def node(node_id: str, children: list | None = None, **attributes) -> dict:
+    return {"id": node_id, "attributes": attributes, "children": children or []}
+
+
+def by_uuid(*nodes: dict) -> dict:
+    return {n["attributes"]["UUID"]: n for n in nodes}
+
+
+def dataset() -> tuple[dict, dict, dict]:
+    """A small valid synthetic set: (lsx_by_file, presets, stats)."""
+    classes = by_uuid(
+        node("ClassDescription", Name="Fighter", UUID="c-fighter", ProgressionTableUUID="t-fighter",
+             BaseHp="10", HpPerLevel="6", SpellCastingAbility="0", PrimaryAbility="1",
+             DisplayName="hFighter", Description="hFighterDesc"),
+        node("ClassDescription", Name="EldritchKnight", UUID="c-ek", ParentGuid="c-fighter",
+             ProgressionTableUUID="t-ek", SpellCastingAbility="4", PrimaryAbility="1",
+             SpellList="l-spells", MustPrepareSpells="false", MulticlassSpellcasterModifier="0.333",
+             DisplayName="hEK;2", Description="hEKDesc;1"),
+    )
+    races = by_uuid(
+        node("Race", Name="Elf", UUID="r-elf", ParentGuid=NULL, ProgressionTableUUID="t-elf",
+             DisplayName="hElf", Description="hElfDesc"),
+        node("Race", Name="Wraith", UUID="r-wraith", ProgressionTableUUID="t-wraith",
+             DisplayName="hWraith", Description="hWraithDesc"),
+    )
+    backgrounds = by_uuid(
+        node("Background", UUID="b-acolyte", Passives="Acolyte_Passive", Hidden="false",
+             DisplayName="hAcolyte", Description="hAcolyteDesc"),
+        node("Background", UUID="b-haunted", Passives="", Hidden="true",
+             DisplayName="hHaunted", Description="hHauntedDesc"),
+    )
+    feats = by_uuid(
+        node("Feat", Name="Alert", UUID="f-alert", PassivesAdded="Alert_Passive",
+             Selectors="SelectSkills(l-skills,1)",
+             Requirements="FeatRequirementAbilityGreaterEqual('Dexterity',13)",
+             CanBeTakenMultipleTimes="false"),
+    )
+    feat_descriptions = by_uuid(
+        node("FeatDescription", UUID="fd-alert", FeatId="f-alert", DisplayName="hAlert;1",
+             Description="hAlertDesc;1"),
+    )
+    subclasses = node("SubClasses", [node("SubClass", Object="c-ek")])
+    progressions = by_uuid(
+        node("Progression", Name="Fighter", UUID="p-fighter-3", TableUUID="t-fighter", Level="3",
+             ProgressionType="0", Boosts="ActionResource(SpellSlot,1,1);Proficiency(Shields)",
+             PassivesAdded="Fighter_Passive", Selectors="", children=None),
+        node("Progression", Name="Fighter", UUID="p-fighter-1", TableUUID="t-fighter", Level="1",
+             ProgressionType="0", IsMulticlass="false", AllowImprovement="false",
+             PassivesAdded="", Selectors="SelectSkills(l-skills,2)"),
+        node("Progression", Name="EldritchKnight", UUID="p-ek-3", TableUUID="t-ek", Level="3",
+             ProgressionType="1", Selectors="SelectSpells(l-spells,2,0);SelectPassives(l-passives,1)",
+             PassivesRemoved="Old_Passive"),
+        node("Progression", Name="Elf", UUID="p-elf-1", TableUUID="t-elf", Level="1",
+             ProgressionType="2", AllowImprovement="true", PassivesAdded="Darkvision"),
+        node("Progression", Name="Goblin", UUID="p-npc-1", TableUUID="t-npc", Level="1",
+             ProgressionType="0", PassivesAdded="Npc_Passive_Missing_From_Stats"),
+        node("Progression", Name="CLASSES", UUID="p-header"),
+    )
+    progressions["p-fighter-1"]["children"] = [subclasses]
+    spell_lists = by_uuid(
+        node("SpellList", UUID="l-spells", Name="EK spells", Spells="Target_FireBolt;Shout_Shield;"),
+        node("SpellList", UUID="l-unused", Name="Unused", Spells="Target_NotInStats"),
+    )
+    passive_lists = by_uuid(
+        node("PassiveList", UUID="l-passives", Name="Styles", Passives="Style_A,Style_B"),
+    )
+    skill_lists = by_uuid(
+        node("SkillList", UUID="l-skills", Name="Fighter skills", Skills="Athletics , Acrobatics , History"),
+    )
+    lsx_by_file = {
+        "Progressions": progressions,
+        "SpellLists": spell_lists,
+        "PassiveLists": passive_lists,
+        "SkillLists": skill_lists,
+        "AbilityLists": {},
+        "EquipmentLists": {},
+        "ClassDescriptions": classes,
+        "Races": races,
+        "Backgrounds": backgrounds,
+        "Feats": feats,
+        "FeatDescriptions": feat_descriptions,
+    }
+    presets = by_uuid(
+        node("CharacterCreationPreset", UUID="pr-elf", RaceUUID="r-elf", SubRaceUUID=NULL),
+    )
+    stats = {
+        "Target_FireBolt": {"type": "SpellData", "SpellType": "Target", "Level": "0",
+                            "SpellSchool": "Evocation", "DisplayName": "hFireBolt;1",
+                            "Description": "hFireBoltDesc;2"},
+        "Shout_Shield": {"type": "SpellData", "DisplayName": "hShield;1"},
+    }
+    for p in ["Acolyte_Passive", "Alert_Passive", "Fighter_Passive", "Old_Passive", "Darkvision",
+              "Style_A", "Style_B"]:
+        stats[p] = {"type": "PassiveData", "DisplayName": f"h{p};1", "Description": f"h{p}Desc;1"}
+    return lsx_by_file, presets, stats
+
+
+def build(data=None):
+    return model.build(*(data or dataset()))
+
+
+def errors_of(data) -> list[str]:
+    with unittest.TestCase().assertRaises(model.ModelError) as c:
+        model.build(*data)
+    return c.exception.errors
+
+
+class TestModel(unittest.TestCase):
+    def test_valid_dataset_builds(self):
+        rules = build()
+        self.assertEqual(set(rules), {"classes", "races", "backgrounds", "feats", "progressions",
+                                      "lists", "spells", "passives"})
+
+    def test_class_fields(self):
+        ek = build()["classes"]["EldritchKnight"]
+        self.assertEqual(ek, {
+            "uuid": "c-ek", "parent": "Fighter", "table": "t-ek", "spellcasting_ability": "Intelligence",
+            "primary_ability": "Strength", "base_hp": None, "hp_per_level": None, "spell_list": "l-spells",
+            "prepares_spells": False, "multiclass_modifier": 0.333,
+            "text": {"name": "hEK", "description": "hEKDesc"},
+        })
+        fighter = build()["classes"]["Fighter"]
+        self.assertIsNone(fighter["parent"])
+        self.assertIsNone(fighter["spellcasting_ability"])
+        self.assertEqual((fighter["base_hp"], fighter["hp_per_level"]), (10, 6))
+
+    def test_race_not_in_presets_is_excluded(self):
+        races = build()["races"]
+        self.assertEqual(races, {"Elf": {"uuid": "r-elf", "parent": None, "table": "t-elf",
+                                         "text": {"name": "hElf", "description": "hElfDesc"}}})
+
+    def test_duplicate_race_name_only_an_error_among_kept(self):
+        data = dataset()
+        data[0]["Races"]["r-wraith2"] = node("Race", Name="Wraith", UUID="r-wraith2")
+        build(data)
+        data[0]["Races"]["r-elf2"] = node("Race", Name="Elf", UUID="r-elf2")
+        data[1]["pr-elf2"] = node("CharacterCreationPreset", UUID="pr-elf2", RaceUUID="r-elf2")
+        self.assertTrue(any("Elf" in e for e in errors_of(data)))
+
+    def test_subrace_whose_parent_is_not_kept_is_orphan(self):
+        data = dataset()
+        data[0]["Races"]["r-high"] = node("Race", Name="HighWraith", UUID="r-high", ParentGuid="r-wraith")
+        data[1]["pr-high"] = node("CharacterCreationPreset", UUID="pr-high", RaceUUID="r-elf", SubRaceUUID="r-high")
+        self.assertTrue(any("HighWraith" in e for e in errors_of(data)))
+
+    def test_preset_race_missing_is_orphan(self):
+        data = dataset()
+        data[1]["pr-x"] = node("CharacterCreationPreset", UUID="pr-x", RaceUUID="r-ghost")
+        self.assertTrue(any("r-ghost" in e for e in errors_of(data)))
+
+    def test_hidden_background_kept_as_origin(self):
+        backgrounds = build()["backgrounds"]
+        self.assertEqual(backgrounds["b-haunted"], {"passives": [], "origin": True,
+                                                    "text": {"name": "hHaunted", "description": "hHauntedDesc"}})
+        self.assertFalse(backgrounds["b-acolyte"]["origin"])
+        self.assertEqual(backgrounds["b-acolyte"]["passives"], ["Acolyte_Passive"])
+
+    def test_feat_fields(self):
+        alert = build()["feats"]["Alert"]
+        self.assertEqual(alert["uuid"], "f-alert")
+        self.assertEqual(alert["passives"], ["Alert_Passive"])
+        self.assertEqual(alert["selectors"][0]["function"], "SelectSkills")
+        self.assertEqual(alert["requirements"], [{"type": "ability_min", "ability": "Dexterity", "value": 13}])
+        self.assertFalse(alert["repeatable"])
+        self.assertEqual(alert["text"], {"name": "hAlert", "description": "hAlertDesc"})
+
+    def test_feat_without_description_is_orphan(self):
+        data = dataset()
+        data[0]["FeatDescriptions"] = {}
+        self.assertTrue(any("Alert" in e for e in errors_of(data)))
+
+    def test_subclass_resolved_to_name(self):
+        p = next(p for p in build()["progressions"] if p["uuid"] == "p-fighter-1")
+        self.assertEqual(p["subclasses"], ["EldritchKnight"])
+
+    def test_unknown_subclass_is_orphan(self):
+        data = dataset()
+        data[0]["Progressions"]["p-fighter-1"]["children"][0]["children"][0]["attributes"]["Object"] = "c-ghost"
+        self.assertTrue(any("c-ghost" in e for e in errors_of(data)))
+
+    def test_progression_fields(self):
+        p = next(p for p in build()["progressions"] if p["uuid"] == "p-fighter-3")
+        self.assertEqual(p, {
+            "uuid": "p-fighter-3", "table": "t-fighter", "name": "Fighter", "level": 3, "type": "class",
+            "multiclass": False, "feat": False,
+            "boosts": ["ActionResource(SpellSlot,1,1)", "Proficiency(Shields)"],
+            "passives_added": ["Fighter_Passive"], "passives_removed": [], "selectors": [], "subclasses": [],
+        })
+        types = {p["uuid"]: p["type"] for p in build()["progressions"]}
+        self.assertEqual((types["p-ek-3"], types["p-elf-1"]), ("subclass", "race"))
+
+    def test_spell_kept_through_referenced_list(self):
+        rules = build()
+        self.assertEqual(rules["lists"]["l-spells"], {"name": "EK spells", "type": "spells",
+                                                      "items": ["Target_FireBolt", "Shout_Shield"]})
+        self.assertNotIn("l-unused", rules["lists"])
+        self.assertEqual(rules["spells"]["Target_FireBolt"], {
+            "type": "Target", "level": 0, "school": "Evocation",
+            "text": {"name": "hFireBolt", "description": "hFireBoltDesc"}})
+        self.assertEqual(rules["spells"]["Shout_Shield"], {
+            "type": "SpellData", "level": None, "school": None, "text": {"name": "hShield", "description": None}})
+        self.assertNotIn("Target_NotInStats", rules["spells"])
+
+    def test_passive_list_split_on_comma(self):
+        rules = build()
+        self.assertEqual(rules["lists"]["l-passives"]["items"], ["Style_A", "Style_B"])
+        self.assertEqual(rules["lists"]["l-passives"]["type"], "passives")
+        self.assertIn("Style_B", rules["passives"])
+
+    def test_skill_list_items_stripped(self):
+        self.assertEqual(build()["lists"]["l-skills"]["items"], ["Athletics", "Acrobatics", "History"])
+
+    def test_passives_kept(self):
+        self.assertEqual(sorted(build()["passives"]), sorted([
+            "Acolyte_Passive", "Alert_Passive", "Fighter_Passive", "Old_Passive", "Darkvision", "Style_A",
+            "Style_B"]))
+        self.assertEqual(build()["passives"]["Darkvision"], {"text": {"name": "hDarkvision",
+                                                                       "description": "hDarkvisionDesc"}})
+
+    def test_npc_progression_dropped(self):
+        uuids = {p["uuid"] for p in build()["progressions"]}
+        self.assertNotIn("p-npc-1", uuids)
+        self.assertNotIn("p-header", uuids)
+        self.assertEqual(len(uuids), 4)
+
+    def test_spell_missing_from_stats_is_orphan(self):
+        data = dataset()
+        del data[2]["Shout_Shield"]
+        self.assertTrue(any("Shout_Shield" in e for e in errors_of(data)))
+
+    def test_duplicate_class_name(self):
+        data = dataset()
+        data[0]["ClassDescriptions"]["c-dup"] = node("ClassDescription", Name="Fighter", UUID="c-dup",
+                                                     ProgressionTableUUID="t-dup")
+        self.assertTrue(any("Fighter" in e for e in errors_of(data)))
+
+    def test_list_uuid_in_two_files_is_duplicate(self):
+        data = dataset()
+        data[0]["AbilityLists"]["l-skills"] = node("AbilityList", UUID="l-skills", Abilities="Strength")
+        self.assertTrue(any("l-skills" in e for e in errors_of(data)))
+
+    def test_unknown_list_reference_is_orphan(self):
+        data = dataset()
+        data[0]["Feats"]["f-alert"]["attributes"]["Selectors"] = "SelectSkills(l-ghost,1)"
+        self.assertTrue(any("l-ghost" in e for e in errors_of(data)))
+
+    def test_unknown_selector_is_reported(self):
+        data = dataset()
+        data[0]["Feats"]["f-alert"]["attributes"]["Selectors"] = "SelectMagic(l-skills,1)"
+        self.assertTrue(any("SelectMagic" in e for e in errors_of(data)))
+
+    def test_handle_version_stripped(self):
+        self.assertEqual(model.handle("h1;3"), "h1")
+        self.assertEqual(model.handle("h1"), "h1")
+        self.assertIsNone(model.handle(""))
+        self.assertIsNone(model.handle(None))
+        self.assertEqual(build()["classes"]["EldritchKnight"]["text"]["name"], "hEK")
+
+    def test_all_errors_reported_together(self):
+        data = dataset()
+        del data[2]["Shout_Shield"]
+        data[0]["Feats"]["f-alert"]["attributes"]["Selectors"] = "SelectSkills(l-ghost,1)"
+        errors = errors_of(data)
+        self.assertTrue(any("Shout_Shield" in e for e in errors))
+        self.assertTrue(any("l-ghost" in e for e in errors))
+
+    def test_progressions_sorted(self):
+        keys = [(p["table"], p["level"], p["multiclass"], p["uuid"]) for p in build()["progressions"]]
+        self.assertEqual(keys, sorted(keys))
+        self.assertEqual([p["uuid"] for p in build()["progressions"]],
+                         ["p-ek-3", "p-elf-1", "p-fighter-1", "p-fighter-3"])
+
+    def test_deterministic(self):
+        self.assertEqual(build(), build())
+
+
+if __name__ == "__main__":
+    unittest.main()
