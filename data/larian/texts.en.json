@@ -4115,6 +4115,10 @@
   "description": "A deep oily smell wafts from this crude tree branch.",
   "name": "Drunk-Purple Torch"
  },
+ "item:UNI_Karlach_Gloves": {
+  "description": null,
+  "name": "Leather Gloves"
+ },
  "item:UNI_LOW_Boots_DimensionalDoor": {
   "description": "These boots are well-maintained and clean, though their soles are thin from wear.",
   "name": "Spaceshunt Boots"
@@ -5055,6 +5059,10 @@
   "description": "This staff's blue inlays and moon-shaped ornamentation indicate its use among Selûne's clergy.",
   "name": "Staff of the Moonmaiden"
  },
+ "item:WPN_HUM_Sword_Shar_A": {
+  "description": null,
+  "name": "Scimitar"
+ },
  "item:WPN_HUM_Syringe_A": {
   "description": "The yellowish-green ooze dried to the syringe's long needle gives you the distinct impression that this medical device was never used to heal anyone.",
   "name": "Syringe"
@@ -5814,6 +5822,10 @@
  "passive:FightingStyle_TwoWeaponFighting": {
   "description": "When you make an <LSTag Tooltip=\"AttackRoll\">attack</LSTag> with your off-hand weapon, you can add your <LSTag Tooltip=\"AbilityModifier\">Ability Modifier</LSTag> to the damage of the attack.",
   "name": "Two-Weapon Fighting"
+ },
+ "passive:FlurryOfBlowsUnlock": {
+  "description": null,
+  "name": "Flurry of Blows"
  },
  "passive:FocusedConjuration": {
   "description": "Damage taken while you are <LSTag Tooltip=\"Concentration\">Concentrating</LSTag> on a Conjuration spell will not break your Concentration.",

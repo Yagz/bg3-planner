@@ -4115,6 +4115,10 @@
   "description": "Une forte odeur d'huile émane de cette branche d'arbre.",
   "name": "Torche violet cocktail"
  },
+ "item:UNI_Karlach_Gloves": {
+  "description": null,
+  "name": "Gants en cuir"
+ },
  "item:UNI_LOW_Boots_DimensionalDoor": {
   "description": "Bien que leurs semelles soient usées jusqu'à la corde, ces bottes sont propres et bien entretenues.",
   "name": "Bottes de transition spatiale"
@@ -5055,6 +5059,10 @@
   "description": "Les incrustations bleues et les ornements en forme de lune de ce bâton le désignent comme un instrument du clergé de Séluné.",
   "name": "Bâton de la Vierge Lunaire"
  },
+ "item:WPN_HUM_Sword_Shar_A": {
+  "description": null,
+  "name": "Cimeterre"
+ },
  "item:WPN_HUM_Syringe_A": {
   "description": "La substance jaune-vert qui a séché au bout de la longue aiguille vous donne l'impression que cet ustensile n'a jamais servi à soigner qui que ce soit.",
   "name": "Seringue"
@@ -5814,6 +5822,10 @@
  "passive:FightingStyle_TwoWeaponFighting": {
   "description": "Lorsque vous portez une <LSTag Tooltip=\"AttackRoll\">attaque</LSTag> avec l'arme de votre main secondaire, vous pouvez ajouter votre <LSTag Tooltip=\"AbilityModifier\">modificateur de caractéristique</LSTag> aux dégâts infligés.",
   "name": "Combat à deux armes"
+ },
+ "passive:FlurryOfBlowsUnlock": {
+  "description": null,
+  "name": "Déluge de coups"
  },
  "passive:FocusedConjuration": {
   "description": "Les dégâts que vous subissez alors que vous vous <LSTag Tooltip=\"Concentration\">concentrez</LSTag> sur un sort d'Invocation ne brisent pas votre concentration.",
