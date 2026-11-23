@@ -24,21 +24,24 @@ def loca_entries(b: bytes) -> list[tuple[str, int, str]]:
     return res
 
 
-def lire_loca(data: bytes) -> dict[str, tuple[int, str]]:
-    """identifiant -> (version, texte) ; la version la plus haute l'emporte."""
-    res: dict[str, tuple[int, str]] = {}
-    for cle, version, texte in loca_entries(data):
-        if cle not in res or version > res[cle][0]:
+def _fusionner(res: dict[str, tuple[int, str]], entrees) -> None:
+    """Ajoute les entrées à res : la version la plus haute l'emporte, à version égale la dernière occurrence."""
+    for cle, version, texte in entrees:
+        if cle not in res or version >= res[cle][0]:
             res[cle] = (version, texte)
+
+
+def lire_loca(data: bytes) -> dict[str, tuple[int, str]]:
+    """identifiant -> (version, texte) ; la version la plus haute l'emporte, à égalité la dernière entrée."""
+    res: dict[str, tuple[int, str]] = {}
+    _fusionner(res, loca_entries(data))
     return res
 
 
 def table(chemin_pak: Path, langue: str) -> dict[str, str]:
-    """Fusion de tous les Localization/<langue>/*.loca du pak : identifiant -> texte."""
+    """Fusion de tous les Localization/<langue>/*.loca du pak : identifiant -> texte (à égalité, le dernier fichier trié)."""
     motif = re.compile(rf"Localization/{re.escape(langue)}/[^/]+\.loca", re.IGNORECASE)
     res: dict[str, tuple[int, str]] = {}
     for nom, data in sorted(lire_pak(chemin_pak, lambda n: motif.fullmatch(n) is not None).items()):
-        for cle, (version, texte) in lire_loca(data).items():
-            if cle not in res or version > res[cle][0]:
-                res[cle] = (version, texte)
+        _fusionner(res, loca_entries(data))
     return {cle: texte for cle, (_, texte) in res.items()}
