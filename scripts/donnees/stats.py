@@ -6,7 +6,7 @@ Entree = dict  # {"nom": str, "type": str, "parent": str | None, "data": dict[st
 _NOUVELLE = re.compile(r'new entry "([^"]*)"')
 _TYPE = re.compile(r'type "([^"]*)"')
 _USING = re.compile(r'using "([^"]*)"')
-_DATA = re.compile(r'data "([^"]*)" "([^"]*)"')
+_DATA_DEBUT = re.compile(r'data "([^"]*)" "(.*)', re.DOTALL)
 
 
 class ErreurStats(Exception):
@@ -22,8 +22,12 @@ def entrees(texte: str) -> list[Entree]:
     res: list[Entree] = []
     erreurs: list[str] = []
     courante = None
-    for no, brut in enumerate(texte.splitlines(), 1):
-        ligne = brut.strip()
+    lignes = texte.replace("\r\n", "\n").split("\n")
+    i = 0
+    while i < len(lignes):
+        no = i + 1
+        ligne = lignes[i].strip()
+        i += 1
         if not ligne or ligne.startswith("//"):
             continue
         if m := _NOUVELLE.fullmatch(ligne):
@@ -35,8 +39,20 @@ def entrees(texte: str) -> list[Entree]:
             courante["type"] = m[1]
         elif m := _USING.fullmatch(ligne):
             courante["parent"] = m[1]
-        elif m := _DATA.fullmatch(ligne):
-            courante["data"][m[1]] = m[2]
+        elif m := _DATA_DEBUT.fullmatch(ligne):
+            # La valeur court jusqu'à la ligne qui porte le guillemet fermant ; ses retours
+            # à la ligne sont conservés tels quels (normalisés en \n), sans rognage.
+            morceaux = [m[2]]
+            while not morceaux[-1].rstrip().endswith('"'):
+                if i >= len(lignes):
+                    erreurs.append(f"ligne {no} : valeur de « {m[1]} » non terminée en fin de fichier")
+                    morceaux = None
+                    break
+                morceaux.append(lignes[i])
+                i += 1
+            if morceaux is not None:
+                morceaux[-1] = morceaux[-1].rstrip()[:-1]
+                courante["data"][m[1]] = "\n".join(morceaux)
         else:
             erreurs.append(f"ligne {no} : ligne non reconnue {ligne!r}")
     if erreurs:

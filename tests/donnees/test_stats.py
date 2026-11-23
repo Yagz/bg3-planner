@@ -19,6 +19,22 @@ class TestEntrees(unittest.TestCase):
         e = stats.entrees('new entry "A"\ntype "T"\ndata "K" ""\ndata "L" "a b;1"\n')
         self.assertEqual(e[0]["data"], {"K": "", "L": "a b;1"})
 
+    def test_valeur_sur_plusieurs_lignes(self):
+        t = ('new entry "A"\ntype "T"\n'
+             'data "TargetCeiling" "0.8\n"\n'
+             'data "Tip" "Apply(A, 1);\nApply(B, 2);"\n'
+             'data "Boosts" "IF(X):Dmg(\n  1d4,\n  Fire\n)"\n'
+             'data "Apres" "ok"\n')
+        attendu = {"TargetCeiling": "0.8\n", "Tip": "Apply(A, 1);\nApply(B, 2);",
+                   "Boosts": "IF(X):Dmg(\n  1d4,\n  Fire\n)", "Apres": "ok"}
+        self.assertEqual(stats.entrees(t)[0]["data"], attendu)
+        self.assertEqual(stats.entrees(t.replace("\n", "\r\n"))[0]["data"], attendu)
+
+    def test_valeur_non_terminee_en_fin_de_fichier(self):
+        with self.assertRaises(stats.ErreurStats) as ctx:
+            stats.entrees('new entry "A"\ntype "T"\ndata "K" "abc\nsuite\n')
+        self.assertIn("ligne 3", str(ctx.exception))
+
     def test_ligne_inconnue(self):
         with self.assertRaises(stats.ErreurStats):
             stats.entrees('new entry "A"\ntype "T"\nn_importe_quoi\n')
