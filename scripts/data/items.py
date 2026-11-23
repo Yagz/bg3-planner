@@ -9,6 +9,8 @@ Description are the item's texts.
 import json
 from pathlib import Path
 
+# Wiki kind -> stats type of the item.
+_STATS_TYPES = {"equipment": "Armor", "weapon": "Weapon"}
 WIKI = Path(__file__).resolve().parents[2] / "data" / "wiki" / "items.json"
 
 
@@ -62,6 +64,8 @@ def _item(uid: str, w: dict, item_stats: dict, templates: dict, handle) -> tuple
     if found is None:
         return None, errors
     found_by, entry, root = found
+    if _STATS_TYPES.get(w.get("kind")) != entry.get("type"):
+        return None, [f"{where}: wiki kind {w.get('kind')!r} does not match the stats type {entry.get('type')!r}"]
     template = templates.get(root)
     if template is None:
         return None, [f"{where}: RootTemplate {root} not found among the templates"]
@@ -87,6 +91,8 @@ def build(wiki: dict[str, dict], item_stats: dict[str, dict], templates: dict[st
     for uid in sorted(excluded):
         if uid not in wiki or wiki[uid].get("legacy") is not None:
             errors.append(f"items_excluded.txt: {uid} is not an obtainable wiki item; remove it")
+        elif _item(uid, wiki[uid], item_stats, templates, handle)[0] is not None:
+            errors.append(f"items_excluded.txt: {uid} is excluded but found without error; remove it")
     res = {}
     for uid in scope(wiki, excluded):
         item, problems = _item(uid, wiki[uid], item_stats, templates, handle)

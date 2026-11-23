@@ -2,43 +2,43 @@
 # An entry that is not an obtainable wiki item is an error, so the list stays exact.
 # Listed from the import of game 4.1.1.7631656; to review with the user case by case.
 
-# Not in the item stats, and the wiki uuid is not a RootTemplate: placed level objects, 36 named S_* (39).
-S_CAMP_StolenInstrument  # placed level object: the wiki uuid is not a RootTemplate
-S_CRE_Abbot4_Weapon  # placed level object: the wiki uuid is not a RootTemplate
-S_CRE_BloodOfLathander  # placed level object: the wiki uuid is not a RootTemplate
-S_DEN_AppCirclet  # placed level object: the wiki uuid is not a RootTemplate
-S_DEN_BardInstrument  # placed level object: the wiki uuid is not a RootTemplate
-S_DEN_NarrativeLoot_NettieGloves  # placed level object: the wiki uuid is not a RootTemplate
-S_DEN_NarrativeLoot_ZevlorSword  # placed level object: the wiki uuid is not a RootTemplate
-S_FOR_Bottomless_MurderWeap  # placed level object: the wiki uuid is not a RootTemplate
-S_FOR_ShovelFlavourItem_Knife  # placed level object: the wiki uuid is not a RootTemplate
-S_GLO_Orin_TeleportRing  # placed level object: the wiki uuid is not a RootTemplate
-S_GOB_WolfPens_BloodFang  # placed level object: the wiki uuid is not a RootTemplate
-S_HAV_AncientFist_ImportantItem_Surgeon  # placed level object: the wiki uuid is not a RootTemplate
-S_LOW_CountingHouse_Vault1_Nymph_Cloak  # placed level object: the wiki uuid is not a RootTemplate
-S_LOW_CountingHouse_Vault2_JannathHat  # placed level object: the wiki uuid is not a RootTemplate
-S_LOW_CountingHouse_Vault3_Crossbow  # placed level object: the wiki uuid is not a RootTemplate
-S_LOW_CountingHouse_Vault4_WaveTrident  # placed level object: the wiki uuid is not a RootTemplate
-S_LOW_CountingHouse_Vault5_MorningStar  # placed level object: the wiki uuid is not a RootTemplate
-S_LOW_CountingHouse_Vault7_PicklocksGloves  # placed level object: the wiki uuid is not a RootTemplate
-S_LOW_Giuldhall_Member_005_Ring  # placed level object: the wiki uuid is not a RootTemplate
-S_LOW_JaheirasHouse_StaffOfTheRam  # placed level object: the wiki uuid is not a RootTemplate
-S_LOW_KurwinCoffin_MausoleumDogCollar_01  # placed level object: the wiki uuid is not a RootTemplate
-S_LOW_KurwinCoffin_MausoleumDogCollar_02  # placed level object: the wiki uuid is not a RootTemplate
-S_LOW_KurwinCoffin_MausoleumDogCollar_03  # placed level object: the wiki uuid is not a RootTemplate
-S_MOO_JailbreakHammer  # placed level object: the wiki uuid is not a RootTemplate
-S_SCL_HarperBlade  # placed level object: the wiki uuid is not a RootTemplate
-S_SCL_OliversDiary_DadsAxe  # placed level object: the wiki uuid is not a RootTemplate
-S_SHA_FalseSpearOfNight  # placed level object: the wiki uuid is not a RootTemplate
-S_TWN_CentralSquare_RitualDagger  # placed level object: the wiki uuid is not a RootTemplate
-S_TWN_ConfiscatedCratesTradersRing  # placed level object: the wiki uuid is not a RootTemplate
-S_UND_CallarduranTrinket  # placed level object: the wiki uuid is not a RootTemplate
-S_UND_DuergarGaleItem  # placed level object: the wiki uuid is not a RootTemplate
-S_UND_MushroomHunter_WeddingRing  # placed level object: the wiki uuid is not a RootTemplate
-S_UND_SharranTargetPractice_Crossbow  # placed level object: the wiki uuid is not a RootTemplate
-S_UND_SwordInStone_SwordReward  # placed level object: the wiki uuid is not a RootTemplate
-S_UNI_LOW_GuildRing  # placed level object: the wiki uuid is not a RootTemplate
-S_WYR_Circus_WheelPrize_ArmorPlusOne  # placed level object: the wiki uuid is not a RootTemplate
+# Not in the item stats, and the wiki uuid is not a RootTemplate: likely placed level objects, 36 of them named S_* (39).
+S_CAMP_StolenInstrument  # likely a placed level object (the wiki uuid is not a RootTemplate)
+S_CRE_Abbot4_Weapon  # likely a placed level object (the wiki uuid is not a RootTemplate)
+S_CRE_BloodOfLathander  # likely a placed level object (the wiki uuid is not a RootTemplate)
+S_DEN_AppCirclet  # likely a placed level object (the wiki uuid is not a RootTemplate)
+S_DEN_BardInstrument  # likely a placed level object (the wiki uuid is not a RootTemplate)
+S_DEN_NarrativeLoot_NettieGloves  # likely a placed level object (the wiki uuid is not a RootTemplate)
+S_DEN_NarrativeLoot_ZevlorSword  # likely a placed level object (the wiki uuid is not a RootTemplate)
+S_FOR_Bottomless_MurderWeap  # likely a placed level object (the wiki uuid is not a RootTemplate)
+S_FOR_ShovelFlavourItem_Knife  # likely a placed level object (the wiki uuid is not a RootTemplate)
+S_GLO_Orin_TeleportRing  # likely a placed level object (the wiki uuid is not a RootTemplate)
+S_GOB_WolfPens_BloodFang  # likely a placed level object (the wiki uuid is not a RootTemplate)
+S_HAV_AncientFist_ImportantItem_Surgeon  # likely a placed level object (the wiki uuid is not a RootTemplate)
+S_LOW_CountingHouse_Vault1_Nymph_Cloak  # likely a placed level object (the wiki uuid is not a RootTemplate)
+S_LOW_CountingHouse_Vault2_JannathHat  # likely a placed level object (the wiki uuid is not a RootTemplate)
+S_LOW_CountingHouse_Vault3_Crossbow  # likely a placed level object (the wiki uuid is not a RootTemplate)
+S_LOW_CountingHouse_Vault4_WaveTrident  # likely a placed level object (the wiki uuid is not a RootTemplate)
+S_LOW_CountingHouse_Vault5_MorningStar  # likely a placed level object (the wiki uuid is not a RootTemplate)
+S_LOW_CountingHouse_Vault7_PicklocksGloves  # likely a placed level object (the wiki uuid is not a RootTemplate)
+S_LOW_Giuldhall_Member_005_Ring  # likely a placed level object (the wiki uuid is not a RootTemplate)
+S_LOW_JaheirasHouse_StaffOfTheRam  # likely a placed level object (the wiki uuid is not a RootTemplate)
+S_LOW_KurwinCoffin_MausoleumDogCollar_01  # likely a placed level object (the wiki uuid is not a RootTemplate)
+S_LOW_KurwinCoffin_MausoleumDogCollar_02  # likely a placed level object (the wiki uuid is not a RootTemplate)
+S_LOW_KurwinCoffin_MausoleumDogCollar_03  # likely a placed level object (the wiki uuid is not a RootTemplate)
+S_MOO_JailbreakHammer  # likely a placed level object (the wiki uuid is not a RootTemplate)
+S_SCL_HarperBlade  # likely a placed level object (the wiki uuid is not a RootTemplate)
+S_SCL_OliversDiary_DadsAxe  # likely a placed level object (the wiki uuid is not a RootTemplate)
+S_SHA_FalseSpearOfNight  # likely a placed level object (the wiki uuid is not a RootTemplate)
+S_TWN_CentralSquare_RitualDagger  # likely a placed level object (the wiki uuid is not a RootTemplate)
+S_TWN_ConfiscatedCratesTradersRing  # likely a placed level object (the wiki uuid is not a RootTemplate)
+S_UND_CallarduranTrinket  # likely a placed level object (the wiki uuid is not a RootTemplate)
+S_UND_DuergarGaleItem  # likely a placed level object (the wiki uuid is not a RootTemplate)
+S_UND_MushroomHunter_WeddingRing  # likely a placed level object (the wiki uuid is not a RootTemplate)
+S_UND_SharranTargetPractice_Crossbow  # likely a placed level object (the wiki uuid is not a RootTemplate)
+S_UND_SwordInStone_SwordReward  # likely a placed level object (the wiki uuid is not a RootTemplate)
+S_UNI_LOW_GuildRing  # likely a placed level object (the wiki uuid is not a RootTemplate)
+S_WYR_Circus_WheelPrize_ArmorPlusOne  # likely a placed level object (the wiki uuid is not a RootTemplate)
 WPN_HUM_Glaive_A_0_Rusty_A  # not an item stats name, and the wiki uuid is not a RootTemplate (likely a placed level object)
 WPN_HUM_Toy_Sword_A_Andrik  # not an item stats name, and the wiki uuid is not a RootTemplate (likely a placed level object)
 WPN_HUM_Toy_Sword_A_Chessa  # not an item stats name, and the wiki uuid is not a RootTemplate (likely a placed level object)

@@ -149,6 +149,22 @@ class ItemsTest(unittest.TestCase):
         rules = build(**{**data, "excluded": {"WPN_Sword": "not in the game's item stats"}})
         self.assertEqual(sorted(rules["items"]), ["ARM_Boots_Fancy", "MAG_Boots"])
 
+    def test_exclusion_no_longer_needed_is_error(self):
+        errors = errors_of(excluded={"WPN_Sword": "was missing from the stats"})
+        self.assertEqual(len(errors), 1, errors)
+        self.assertIn("items_excluded", errors[0])
+        self.assertIn("WPN_Sword", errors[0])
+        self.assertIn("remove it", errors[0])
+
+    def test_kind_must_match_stats_type(self):
+        for uid, kind in (("MAG_Boots", "weapon"), ("WPN_Sword", "equipment"), ("ARM_Boots_Fancy", "trinket")):
+            data = item_data()
+            data["wiki"][uid]["kind"] = kind
+            errors = errors_of(**data)
+            self.assertEqual(len(errors), 1, errors)
+            self.assertIn(f"item {uid}", errors[0])
+            self.assertIn(repr(kind), errors[0])
+
     def test_stale_exclusion_is_error(self):
         errors = errors_of(excluded={"MAG_Old": "legacy anyway", "MAG_Ghost": "unknown"})
         self.assertEqual(len(errors), 2, errors)
