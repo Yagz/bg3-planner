@@ -47,14 +47,14 @@ def resolve(rules: dict, en: dict[str, str], fr: dict[str, str],
                 continue
             entries = []
             for language, table, result in (("English", en, tables[0]), ("French", fr, tables[1])):
-                if name not in table:
-                    errors.append(f"{key}: name handle {name} missing from the {language} table")
-                    continue
-                if description is not None and description not in table:
-                    errors.append(f"{key}: description handle {description} missing from the {language} table")
-                    continue
-                entries.append((result, {"name": table[name],
-                                         "description": table[description] if description is not None else None}))
+                missing = False
+                for kind, h in (("name", name), ("description", description)):
+                    if h is not None and not table.get(h, "").strip():
+                        errors.append(f"{key}: {kind} handle {h} missing or empty in the {language} table")
+                        missing = True
+                if not missing:
+                    entries.append((result, {"name": table[name], "description":
+                                             table[description] if description is not None else None}))
             if len(entries) == 2:
                 for result, entry in entries:
                     result[key] = entry

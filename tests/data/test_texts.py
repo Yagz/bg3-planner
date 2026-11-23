@@ -41,6 +41,19 @@ class TextsTest(unittest.TestCase):
         self.assertIn("class:Fighter", joined)
         self.assertIn("passive:Sharpshooter", joined)
 
+    def test_empty_or_blank_translation_is_missing(self):
+        for table, handle in ((dict(FR, hFighter=""), "hFighter"), (dict(FR, hFighterDesc="  \n"), "hFighterDesc")):
+            with self.assertRaises(texts.MissingText) as ctx:
+                texts.resolve(rules(), EN, table, set())
+            self.assertEqual(len(ctx.exception.errors), 1)
+            self.assertIn(handle, ctx.exception.errors[0])
+
+    def test_missing_name_and_description_give_two_errors(self):
+        fr = {k: v for k, v in FR.items() if k not in ("hFighter", "hFighterDesc")}
+        with self.assertRaises(texts.MissingText) as ctx:
+            texts.resolve(rules(), EN, fr, set())
+        self.assertEqual(len(ctx.exception.errors), 2)
+
     def test_missing_name_handle_is_an_error(self):
         r = rules()
         r["feats"]["Sharpshooter"]["text"]["name"] = None
