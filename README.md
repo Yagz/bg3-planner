@@ -10,6 +10,10 @@ En conception. Voir [`docs/superpowers/specs/2026-11-23-bg3-planner-design.md`](
 
 Design phase. See the design document above (in French).
 
+## Licence / License
+
+Code sous licence GNU GPL v3, voir [`LICENSE`](LICENSE). *Code licensed under the GNU GPL v3.* Les données ont leurs propres conditions, ci-dessous. *Data has its own terms, below.*
+
 ## Données / Data
 
 - Les noms et descriptions du jeu sont la propriété de Larian Studios ; ce projet de fans est gratuit et non commercial. *Game names and descriptions are the property of Larian Studios; this is a free, non-commercial fan project.*

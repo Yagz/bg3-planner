@@ -15,6 +15,7 @@ Le contexte propre au poste (chemins du jeu, outils existants, règles de travai
 
 ## Données et licences
 
+- Code : GPL-3.0 (`LICENSE`). Du code repris d'un autre projet doit avoir une licence compatible (MIT, BSD, GPL-3.0…) et garder sa mention d'origine ; un projet sans licence se lit, ne se copie pas.
 - `data/larian/` : produit par script depuis les fichiers du jeu, jamais édité à la main ; contenu propriété de Larian Studios, projet de fans non commercial.
 - `data/wiki/` : produit par script depuis bg3.wiki (tables Cargo), CC BY-NC-SA 4.0, attribution obligatoire. bg3.wiki limite fortement les robots : extraction ponctuelle, lente, jamais depuis le site.
 - `data/regles/` : écrit à la main, bilingue (compagnons, alertes d'histoire, bonus uniques), faits sourcés sur bg3.wiki, libellés tirés des tables de traduction.
