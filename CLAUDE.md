@@ -20,6 +20,11 @@ Machine-specific context (game paths, local tools, working rules, state of the p
 - `data/wiki/`: produced by script from bg3.wiki (Cargo tables), CC BY-NC-SA 4.0, attribution required. bg3.wiki strongly limits bots: one-off, slow extraction, never from the site.
 - `data/rules/`: hand-written, bilingual (companions, story alerts, unique bonuses), facts sourced from bg3.wiki, labels taken from the translation tables.
 
+## Data workflows
+
+- Re-import the game data after a patch: skill `.claude/skills/import-game-data`. Refresh the bg3.wiki data: skill `.claude/skills/refresh-wiki-data`.
+- Data exceptions (texts left unnamed, excluded items, ambiguous wiki uids, game typos, duplicate progressions) are decisions for the maintainer: present the grouped list, never add entries to the exception lists on your own.
+
 ## Conventions
 
 - **Everything public is in English**: code (identifiers, comments, docstrings, tests, error messages, keys of produced JSON, folder names), documentation and commit messages. French appears only as product content (French game texts, the French UI and notices). Maintainer-local material (`docs/`, `CLAUDE.local.md`) may be in French and is not versioned.
