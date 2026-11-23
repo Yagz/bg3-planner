@@ -105,6 +105,19 @@ class _Builder:
             self.error(f"{where}: unknown selector or requirement {e.text!r}")
             return []
 
+    def selectors(self, value: str | None, where: str) -> list[dict]:
+        """Parsed selectors, with the SelectSpells class UUID converted to that class's Name."""
+        parsed = self.parse(selectors.parse, value, where)
+        class_names = {n["attributes"]["UUID"]: n["attributes"].get("Name")
+                       for n in self.lsx["ClassDescriptions"].values()}
+        for s in parsed:
+            class_uuid = _uuid(s.get("class"))
+            if "class" in s:
+                s["class"] = class_names.get(class_uuid) if class_uuid else None
+                if class_uuid and class_uuid not in class_names:
+                    self.error(f"{where}: {s['function']} references unknown class {class_uuid}")
+        return parsed
+
     def unique_names(self, nodes: list[dict], kind: str) -> dict[str, dict]:
         """Index nodes by Name; a Name used twice is an error."""
         by_name: dict[str, list[str]] = {}
@@ -156,6 +169,7 @@ class _Builder:
     def races(self) -> dict:
         all_races = self.lsx["Races"]
         kept_uuids = []
+        base_uuids: set[str] = set()
         for preset_uuid, preset in self.presets.items():
             for key in ("RaceUUID", "SubRaceUUID"):
                 race = _uuid(preset["attributes"].get(key))
@@ -163,19 +177,27 @@ class _Builder:
                     continue
                 if race not in all_races:
                     self.error(f"preset {preset_uuid}: {key} not found {race}")
-                elif race not in kept_uuids:
-                    kept_uuids.append(race)
+                else:
+                    if key == "RaceUUID":
+                        base_uuids.add(race)
+                    if race not in kept_uuids:
+                        kept_uuids.append(race)
         kept = [all_races[u] for u in kept_uuids]
         names = {n["attributes"]["UUID"]: n["attributes"].get("Name") for n in kept}
         res = {}
         for name, n in self.unique_names(kept, "race").items():
             a = n["attributes"]
-            parent = _uuid(a.get("ParentGuid"))
-            if parent is not None and parent not in names:
-                self.error(f"race {name}: parent race {parent} is not a playable race")
+            # A preset's RaceUUID is a base race: its game parent (a generic non-playable race)
+            # is ignored. A race kept only as a SubRaceUUID must have a kept parent.
+            parent = None
+            if a["UUID"] not in base_uuids:
+                parent_uuid = _uuid(a.get("ParentGuid"))
+                parent = names.get(parent_uuid)
+                if parent is None:
+                    self.error(f"race {name}: subrace whose parent {parent_uuid} is not a playable race")
             res[name] = {
                 "uuid": a["UUID"],
-                "parent": names.get(parent) if parent else None,
+                "parent": parent,
                 "table": _uuid(a.get("ProgressionTableUUID")),
                 "text": _text(a),
             }
@@ -209,7 +231,7 @@ class _Builder:
             res[name] = {
                 "uuid": a["UUID"],
                 "passives": _split(a.get("PassivesAdded")),
-                "selectors": self.parse(selectors.parse, a.get("Selectors"), where),
+                "selectors": self.selectors(a.get("Selectors"), where),
                 "requirements": self.parse(selectors.requirements, a.get("Requirements"), where),
                 "repeatable": self.read_bool(a, "CanBeTakenMultipleTimes", where),
                 "text": _text(description["attributes"]) if description else {"name": None, "description": None},
@@ -253,13 +275,14 @@ class _Builder:
                 "boosts": _split(a.get("Boosts")),
                 "passives_added": _split(a.get("PassivesAdded")),
                 "passives_removed": _split(a.get("PassivesRemoved")),
-                "selectors": self.parse(selectors.parse, a.get("Selectors"), where),
+                "selectors": self.selectors(a.get("Selectors"), where),
                 "subclasses": subclasses,
             })
         res.sort(key=lambda p: (p["table"], p["level"] or 0, p["multiclass"], p["uuid"]))
         return res
 
-    def lists(self, referencing: list[tuple[str, list[dict]]]) -> dict:
+    def lists(self, referencing: list[tuple[str, str, str | None, str | None]]) -> dict:
+        """Referenced lists; each reference is (where, what, list UUID, required source file or None)."""
         available: dict[str, tuple[str, dict, str, str, str]] = {}
         for file, (kind, attribute, separator) in _LIST_FILES.items():
             for uuid, n in self.lsx[file].items():
@@ -268,13 +291,11 @@ class _Builder:
                     continue
                 available[uuid] = (file, n, kind, attribute, separator)
         wanted: list[str] = []
-        for where, parsed in referencing:
-            for s in parsed:
-                uuid = s.get("list")
-                if uuid not in available:
-                    self.error(f"{where}: {s['function']} references unknown list {uuid}")
-                elif uuid not in wanted:
-                    wanted.append(uuid)
+        for where, what, uuid, file in referencing:
+            if uuid not in available or (file is not None and available[uuid][0] != file):
+                self.error(f"{where}: {what} references unknown {file or 'list'} {uuid}")
+            elif uuid not in wanted:
+                wanted.append(uuid)
         res = {}
         for uuid in sorted(wanted):
             _, n, kind, attribute, separator = available[uuid]
@@ -301,8 +322,12 @@ class _Builder:
         backgrounds = self.backgrounds()
         feats = self.feats()
         progressions = self.progressions(classes, races)
-        referencing = [(f"progression {p['uuid']}", p["selectors"]) for p in progressions]
-        referencing += [(f"feat {name}", f["selectors"]) for name, f in feats.items()]
+        referencing = [(f"class {name}", "SpellList", c["spell_list"], "SpellLists")
+                       for name, c in classes.items() if c["spell_list"] is not None]
+        referencing += [(f"progression {p['uuid']}", s["function"], s.get("list"), None)
+                        for p in progressions for s in p["selectors"]]
+        referencing += [(f"feat {name}", s["function"], s.get("list"), None)
+                        for name, f in feats.items() for s in f["selectors"]]
         lists = self.lists(referencing)
 
         spell_refs: dict[str, str] = {}

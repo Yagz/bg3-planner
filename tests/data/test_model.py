@@ -145,11 +145,52 @@ class TestModel(unittest.TestCase):
         data[1]["pr-elf2"] = node("CharacterCreationPreset", UUID="pr-elf2", RaceUUID="r-elf2")
         self.assertTrue(any("Elf" in e for e in errors_of(data)))
 
-    def test_subrace_whose_parent_is_not_kept_is_orphan(self):
+    def test_base_race_parent_ignored(self):
         data = dataset()
-        data[0]["Races"]["r-high"] = node("Race", Name="HighWraith", UUID="r-high", ParentGuid="r-wraith")
+        data[0]["Races"]["r-elf"]["attributes"]["ParentGuid"] = "r-generic-not-playable"
+        self.assertIsNone(build(data)["races"]["Elf"]["parent"])
+
+    def test_subrace_parent_must_be_kept(self):
+        data = dataset()
+        data[0]["Races"]["r-high"] = node("Race", Name="HighElf", UUID="r-high", ParentGuid="r-elf")
         data[1]["pr-high"] = node("CharacterCreationPreset", UUID="pr-high", RaceUUID="r-elf", SubRaceUUID="r-high")
-        self.assertTrue(any("HighWraith" in e for e in errors_of(data)))
+        self.assertEqual(build(data)["races"]["HighElf"]["parent"], "Elf")
+        data[0]["Races"]["r-high"]["attributes"]["ParentGuid"] = "r-wraith"
+        self.assertTrue(any("HighElf" in e for e in errors_of(data)))
+        data[0]["Races"]["r-high"]["attributes"]["ParentGuid"] = NULL
+        self.assertTrue(any("HighElf" in e for e in errors_of(data)))
+
+    def test_race_both_base_and_subrace_is_base(self):
+        data = dataset()
+        data[0]["Races"]["r-elf"]["attributes"]["ParentGuid"] = "r-generic-not-playable"
+        data[1]["pr-x"] = node("CharacterCreationPreset", UUID="pr-x", RaceUUID="r-elf", SubRaceUUID="r-elf")
+        self.assertIsNone(build(data)["races"]["Elf"]["parent"])
+
+    def test_class_spell_list_kept(self):
+        data = dataset()
+        data[0]["ClassDescriptions"]["c-ek"]["attributes"]["SpellList"] = "l-class"
+        data[0]["SpellLists"]["l-class"] = node("SpellList", UUID="l-class", Name="Class", Spells="Target_Prepared")
+        data[2]["Target_Prepared"] = {"type": "SpellData", "SpellType": "Target", "Level": "1"}
+        rules = build(data)
+        self.assertEqual(rules["lists"]["l-class"], {"name": "Class", "type": "spells", "items": ["Target_Prepared"]})
+        self.assertIn("Target_Prepared", rules["spells"])
+
+    def test_class_spell_list_unknown_is_orphan(self):
+        data = dataset()
+        data[0]["ClassDescriptions"]["c-ek"]["attributes"]["SpellList"] = "l-skills"
+        self.assertTrue(any("l-skills" in e and "EldritchKnight" in e for e in errors_of(data)))
+        data[0]["ClassDescriptions"]["c-ek"]["attributes"]["SpellList"] = "l-ghost"
+        self.assertTrue(any("l-ghost" in e for e in errors_of(data)))
+
+    def test_select_spells_class_converted_to_name(self):
+        data = dataset()
+        data[0]["Feats"]["f-alert"]["attributes"]["Selectors"] = "SelectSpells(l-spells,1,0,,,,,,c-ek)"
+        self.assertEqual(build(data)["feats"]["Alert"]["selectors"][0]["class"], "EldritchKnight")
+        p = next(p for p in build()["progressions"] if p["uuid"] == "p-ek-3")
+        self.assertIsNone(p["selectors"][0]["class"])
+        self.assertNotIn("class", p["selectors"][1])
+        data[0]["Feats"]["f-alert"]["attributes"]["Selectors"] = "SelectSpells(l-spells,1,0,,,,,,c-ghost)"
+        self.assertTrue(any("c-ghost" in e for e in errors_of(data)))
 
     def test_preset_race_missing_is_orphan(self):
         data = dataset()
