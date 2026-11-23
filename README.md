@@ -1,8 +1,8 @@
 # BG3 Planner
 
-**Français** — Planificateur de partie pour Baldur's Gate 3 : groupe, builds niveau par niveau pour le personnage et ses compagnons, objets clés, choix de partie. Interface et données du jeu en français et en anglais. Tout reste dans le navigateur ; une partie s'exporte et s'importe sous forme d'une chaîne de texte. La lecture des sauvegardes viendra dans un second temps.
+**Français** — Planificateur de partie pour Baldur's Gate 3 : groupe, builds niveau par niveau pour le personnage et ses compagnons, objets clés, choix de partie. 
 
-**English** — Party planner for Baldur's Gate 3: party, level-by-level builds for your character and companions, key items, run decisions. Interface and game data in English and French. Everything stays in your browser; a run exports and imports as a single text string. Save-file reading comes later.
+**English** — Party planner for Baldur's Gate 3: party, level-by-level builds for your character and companions, key items, run decisions.
 
 ## Statut / Status
 
