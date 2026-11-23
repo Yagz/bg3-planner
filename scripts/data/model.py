@@ -435,7 +435,7 @@ class _Builder:
                 "school": s.get("SpellSchool") or None,
                 "text": _text(s),
             }
-        passives = {name: {"text": _text(s)}
+        passives = {name: {"boosts": _split(s.get("Boosts")), "text": _text(s)}
                     for name, s in self.stats_entries(list(passive_refs), "passive", passive_refs).items()}
 
         for typo in sorted(set(self.typos) - self.typos_used):

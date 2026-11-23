@@ -276,8 +276,14 @@ class TestModel(unittest.TestCase):
         self.assertEqual(sorted(build()["passives"]), sorted([
             "Acolyte_Passive", "Alert_Passive", "Fighter_Passive", "Old_Passive", "Darkvision", "Style_A",
             "Style_B"]))
-        self.assertEqual(build()["passives"]["Darkvision"], {"text": {"name": "hDarkvision",
-                                                                       "description": "hDarkvisionDesc"}})
+        self.assertEqual(build()["passives"]["Darkvision"], {"boosts": [], "text": {
+            "name": "hDarkvision", "description": "hDarkvisionDesc"}})
+
+    def test_passive_boosts(self):
+        data = dataset()
+        data[2]["Darkvision"]["Boosts"] = "DarkvisionRangeMin(12); ;\n  ActiveCharacterLight(abc);\nIF(x):Advantage(Skill, Stealth)  ;"
+        self.assertEqual(build(data)["passives"]["Darkvision"]["boosts"],
+                         ["DarkvisionRangeMin(12)", "ActiveCharacterLight(abc)", "IF(x):Advantage(Skill, Stealth)"])
 
     def test_npc_progression_dropped(self):
         uuids = {p["uuid"] for p in build()["progressions"]}
