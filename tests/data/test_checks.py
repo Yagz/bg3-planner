@@ -32,7 +32,7 @@ RULES = {
               "l-pass": {"type": "passives", "items": ["Soldier"]}},
     "spells": {"Fireball": {}},
     "passives": {"Soldier": {}},
-    "items": {"MAG_Boots": {"kind": "equipment", "stats_type": "Armor", "slot": "Boots", "rarity": "Rare",
+    "items": {"MAG_Boots": {"kind": "equipment", "found_by": "stats", "stats_type": "Armor", "slot": "Boots", "rarity": "Rare",
                             "root_template": "t-boots"}},
 }
 KEYS = ["class:Wizard", "class:Evocation", "race:Elf", "race:HighElf", "background:bg-1", "feat:Alert",
@@ -207,6 +207,7 @@ class ChecksTest(unittest.TestCase):
         problems = verify(self.folder, {"items": 2})
         self.assertEqual(len(problems), 1)
         self.assertIn("items", problems[0])
+        self.assertEqual(checks.COUNTS["items"], 1167)
 
     def test_missing_notice(self):
         problems = self.problems(meta={"game": "1.0", "notice": {"en": "Notice.", "fr": ""}})

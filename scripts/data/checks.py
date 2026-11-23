@@ -13,7 +13,8 @@ KNOWN_DUPLICATES = Path(__file__).with_name("known_duplicates.txt")
 ITEMS_EXCLUDED = Path(__file__).with_name("items_excluded.txt")
 
 COUNTS = {"base_classes": 12, "subclasses": 58, "races": 39, "base_races": 11, "backgrounds": 22,
-          "origin_backgrounds": 11, "feats": 41, "progressions": 663, "lists": 342, "spells": 416, "passives": 475}
+          "origin_backgrounds": 11, "feats": 41, "progressions": 663, "lists": 342, "spells": 416, "passives": 475,
+          "items": 1167}
 # Type of the list each selector function picks from.
 SELECTOR_LIST_TYPES = {"AddSpells": "spells", "SelectSpells": "spells", "SelectPassives": "passives",
                        "ReplacePassives": "passives", "SelectSkills": "skills", "SelectSkillsExpertise": "skills",
