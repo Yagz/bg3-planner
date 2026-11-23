@@ -1,1 +1,38 @@
 # Identifiers (`<category>:<id>` or bare `<id>`) deliberately left without a name, one per line.
+
+# Passives with a "%%% Empty" developer-placeholder English name and no French text.
+passive:Bladesong_Armor_Message
+passive:Bladesong_Shield
+passive:Bladesong_Shield_Message
+passive:Bladesong_Unarmed
+passive:Bladesong_Weapon
+passive:Bladesong_Weapon_Message
+passive:CheekyTipple_Drunk
+passive:CosmicOmen_Ability
+passive:Divine_Strike_Death
+passive:FungalInfestation
+passive:MantleOfInspiration_Unlock2
+passive:MantleOfInspiration_Unlock3
+passive:SneakAttackSwitch
+passive:SneakAttack_Unlock
+passive:SongOfDefense_6
+passive:ThirstingBlade_Blade
+passive:ThirstingBlade_Tome
+passive:TidesOfChaos_Unlock
+passive:TransmutationStone_Activation
+passive:WrithingTide_Technical
+
+# Divine Strike toggles sharing one "%%% Divine Stike" placeholder name, with no French text.
+passive:Divine_Strike_Life_Toggle
+passive:Divine_Strike_Nature_Toggle
+passive:Divine_Strike_Tempest_Toggle
+passive:Divine_Strike_Trickery_Toggle
+passive:Divine_Strike_War_Toggle
+
+# Hidden technical or helper passives: "%%%" placeholder English name or description, no French text.
+passive:ArcaneWard_Cast
+passive:BardSpellcasting
+passive:FlurryOfBlowsUnlock
+passive:Monk_SoundSwitch
+passive:Rage_Armour_Message
+passive:Rage_NoHeavyArmour_VFX

@@ -1,0 +1,14 @@
+{
+ "game": "4.1.1.7631656",
+ "modules": [
+  "Shared",
+  "SharedDev",
+  "Gustav",
+  "GustavDev",
+  "GustavX"
+ ],
+ "notice": {
+  "en": "Non-commercial fan project; content owned by Larian Studios.",
+  "fr": "Projet de fans non commercial ; contenu propriété de Larian Studios."
+ }
+}
