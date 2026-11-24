@@ -2,6 +2,7 @@
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { loadGameData } from "../src/data/load.ts";
+import { bareNameOf } from "../src/data/names.ts";
 import type { GameData } from "../src/data/types.ts";
 import { resolve } from "../src/engine/progression.ts";
 import { validate } from "../src/engine/validate.ts";
@@ -55,27 +56,9 @@ async function readRun(arg: string): Promise<Run> {
   return run;
 }
 
-type Texts = GameData["texts"]["en"];
-
-/** Texts are keyed `<kind>:<identifier>`; the run holds bare identifiers, so index them without the kind. */
-const bare = new WeakMap<Texts, Texts>();
-function bareTexts(texts: Texts): Texts {
-  let flat = bare.get(texts);
-  if (flat === undefined) {
-    flat = {};
-    for (const [key, entry] of Object.entries(texts)) {
-      const id = key.slice(key.indexOf(":") + 1);
-      if (!Object.hasOwn(flat, id)) flat[id] = entry;
-    }
-    bare.set(texts, flat);
-  }
-  return flat;
-}
-
 function label(id: string, data: GameData, lang: "en" | "fr"): string {
-  const texts = bareTexts(data.texts[lang]);
-  const name = Object.hasOwn(texts, id) ? texts[id]?.name : undefined;
-  return name === undefined || name === null || name === "" || name === id ? id : `${id} (${name})`;
+  const name = bareNameOf(data.texts[lang], id);
+  return name === null || name === "" || name === id ? id : `${id} (${name})`;
 }
 
 function validateCommand(run: Run, data: GameData, lang: "en" | "fr"): number {
@@ -157,7 +140,7 @@ async function main(argv: string[]): Promise<number> {
       need(1);
       const run = await readRun(positional[0] ?? "");
       const data = await loadGameData(DATA_DIR);
-      console.log(toReadableJson(run, bareTexts(data.texts.en)));
+      console.log(toReadableJson(run, data.texts.en));
       return 0;
     }
     case "encode": {

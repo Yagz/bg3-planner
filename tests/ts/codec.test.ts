@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CodecError, PREFIX, decode, encode, toReadableJson } from "../../src/plan/codec.ts";
+import { loadGameData } from "../../src/data/load.ts";
 import { emptyRun } from "../../src/plan/model.ts";
 import type { Run } from "../../src/plan/model.ts";
 import { CURRENT_VERSION, migrate } from "../../src/plan/migrations.ts";
@@ -64,9 +65,9 @@ describe("readable JSON", () => {
   it("is accepted, hints are ignored and reported", async () => {
     const run = sampleRun();
     const texts = {
-      Halfling: { name: "Halfelin", description: null },
-      Ranger: { name: "Rôdeur", description: null },
-      Skill_Stealth: { name: "Discrétion", description: null },
+      "race:Halfling": { name: "Halfelin", description: null },
+      "class:Ranger": { name: "Rôdeur", description: null },
+      "spell:Skill_Stealth": { name: "Discrétion", description: null },
     };
     const json = toReadableJson(run, texts);
     expect(json).toContain("\n  ");
@@ -76,6 +77,33 @@ describe("readable JSON", () => {
     expect(decoded.run).toEqual(run);
     expect(decoded.warnings).toHaveLength(1);
     expect(decoded.warnings[0]).toMatch(/hint/);
+  });
+
+  it("resolves names from the real texts tables, in each language", async () => {
+    const data = await loadGameData("data/larian");
+    const background = Object.keys(data.rules.backgrounds)[0] ?? "";
+    const spell = Object.keys(data.rules.spells)[0] ?? "";
+    const run = emptyRun();
+    run.characters = [
+      {
+        id: "c1", who: "player", race: "Halfling", subrace: "LightfootHalfling", background,
+        abilities: { Strength: 8, Dexterity: 15, Constitution: 14, Intelligence: 8, Wisdom: 13, Charisma: 10 },
+        levels: [{ class: "Ranger", choices: { "x/0": [spell] } }],
+        items: [], notes: "",
+      },
+    ];
+    for (const lang of ["en", "fr"] as const) {
+      const texts = data.texts[lang];
+      const parsed = JSON.parse(toReadableJson(run, texts));
+      const hints = parsed.characters[0]._names;
+      expect(hints["Ranger"]).toBe(texts["class:Ranger"]?.name);
+      expect(hints["Halfling"]).toBe(texts["race:Halfling"]?.name);
+      expect(hints[background]).toBe(texts[`background:${background}`]?.name);
+      expect(parsed.characters[0].levels[0]._names[spell]).toBe(texts[`spell:${spell}`]?.name);
+      expect(hints["Ranger"]).toBeTruthy();
+    }
+    const fr = JSON.parse(toReadableJson(run, data.texts.fr)).characters[0]._names["Ranger"];
+    expect(fr).toBe(data.texts.fr["class:Ranger"]?.name);
   });
 
   it("accepts a hand-written _name hint", async () => {

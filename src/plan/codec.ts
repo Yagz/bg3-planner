@@ -1,3 +1,6 @@
+import { bareNameOf, nameOf } from "../data/names.ts";
+import type { TextKind } from "../data/names.ts";
+import type { Texts } from "../data/types.ts";
 import { CodecError } from "./errors.ts";
 import { CURRENT_VERSION, MIGRATIONS, migrate } from "./migrations.ts";
 import type { Migration } from "./migrations.ts";
@@ -8,7 +11,6 @@ export { CodecError };
 
 export const PREFIX = "BG3P";
 
-type Texts = Record<string, { name: string; description: string | null }>;
 type Json = unknown;
 type Obj = Record<string, unknown>;
 
@@ -266,18 +268,18 @@ function validateRun(raw: Obj): Run {
 
 // ---------------------------------------------------------------- readable JSON
 
-function names(ids: Iterable<string | null>, texts: Texts): Record<string, string> {
+/** A hint entry per identifier; `kind` is null for choices, whose kind is not known. */
+function names(ids: Iterable<string | null>, texts: Texts, kind: TextKind | null): Record<string, string> {
   const out: Record<string, string> = {};
   for (const id of ids) {
-    if (id === null) continue;
-    const entry = Object.hasOwn(texts, id) ? texts[id] : undefined;
-    if (entry !== undefined) out[id] = entry.name;
+    if (id === null || id === "") continue;
+    const name = kind === null ? bareNameOf(texts, id) : nameOf(texts, kind, id);
+    if (name !== null) out[id] = name;
   }
   return out;
 }
 
-function withNames<T extends object>(value: T, ids: Iterable<string | null>, texts: Texts): T & { _names?: Record<string, string> } {
-  const found = names(ids, texts);
+function withNames<T extends object>(value: T, found: Record<string, string>): T & { _names?: Record<string, string> } {
   return Object.keys(found).length > 0 ? { ...value, _names: found } : value;
 }
 
@@ -287,16 +289,20 @@ export function toReadableJson(run: Run, texts: Texts): string {
     const levels = c.levels.map((level) =>
       withNames(
         level,
-        Object.values(level.choices).flatMap((ch) => (Array.isArray(ch) ? ch : [])),
-        texts,
+        {
+          ...names([level.class], texts, "class"),
+          ...names(Object.values(level.choices).flatMap((ch) => (Array.isArray(ch) ? ch : [])), texts, null),
+        },
       ),
     );
-    return withNames(
-      { ...c, levels },
-      [c.race, c.subrace, c.background, ...c.items, ...c.levels.map((l) => l.class)],
-      texts,
-    );
+    const found = {
+      ...names([c.race, c.subrace], texts, "race"),
+      ...names([c.background], texts, "background"),
+      ...names(c.items, texts, "item"),
+      ...names(c.levels.map((l) => l.class), texts, "class"),
+    };
+    return withNames({ ...c, levels }, found);
   });
-  const out = withNames({ ...run, characters }, run.uniqueItems, texts);
+  const out = withNames({ ...run, characters }, names(run.uniqueItems, texts, "item"));
   return JSON.stringify(out, null, 2);
 }
