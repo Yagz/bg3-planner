@@ -45,7 +45,7 @@ WIKI = {"MAG_Boots": {"uuid": "t-boots", "kind": "equipment", "rarity": "rare", 
 def verify(folder: Path, counts=COUNTS, **kwargs):
     """checks.verify on synthetic wiki items, no exclusion and no known duplicate, unless given."""
     return checks.verify(folder, counts, **{"wiki": WIKI, "excluded": {}, "duplicates": [], "descriptionless": set(),
-                                            **kwargs})
+                                            "unlocked": {}, **kwargs})
 META = {"game": "1.0", "modules": ["Shared"], "notice": {"en": "Notice.", "fr": "Mention."}}
 
 
@@ -270,6 +270,35 @@ class ChecksTest(unittest.TestCase):
         self.assertIn("notice.fr", problems[0])
         problems = self.problems(meta={"notice": {"en": "a", "fr": "b"}})
         self.assertIn("game", problems[0])
+
+    def test_unlocked_subclass(self):
+        rules = copy.deepcopy(RULES)
+        rules["classes"]["Necromancy"] = {"parent": "Wizard", "table": "t-necro", "spell_list": None}
+        rules["progressions"].append({"table": "t-necro", "subclasses": [], "passives_added": [], "passives_removed": [],
+                                      "selectors": []})
+        write(self.folder, rules=rules, keys=KEYS + ["class:Necromancy"])
+        counts = {**COUNTS, "subclasses": 2}
+        entry = {"parent": "Wizard", "reason": "Unlocked in play.", "source": "bg3.wiki: Wizard"}
+        self.assertEqual(verify(self.folder, counts, unlocked={"Necromancy": entry}), [])
+        cases = {
+            "Ghost": ({"Ghost": entry}, "not a class"),
+            "wrong parent": ({"Necromancy": {**entry, "parent": "Cleric"}}, "parent"),
+            "empty reason": ({"Necromancy": {**entry, "reason": " "}}, "reason"),
+            "empty source": ({"Necromancy": {**entry, "source": ""}}, "source"),
+            "offered": ({"Evocation": entry}, "offered"),
+        }
+        for name, (unlocked, word) in cases.items():
+            with self.subTest(name):
+                problems = verify(self.folder, counts, unlocked=unlocked)
+                self.assertEqual(len(problems), 1, problems)
+                self.assertIn("unlocked_subclasses", problems[0])
+                self.assertIn(word, problems[0])
+
+    def test_committed_unlocked_subclasses(self):
+        unlocked = checks.read_unlocked(checks.UNLOCKED_SUBCLASSES)
+        self.assertEqual(unlocked["Oathbreaker"]["parent"], "Paladin")
+        rules = json.loads((Path(checks.__file__).parents[2] / "data" / "larian" / "rules.json").read_text(encoding="utf-8"))
+        self.assertEqual(checks.check_unlocked(rules, unlocked), [])
 
 
 if __name__ == "__main__":

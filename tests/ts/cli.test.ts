@@ -129,6 +129,15 @@ describe("run command line", () => {
     expect(open.out).not.toContain("alternative rows");
   });
 
+  it("marks a subclass unlocked in play among the allowed subclasses", async () => {
+    const run = rangerRun(1);
+    run.characters[0]!.levels = [{ class: "Paladin", choices: {} }];
+    const result = cli("slots", await encode(run), "c1", "--lang", "fr");
+    expect(result.code).toBe(0);
+    expect(result.out).toMatch(/^ {4}Oathbreaker \(Parjure\) \(unlocked in play\)$/m);
+    expect(result.out).toMatch(/^ {4}Devotion \(.+\)$/m);
+  });
+
   it("lists a missing race, subrace, background and class", async () => {
     // Before any pick, a character has no progression row: these are its only open choices.
     const run = rangerRun(1);

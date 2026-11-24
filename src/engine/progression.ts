@@ -25,8 +25,10 @@ export type ResolvedLevel = {
    * same (table, level, multiclass) group: the game applies every row of such a group, and that choice is made once.
    */
   slots: Slot[];
-  /** Allowed subclass names when this level requires choosing one. */
+  /** Allowed subclass names when this level requires choosing one: the rows' subclasses, then those unlocked in play. */
   subclassChoice: string[] | null;
+  /** The names of `subclassChoice` that the game unlocks during play rather than offering them in a row. */
+  unlockedSubclasses: string[];
   featChoice: boolean;
 };
 
@@ -118,6 +120,7 @@ export function resolve(character: Character, data: GameData): { levels: Resolve
     const classRows: Progression[] = [];
     const subclassRows: Progression[] = [];
     let subclassChoice: string[] | null = null;
+    let unlocked: string[] = [];
 
     if (cls === "") {
       issue("incomplete", "choiceMissing", n, "class");
@@ -128,8 +131,13 @@ export function resolve(character: Character, data: GameData): { levels: Resolve
       const multiclass = classLevel === 1 && cls !== firstClass;
       classRows.push(...rowsAt(table, classLevel, multiclass));
 
-      const offered = [...new Set(classRows.flatMap((r) => r.subclasses))];
-      if (offered.length > 0) {
+      const rowSubclasses = [...new Set(classRows.flatMap((r) => r.subclasses))];
+      if (rowSubclasses.length > 0) {
+        // Subclasses the game unlocks during play (e.g. Oathbreaker) join the choice of their parent class.
+        unlocked = Object.keys(data.unlockedSubclasses).filter(
+          (name) => data.unlockedSubclasses[name]?.parent === cls && !rowSubclasses.includes(name),
+        );
+        const offered = [...rowSubclasses, ...unlocked];
         subclassChoice = offered;
         const slot = subclassSlot(cls);
         const choice = entry.choices[slot];
@@ -140,7 +148,9 @@ export function resolve(character: Character, data: GameData): { levels: Resolve
         } else if (choice.length !== 1 || !offered.includes(choice[0] ?? "")) {
           issue("invalid", "subclassNotOffered", n, slot, { class: cls, subclass: choice.join(", ") });
         } else {
-          subclasses.set(cls, choice[0] ?? "");
+          const chosen = choice[0] ?? "";
+          subclasses.set(cls, chosen);
+          if (unlocked.includes(chosen)) issue("notice", "subclassUnlockedInPlay", n, slot, { subclass: chosen, parent: cls });
         }
       }
 
@@ -156,7 +166,7 @@ export function resolve(character: Character, data: GameData): { levels: Resolve
       ...(subraceTable === null ? [] : rowsAt(subraceTable, n, false)),
     ];
     const slots = slotsOf(rows, n);
-    levels.push({ level: n, class: cls, classLevel, rows, slots, subclassChoice, featChoice: classRows.some((r) => r.feat) });
+    levels.push({ level: n, class: cls, classLevel, rows, slots, subclassChoice, unlockedSubclasses: unlocked, featChoice: classRows.some((r) => r.feat) });
   });
 
   return { levels, issues };

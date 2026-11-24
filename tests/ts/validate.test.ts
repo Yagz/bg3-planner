@@ -447,3 +447,44 @@ describe("validate, duplicate progression rows of the game", () => {
     for (const p of ["LightArmor", "MediumArmor", "Shields", "Morningstars", "Flails"]) expect(boosts.has(`Proficiency(${p})`)).toBe(true);
   });
 });
+
+describe("validate, subclasses unlocked in play", () => {
+  const PALADIN1 = "b60618d1-c262-42b5-9fdd-2c0f7aa5e5af";
+  const paladin = (choices: Record<string, Choice>) =>
+    character(["Paladin"], [{ [`${PALADIN1}/0`]: ["Athletics", "Insight"], [`${PALADIN1}/2`]: ["Strength", "Charisma"], ...choices }], FIGHTER_SCORES);
+
+  it("accepts Oathbreaker for a Paladin 1, with a notice that it is unlocked in play", () => {
+    const report = validate(runOf(paladin({ "subclass:Paladin": ["Oathbreaker"] })), data);
+    expect(report).toEqual({
+      status: "valid",
+      issues: [
+        { severity: "notice", code: "subclassUnlockedInPlay", character: "c1", level: 1, slot: "subclass:Paladin", params: { subclass: "Oathbreaker", parent: "Paladin" } },
+      ],
+    });
+  });
+
+  it("offers Oathbreaker alongside the oaths of the Paladin's row", () => {
+    const first = resolve(paladin({}), data).levels[0];
+    expect(first?.subclassChoice).toEqual(["Ancients", "Devotion", "Vengeance", "Crown", "Oathbreaker"]);
+    expect(first?.unlockedSubclasses).toEqual(["Oathbreaker"]);
+  });
+
+  it("applies the Oathbreaker table rows at Paladin levels 1 and 3", () => {
+    const table = data.rules.classes["Oathbreaker"]?.table;
+    const oathbreakerRows = (lvl: number) => data.rules.progressions.filter((p) => p.table === table && p.level === lvl).map((p) => p.uuid);
+    const levels: Record<string, Choice>[] = [{ "subclass:Paladin": ["Oathbreaker"] }, {}, {}];
+    const resolved = resolve(character(["Paladin", "Paladin", "Paladin"], levels, FIGHTER_SCORES), data).levels;
+    for (const lvl of [1, 3]) {
+      expect(oathbreakerRows(lvl)).toHaveLength(1);
+      expect(resolved[lvl - 1]?.rows.map((r) => r.uuid)).toEqual(expect.arrayContaining(oathbreakerRows(lvl)));
+    }
+  });
+
+  it("rejects Oathbreaker for a Fighter", () => {
+    const fighter = character(["Fighter", "Fighter", "Fighter"], [{}, {}, { "subclass:Fighter": ["Oathbreaker"] }], FIGHTER_SCORES);
+    const issues = validate(runOf(fighter), data).issues.filter((i) => i.slot === "subclass:Fighter");
+    expect(issues).toEqual([
+      { severity: "invalid", code: "subclassNotOffered", character: "c1", level: 3, slot: "subclass:Fighter", params: { class: "Fighter", subclass: "Oathbreaker" } },
+    ]);
+  });
+});

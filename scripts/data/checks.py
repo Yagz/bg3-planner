@@ -11,6 +11,7 @@ from scripts.data import items, model, texts
 UNNAMED = Path(__file__).with_name("unnamed.txt")
 KNOWN_DUPLICATES = Path(__file__).with_name("known_duplicates.txt")
 ITEMS_EXCLUDED = Path(__file__).with_name("items_excluded.txt")
+UNLOCKED_SUBCLASSES = Path(__file__).parents[2] / "data" / "rules" / "unlocked_subclasses.json"
 
 COUNTS = {"base_classes": 12, "subclasses": 58, "races": 39, "base_races": 11, "backgrounds": 22,
           "origin_backgrounds": 11, "feats": 41, "progressions": 663, "lists": 342, "spells": 416, "passives": 475,
@@ -177,11 +178,39 @@ def _check_meta(meta: dict) -> list[str]:
     return problems
 
 
+def read_unlocked(path: Path) -> dict[str, dict]:
+    """Hand-written subclasses unlocked during play: `{subclass: {"parent", "reason", "source"}}`."""
+    return json.loads(Path(path).read_text(encoding="utf-8"))
+
+
+def check_unlocked(rules: dict, unlocked: dict[str, dict]) -> list[str]:
+    """Each subclass unlocked in play is a subclass of its parent, with a reason and a source, and offered by no
+    progression row: once a row offers it, the entry is stale."""
+    problems = []
+    classes = rules.get("classes", {})
+    offered = {name for p in rules.get("progressions", []) for name in p.get("subclasses") or []}
+    for name, entry in unlocked.items():
+        where = f"unlocked_subclasses.json: {name}"
+        parent = entry.get("parent")
+        if name not in classes:
+            problems.append(f"{where}: not a class in rules.json")
+        elif not parent or classes[name].get("parent") != parent:
+            problems.append(f"{where}: parent {parent!r} is not its class parent {classes[name].get('parent')!r}")
+        for field in ("reason", "source"):
+            if not str(entry.get(field) or "").strip():
+                problems.append(f"{where}: empty {field}")
+        if name in offered:
+            problems.append(f"{where}: offered by a progression row, the entry is stale")
+    return problems
+
+
 def verify(folder: Path, counts: dict[str, int] = COUNTS, unnamed: set[str] | None = None,
            duplicates: list[frozenset[str]] | None = None, wiki: dict[str, dict] | None = None,
-           excluded: dict[str, str] | None = None, descriptionless: set[str] | None = None) -> list[str]:
+           excluded: dict[str, str] | None = None, descriptionless: set[str] | None = None,
+           unlocked: dict[str, dict] | None = None) -> list[str]:
     """Every problem found in the data folder, sorted; empty when everything is fine. `wiki` (default: the
-    committed bg3.wiki items) and `excluded` (default: items_excluded.txt) set the expected items."""
+    committed bg3.wiki items) and `excluded` (default: items_excluded.txt) set the expected items; `unlocked`
+    (default: data/rules/unlocked_subclasses.json) the subclasses unlocked in play."""
     folder = Path(folder)
     if unnamed is None:
         unnamed = texts.read_unnamed(UNNAMED)
@@ -193,11 +222,13 @@ def verify(folder: Path, counts: dict[str, int] = COUNTS, unnamed: set[str] | No
         wiki = items.read_wiki(items.WIKI)
     if excluded is None:
         excluded = model.read_excluded(ITEMS_EXCLUDED)
+    if unlocked is None:
+        unlocked = read_unlocked(UNLOCKED_SUBCLASSES)
     rules = _load(folder, "rules")
     tables = {name: _load(folder, name) for name in _LANGUAGES}
     problems = (_check_texts(rules, tables, unnamed, descriptionless) + _check_references(rules)
                 + _check_items(rules, wiki, excluded) + _check_counts(rules, counts) + _check_meta(_load(folder, "meta"))
-                + model.duplicate_problems(rules.get("progressions", []), duplicates))
+                + model.duplicate_problems(rules.get("progressions", []), duplicates) + check_unlocked(rules, unlocked))
     return sorted(problems)
 
 

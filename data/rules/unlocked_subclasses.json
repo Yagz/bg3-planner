@@ -1,0 +1,7 @@
+{
+  "Oathbreaker": {
+    "parent": "Paladin",
+    "reason": "Unlocked during play by breaking the Paladin's oath and accepting the Oathbreaker Knight's offer in camp; not available at character creation.",
+    "source": "bg3.wiki: Paladin (Oaths and Oathbreaking)"
+  }
+}

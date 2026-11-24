@@ -196,8 +196,17 @@ export interface Meta {
   notice: { en: string; fr: string };
 }
 
+/** A subclass the game unlocks during play, offered by no progression row (hand-written, `data/rules/`). */
+export interface UnlockedSubclass {
+  parent: string;
+  reason: string;
+  source: string;
+}
+
 export interface GameData {
   rules: Rules;
   texts: { en: Texts; fr: Texts };
   meta: Meta;
+  /** Keyed by subclass name. */
+  unlockedSubclasses: Record<string, UnlockedSubclass>;
 }

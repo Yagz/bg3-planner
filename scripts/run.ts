@@ -110,9 +110,9 @@ function slotsCommand(run: Run, data: GameData, lang: "en" | "fr", characterId: 
   for (const level of levels) {
     const choices = character.levels[level.level - 1]?.choices ?? {};
     const before = out.length;
-    const add = (slot: string, header: string, allowed: string[]) => {
+    const add = (slot: string, header: string, allowed: string[], unlocked: string[] = []) => {
       out.push(`  ${slot}: ${header}`);
-      for (const id of allowed) out.push(`    ${label(id, data, lang)}`);
+      for (const id of allowed) out.push(`    ${label(id, data, lang)}${unlocked.includes(id) ? " (unlocked in play)" : ""}`);
     };
     out.push(`level ${level.level} (${level.class === "" ? "no class" : label(level.class, data, lang)})`);
     if (level.class === "") pick("class", "class", baseClasses);
@@ -126,7 +126,7 @@ function slotsCommand(run: Run, data: GameData, lang: "en" | "fr", characterId: 
       add(slot.id, `${selector.function}${count}`, items);
     }
     if (level.subclassChoice !== null && undecided(choices, `subclass:${level.class}`)) {
-      add(`subclass:${level.class}`, "subclass choice count 1", level.subclassChoice);
+      add(`subclass:${level.class}`, "subclass choice count 1", level.subclassChoice, level.unlockedSubclasses);
     }
     if (level.featChoice) {
       const slot = `feat:${level.level}`;
