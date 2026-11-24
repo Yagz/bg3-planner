@@ -55,16 +55,18 @@ function validateCharacter(character: Character, data: GameData): Issue[] {
     const open = new Set<string>();
     if (level.subclassChoice !== null) open.add(subclassSlot(level.class));
 
-    const checkSlot = (slot: string, selector: Selector) => {
+    const checkSlot = (slot: string, selector: Selector, scope: string) => {
       if (selector.function === "AddSpells") return;
       open.add(slot);
       const choice = Object.hasOwn(choices, slot) ? choices[slot] : undefined;
-      if (choice === undefined || choice === "todo") {
+      if (choice === undefined && "count" in selector && selector.count === 0) {
+        // Nothing to pick; replacements, if any, are optional.
+      } else if (choice === undefined || choice === "todo") {
         issue("incomplete", "choiceMissing", slot, { selector: selector.function });
       } else if (!Array.isArray(choice)) {
         issue("notice", "offData", slot, { selector: selector.function });
       } else {
-        const ctx = { data, character: character.id, level: n, class: level.class, slot, scores, known };
+        const ctx = { data, character: character.id, level: n, scope, slot, scores, known };
         issues.push(...checkChoice(selector, choice, ctx));
         if (selector.function === "SelectPassives" || selector.function === "ReplacePassives") {
           const offered = Object.hasOwn(lists, selector.list) ? (lists[selector.list]?.items ?? []) : [];
@@ -73,9 +75,13 @@ function validateCharacter(character: Character, data: GameData): Issue[] {
       }
     };
 
-    // A level's grants come together: they are known before its picks are checked.
-    for (const slot of level.slots) if (slot.selector.function === "AddSpells") grantSpells(known, slot.selector, data);
-    for (const slot of level.slots) checkSlot(slot.id, slot.selector);
+    // A level's grants come together: they are known before its picks are checked. Only class and subclass grants
+    // belong to the class's spell scope.
+    const owner = new Map(level.rows.map((row) => [row.uuid, row.type]));
+    for (const slot of level.slots) {
+      if (slot.selector.function === "AddSpells" && owner.get(slot.progression) !== "race") grantSpells(known, level.class, slot.selector, data);
+    }
+    for (const slot of level.slots) checkSlot(slot.id, slot.selector, level.class);
 
     /** Checks the feat slot; returns the feat whose selectors open, or null. */
     const checkFeat = (slot: string): string | null => {
@@ -114,8 +120,8 @@ function validateCharacter(character: Character, data: GameData): Issue[] {
       const feat = checkFeat(slot);
       if (feat !== null) {
         const selectors = feats[feat]?.selectors ?? [];
-        for (const selector of selectors) if (selector.function === "AddSpells") grantSpells(known, selector, data);
-        selectors.forEach((selector, i) => checkSlot(`${slot}/${i}`, selector));
+        for (const selector of selectors) if (selector.function === "AddSpells") grantSpells(known, slot, selector, data);
+        selectors.forEach((selector, i) => checkSlot(`${slot}/${i}`, selector, slot));
         // The feat's passives count for the feats of later levels only.
         grantPassives(feats[feat]?.passives ?? []);
       }

@@ -9,9 +9,13 @@ export const SWAP_SEPARATOR = ">";
 
 /** What a character has gained so far while its levels are walked in order. */
 export type Known = {
-  /** Spells known, with the number of grants or picks behind each. */
-  spells: Map<string, number>;
-  /** Spells picked by `SelectSpells`, by the class of the level they were picked at; only these can be swapped out. */
+  /**
+   * Spells known per spell scope (a class, or one feat slot), with the number of grants or picks behind each.
+   * A class scope holds its `SelectSpells` picks and the `AddSpells` grants of its class and subclass rows;
+   * race grants and other scopes never make a pick `alreadyKnown`.
+   */
+  spells: Map<string, Map<string, number>>;
+  /** Spells picked by `SelectSpells`, per spell scope; only these can be swapped out. */
   picked: Map<string, Set<string>>;
   /** Passives picked by `SelectPassives`. */
   passives: Set<string>;
@@ -23,9 +27,9 @@ export function emptyKnown(): Known {
   return { spells: new Map(), picked: new Map(), passives: new Set(), skills: new Set() };
 }
 
-/** Records the spells an `AddSpells` grant gives. */
-export function grantSpells(known: Known, selector: Selector, data: GameData): void {
-  for (const spell of listItems(data, selector.list)) addSpell(known, spell);
+/** Records the spells an `AddSpells` grant gives to a spell scope. */
+export function grantSpells(known: Known, scope: string, selector: Selector, data: GameData): void {
+  for (const spell of listItems(data, selector.list)) addSpell(known, scope, spell);
 }
 
 export type SlotContext = {
@@ -33,8 +37,8 @@ export type SlotContext = {
   character: string;
   /** Character level (1-based). */
   level: number;
-  /** Class taken at this level. */
-  class: string;
+  /** Spell scope of the slot: the level's class, or the feat slot for a feat's selectors. */
+  scope: string;
   slot: string;
   /** Running ability scores, uncapped; ability choices add to them. */
   scores: Record<Ability, number>;
@@ -45,14 +49,25 @@ function listItems(data: GameData, list: string): string[] {
   return Object.hasOwn(data.rules.lists, list) ? (data.rules.lists[list]?.items ?? []) : [];
 }
 
-function addSpell(known: Known, spell: string): void {
-  known.spells.set(spell, (known.spells.get(spell) ?? 0) + 1);
+function spellsOf(known: Known, scope: string): Map<string, number> {
+  let spells = known.spells.get(scope);
+  if (spells === undefined) {
+    spells = new Map();
+    known.spells.set(scope, spells);
+  }
+  return spells;
 }
 
-function removeSpell(known: Known, spell: string): void {
-  const count = (known.spells.get(spell) ?? 0) - 1;
-  if (count > 0) known.spells.set(spell, count);
-  else known.spells.delete(spell);
+function addSpell(known: Known, scope: string, spell: string): void {
+  const spells = spellsOf(known, scope);
+  spells.set(spell, (spells.get(spell) ?? 0) + 1);
+}
+
+function removeSpell(known: Known, scope: string, spell: string): void {
+  const spells = spellsOf(known, scope);
+  const count = (spells.get(spell) ?? 0) - 1;
+  if (count > 0) spells.set(spell, count);
+  else spells.delete(spell);
 }
 
 function duplicates(entries: string[]): string[] {
@@ -158,8 +173,9 @@ function checkSpells(
   exactly(picks.length, selector.count);
   if (swaps.length > selector.swaps) invalid("tooManySwaps", { count: swaps.length, max: selector.swaps });
 
-  const picked = known.picked.get(ctx.class) ?? new Set<string>();
-  known.picked.set(ctx.class, picked);
+  const picked = known.picked.get(ctx.scope) ?? new Set<string>();
+  known.picked.set(ctx.scope, picked);
+  const scoped = spellsOf(known, ctx.scope);
   const swappable = swaps.filter((swap) => {
     if (picked.has(swap.old)) return true;
     invalid("swapNotKnown", { item: swap.old });
@@ -169,14 +185,14 @@ function checkSpells(
   const incoming = [...picks, ...swaps.map((swap) => swap.new)];
   const valid = inList(incoming);
   noDuplicates(incoming);
-  for (const spell of new Set(valid)) if (known.spells.has(spell)) invalid("alreadyKnown", { item: spell });
+  for (const spell of new Set(valid)) if (scoped.has(spell)) invalid("alreadyKnown", { item: spell });
 
   for (const swap of swappable) {
     picked.delete(swap.old);
-    removeSpell(known, swap.old);
+    removeSpell(known, ctx.scope, swap.old);
   }
   for (const spell of valid) {
     picked.add(spell);
-    addSpell(known, spell);
+    addSpell(known, ctx.scope, spell);
   }
 }

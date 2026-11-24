@@ -132,6 +132,33 @@ describe("validate", () => {
     ]);
   });
 
+  it("needs no choice for a selector with count 0, but still checks one that is present", () => {
+    const id = slot(4, "SelectSpells");
+    expect(validate(runOf(ranger((c) => { delete c[3]![id]; })), data)).toEqual({ status: "valid", issues: [] });
+    expect(validate(runOf(ranger((c) => { c[3]![id] = "todo"; })), data).issues.map((i) => i.code)).toEqual(["choiceMissing"]);
+    expect(validate(runOf(ranger((c) => { c[3]![id] = ["Target_HuntersMark>Target_Jump"]; })), data).status).toBe("valid");
+    expect(codes(ranger((c) => { c[3]![id] = ["Target_Jump"]; }))).toEqual(["wrongCount"]);
+  });
+
+  it("scopes known spells by class: the same spell picked in two classes is valid, twice in one class is not", () => {
+    const classes = ["Ranger", "Ranger", "Bard"];
+    const rangerSpells = slotId(classes, {}, 2, "SelectSpells");
+    const bardSpells = slotId(classes, {}, 3, "SelectSpells", 1);
+    const choices: Record<string, Choice>[] = [{}, { [rangerSpells]: ["Target_HuntersMark", "Target_CureWounds"] }, { [bardSpells]: ["Target_CureWounds", "Target_HealingWord", "Target_Sleep", "Zone_Thunderwave"] }];
+    const issues = validate(runOf(character(classes, choices, RANGER_SCORES)), data).issues;
+    expect(issues.filter((i) => i.severity === "invalid")).toEqual([]);
+    // Same class twice: the alreadyKnown test above (Target_CureWounds at Ranger 2 and Ranger 5).
+    expect(codes(ranger((c) => { c[4]![slot(5, "SelectSpells")] = ["Target_CureWounds"]; }))).toEqual(["alreadyKnown"]);
+  });
+
+  it("does not count a race's granted spell as known for a class pick", () => {
+    const classes = ["Cleric"];
+    const cantrips = slotId(classes, {}, 1, "SelectSpells");
+    const choices: Record<string, Choice>[] = [{ [cantrips]: ["Shout_ProduceFlame", "Target_Guidance", "Shout_Thaumaturgy"] }];
+    const issues = validate(runOf(character(classes, choices, RANGER_SCORES, "Tiefling", "Tiefling_Asmodeus")), data).issues;
+    expect(issues.filter((i) => i.slot === cantrips)).toEqual([]);
+  });
+
   it("accepts a swap of a known spell, written old>new, besides the new picks", () => {
     const id = slot(3, "SelectSpells");
     expect(validate(runOf(ranger((c) => { c[2]![id] = ["Target_Goodberry", "Target_HuntersMark>Target_Jump"]; })), data)).toEqual({ status: "valid", issues: [] });
