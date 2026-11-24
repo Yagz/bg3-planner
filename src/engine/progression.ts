@@ -20,13 +20,14 @@ export type ResolvedLevel = {
   classLevel: number;
   /** Class rows, then subclass rows, then race rows, then subrace rows. */
   rows: Progression[];
-  /** Every selector of `rows`, in row order then selector order. */
+  /**
+   * Every selector of `rows`, in row order then selector order, except a selector equal to one of an earlier row of the
+   * same (table, level, multiclass) group: the game applies every row of such a group, and that choice is made once.
+   */
   slots: Slot[];
   /** Allowed subclass names when this level requires choosing one. */
   subclassChoice: string[] | null;
   featChoice: boolean;
-  /** Groups of rows the game itself gives for the same table and level (sorted uuids): alternatives, one to fill. */
-  ambiguous: string[][];
 };
 
 export function subclassSlot(cls: string): string {
@@ -66,17 +67,8 @@ export function resolve(character: Character, data: GameData): { levels: Resolve
     issues.push({ severity, code, character: character.id, level, slot, params });
   };
 
-  /** Rows of one (table, level, multiclass) group; a group of several rows is flagged once. */
-  const flagged = new Set<string>();
-  const rowsAt = (table: string, level: number, multiclass: boolean, characterLevel: number): Progression[] => {
-    const key = rowKey(table, level, multiclass);
-    const group = index.get(key) ?? [];
-    if (group.length > 1 && !flagged.has(key)) {
-      flagged.add(key);
-      issue("notice", "ambiguousGameData", characterLevel, null, { rows: group.map((r) => r.uuid).toSorted().join(", ") });
-    }
-    return group;
-  };
+  /** Rows of one (table, level, multiclass) group, in `rules.progressions` order; all of them apply. */
+  const rowsAt = (table: string, level: number, multiclass: boolean): Progression[] => index.get(rowKey(table, level, multiclass)) ?? [];
 
   // Race and subrace.
   let raceTable: string | null = null;
@@ -134,7 +126,7 @@ export function resolve(character: Character, data: GameData): { levels: Resolve
     } else {
       const table = classes[cls]?.table ?? "";
       const multiclass = classLevel === 1 && cls !== firstClass;
-      classRows.push(...rowsAt(table, classLevel, multiclass, n));
+      classRows.push(...rowsAt(table, classLevel, multiclass));
 
       const offered = [...new Set(classRows.flatMap((r) => r.subclasses))];
       if (offered.length > 0) {
@@ -154,52 +146,49 @@ export function resolve(character: Character, data: GameData): { levels: Resolve
 
       const subclass = subclasses.get(cls);
       const subclassTable = subclass !== undefined && Object.hasOwn(classes, subclass) ? classes[subclass]?.table : undefined;
-      if (subclassTable !== undefined) subclassRows.push(...rowsAt(subclassTable, classLevel, false, n));
+      if (subclassTable !== undefined) subclassRows.push(...rowsAt(subclassTable, classLevel, false));
     }
 
     const rows = [
       ...classRows,
       ...subclassRows,
-      ...(raceTable === null ? [] : rowsAt(raceTable, n, false, n)),
-      ...(subraceTable === null ? [] : rowsAt(subraceTable, n, false, n)),
+      ...(raceTable === null ? [] : rowsAt(raceTable, n, false)),
+      ...(subraceTable === null ? [] : rowsAt(subraceTable, n, false)),
     ];
-    const slots = rows.flatMap((row) =>
-      row.selectors.map((selector, s) => ({ id: `${row.uuid}/${s}`, progression: row.uuid, selector, level: n })),
-    );
-    const groups = new Map<string, Progression[]>();
-    for (const row of rows) {
-      const key = rowKey(row.table, row.level, row.multiclass);
-      groups.set(key, [...(groups.get(key) ?? []), row]);
-    }
-    const ambiguous = [...groups.values()].filter((group) => group.length > 1).map((group) => group.map((r) => r.uuid).toSorted());
-    levels.push({ level: n, class: cls, classLevel, rows, slots, subclassChoice, featChoice: classRows.some((r) => r.feat), ambiguous });
+    const slots = slotsOf(rows, n);
+    levels.push({ level: n, class: cls, classLevel, rows, slots, subclassChoice, featChoice: classRows.some((r) => r.feat) });
   });
 
   return { levels, issues };
 }
 
-/** Whether `choices` holds a key (even `"todo"`) for a slot of the progression row `uuid`. */
-function hasRowChoice(choices: Record<string, unknown>, uuid: string): boolean {
-  return Object.keys(choices).some((key) => key.startsWith(`${uuid}/`));
+/** Deep equality of JSON values; object key order does not matter. */
+function jsonEqual(a: unknown, b: unknown): boolean {
+  if (a === b) return true;
+  if (typeof a !== "object" || typeof b !== "object" || a === null || b === null) return false;
+  if (Array.isArray(a) !== Array.isArray(b)) return false;
+  if (Array.isArray(a) && Array.isArray(b)) return a.length === b.length && a.every((v, i) => jsonEqual(v, b[i]));
+  const ka = Object.keys(a);
+  const kb = Object.keys(b);
+  const ob = b as Record<string, unknown>;
+  return ka.length === kb.length && ka.every((k) => Object.hasOwn(ob, k) && jsonEqual((a as Record<string, unknown>)[k], ob[k]));
 }
 
 /**
- * Reads the alternative rows of a level against its choices: in each ambiguous group, the rows holding a choice are
- * the ones meant; when none does, every row stays open. Returns the rows whose slots are not required, and the groups
- * where several rows hold choices (combined, which the game may not allow) or none does (undecided).
+ * Slots of a level's rows. Rows sharing (table, level, multiclass) all apply; a selector equal to one of an earlier row
+ * of its group opens no slot of its own (the same choice, made in the earlier row's slot). Slot ids keep the selector's
+ * index in its row.
  */
-export function alternatives(
-  level: ResolvedLevel,
-  choices: Record<string, unknown>,
-): { unused: Set<string>; combined: string[][]; undecided: string[][] } {
-  const unused = new Set<string>();
-  const combined: string[][] = [];
-  const undecided: string[][] = [];
-  for (const group of level.ambiguous) {
-    const chosen = group.filter((uuid) => hasRowChoice(choices, uuid));
-    if (chosen.length === 0) undecided.push(group);
-    if (chosen.length === 1) for (const uuid of group) if (uuid !== chosen[0]) unused.add(uuid);
-    if (chosen.length > 1) combined.push(chosen);
+function slotsOf(rows: Progression[], level: number): Slot[] {
+  const seen = new Map<string, Selector[]>();
+  const slots: Slot[] = [];
+  for (const row of rows) {
+    const key = rowKey(row.table, row.level, row.multiclass);
+    const earlier = seen.get(key) ?? [];
+    row.selectors.forEach((selector, s) => {
+      if (!earlier.some((other) => jsonEqual(other, selector))) slots.push({ id: `${row.uuid}/${s}`, progression: row.uuid, selector, level });
+    });
+    seen.set(key, [...earlier, ...row.selectors]);
   }
-  return { unused, combined, undecided };
+  return slots;
 }

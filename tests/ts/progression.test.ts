@@ -156,26 +156,28 @@ describe("resolve", () => {
     expect(levels[1]?.rows.map((r) => r.uuid)).toEqual(data.rules.progressions.filter((p) => p.table === human && p.level === 2).map((p) => p.uuid));
   });
 
-  it("flags the BattleMaster level 3 ambiguity and keeps both rows' slots", () => {
+  it("applies both BattleMaster level 3 rows and keeps one slot for their identical maneuver choice", () => {
     const levels3 = [level("Fighter"), level("Fighter"), level("Fighter", { "subclass:Fighter": ["BattleMaster"] })];
     const { levels, issues } = resolve(character(levels3), data);
-    const duplicates = tableRows("BattleMaster", 3).map((r) => r.uuid).toSorted();
-    expect(duplicates).toHaveLength(2);
-    expect(issues).toEqual([{ severity: "notice", code: "ambiguousGameData", character: "c1", level: 3, slot: null, params: { rows: duplicates.join(", ") } }]);
+    const duplicates = tableRows("BattleMaster", 3).map((r) => r.uuid);
+    expect(duplicates).toEqual(["01115231-fa37-4cd2-b750-5f282c8ab667", "59505762-9251-463c-a81b-420e9a14c8cd"]);
+    expect(issues).toEqual([]);
     const third = levels[2];
-    expect(third?.rows.filter((r) => r.type === "subclass").map((r) => r.uuid).toSorted()).toEqual(duplicates);
-    for (const uuid of duplicates) expect(third?.slots.some((s) => s.id === `${uuid}/0`)).toBe(true);
-    expect(third?.ambiguous).toEqual([duplicates]);
-    expect(levels[1]?.ambiguous).toEqual([]);
+    expect(third?.rows.filter((r) => r.type === "subclass").map((r) => r.uuid)).toEqual(duplicates);
+    expect(third?.slots.filter((s) => duplicates.includes(s.progression)).map((s) => s.id)).toEqual([`${duplicates[0]}/0`]);
   });
 
-  it("flags the Cleric multiclass ambiguity and offers the subclasses of both rows", () => {
+  it("applies both Cleric multiclass rows, keeps the slots of the first and offers the subclasses of both", () => {
     const { levels, issues } = resolve(character([level("Fighter"), level("Cleric")]), data);
-    const duplicates = classRows("Cleric", 1, true).map((r) => r.uuid).toSorted();
-    expect(duplicates).toHaveLength(2);
-    expect(issues).toContainEqual({ severity: "notice", code: "ambiguousGameData", character: "c1", level: 2, slot: null, params: { rows: duplicates.join(", ") } });
-    expect(levels[1]?.slots).toHaveLength(5);
-    expect(levels[1]?.subclassChoice).toContain("WarDomain");
+    const duplicates = classRows("Cleric", 1, true).map((r) => r.uuid);
+    expect(duplicates).toEqual(["2b249feb-bba5-4922-8385-c2dd9baaa049", "366cde9c-db0c-43ce-a49c-fb140e084b3c"]);
+    expect(issues.map((i) => [i.code, i.slot])).toEqual([["choiceMissing", "subclass:Cleric"]]);
+    expect(levels[1]?.rows.map((r) => r.uuid)).toEqual(expect.arrayContaining(duplicates));
+    // Row A: skills, cantrips, granted spells; row B's cantrips and granted spells are the same selectors.
+    expect(levels[1]?.slots.map((s) => s.id)).toEqual([0, 1, 2].map((s) => `${duplicates[0]}/${s}`));
+    expect(levels[1]?.subclassChoice?.toSorted()).toEqual(
+      ["DeathDomain", "KnowledgeDomain", "LifeDomain", "LightDomain", "NatureDomain", "TempestDomain", "TrickeryDomain", "WarDomain"],
+    );
   });
 
   it("exposes the feat choice on feat levels", () => {

@@ -379,11 +379,13 @@ describe("validate", () => {
 });
 
 describe("validate, duplicate progression rows of the game", () => {
+  // The game applies every row of a duplicate group; a selector identical to one of an earlier row counts once.
   const BM_A = "01115231-fa37-4cd2-b750-5f282c8ab667";
   const BM_B = "59505762-9251-463c-a81b-420e9a14c8cd";
   const CLERIC_A = "2b249feb-bba5-4922-8385-c2dd9baaa049";
   const CLERIC_B = "366cde9c-db0c-43ce-a49c-fb140e084b3c";
   const FIGHTER1 = "dfb2fd83-9849-4c2d-be84-adedb81a867a";
+  const DEATH1 = "bcdcfb06-09b9-4299-81b4-aa83e1ffd034";
   const fighter1 = (): Record<string, Choice> => ({
     [`${FIGHTER1}/0`]: ["Athletics", "Perception"],
     [`${FIGHTER1}/2`]: ["FightingStyle_Defense"],
@@ -394,47 +396,54 @@ describe("validate, duplicate progression rows of the game", () => {
     character(["Fighter", "Fighter", "Fighter"], [fighter1(), {}, { "subclass:Fighter": ["BattleMaster"], ...third }], FIGHTER_SCORES);
   const summary = (c: Character) => {
     const report = validate(runOf(c), data);
-    return { status: report.status, issues: report.issues.map((i) => [i.severity, i.code, i.slot, i.params["rows"] ?? null]) };
+    return { status: report.status, issues: report.issues.map((i) => [i.severity, i.code, i.slot]) };
   };
-  const bmRows = [BM_A, BM_B].toSorted().join(", ");
 
-  it("accepts a BattleMaster 3 with one of the two maneuver rows filled, with the ambiguity notice", () => {
-    for (const filled of [BM_A, BM_B]) {
-      expect(summary(battleMaster({ [`${filled}/0`]: maneuvers }))).toEqual({ status: "valid", issues: [["notice", "ambiguousGameData", null, bmRows]] });
-    }
+  it("accepts a BattleMaster 3 with its 3 maneuvers in the one remaining slot, without notice", () => {
+    expect(summary(battleMaster({ [`${BM_A}/0`]: maneuvers }))).toEqual({ status: "valid", issues: [] });
   });
 
-  it("accepts both maneuver rows filled, with a notice that the rows were combined", () => {
+  it("asks for the maneuvers once, in the first row's slot", () => {
+    expect(summary(battleMaster({}))).toEqual({ status: "incomplete", issues: [["incomplete", "choiceMissing", `${BM_A}/0`]] });
+  });
+
+  it("rejects a second set of maneuvers on the merged-away row's slot as an unknown slot", () => {
     const both = battleMaster({ [`${BM_A}/0`]: maneuvers, [`${BM_B}/0`]: ["EvasiveFootwork", "FeintingAttack", "GoadingAttack"] });
-    expect(summary(both)).toEqual({
-      status: "valid",
-      issues: [
-        ["notice", "ambiguousGameData", null, bmRows],
-        ["notice", "ambiguousRowsCombined", null, bmRows],
-      ],
-    });
+    expect(summary(both)).toEqual({ status: "invalid", issues: [["invalid", "unknownSlot", `${BM_B}/0`]] });
   });
 
-  it("reports the slots of both rows as missing when neither is filled", () => {
-    expect(summary(battleMaster({}))).toEqual({
+  const cantrips = ["Target_Guidance", "Target_Light", "Target_SacredFlame"];
+  const clericAt2 = (cleric: Record<string, Choice>) => character(["Fighter", "Cleric"], [fighter1(), cleric], FIGHTER_SCORES);
+
+  it("requires the 2 skills and the 3 cantrips of a Cleric taken at level 2, in the first row's slots", () => {
+    expect(summary(clericAt2({ "subclass:Cleric": ["WarDomain"] }))).toEqual({
       status: "incomplete",
       issues: [
-        ["notice", "ambiguousGameData", null, bmRows],
-        ["incomplete", "choiceMissing", `${BM_A}/0`, null],
-        ["incomplete", "choiceMissing", `${BM_B}/0`, null],
+        ["incomplete", "choiceMissing", `${CLERIC_A}/0`],
+        ["incomplete", "choiceMissing", `${CLERIC_A}/1`],
       ],
     });
+    const cleric = resolve(clericAt2({}), data).levels[1];
+    expect(cleric?.rows.map((r) => r.uuid)).toEqual(expect.arrayContaining([CLERIC_A, CLERIC_B]));
+    expect(cleric?.slots.some((s) => s.progression === CLERIC_B)).toBe(false);
   });
 
-  it("accepts a Fighter 1 / Cleric 2 with one of the two multiclass rows filled", () => {
-    const clericRows = [CLERIC_A, CLERIC_B].toSorted().join(", ");
-    const cantrips = ["Target_Guidance", "Target_Light", "Target_SacredFlame"];
-    const withRow = (cleric: Record<string, Choice>) =>
-      character(["Fighter", "Cleric"], [fighter1(), { "subclass:Cleric": ["LifeDomain"], ...cleric }], FIGHTER_SCORES);
-    expect(summary(withRow({ [`${CLERIC_B}/0`]: cantrips }))).toEqual({ status: "valid", issues: [["notice", "ambiguousGameData", null, clericRows]] });
-    expect(summary(withRow({ [`${CLERIC_A}/0`]: ["Insight", "Medicine"], [`${CLERIC_A}/1`]: cantrips }))).toEqual({
-      status: "valid",
-      issues: [["notice", "ambiguousGameData", null, clericRows]],
-    });
+  it("accepts a domain of either row for a Cleric taken at level 2", () => {
+    const base = { [`${CLERIC_A}/0`]: ["Insight", "Medicine"], [`${CLERIC_A}/1`]: cantrips };
+    expect(summary(clericAt2({ ...base, "subclass:Cleric": ["WarDomain"] }))).toEqual({ status: "valid", issues: [] });
+    expect(summary(clericAt2({ ...base, "subclass:Cleric": ["LifeDomain"] }))).toEqual({ status: "valid", issues: [] });
+    const death = { ...base, "subclass:Cleric": ["DeathDomain"], [`${DEATH1}/0`]: ["Target_ChillTouch"] };
+    expect(summary(clericAt2(death))).toEqual({ status: "valid", issues: [] });
+  });
+
+  it("rejects cantrips on the merged-away Cleric row's slot as an unknown slot", () => {
+    const stale = { [`${CLERIC_A}/0`]: ["Insight", "Medicine"], [`${CLERIC_A}/1`]: cantrips, [`${CLERIC_B}/0`]: cantrips, "subclass:Cleric": ["WarDomain"] };
+    expect(summary(clericAt2(stale))).toEqual({ status: "invalid", issues: [["invalid", "unknownSlot", `${CLERIC_B}/0`]] });
+  });
+
+  it("grants the armour and weapon proficiencies of both Cleric rows", () => {
+    const cleric = resolve(clericAt2({}), data).levels[1];
+    const boosts = new Set(cleric?.rows.flatMap((r) => r.boosts));
+    for (const p of ["LightArmor", "MediumArmor", "Shields", "Morningstars", "Flails"]) expect(boosts.has(`Proficiency(${p})`)).toBe(true);
   });
 });

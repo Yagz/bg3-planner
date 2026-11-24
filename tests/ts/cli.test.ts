@@ -116,7 +116,7 @@ describe("run command line", () => {
     expect(result.out).toContain("level 3");
   });
 
-  it("lists the duplicated game rows as alternatives until one of them holds a choice", async () => {
+  it("lists the identical choice of duplicated game rows once, in the first row's slot", async () => {
     const a = "01115231-fa37-4cd2-b750-5f282c8ab667";
     const b = "59505762-9251-463c-a81b-420e9a14c8cd";
     const run = rangerRun(3);
@@ -124,14 +124,9 @@ describe("run command line", () => {
     fighter.levels = [{ class: "Fighter", choices: {} }, { class: "Fighter", choices: {} }, { class: "Fighter", choices: { "subclass:Fighter": ["BattleMaster"] } }];
     const open = cli("slots", await encode(run), "c1");
     expect(open.code).toBe(0);
-    expect(open.out).toContain(`alternative rows (fill one): ${a}, ${b}`);
-    expect(open.out).toContain(`${a}/0:`);
-    expect(open.out).toContain(`${b}/0:`);
-    fighter.levels[2]!.choices[`${a}/0`] = "todo";
-    const chosen = cli("slots", await encode(run), "c1");
-    expect(chosen.out).toContain(`${a}/0:`);
-    expect(chosen.out).not.toContain(`${b}/0`);
-    expect(chosen.out).not.toContain("alternative rows");
+    expect(open.out).toContain(`${a}/0: SelectPassives count 3`);
+    expect(open.out).not.toContain(b);
+    expect(open.out).not.toContain("alternative rows");
   });
 
   it("lists a missing race, subrace, background and class", async () => {

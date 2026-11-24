@@ -29,7 +29,6 @@ Machine-specific context (game paths, local tools, working rules, state of the p
 
 - Read it with `node scripts/run.ts decode <run>` (readable JSON; the `_names` fields are display hints and are ignored on import), change identifiers only, check with `node scripts/run.ts validate <file>`, then `node scripts/run.ts encode <file.json>`.
 - `node scripts/run.ts slots <run> <character id>` lists the open choices with the identifiers the game allows; use it instead of guessing identifiers.
-- Where the game gives two rows for the same table and level (flagged `ambiguousGameData`, listed by `slots` as alternative rows), fill one row only: the engine then requires only that row; filling several is reported as `ambiguousRowsCombined`.
 - Never complete a build's game decisions (subclass, spells, feats, skills) unless the user asks: `incomplete` (exit 1, a choice still `"todo"`) is a normal state, `invalid` (exit 2, an impossible choice) is a defect to report, not to correct silently.
 - Exit 3 means unreadable input or a usage error; exit 4 means the tool itself failed (`error: <message>` on stderr), not a run status: report it, do not read it as `incomplete`.
 

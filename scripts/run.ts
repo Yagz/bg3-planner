@@ -5,7 +5,7 @@ import { loadGameData } from "../src/data/load.ts";
 import { bareNameOf, nameOf } from "../src/data/names.ts";
 import type { TextKind } from "../src/data/names.ts";
 import type { GameData } from "../src/data/types.ts";
-import { alternatives, resolve } from "../src/engine/progression.ts";
+import { resolve } from "../src/engine/progression.ts";
 import { validate } from "../src/engine/validate.ts";
 import { CodecError, decode, encode, toReadableJson } from "../src/plan/codec.ts";
 import type { Run } from "../src/plan/model.ts";
@@ -116,11 +116,7 @@ function slotsCommand(run: Run, data: GameData, lang: "en" | "fr", characterId: 
     };
     out.push(`level ${level.level} (${level.class === "" ? "no class" : label(level.class, data, lang)})`);
     if (level.class === "") pick("class", "class", baseClasses);
-    // Rows the game duplicates are alternatives: all are listed until one holds a choice, then only that one.
-    const { unused, undecided: openGroups } = alternatives(level, choices);
-    for (const group of openGroups) out.push(`  alternative rows (fill one): ${group.join(", ")}`);
     for (const slot of level.slots) {
-      if (unused.has(slot.progression)) continue;
       const selector = slot.selector;
       if (selector.function === "AddSpells" || selector.function === "ReplacePassives") continue;
       if ("count" in selector && selector.count === 0) continue;
