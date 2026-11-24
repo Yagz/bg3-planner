@@ -1,0 +1,203 @@
+// Types of the produced game data (`data/larian/*.json`). They mirror the JSON exactly; see
+// `scripts/data/model.py` and `scripts/data/selectors.py`. Everything is keyed by the game's internal identifier.
+
+export interface ClassDef {
+  uuid: string;
+  /** UUID of the progression table. */
+  table: string;
+  /** Base class `Name` for a subclass, null for a base class. */
+  parent: string | null;
+  base_hp: number | null;
+  hp_per_level: number | null;
+  multiclass_modifier: number | null;
+  primary_ability: string;
+  spellcasting_ability: string | null;
+  /** UUID of a spell list. */
+  spell_list: string | null;
+  prepares_spells: boolean;
+}
+
+export interface RaceDef {
+  uuid: string;
+  /** UUID of the progression table. */
+  table: string;
+  /** Race `Name` for a subrace, null for a base race. */
+  parent: string | null;
+}
+
+export interface BackgroundDef {
+  origin: boolean;
+  passives: string[];
+}
+
+export type Requirement =
+  | { type: "ability_min"; ability: string; value: number }
+  | { type: "proficiency"; proficiency: string };
+
+export interface FeatDef {
+  uuid: string;
+  passives: string[];
+  repeatable: boolean;
+  requirements: Requirement[];
+  selectors: Selector[];
+}
+
+export interface AddSpells {
+  function: "AddSpells";
+  list: string;
+  id: string | null;
+  ability: string | null;
+  resource: string | null;
+  prepare: string | null;
+  cooldown: string | null;
+}
+
+export interface SelectSpells {
+  function: "SelectSpells";
+  list: string;
+  count: number;
+  swaps: number;
+  id: string | null;
+  ability: string | null;
+  resource: string | null;
+  prepare: string | null;
+  cooldown: string | null;
+  class: string | null;
+}
+
+export interface SelectPassives {
+  function: "SelectPassives";
+  list: string;
+  count: number;
+  id: string | null;
+}
+
+export interface ReplacePassives {
+  function: "ReplacePassives";
+  list: string;
+  count: number;
+  id: string;
+}
+
+export interface SelectSkills {
+  function: "SelectSkills";
+  list: string;
+  count: number;
+  id: string | null;
+}
+
+export interface SelectSkillsExpertise {
+  function: "SelectSkillsExpertise";
+  list: string;
+  count: number;
+  requires_proficiency: boolean | null;
+  id: string | null;
+}
+
+export interface SelectAbilities {
+  function: "SelectAbilities";
+  list: string;
+  count: number;
+  max: number;
+  id: string;
+}
+
+export interface SelectAbilityBonus {
+  function: "SelectAbilityBonus";
+  list: string;
+  id: string;
+  bonuses: number[];
+}
+
+export interface SelectEquipment {
+  function: "SelectEquipment";
+  list: string;
+  count: number;
+  id: string;
+}
+
+export type Selector =
+  | AddSpells
+  | SelectSpells
+  | SelectPassives
+  | ReplacePassives
+  | SelectSkills
+  | SelectSkillsExpertise
+  | SelectAbilities
+  | SelectAbilityBonus
+  | SelectEquipment;
+
+export interface Progression {
+  uuid: string;
+  /** UUID of the progression table this row belongs to. */
+  table: string;
+  level: number;
+  type: "class" | "subclass" | "race";
+  name: string;
+  /** Row used when the class is taken after character level 1. */
+  multiclass: boolean;
+  feat: boolean;
+  boosts: string[];
+  passives_added: string[];
+  passives_removed: string[];
+  selectors: Selector[];
+  /** Subclass `Name`s offered by this row (non-empty on a subclass-choice row). */
+  subclasses: string[];
+}
+
+export interface ChoiceList {
+  name: string;
+  type: "spells" | "passives" | "skills" | "abilities" | "equipment";
+  items: string[];
+}
+
+export interface SpellDef {
+  type: string;
+  level: number | null;
+  school: string | null;
+}
+
+export interface PassiveDef {
+  boosts: string[];
+}
+
+export interface ItemDef {
+  kind: "weapon" | "equipment";
+  found_by: "stats" | "template";
+  rarity: string | null;
+  root_template: string;
+  slot: string;
+  stats_type: string;
+}
+
+export interface Rules {
+  /** Keyed by `Name`; base classes and subclasses together. */
+  classes: Record<string, ClassDef>;
+  /** Keyed by `Name`; base races and subraces together. */
+  races: Record<string, RaceDef>;
+  /** Keyed by UUID. */
+  backgrounds: Record<string, BackgroundDef>;
+  /** Keyed by `Name`. */
+  feats: Record<string, FeatDef>;
+  progressions: Progression[];
+  /** Keyed by UUID. */
+  lists: Record<string, ChoiceList>;
+  spells: Record<string, SpellDef>;
+  passives: Record<string, PassiveDef>;
+  items: Record<string, ItemDef>;
+}
+
+/** Translations keyed by `<kind>:<identifier>` (e.g. `background:<uuid>`). */
+export type Texts = Record<string, { name: string; description: string | null }>;
+
+export interface Meta {
+  game: string;
+  modules: string[];
+  notice: { en: string; fr: string };
+}
+
+export interface GameData {
+  rules: Rules;
+  texts: { en: Texts; fr: Texts };
+  meta: Meta;
+}

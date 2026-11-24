@@ -8,9 +8,10 @@ In development. The game-data import (character creation and progression rules, 
 
 ## Development
 
-Requirements: Python 3.14 (standard library only) for the data scripts; Node 24 for the web app (to come).
+Requirements: Python 3.14 (standard library only) for the data scripts; Node 24 (not 26, which breaks Vitest) for the rules engine and the web app.
 
 - Run the tests: `python3.14 -m unittest discover -s tests -t .`
+- Install the Node dev dependencies: `npm ci`; type-check: `npx tsc --noEmit`; run the TypeScript tests: `npx vitest run`
 - Check the committed game data: `python3.14 -m scripts.data.checks data/larian`
 - Refresh the bg3.wiki item data (slow, polite, cached in `cache/wiki/`): `python3.14 -m scripts.wiki.fetch --output data/wiki` — see [`data/wiki/README.md`](data/wiki/README.md).
 - Re-import the game data from an installed copy of the game (read-only): `python3.14 -m scripts.data.importer --game <game install directory> --game-version <version>` — see [`data/larian/README.md`](data/larian/README.md).
