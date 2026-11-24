@@ -97,6 +97,16 @@ describe("run command line", () => {
     expect(cli("validate", "not a run").err).not.toBe("");
   });
 
+  it("exits 4 with a one-line error when the tool itself fails", () => {
+    const deep = join(dir, "deep.json");
+    const run = JSON.stringify(rangerRun(1));
+    writeFileSync(deep, run.replace('"notes":""', `"notes":${"[".repeat(20000)}${"]".repeat(20000)}`));
+    const result = cli("validate", deep);
+    expect(result.code).toBe(4);
+    expect(result.err).toMatch(/^error: /);
+    expect(result.err).not.toMatch(/^\s+at /m);
+  });
+
   it("lists the open slots of a character with the allowed identifiers", () => {
     const result = cli("slots", runFile, "c1");
     expect(result.code).toBe(0);

@@ -15,7 +15,8 @@ const USAGE = `Usage:
   node scripts/run.ts validate <string|file|-> [--lang en|fr]
                                                         report; exit 0 valid, 1 incomplete, 2 invalid, 3 unreadable
   node scripts/run.ts slots <string|file|-> <character id> [--lang en|fr]
-                                                        open slots with their allowed identifiers`;
+                                                        open slots with their allowed identifiers
+Exit 4 (any command): the tool itself failed; this is not a run status.`;
 
 const DATA_DIR = join(import.meta.dirname, "..", "data", "larian");
 
@@ -174,6 +175,8 @@ try {
     console.error((error as Error).message);
     process.exitCode = 3;
   } else {
-    throw error;
+    // Exit 1 means an incomplete run: a failure of the tool itself gets its own code.
+    console.error(`error: ${error instanceof Error ? error.message : String(error)}`);
+    process.exitCode = 4;
   }
 }
