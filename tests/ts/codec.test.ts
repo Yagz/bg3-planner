@@ -146,6 +146,16 @@ describe("errors", () => {
   });
 });
 
+describe("__proto__ keys", () => {
+  it("are rejected at the top level and as record keys, never silently lost", async () => {
+    const top = JSON.stringify(emptyRun()).replace("{", '{"__proto__":{"x":1},');
+    expect((await rejects(decode(top))).message).toContain("__proto__");
+    const deco = JSON.stringify(emptyRun()).replace('"decisions":{}', '"decisions":{"__proto__":"keep"}');
+    expect(deco).toContain("keep");
+    expect((await rejects(decode(deco))).message).toContain("decisions.__proto__");
+  });
+});
+
 describe("migrations", () => {
   it("an older version goes through the registry", async () => {
     expect(CURRENT_VERSION).toBe(1);

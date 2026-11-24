@@ -123,16 +123,17 @@ function isObject(value: unknown): value is Obj {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function stripHints(value: Json, hints: { count: number }): Json {
-  if (Array.isArray(value)) return value.map((item) => stripHints(item, hints));
+function stripHints(value: Json, hints: { count: number }, path = ""): Json {
+  if (Array.isArray(value)) return value.map((item, i) => stripHints(item, hints, at(path, i)));
   if (isObject(value)) {
     const out: Obj = {};
     for (const [key, item] of Object.entries(value)) {
+      if (key === "__proto__") throw new CodecError(`Forbidden key ${at(path, key)}: "__proto__" cannot be stored`);
       if (HINT_KEYS.has(key)) {
         hints.count++;
         continue;
       }
-      out[key] = stripHints(item, hints);
+      out[key] = stripHints(item, hints, at(path, key));
     }
     return out;
   }
