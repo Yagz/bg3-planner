@@ -133,4 +133,30 @@ describe("run command line", () => {
     expect(chosen.out).not.toContain(`${b}/0`);
     expect(chosen.out).not.toContain("alternative rows");
   });
+
+  it("lists a missing race, subrace, background and class", async () => {
+    // Before any pick, a character has no progression row: these are its only open choices.
+    const run = rangerRun(1);
+    const blank = run.characters[0]!;
+    blank.race = "";
+    blank.levels[0]!.class = "";
+    const result = cli("slots", await encode(run), "c1");
+    expect(result.code).toBe(0);
+    expect(result.out).not.toContain("No open slots");
+    expect(result.out).toMatch(/^  race: /m);
+    expect(result.out).toMatch(/^    Human$/m);
+    expect(result.out).toMatch(/^    HalfElf \(Half-Elf\)$/m);
+    expect(result.out).not.toMatch(/^    Halfling_Lightfoot/m);
+    expect(result.out).toMatch(/^  background: /m);
+    expect(result.out).toMatch(/^    [0-9a-f-]{36} \(.+\)$/m);
+    expect(result.out).toMatch(/level 1 \(no class\)\n  class: .*\n(    .*\n)*    Fighter\n/);
+    expect(result.out).not.toMatch(/^    BattleMaster/m);
+    expect(result.out).not.toMatch(/^  subrace: /m);
+
+    blank.race = "Halfling";
+    const subrace = cli("slots", await encode(run), "c1");
+    expect(subrace.out).toMatch(/^  subrace: /m);
+    expect(subrace.out).toMatch(/^    Halfling_Lightfoot \(.+\)$/m);
+    expect(subrace.out).not.toMatch(/^  race: /m);
+  });
 });

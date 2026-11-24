@@ -2,7 +2,8 @@
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { loadGameData } from "../src/data/load.ts";
-import { bareNameOf } from "../src/data/names.ts";
+import { bareNameOf, nameOf } from "../src/data/names.ts";
+import type { TextKind } from "../src/data/names.ts";
 import type { GameData } from "../src/data/types.ts";
 import { alternatives, resolve } from "../src/engine/progression.ts";
 import { validate } from "../src/engine/validate.ts";
@@ -62,6 +63,12 @@ function label(id: string, data: GameData, lang: "en" | "fr"): string {
   return name === null || name === "" || name === id ? id : `${id} (${name})`;
 }
 
+/** Label of an identifier of a known kind (race, background, class). */
+function kindLabel(kind: TextKind, id: string, data: GameData, lang: "en" | "fr"): string {
+  const name = nameOf(data.texts[lang], kind, id);
+  return name === null || name === "" || name === id ? id : `${id} (${name})`;
+}
+
 function validateCommand(run: Run, data: GameData, lang: "en" | "fr"): number {
   const report = validate(run, data);
   const lines: string[] = [report.status];
@@ -86,6 +93,20 @@ function slotsCommand(run: Run, data: GameData, lang: "en" | "fr", characterId: 
     return choice === undefined || choice === "todo";
   };
 
+  // Choices of the character itself, missing in the same cases as `resolve` reports them.
+  const { races, backgrounds, classes } = data.rules;
+  const pick = (slot: string, kind: TextKind, allowed: string[]) => {
+    out.push(`  ${slot}: ${kind} choice count 1`);
+    for (const id of allowed) out.push(`    ${kindLabel(kind, id, data, lang)}`);
+  };
+  const baseRaces = Object.keys(races).filter((id) => races[id]?.parent === null);
+  const subraces = Object.keys(races).filter((id) => races[id]?.parent === character.race);
+  if (character.race === "") pick("race", "race", baseRaces);
+  else if (baseRaces.includes(character.race) && character.subrace === null && subraces.length > 0) pick("subrace", "race", subraces);
+  if (character.background === "") pick("background", "background", Object.keys(backgrounds));
+  if (out.length > 0) out.unshift("character");
+  const baseClasses = Object.keys(classes).filter((id) => classes[id]?.parent === null);
+
   for (const level of levels) {
     const choices = character.levels[level.level - 1]?.choices ?? {};
     const before = out.length;
@@ -94,6 +115,7 @@ function slotsCommand(run: Run, data: GameData, lang: "en" | "fr", characterId: 
       for (const id of allowed) out.push(`    ${label(id, data, lang)}`);
     };
     out.push(`level ${level.level} (${level.class === "" ? "no class" : label(level.class, data, lang)})`);
+    if (level.class === "") pick("class", "class", baseClasses);
     // Rows the game duplicates are alternatives: all are listed until one holds a choice, then only that one.
     const { unused, undecided: openGroups } = alternatives(level, choices);
     for (const group of openGroups) out.push(`  alternative rows (fill one): ${group.join(", ")}`);
