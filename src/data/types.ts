@@ -207,6 +207,6 @@ export interface GameData {
   rules: Rules;
   texts: { en: Texts; fr: Texts };
   meta: Meta;
-  /** Keyed by subclass name. */
+  /** Keyed by subclass name; from the hand-written `data/rules/unlocked_subclasses.json` (sibling of `data/larian/`), which any loader must read too. */
   unlockedSubclasses: Record<string, UnlockedSubclass>;
 }

@@ -19,7 +19,7 @@ The import reads the installed game read-only and rewrites `data/larian/`. It ne
 2. Import: `python3.14 -m scripts.data.importer --game "<game install directory>" --game-version <version>` (about 30 s). On failure it prints every error and writes nothing.
 3. If it fails with data exceptions (missing texts, items not found, duplicate progressions, typos in selectors, stale list entries…):
    - Group the errors by pattern with counts and examples.
-   - **Stop and ask the maintainer** which ones to list. Never add entries to `scripts/data/unnamed.txt`, `items_excluded.txt`, `game_typos.txt`, `known_duplicates.txt` or `scripts/wiki/ambiguous_uids.txt` on your own: these are decisions.
+   - **Stop and ask the maintainer** which ones to list. Never add entries to `scripts/data/unnamed.txt`, `items_excluded.txt`, `game_typos.txt`, `known_duplicates.txt`, `scripts/wiki/ambiguous_uids.txt` or `data/rules/unlocked_subclasses.json` on your own: these are decisions. An unlocked subclass that a progression row now offers is reported as stale by the checks.
    - Check suspicious values against the game before blaming the code (e.g. read the RootTemplate chain with `scripts.data.templates`, resolve handles with the translation tables).
 4. Run the import a second time: `git status --short data/larian` must show no change (determinism).
 5. Check the committed data without the game: `python3.14 -m scripts.data.checks data/larian` (must print nothing). If counts changed legitimately (new patch), update `COUNTS` in `scripts/data/checks.py` and say why in the commit.
