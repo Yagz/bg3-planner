@@ -25,6 +25,8 @@ export type ResolvedLevel = {
   /** Allowed subclass names when this level requires choosing one. */
   subclassChoice: string[] | null;
   featChoice: boolean;
+  /** Groups of rows the game itself gives for the same table and level (sorted uuids): alternatives, one to fill. */
+  ambiguous: string[][];
 };
 
 export function subclassSlot(cls: string): string {
@@ -164,8 +166,40 @@ export function resolve(character: Character, data: GameData): { levels: Resolve
     const slots = rows.flatMap((row) =>
       row.selectors.map((selector, s) => ({ id: `${row.uuid}/${s}`, progression: row.uuid, selector, level: n })),
     );
-    levels.push({ level: n, class: cls, classLevel, rows, slots, subclassChoice, featChoice: classRows.some((r) => r.feat) });
+    const groups = new Map<string, Progression[]>();
+    for (const row of rows) {
+      const key = rowKey(row.table, row.level, row.multiclass);
+      groups.set(key, [...(groups.get(key) ?? []), row]);
+    }
+    const ambiguous = [...groups.values()].filter((group) => group.length > 1).map((group) => group.map((r) => r.uuid).toSorted());
+    levels.push({ level: n, class: cls, classLevel, rows, slots, subclassChoice, featChoice: classRows.some((r) => r.feat), ambiguous });
   });
 
   return { levels, issues };
+}
+
+/** Whether `choices` holds a key (even `"todo"`) for a slot of the progression row `uuid`. */
+function hasRowChoice(choices: Record<string, unknown>, uuid: string): boolean {
+  return Object.keys(choices).some((key) => key.startsWith(`${uuid}/`));
+}
+
+/**
+ * Reads the alternative rows of a level against its choices: in each ambiguous group, the rows holding a choice are
+ * the ones meant; when none does, every row stays open. Returns the rows whose slots are not required, and the groups
+ * where several rows hold choices (combined, which the game may not allow) or none does (undecided).
+ */
+export function alternatives(
+  level: ResolvedLevel,
+  choices: Record<string, unknown>,
+): { unused: Set<string>; combined: string[][]; undecided: string[][] } {
+  const unused = new Set<string>();
+  const combined: string[][] = [];
+  const undecided: string[][] = [];
+  for (const group of level.ambiguous) {
+    const chosen = group.filter((uuid) => hasRowChoice(choices, uuid));
+    if (chosen.length === 0) undecided.push(group);
+    if (chosen.length === 1) for (const uuid of group) if (uuid !== chosen[0]) unused.add(uuid);
+    if (chosen.length > 1) combined.push(chosen);
+  }
+  return { unused, combined, undecided };
 }

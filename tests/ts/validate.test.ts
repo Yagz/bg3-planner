@@ -377,3 +377,64 @@ describe("validate", () => {
     expect(validate(runOf(noSub), data).issues.map((i) => [i.code, i.slot])).toEqual([["choiceMissing", "subclass:Ranger"]]);
   });
 });
+
+describe("validate, duplicate progression rows of the game", () => {
+  const BM_A = "01115231-fa37-4cd2-b750-5f282c8ab667";
+  const BM_B = "59505762-9251-463c-a81b-420e9a14c8cd";
+  const CLERIC_A = "2b249feb-bba5-4922-8385-c2dd9baaa049";
+  const CLERIC_B = "366cde9c-db0c-43ce-a49c-fb140e084b3c";
+  const FIGHTER1 = "dfb2fd83-9849-4c2d-be84-adedb81a867a";
+  const fighter1 = (): Record<string, Choice> => ({
+    [`${FIGHTER1}/0`]: ["Athletics", "Perception"],
+    [`${FIGHTER1}/2`]: ["FightingStyle_Defense"],
+    [`${FIGHTER1}/3`]: ["Strength", "Constitution"],
+  });
+  const maneuvers = ["CommanderStrike_Maneuver", "DisarmingAttack", "DistractingStrike"];
+  const battleMaster = (third: Record<string, Choice>) =>
+    character(["Fighter", "Fighter", "Fighter"], [fighter1(), {}, { "subclass:Fighter": ["BattleMaster"], ...third }], FIGHTER_SCORES);
+  const summary = (c: Character) => {
+    const report = validate(runOf(c), data);
+    return { status: report.status, issues: report.issues.map((i) => [i.severity, i.code, i.slot, i.params["rows"] ?? null]) };
+  };
+  const bmRows = [BM_A, BM_B].toSorted().join(", ");
+
+  it("accepts a BattleMaster 3 with one of the two maneuver rows filled, with the ambiguity notice", () => {
+    for (const filled of [BM_A, BM_B]) {
+      expect(summary(battleMaster({ [`${filled}/0`]: maneuvers }))).toEqual({ status: "valid", issues: [["notice", "ambiguousGameData", null, bmRows]] });
+    }
+  });
+
+  it("accepts both maneuver rows filled, with a notice that the rows were combined", () => {
+    const both = battleMaster({ [`${BM_A}/0`]: maneuvers, [`${BM_B}/0`]: ["EvasiveFootwork", "FeintingAttack", "GoadingAttack"] });
+    expect(summary(both)).toEqual({
+      status: "valid",
+      issues: [
+        ["notice", "ambiguousGameData", null, bmRows],
+        ["notice", "ambiguousRowsCombined", null, bmRows],
+      ],
+    });
+  });
+
+  it("reports the slots of both rows as missing when neither is filled", () => {
+    expect(summary(battleMaster({}))).toEqual({
+      status: "incomplete",
+      issues: [
+        ["notice", "ambiguousGameData", null, bmRows],
+        ["incomplete", "choiceMissing", `${BM_A}/0`, null],
+        ["incomplete", "choiceMissing", `${BM_B}/0`, null],
+      ],
+    });
+  });
+
+  it("accepts a Fighter 1 / Cleric 2 with one of the two multiclass rows filled", () => {
+    const clericRows = [CLERIC_A, CLERIC_B].toSorted().join(", ");
+    const cantrips = ["Target_Guidance", "Target_Light", "Target_SacredFlame"];
+    const withRow = (cleric: Record<string, Choice>) =>
+      character(["Fighter", "Cleric"], [fighter1(), { "subclass:Cleric": ["LifeDomain"], ...cleric }], FIGHTER_SCORES);
+    expect(summary(withRow({ [`${CLERIC_B}/0`]: cantrips }))).toEqual({ status: "valid", issues: [["notice", "ambiguousGameData", null, clericRows]] });
+    expect(summary(withRow({ [`${CLERIC_A}/0`]: ["Insight", "Medicine"], [`${CLERIC_A}/1`]: cantrips }))).toEqual({
+      status: "valid",
+      issues: [["notice", "ambiguousGameData", null, clericRows]],
+    });
+  });
+});

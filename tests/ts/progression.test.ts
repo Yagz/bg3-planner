@@ -165,6 +165,8 @@ describe("resolve", () => {
     const third = levels[2];
     expect(third?.rows.filter((r) => r.type === "subclass").map((r) => r.uuid).toSorted()).toEqual(duplicates);
     for (const uuid of duplicates) expect(third?.slots.some((s) => s.id === `${uuid}/0`)).toBe(true);
+    expect(third?.ambiguous).toEqual([duplicates]);
+    expect(levels[1]?.ambiguous).toEqual([]);
   });
 
   it("flags the Cleric multiclass ambiguity and offers the subclasses of both rows", () => {

@@ -4,7 +4,7 @@ import { abilityTotals, checkPointBuy } from "./abilities.ts";
 import { checkChoice, emptyKnown, heldPassives } from "./choices.ts";
 import { reportFrom } from "./issues.ts";
 import type { Issue, Report } from "./issues.ts";
-import { resolve, subclassSlot } from "./progression.ts";
+import { alternatives, resolve, subclassSlot } from "./progression.ts";
 
 export function featSlot(level: number): string {
   return `feat:${level}`;
@@ -61,9 +61,10 @@ function validateCharacter(character: Character, data: GameData): Issue[] {
     const open = new Set<string>();
     if (level.subclassChoice !== null) open.add(subclassSlot(level.class));
 
-    const checkSlot = (slot: string, selector: Selector, scope: string) => {
+    const checkSlot = (slot: string, selector: Selector, scope: string, required = true) => {
       if (selector.function === "AddSpells") return;
       open.add(slot);
+      if (!required) return;
       const choice = Object.hasOwn(choices, slot) ? choices[slot] : undefined;
       if (choice === undefined && (selector.function === "ReplacePassives" || ("count" in selector && selector.count === 0))) {
         // Nothing to pick, or an optional replacement: leaving the key out keeps what is held.
@@ -79,9 +80,14 @@ function validateCharacter(character: Character, data: GameData): Issue[] {
 
     // Race and subrace selectors pick spells in their own table's scope, apart from every class.
     const raceTables = new Map(level.rows.filter((row) => row.type === "race").map((row) => [row.uuid, row.table]));
+    // Rows the game duplicates are alternatives: only the row holding choices is required (see `alternatives`).
+    const { unused, combined } = alternatives(level, choices);
+    for (const rows of combined) {
+      issues.push({ severity: "notice", code: "ambiguousRowsCombined", character: character.id, level: n, slot: null, params: { rows: rows.join(", ") } });
+    }
     for (const slot of level.slots) {
       const table = raceTables.get(slot.progression);
-      checkSlot(slot.id, slot.selector, table === undefined ? level.class : `race:${table}`);
+      checkSlot(slot.id, slot.selector, table === undefined ? level.class : `race:${table}`, !unused.has(slot.progression));
     }
 
     /** Checks the feat slot; returns the feat whose selectors open, or null. */
