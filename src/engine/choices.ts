@@ -10,26 +10,24 @@ export const SWAP_SEPARATOR = ">";
 /** What a character has gained so far while its levels are walked in order. */
 export type Known = {
   /**
-   * Spells known per spell scope (a class, or one feat slot), with the number of grants or picks behind each.
-   * A class scope holds its `SelectSpells` picks and the `AddSpells` grants of its class and subclass rows;
-   * race grants and other scopes never make a pick `alreadyKnown`.
+   * Spells picked by `SelectSpells` per spell scope (a class, a race or subrace table, or one feat slot), minus the
+   * swapped-out ones. Only these make a pick `alreadyKnown` and can be swapped out; `AddSpells` grants never do,
+   * since whether the game also lets the player pick a granted spell is unverified.
    */
-  spells: Map<string, Map<string, number>>;
-  /** Spells picked by `SelectSpells`, per spell scope; only these can be swapped out. */
-  picked: Map<string, Set<string>>;
-  /** Passives picked by `SelectPassives`. */
-  passives: Set<string>;
+  spells: Map<string, Set<string>>;
+  /** Passives currently held, by the list they were picked from (`SelectPassives`, then `ReplacePassives`). */
+  passives: Map<string, string[]>;
   /** Skills picked by `SelectSkills`. */
   skills: Set<string>;
 };
 
 export function emptyKnown(): Known {
-  return { spells: new Map(), picked: new Map(), passives: new Set(), skills: new Set() };
+  return { spells: new Map(), passives: new Map(), skills: new Set() };
 }
 
-/** Records the spells an `AddSpells` grant gives to a spell scope. */
-export function grantSpells(known: Known, scope: string, selector: Selector, data: GameData): void {
-  for (const spell of listItems(data, selector.list)) addSpell(known, scope, spell);
+/** Every passive currently held from a picking selector. */
+export function heldPassives(known: Known): string[] {
+  return [...known.passives.values()].flat();
 }
 
 export type SlotContext = {
@@ -37,7 +35,7 @@ export type SlotContext = {
   character: string;
   /** Character level (1-based). */
   level: number;
-  /** Spell scope of the slot: the level's class, or the feat slot for a feat's selectors. */
+  /** Spell scope of the slot: the level's class, `race:<table>` for a race or subrace row, or the feat slot. */
   scope: string;
   slot: string;
   /** Running ability scores, uncapped; ability choices add to them. */
@@ -47,27 +45,6 @@ export type SlotContext = {
 
 function listItems(data: GameData, list: string): string[] {
   return Object.hasOwn(data.rules.lists, list) ? (data.rules.lists[list]?.items ?? []) : [];
-}
-
-function spellsOf(known: Known, scope: string): Map<string, number> {
-  let spells = known.spells.get(scope);
-  if (spells === undefined) {
-    spells = new Map();
-    known.spells.set(scope, spells);
-  }
-  return spells;
-}
-
-function addSpell(known: Known, scope: string, spell: string): void {
-  const spells = spellsOf(known, scope);
-  spells.set(spell, (spells.get(spell) ?? 0) + 1);
-}
-
-function removeSpell(known: Known, scope: string, spell: string): void {
-  const spells = spellsOf(known, scope);
-  const count = (spells.get(spell) ?? 0) - 1;
-  if (count > 0) spells.set(spell, count);
-  else spells.delete(spell);
 }
 
 function duplicates(entries: string[]): string[] {
@@ -134,16 +111,43 @@ export function checkChoice(selector: Selector, choice: string[], ctx: SlotConte
       }
       break;
     }
-    default: {
-      const known = selector.function === "SelectPassives" ? ctx.known.passives : selector.function === "SelectSkills" ? ctx.known.skills : null;
+    case "SelectPassives": {
       const valid = inList(choice);
       noDuplicates(choice);
       exactly(choice.length, selector.count);
-      if (known !== null) {
-        for (const entry of new Set(valid)) if (known.has(entry)) invalid("alreadyKnown", { item: entry });
-        for (const entry of valid) known.add(entry);
-      }
+      const held = new Set(heldPassives(ctx.known));
+      for (const entry of new Set(valid)) if (held.has(entry)) invalid("alreadyKnown", { item: entry });
+      const fromList = ctx.known.passives.get(selector.list) ?? [];
+      ctx.known.passives.set(selector.list, [...fromList, ...new Set(valid)]);
+      break;
     }
+    case "ReplacePassives": {
+      // An optional change of a passive picked earlier from the same list; at most `count` replacements.
+      const valid = inList(choice);
+      noDuplicates(choice);
+      if (choice.length > selector.count) invalid("wrongCount", { count: choice.length, max: selector.count });
+      const fromList = ctx.known.passives.get(selector.list) ?? [];
+      const incoming = [...new Set(valid)];
+      for (const entry of incoming) if (fromList.includes(entry)) invalid("alreadyKnown", { item: entry });
+      if (issues.length === 0 && incoming.length > 0) {
+        // The latest picks give way to the replacements.
+        ctx.known.passives.set(selector.list, [...fromList.slice(0, Math.max(0, fromList.length - incoming.length)), ...incoming]);
+      }
+      break;
+    }
+    case "SelectSkills": {
+      const valid = inList(choice);
+      noDuplicates(choice);
+      exactly(choice.length, selector.count);
+      for (const entry of new Set(valid)) if (ctx.known.skills.has(entry)) invalid("alreadyKnown", { item: entry });
+      for (const entry of valid) ctx.known.skills.add(entry);
+      break;
+    }
+    case "SelectSkillsExpertise":
+    case "SelectEquipment":
+      inList(choice);
+      noDuplicates(choice);
+      exactly(choice.length, selector.count);
   }
   return issues;
 }
@@ -173,9 +177,8 @@ function checkSpells(
   exactly(picks.length, selector.count);
   if (swaps.length > selector.swaps) invalid("tooManySwaps", { count: swaps.length, max: selector.swaps });
 
-  const picked = known.picked.get(ctx.scope) ?? new Set<string>();
-  known.picked.set(ctx.scope, picked);
-  const scoped = spellsOf(known, ctx.scope);
+  const picked = known.spells.get(ctx.scope) ?? new Set<string>();
+  known.spells.set(ctx.scope, picked);
   const swappable = swaps.filter((swap) => {
     if (picked.has(swap.old)) return true;
     invalid("swapNotKnown", { item: swap.old });
@@ -185,14 +188,8 @@ function checkSpells(
   const incoming = [...picks, ...swaps.map((swap) => swap.new)];
   const valid = inList(incoming);
   noDuplicates(incoming);
-  for (const spell of new Set(valid)) if (scoped.has(spell)) invalid("alreadyKnown", { item: spell });
+  for (const spell of new Set(valid)) if (picked.has(spell)) invalid("alreadyKnown", { item: spell });
 
-  for (const swap of swappable) {
-    picked.delete(swap.old);
-    removeSpell(known, ctx.scope, swap.old);
-  }
-  for (const spell of valid) {
-    picked.add(spell);
-    addSpell(known, ctx.scope, spell);
-  }
+  for (const swap of swappable) picked.delete(swap.old);
+  for (const spell of valid) picked.add(spell);
 }

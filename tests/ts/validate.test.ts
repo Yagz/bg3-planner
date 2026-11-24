@@ -159,6 +159,72 @@ describe("validate", () => {
     expect(issues.filter((i) => i.slot === cantrips)).toEqual([]);
   });
 
+  it("keeps race picks in their own spell scope, apart from the class", () => {
+    const probe = character(["Wizard"], [{}], RANGER_SCORES, "Elf", "Elf_HighElf");
+    const slots = resolve(probe, data).levels[0]?.slots ?? [];
+    const raceRows = new Set(data.rules.progressions.filter((p) => p.type === "race").map((p) => p.uuid));
+    const raceCantrip = slots.find((s) => s.selector.function === "SelectSpells" && raceRows.has(s.progression))?.id ?? "";
+    const classCantrips = slots.find((s) => s.selector.function === "SelectSpells" && !raceRows.has(s.progression))?.id ?? "";
+    expect(raceCantrip).not.toBe("");
+    const choices: Record<string, Choice>[] = [{ [classCantrips]: ["Projectile_AcidSplash", "Projectile_FireBolt", "Projectile_RayOfFrost"], [raceCantrip]: ["Projectile_AcidSplash"] }];
+    const issues = validate(runOf(character(["Wizard"], choices, RANGER_SCORES, "Elf", "Elf_HighElf")), data).issues;
+    expect(issues.filter((i) => i.slot === raceCantrip || i.slot === classCantrips)).toEqual([]);
+  });
+
+  it("does not count a class or subclass grant as known for a pick", () => {
+    const classes = ["Cleric"];
+    const light = { 1: { "subclass:Cleric": ["LightDomain"] } };
+    const cantrips = slotId(classes, light, 1, "SelectSpells");
+    const choices: Record<string, Choice>[] = [{ "subclass:Cleric": ["LightDomain"], [cantrips]: ["Target_Light", "Target_Guidance", "Shout_Thaumaturgy"] }];
+    const issues = validate(runOf(character(classes, choices, RANGER_SCORES)), data).issues;
+    expect(issues.filter((i) => i.slot === cantrips)).toEqual([]);
+  });
+
+  it("treats ReplacePassives as an optional change of the held passive", () => {
+    const classes = ["Barbarian", "Barbarian", "Barbarian", "Barbarian", "Barbarian"];
+    const totem = { 3: { "subclass:Barbarian": ["TotemWarriorPath"] } };
+    const pick = slotId(classes, totem, 3, "SelectPassives");
+    const replace4 = slotId(classes, totem, 4, "ReplacePassives");
+    const replace5 = slotId(classes, totem, 5, "ReplacePassives");
+    const passiveIssues = (at4?: Choice, at5?: Choice) => {
+      const choices: Record<string, Choice>[] = [{}, {}, { "subclass:Barbarian": ["TotemWarriorPath"], [pick]: ["TotemSpirit_Bear"] }, {}, {}];
+      if (at4 !== undefined) choices[3]![replace4] = at4;
+      if (at5 !== undefined) choices[4]![replace5] = at5;
+      return validate(runOf(character(classes, choices, FIGHTER_SCORES, "Human", null)), data).issues.filter((i) => i.slot === replace4 || i.slot === replace5);
+    };
+    // Keeping the totem: the key is left out, or no replacement is listed.
+    expect(passiveIssues()).toEqual([]);
+    expect(passiveIssues([])).toEqual([]);
+    expect(passiveIssues("todo").map((i) => i.code)).toEqual(["choiceMissing"]);
+    // Replacing it: the new one is held, the old one can come back.
+    expect(passiveIssues(["TotemSpirit_Wolf"])).toEqual([]);
+    expect(passiveIssues(["TotemSpirit_Wolf"], ["TotemSpirit_Bear"])).toEqual([]);
+    expect(passiveIssues(["TotemSpirit_Wolf"], ["TotemSpirit_Wolf"])).toEqual([
+      { severity: "invalid", code: "alreadyKnown", character: "c1", level: 5, slot: replace5, params: { item: "TotemSpirit_Wolf" } },
+    ]);
+    expect(passiveIssues(["TotemSpirit_Bear"])).toEqual([
+      { severity: "invalid", code: "alreadyKnown", character: "c1", level: 4, slot: replace4, params: { item: "TotemSpirit_Bear" } },
+    ]);
+    expect(passiveIssues(["TotemSpirit_Wolf", "TotemSpirit_Elk"]).map((i) => [i.code, i.params])).toEqual([["wrongCount", { count: 2, max: 1 }]]);
+  });
+
+  it("stops counting a replaced passive's armour proficiency", () => {
+    // Synthetic: the Bear totem is given Heavy Armor proficiency so that replacing it matters for HeavyArmorMaster.
+    const patched: GameData = structuredClone(data);
+    patched.rules.passives["TotemSpirit_Bear"] = { boosts: ["Proficiency(HeavyArmor)"] };
+    const classes = ["Barbarian", "Barbarian", "Barbarian", "Barbarian"];
+    const totem = { 3: { "subclass:Barbarian": ["TotemWarriorPath"] } };
+    const pick = slotId(classes, totem, 3, "SelectPassives");
+    const replace4 = slotId(classes, totem, 4, "ReplacePassives");
+    const notMet = (replacement?: string[]) => {
+      const choices: Record<string, Choice>[] = [{}, {}, { "subclass:Barbarian": ["TotemWarriorPath"], [pick]: ["TotemSpirit_Bear"] }, { "feat:4": ["HeavyArmorMaster"] }];
+      if (replacement !== undefined) choices[3]![replace4] = replacement;
+      return validate(runOf(character(classes, choices, FIGHTER_SCORES, "Human", null)), patched).issues.filter((i) => i.code === "requirementNotMet");
+    };
+    expect(notMet()).toEqual([]);
+    expect(notMet(["TotemSpirit_Wolf"]).map((i) => i.params["proficiency"])).toEqual(["HeavyArmor"]);
+  });
+
   it("accepts a swap of a known spell, written old>new, besides the new picks", () => {
     const id = slot(3, "SelectSpells");
     expect(validate(runOf(ranger((c) => { c[2]![id] = ["Target_Goodberry", "Target_HuntersMark>Target_Jump"]; })), data)).toEqual({ status: "valid", issues: [] });
