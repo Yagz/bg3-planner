@@ -25,6 +25,12 @@ Machine-specific context (game paths, local tools, working rules, state of the p
 - Re-import the game data after a patch: skill `.claude/skills/import-game-data`. Refresh the bg3.wiki data: skill `.claude/skills/refresh-wiki-data`.
 - Data exceptions (texts left unnamed, excluded items, ambiguous wiki uids, game typos, duplicate progressions) are decisions for the maintainer: present the grouped list, never add entries to the exception lists on your own.
 
+## Working on a run string
+
+- Read it with `node scripts/run.ts decode <run>` (readable JSON; the `_names` fields are display hints and are ignored on import), change identifiers only, check with `node scripts/run.ts validate <file>`, then `node scripts/run.ts encode <file.json>`.
+- `node scripts/run.ts slots <run> <character id>` lists the open choices with the identifiers the game allows; use it instead of guessing identifiers.
+- Never complete a build's game decisions (subclass, spells, feats, skills) unless the user asks: `incomplete` (exit 1, a choice still `"todo"`) is a normal state, `invalid` (exit 2, an impossible choice) is a defect to report, not to correct silently.
+
 ## Conventions
 
 - **Everything public is in English**: code (identifiers, comments, docstrings, tests, error messages, keys of produced JSON, folder names), documentation and commit messages. French appears only as product content (French game texts, the French UI and notices). Maintainer-local material (`docs/`, `CLAUDE.local.md`) may be in French and is not versioned.

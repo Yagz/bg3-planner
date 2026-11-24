@@ -12,6 +12,7 @@ Requirements: Python 3.14 (standard library only) for the data scripts; Node 24 
 
 - Run the tests: `python3.14 -m unittest discover -s tests -t .`
 - Install the Node dev dependencies: `npm ci`; type-check: `npx tsc --noEmit`; run the TypeScript tests: `npx vitest run`
+- Read, edit and validate a run string (a string, a file or `-` for stdin): `node scripts/run.ts decode <run>` (readable JSON), `node scripts/run.ts encode <file.json>` (export string), `node scripts/run.ts validate <run> [--lang en|fr]` (exit 0 valid, 1 incomplete, 2 invalid, 3 unreadable input), `node scripts/run.ts slots <run> <character id>` (open choice slots with the allowed identifiers)
 - Check the committed game data: `python3.14 -m scripts.data.checks data/larian`
 - Refresh the bg3.wiki item data (slow, polite, cached in `cache/wiki/`): `python3.14 -m scripts.wiki.fetch --output data/wiki` — see [`data/wiki/README.md`](data/wiki/README.md).
 - Re-import the game data from an installed copy of the game (read-only): `python3.14 -m scripts.data.importer --game <game install directory> --game-version <version>` — see [`data/larian/README.md`](data/larian/README.md).
