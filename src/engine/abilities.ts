@@ -10,7 +10,7 @@ export const POINT_BUY = {
   cost: { 8: 0, 9: 1, 10: 2, 11: 3, 12: 4, 13: 5, 14: 7, 15: 9 } as Record<number, number>,
 };
 
-const ABILITY_CAP = 20;
+export const ABILITY_CAP = 20;
 
 export function checkPointBuy(character: Character): Issue[] {
   const issues: Issue[] = [];
