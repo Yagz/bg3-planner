@@ -1,0 +1,26 @@
+export type Severity = "incomplete" | "invalid" | "notice";
+
+/** A finding of the rules engine; messages are rendered later from `code` and `params`. */
+export type Issue = {
+  severity: Severity;
+  code: string;
+  character: string;
+  level: number | null;
+  slot: string | null;
+  params: Record<string, string | number>;
+};
+
+export type Report = {
+  status: "valid" | "incomplete" | "invalid";
+  issues: Issue[];
+};
+
+/** Builds a report whose status is the worst severity found; notices never change it. */
+export function reportFrom(issues: Issue[]): Report {
+  const status = issues.some((i) => i.severity === "invalid")
+    ? "invalid"
+    : issues.some((i) => i.severity === "incomplete")
+      ? "incomplete"
+      : "valid";
+  return { status, issues };
+}
