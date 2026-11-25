@@ -83,11 +83,13 @@ describe("contribution", () => {
     expect(result.get("g")!.highest).not.toContain("Dexterity");
   });
 
-  it("covers only the active party", () => {
+  it("covers only the active party, and compares a lone member with nobody", () => {
     const result = contribution(runOf([ranger()], [rogue()]), data, 1);
     expect([...result.keys()]).toEqual(["r"]);
     expect(result.get("r")!.only).toContain("Stealth");
-    expect(result.get("r")!.highest).toEqual([...ABILITIES]);
+    // Nobody to compare with: no best skill, no highest ability.
+    expect(result.get("r")!.best).toEqual([]);
+    expect(result.get("r")!.highest).toEqual([]);
     expect(contribution(runOf([]), data, 1).size).toBe(0);
   });
 });

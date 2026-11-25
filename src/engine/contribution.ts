@@ -8,9 +8,9 @@ import { activeParty, coverage, truncate } from "./coverage.ts";
 export type Contribution = {
   /** Skills where the member is the single proficient active member. */
   only: string[];
-  /** Skills where the member has the group's best value (`coverage().best`), apart from those in `only`. */
+  /** Skills where the member has the group's best value (`coverage().best`), apart from those in `only`; empty for a lone member. */
   best: string[];
-  /** Abilities where the member's total is strictly above every other active member's. */
+  /** Abilities where the member's total is strictly above every other active member's; empty for a lone member. */
   highest: Ability[];
 };
 
@@ -23,10 +23,12 @@ export function contribution(run: Run, data: GameData, level: number): Map<strin
     return abilityTotals(cut, data, cut.levels.length);
   });
   const result = new Map<string, Contribution>();
+  // A lone member has nobody to be compared with: only `only` says something about it.
+  const compared = members.length >= 2;
   members.forEach((character, i) => {
     const only = skills.filter((s) => s.proficient.length === 1 && s.proficient[0] === character.id).map((s) => s.skill);
-    const best = skills.filter((s) => s.best?.character === character.id && !only.includes(s.skill)).map((s) => s.skill);
-    const highest = ABILITIES.filter((ability) => totals.every((other, j) => j === i || totals[i]![ability] > other[ability]));
+    const best = !compared ? [] : skills.filter((s) => s.best?.character === character.id && !only.includes(s.skill)).map((s) => s.skill);
+    const highest = !compared ? [] : ABILITIES.filter((ability) => totals.every((other, j) => j === i || totals[i]![ability] > other[ability]));
     result.set(character.id, { only, best, highest });
   });
   return result;
