@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -111,6 +111,40 @@ describe("checkDist", () => {
   });
 });
 
+describe("checkDist inline content and static imports", () => {
+  it("scans <style> and <script> bodies and style attributes of the page and of any other HTML file", () => {
+    cleanBuild();
+    const inline = `<style>@import url(https://fonts.example.com/a.css);</style><style>a{background:url('https://img.example.com/b.png')}</style><script>fetch("https://api.example.com/c")</script><p style="background:url(https://img.example.com/d.png)">x</p>`;
+    put("index.html", INDEX.replace("<div", `${inline}<div`));
+    put("other.html", `<!doctype html>${inline}`);
+    const text = checkDist(dir).join("\n");
+    for (const file of ["index.html", "other.html"]) {
+      for (const url of ["fonts.example.com/a.css", "img.example.com/b.png", "api.example.com/c", "img.example.com/d.png"]) {
+        expect(text.split("\n").some((line) => line.startsWith(`${file} `) && line.includes(url))).toBe(true);
+      }
+    }
+  });
+
+  it("does not report inline code without an external load", () => {
+    cleanBuild();
+    put("index.html", INDEX.replace("<div", `<style>a{color:red}</style><script>var x="https://react.dev/errors/"</script><p style="color:red">x</p><div`));
+    expect(checkDist(dir)).toEqual([]);
+  });
+
+  it("reports static imports of another site, spaced or minified", () => {
+    cleanBuild();
+    put("assets/app.js", `import x from "https://a.example.com/1.js";import"https://b.example.com/2.js";export*from"https://c.example.com/3.js";import{y}from'//d.example.com/4.js';`);
+    const text = checkDist(dir).join("\n");
+    for (const host of ["a", "b", "c", "d"]) expect(text).toContain(`${host}.example.com`);
+  });
+
+  it("matches URLs case-insensitively in JS", () => {
+    cleanBuild();
+    put("assets/app.js", `fetch("HTTPS://api.example.com/a")`);
+    expect(checkDist(dir)).toHaveLength(1);
+  });
+});
+
 describe("check-dist command", () => {
   it("prints nothing and exits 0 on a clean build, lists problems and exits 1 otherwise", () => {
     const script = join(import.meta.dirname, "../../scripts/check-dist.ts");
@@ -122,5 +156,20 @@ describe("check-dist command", () => {
     const bad = spawnSync("node", [script, dir], { encoding: "utf8" });
     expect(bad.status).toBe(1);
     expect(bad.stderr).toContain(DATA_FILES[0]);
+  });
+
+  it("checks when run through a symlink", () => {
+    const script = join(import.meta.dirname, "../../scripts/check-dist.ts");
+    cleanBuild();
+    rmSync(join(dir, DATA_FILES[0]));
+    const link = join(dir, "..", `check-dist-link-${process.pid}.ts`);
+    symlinkSync(script, link);
+    try {
+      const result = spawnSync("node", [link, dir], { encoding: "utf8" });
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain(DATA_FILES[0]);
+    } finally {
+      rmSync(link, { force: true });
+    }
   });
 });

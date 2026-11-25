@@ -1,6 +1,6 @@
 // Checks a built site (web/dist): nothing is loaded from another site, and everything that must ship is there. Usage: node scripts/check-dist.ts <dist directory>
 // Exit 0 and no output when clean; exit 1 with one problem per line on stderr otherwise.
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { DATA_FILES } from "../web/src/data/loadInBrowser.ts";
@@ -63,6 +63,10 @@ function checkHtml(name: string, html: string): string[] {
       problems.push(`${name}: <${tag} ${attribute}> loads or links to another site: ${url}`);
     }
   }
+  // Inline code is scanned with the CSS and JS rules: <style> and <script> bodies, and style="" values.
+  for (const block of html.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style\s*>/gi)) problems.push(...checkCss(`${name} <style>`, block[1] ?? ""));
+  for (const block of html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script\s*>/gi)) problems.push(...checkJs(`${name} <script>`, block[1] ?? ""));
+  for (const attribute of html.matchAll(/\bstyle\s*=\s*(?:"([^"]*)"|'([^']*)')/gi)) problems.push(...checkCss(`${name} style=""`, attribute[1] ?? attribute[2] ?? ""));
   return problems;
 }
 
@@ -87,9 +91,11 @@ function checkCss(name: string, css: string): string[] {
 function checkJs(name: string, js: string): string[] {
   const problems: string[] = [];
   const literal = `["'\`]((?:https?:)?\\/\\/[^"'\`]*)["'\`]`;
-  const calls = new RegExp(`\\b(fetch|import|importScripts|Worker|EventSource|WebSocket|sendBeacon)\\s*\\(\\s*${literal}`, "g");
+  const calls = new RegExp(`\\b(fetch|import|importScripts|Worker|EventSource|WebSocket|sendBeacon)\\s*\\(\\s*${literal}`, "gi");
   for (const match of js.matchAll(calls)) problems.push(`${name}: ${match[1]}() of another site: ${match[2]}`);
-  for (const match of js.matchAll(new RegExp(`\\.src\\s*=\\s*${literal}`, "g"))) problems.push(`${name}: .src set to another site: ${match[1]}`);
+  // Static imports and re-exports: `import x from "…"`, `import"…"`, `export * from "…"`.
+  for (const match of js.matchAll(new RegExp(`\\b(?:import|from)\\s*${literal}`, "gi"))) problems.push(`${name}: static import of another site: ${match[1]}`);
+  for (const match of js.matchAll(new RegExp(`\\.src\\s*=\\s*${literal}`, "gi"))) problems.push(`${name}: .src set to another site: ${match[1]}`);
   return problems;
 }
 
@@ -136,7 +142,18 @@ export function checkDist(dir: string): string[] {
   return problems;
 }
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+/** True when this file is the script being run, whatever path (symlink included) it was started through. */
+function isEntryPoint(): boolean {
+  const started = process.argv[1];
+  if (started === undefined) return false;
+  try {
+    return realpathSync(started) === realpathSync(fileURLToPath(import.meta.url));
+  } catch {
+    return true;
+  }
+}
+
+if (isEntryPoint()) {
   const dir = process.argv[2];
   if (dir === undefined || process.argv.length > 3) {
     console.error("Usage: node scripts/check-dist.ts <dist directory>");
