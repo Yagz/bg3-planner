@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CodecError, PREFIX, decode, encode, toReadableJson } from "../../src/plan/codec.ts";
+import { CodecError, PREFIX, decode, decodeJson, encode, toReadableJson } from "../../src/plan/codec.ts";
 import { loadGameData } from "../../src/data/load.ts";
 import { emptyRun, isOffData } from "../../src/plan/model.ts";
 import type { Run } from "../../src/plan/model.ts";
@@ -287,5 +287,43 @@ describe("migrations", () => {
     await rejects(decode(JSON.stringify({ ...emptyRun("r1"), version: 99 })));
     const bad = { 0: (raw: unknown) => raw };
     await rejects(decode(JSON.stringify({ ...emptyRun("r1"), version: 0 }), bad));
+  });
+});
+
+describe("synchronous JSON decoding", () => {
+  function throwsCodecError(text: string, registry = MIGRATIONS): CodecError {
+    try {
+      decodeJson(text, registry);
+    } catch (error) {
+      expect(error).toBeInstanceOf(CodecError);
+      return error as CodecError;
+    }
+    throw new Error("expected a CodecError");
+  }
+
+  it("reads the run's JSON and returns the run, not a promise", () => {
+    const run = sampleRun();
+    expect(decodeJson(JSON.stringify(run))).toEqual(run);
+  });
+
+  it("gives the same run as decode, hint fields stripped", async () => {
+    const run = sampleRun();
+    const text = JSON.stringify({ ...run, _names: { MAG_Acrobat_Shoes: "Acrobat Shoes" } });
+    expect(decodeJson(text)).toEqual((await decode(text)).run);
+  });
+
+  it("migrates a version 1 document", () => {
+    const { id, updatedAt, ...rest } = sampleRun();
+    const run = decodeJson(JSON.stringify({ ...rest, version: 1 }));
+    expect(run.version).toBe(2);
+    expect(run.id).toBe("");
+    expect(run.updatedAt).toBeNull();
+  });
+
+  it("throws nothing but a CodecError", () => {
+    const deep = JSON.stringify(emptyRun("r1")).replace('"notes":""', `"notes":${"[".repeat(20000)}${"]".repeat(20000)}`);
+    for (const text of ["", "BG3P2:abcd", "{not json", "[1,2]", JSON.stringify({ version: 2 }), deep]) throwsCodecError(text);
+    const registry = { ...MIGRATIONS, 1: () => { throw new TypeError("boom"); } };
+    expect(throwsCodecError(JSON.stringify({ ...emptyRun("r1"), version: 1 }), registry).message).toContain("boom");
   });
 });

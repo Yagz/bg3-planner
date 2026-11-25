@@ -66,10 +66,53 @@ export async function decode(
   try {
     return await decodeText(text, registry);
   } catch (error) {
-    if (error instanceof CodecError) throw error;
-    // Deep nesting overflows the stack; a migration may throw anything.
-    throw new CodecError(`The document could not be read: ${error instanceof Error ? error.message : String(error)}`);
+    throw asCodecError(error);
   }
+}
+
+/**
+ * Reads the run's JSON document synchronously (the form the browser stores), through the same hint stripping,
+ * migrations and shape checks as `decode`; throws nothing but a `CodecError`.
+ */
+export function decodeJson(text: string, registry: Record<number, Migration> = MIGRATIONS): Run {
+  try {
+    const trimmed = text.trim();
+    if (!(trimmed.startsWith("{") || trimmed.startsWith("["))) throw new CodecError("Not a JSON document");
+    const { raw, version } = readJsonDocument(trimmed);
+    return finish(raw, version, registry).run;
+  } catch (error) {
+    throw asCodecError(error);
+  }
+}
+
+function asCodecError(error: unknown): CodecError {
+  if (error instanceof CodecError) return error;
+  // Deep nesting overflows the stack; a migration may throw anything.
+  return new CodecError(`The document could not be read: ${error instanceof Error ? error.message : String(error)}`);
+}
+
+/** Parses a JSON document and reads its declared version. */
+function readJsonDocument(trimmed: string): { raw: Obj; version: number } {
+  const raw = parseJson(trimmed);
+  if (!isObject(raw)) throw new CodecError("The JSON document is not an object");
+  const declared = raw["version"];
+  if (typeof declared !== "number" || !Number.isInteger(declared)) {
+    throw new CodecError("Invalid field version: expected an integer");
+  }
+  return { raw, version: declared };
+}
+
+/** Strips the hint fields, migrates to the current version and checks the shape. */
+function finish(raw: unknown, version: number, registry: Record<number, Migration>): { run: Run; warnings: string[] } {
+  const hints = { count: 0 };
+  const cleaned = stripHints(raw, hints);
+  const migrated = migrate(cleaned, version, registry);
+  if (!isObject(migrated) || migrated["version"] !== CURRENT_VERSION) {
+    throw new CodecError(`A migration left the data at version ${isObject(migrated) ? JSON.stringify(migrated["version"]) : "?"}, expected ${CURRENT_VERSION}`);
+  }
+  const run = validateRun(migrated);
+  const warnings = hints.count > 0 ? [`Ignored ${hints.count} hint field(s) (_name / _names): they are display aids, not data`] : [];
+  return { run, warnings };
 }
 
 async function decodeText(text: string, registry: Record<number, Migration>): Promise<{ run: Run; warnings: string[] }> {
@@ -79,13 +122,7 @@ async function decodeText(text: string, registry: Record<number, Migration>): Pr
   let raw: unknown;
   let version: number;
   if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
-    raw = parseJson(trimmed);
-    if (!isObject(raw)) throw new CodecError("The JSON document is not an object");
-    const declared = raw["version"];
-    if (typeof declared !== "number" || !Number.isInteger(declared)) {
-      throw new CodecError("Invalid field version: expected an integer");
-    }
-    version = declared;
+    ({ raw, version } = readJsonDocument(trimmed));
   } else {
     const colon = trimmed.indexOf(":");
     const head = colon < 0 ? trimmed : trimmed.slice(0, colon);
@@ -116,15 +153,7 @@ async function decodeText(text: string, registry: Record<number, Migration>): Pr
     }
   }
 
-  const hints = { count: 0 };
-  const cleaned = stripHints(raw, hints);
-  const migrated = migrate(cleaned, version, registry);
-  if (!isObject(migrated) || migrated["version"] !== CURRENT_VERSION) {
-    throw new CodecError(`A migration left the data at version ${isObject(migrated) ? JSON.stringify(migrated["version"]) : "?"}, expected ${CURRENT_VERSION}`);
-  }
-  const run = validateRun(migrated);
-  const warnings = hints.count > 0 ? [`Ignored ${hints.count} hint field(s) (_name / _names): they are display aids, not data`] : [];
-  return { run, warnings };
+  return finish(raw, version, registry);
 }
 
 function parseJson(text: string): unknown {
