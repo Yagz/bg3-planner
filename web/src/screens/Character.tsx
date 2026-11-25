@@ -20,7 +20,6 @@ import {
   setLevelClass,
   withOriginLock,
 } from "../state/characterOps.ts";
-import { isRecruitable } from "../state/partyOps.ts";
 import ChoicePicker, { kindOfList } from "./character/ChoicePicker.tsx";
 import type { PickerMode, PickerSpec } from "./character/ChoicePicker.tsx";
 import Creation from "./character/Creation.tsx";
@@ -117,9 +116,12 @@ export default function Character({ data, run, saveRun, characterId, onSelect, t
     setPending(null);
     attempt(() => save(result, origin));
   };
-  // The player's origin: the custom player, or an origin with a class that is not already a companion in the run.
+  // The player's origin: the custom player, or an origin the game offers at character creation that is not already a
+  // companion in the run (the current one stays listed).
   const originOptions = sortByName(
-    Object.keys(data.rules.origins).filter((name) => name === run.origin || (isRecruitable(data, name) && !run.characters.some((c) => c.who === name))),
+    Object.keys(data.rules.origins).filter(
+      (name) => name === run.origin || (name !== "Generic" && data.rules.origins[name]!.playable && !run.characters.some((c) => c.who === name)),
+    ),
     "origin",
   );
   const changeOrigin = (next: string) => commit(withOriginLock(character, data, next), next);

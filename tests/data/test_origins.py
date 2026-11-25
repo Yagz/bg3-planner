@@ -30,7 +30,7 @@ PRESETS = lsx.merge([lsx.nodes(lsx_file("AbilityDistributionPreset", preset("a-c
 def origin(**attributes: str) -> dict:
     return {"UUID": "o-sh", "Name": "Shadowheart", "ClassUUID": "c-cleric", "SubClassUUID": "c-trick",
             "RaceUUID": "r-halfelf", "SubRaceUUID": "r-high", "BackgroundUUID": "b-acolyte", "LockRace": "true",
-            "DisplayName": "hShadowheart;1", "Description": "hShadowheartDesc;2", **attributes}
+            "AvailableInCharacterCreation": "1", "DisplayName": "hShadowheart;1", "Description": "hShadowheartDesc;2", **attributes}
 
 
 def merged(*layers: list[dict]) -> dict:
@@ -44,7 +44,7 @@ class OriginsTest(unittest.TestCase):
         self.assertEqual(errors, [])
         self.assertEqual(result, {"Shadowheart": {
             "class": "Cleric", "subclass": "Trickery", "race": "HalfElf", "subrace": "HalfElf_High",
-            "background": "b-acolyte", "lockRace": True,
+            "background": "b-acolyte", "lockRace": True, "playable": True,
             "abilities": {"Strength": 12, "Dexterity": 13, "Constitution": 14, "Intelligence": 10, "Wisdom": 15,
                           "Charisma": 8},
             "text": {"name": "hShadowheart", "description": "hShadowheartDesc"}}})
@@ -57,11 +57,11 @@ class OriginsTest(unittest.TestCase):
         self.assertEqual(result["Shadowheart"]["abilities"]["Wisdom"], 14)
 
     def test_origin_without_class(self):
-        nodes = merged([{"UUID": "o-gen", "Name": "Generic", "DisplayName": "hCustom;1"}])
+        nodes = merged([{"UUID": "o-gen", "Name": "Generic", "AvailableInCharacterCreation": "1", "DisplayName": "hCustom;1"}])
         result, errors = origins.build(nodes, PRESETS, RULES, {})
         self.assertEqual(errors, [])
         self.assertEqual(result["Generic"], {"class": None, "subclass": None, "race": None, "subrace": None,
-                                             "background": None, "lockRace": False, "abilities": None,
+                                             "background": None, "lockRace": False, "playable": True, "abilities": None,
                                              "text": {"name": "hCustom", "description": None}})
 
     def test_excluded_origin_is_left_out(self):
@@ -82,6 +82,21 @@ class OriginsTest(unittest.TestCase):
         for word in ("Shadowheart: SubRaceUUID r-hidden", "Shadowheart: BackgroundUUID b-none", "LockRace",
                      "duplicate origin Name Twin", "o-4: missing Name", "Gone"):
             self.assertIn(word, joined)
+
+    def test_origin_offered_at_character_creation_only_when_the_game_says_so(self):
+        nodes = merged([origin(), origin(UUID="o-h", Name="Halsin", AvailableInCharacterCreation="2")])
+        result, errors = origins.build(nodes, PRESETS, RULES, {})
+        self.assertEqual(errors, [])
+        self.assertTrue(result["Shadowheart"]["playable"])
+        self.assertFalse(result["Halsin"]["playable"])
+
+    def test_missing_or_unknown_character_creation_flag_is_an_error(self):
+        nodes = merged([origin(AvailableInCharacterCreation="3"),
+                        {**origin(UUID="o-x", Name="Other"), "AvailableInCharacterCreation": ""}])
+        _, errors = origins.build(nodes, PRESETS, RULES, {})
+        joined = "\n".join(errors)
+        self.assertIn("origin Shadowheart: invalid AvailableInCharacterCreation='3'", joined)
+        self.assertIn("origin Other: invalid AvailableInCharacterCreation=''", joined)
 
     def test_class_without_preset_is_an_error(self):
         nodes = merged([origin(ClassUUID="c-fighter", SubClassUUID="")])

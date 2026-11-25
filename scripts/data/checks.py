@@ -144,6 +144,8 @@ def _check_origins(rules: dict) -> list[str]:
             problems.append(f"{where}: abilities must give an integer score for each of the six abilities")
         if o.get("class") is not None and abilities is None:
             problems.append(f"{where}: a class without abilities")
+        if not isinstance(o.get("playable"), bool):
+            problems.append(f"{where}: playable must be true or false")
     return problems
 
 

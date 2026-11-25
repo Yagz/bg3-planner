@@ -38,11 +38,11 @@ RULES = {
     "items": {"MAG_Boots": {"kind": "equipment", "found_by": "stats", "stats_type": "Armor", "slot": "Boots", "rarity": "Rare",
                             "root_template": "t-boots"}},
     "origins": {"Sh": {"class": "Wizard", "subclass": "Evocation", "race": "Elf", "subrace": "HighElf",
-                       "background": "bg-1", "lockRace": True,
+                       "background": "bg-1", "lockRace": True, "playable": True,
                        "abilities": {"Strength": 8, "Dexterity": 14, "Constitution": 14, "Intelligence": 15,
                                      "Wisdom": 12, "Charisma": 10}},
                 "Generic": {"class": None, "subclass": None, "race": None, "subrace": None, "background": None,
-                            "lockRace": False, "abilities": None}},
+                            "lockRace": False, "playable": True, "abilities": None}},
 }
 ABILITIES = ["Strength", "Dexterity", "Constitution", "Intelligence", "Wisdom", "Charisma"]
 SKILLS = {"Athletics": "Strength", "Stealth": "Dexterity"}
@@ -323,6 +323,14 @@ class ChecksTest(unittest.TestCase):
         problems = self.problems(rules=rules)
         for needle in ("origin:Sh: unknown class Bard", "unknown subclass Lore", "unknown race Orc",
                        "unknown subrace HalfOrc", "unknown background bg-9", "origin:Generic: abilities"):
+            self.assertTrue(any(needle in p for p in problems), (needle, problems))
+
+    def test_origin_playable_flag_is_a_boolean(self):
+        rules = copy.deepcopy(RULES)
+        rules["origins"]["Sh"]["playable"] = "yes"
+        del rules["origins"]["Generic"]["playable"]
+        problems = self.problems(rules=rules)
+        for needle in ("origin:Sh: playable must be true or false", "origin:Generic: playable must be true or false"):
             self.assertTrue(any(needle in p for p in problems), (needle, problems))
 
     def test_origin_needs_texts(self):

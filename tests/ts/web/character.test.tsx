@@ -237,7 +237,7 @@ describe("Character screen", () => {
     const originBox = () => within(screen.getByRole("region", { name: "Creation" })).getByRole("combobox", { name: "Origin" }) as HTMLSelectElement;
     const raceButton = () => within(screen.getByRole("region", { name: "Creation" })).getByRole("button", { name: /^Race/ }) as HTMLButtonElement;
 
-    it("offers the custom player and the origins with a class, minus those already in the run as companions", () => {
+    it("offers the custom player and the origins the game offers at character creation, minus those already in the run as companions", () => {
       const run = addCharacter(addCharacter(emptyRun("r"), data, "player"), data, "Gale");
       setup(run, run.characters[0]!.id);
       const values = within(originBox()).getAllByRole("option").map((option) => option.getAttribute("value"));
@@ -249,6 +249,8 @@ describe("Character screen", () => {
       expect(values).toContain("Astarion");
       expect(values).not.toContain("Generic");
       expect(values).not.toContain("Gale");
+      // Companions and hirelings that join in play are not offered to the player.
+      expect([...values].sort()).toEqual(["", "Astarion", "DarkUrge", "Karlach", "Laezel", "Shadowheart", "Wyll"]);
       cleanup();
       setup(run, run.characters[1]!.id);
       expect(within(screen.getByRole("region", { name: "Creation" })).queryByRole("combobox", { name: "Origin" })).toBeNull();

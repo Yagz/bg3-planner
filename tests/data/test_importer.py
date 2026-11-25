@@ -88,7 +88,8 @@ def rules_files() -> dict[str, dict[str, bytes]]:
         # Gustav overrides the Shared origin of the same UUID.
         "Public/Gustav/Origins/Origins.lsx": lsx(
             "Origin", {"UUID": "o-hero", "Name": "Hero", "ClassUUID": "c-fighter", "RaceUUID": "r-elf",
-                       "BackgroundUUID": "b-acolyte", "LockRace": "true", "DisplayName": "hHero"}),
+                       "BackgroundUUID": "b-acolyte", "LockRace": "true", "AvailableInCharacterCreation": "1",
+                       "DisplayName": "hHero"}),
         # Gustav overrides the Shared Fire Bolt: one layer per module, the later one wins.
         "Public/Gustav/Stats/Generated/Data/Spell_Target.txt": (
             'new entry "Target_FireBolt"\ntype "SpellData"\ndata "SpellType" "Target"\ndata "Level" "0"\n'
@@ -103,7 +104,8 @@ def rules_files() -> dict[str, dict[str, bytes]]:
             {"MapKey": "t-fancy", "Name": "WPN_Sword_Fancy", "Stats": "WPN_Sword", "DisplayName": "hFancy"}),
     }
     shared["Public/Shared/Origins/Origins.lsx"] = lsx(
-        "Origin", {"UUID": "o-hero", "Name": "Hero", "LockRace": "false", "DisplayName": "hHeroOld"})
+        "Origin", {"UUID": "o-hero", "Name": "Hero", "LockRace": "false", "AvailableInCharacterCreation": "2",
+                   "DisplayName": "hHeroOld"})
     gustavx = {"Public/GustavX/Other/Nothing.txt": b"x"}
     return {"Shared.pak": shared, "Gustav.pak": gustav, "GustavX.pak": gustavx}
 
@@ -208,7 +210,7 @@ class ImporterTest(unittest.TestCase):
         rules = json.loads((self.out / "rules.json").read_text(encoding="utf-8"))
         self.assertEqual(rules["origins"], {"Hero": {
             "class": "Fighter", "subclass": None, "race": "Elf", "subrace": None, "background": "b-acolyte",
-            "lockRace": True, "abilities": {"Strength": 15, "Dexterity": 13, "Constitution": 14, "Intelligence": 8,
+            "lockRace": True, "playable": True, "abilities": {"Strength": 15, "Dexterity": 13, "Constitution": 14, "Intelligence": 8,
                                             "Wisdom": 12, "Charisma": 10}}})
         en = json.loads((self.out / "texts.en.json").read_text(encoding="utf-8"))
         fr = json.loads((self.out / "texts.fr.json").read_text(encoding="utf-8"))

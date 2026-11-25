@@ -138,6 +138,12 @@ def build(origins: dict[str, dict], presets: dict[str, dict], rules: dict,
         if lock not in ("", "true", "false"):
             errors.append(f"{where}: invalid boolean LockRace={lock!r}")
         origin["lockRace"] = lock == "true"
+        # Whether the character creation screen offers the origin to the player: 1 offered, 2 not (companions and
+        # hirelings joining in play).
+        creation = a.get("AvailableInCharacterCreation", "")
+        if creation not in ("1", "2"):
+            errors.append(f"{where}: invalid AvailableInCharacterCreation={creation!r}")
+        origin["playable"] = creation == "1"
         # The preset of the resolved (possibly listed) subclass, else of the class.
         class_uuid = classes[origin["class"]]["uuid"] if origin["class"] else None
         subclass_uuid = classes[origin["subclass"]]["uuid"] if origin["subclass"] else None

@@ -16622,6 +16622,7 @@
    "background": "229775c9-3044-4779-a3bb-532c39238e03",
    "class": "Bard",
    "lockRace": false,
+   "playable": false,
    "race": "Tiefling",
    "subclass": "LoreCollege",
    "subrace": "Tiefling_Asmodeus"
@@ -16638,6 +16639,7 @@
    "background": "76925f0b-3ec8-4f42-86a9-cd4f745af2ac",
    "class": "Rogue",
    "lockRace": true,
+   "playable": true,
    "race": "Elf",
    "subclass": "ArcaneTrickster",
    "subrace": "Elf_HighElf"
@@ -16654,6 +16656,7 @@
    "background": "20d865ea-03bd-47bf-97d3-777e1b36b073",
    "class": "Sorcerer",
    "lockRace": false,
+   "playable": true,
    "race": "Dragonborn",
    "subclass": "StormSorcery",
    "subrace": "Dragonborn_White"
@@ -16670,6 +16673,7 @@
    "background": "8807a6c6-d8cf-494b-aec2-cc01d7517a56",
    "class": "Wizard",
    "lockRace": true,
+   "playable": true,
    "race": "Human",
    "subclass": "EvocationSchool",
    "subrace": null
@@ -16679,6 +16683,7 @@
    "background": null,
    "class": null,
    "lockRace": false,
+   "playable": true,
    "race": null,
    "subclass": null,
    "subrace": null
@@ -16695,6 +16700,7 @@
    "background": "5b1e726f-52bf-4e93-a798-9f93c067ee7f",
    "class": "Druid",
    "lockRace": false,
+   "playable": false,
    "race": "Elf",
    "subclass": "CircleOfTheMoon",
    "subrace": "Elf_WoodElf"
@@ -16711,6 +16717,7 @@
    "background": "5b1e726f-52bf-4e93-a798-9f93c067ee7f",
    "class": "Barbarian",
    "lockRace": true,
+   "playable": false,
    "race": "Dwarf",
    "subclass": null,
    "subrace": "Dwarf_GoldHill"
@@ -16727,6 +16734,7 @@
    "background": "229775c9-3044-4779-a3bb-532c39238e03",
    "class": "Bard",
    "lockRace": true,
+   "playable": false,
    "race": "Halfling",
    "subclass": null,
    "subrace": "Halfling_Lightfoot"
@@ -16743,6 +16751,7 @@
    "background": "633aa4be-365f-4358-ba56-e2b85f9a88ec",
    "class": "Cleric",
    "lockRace": true,
+   "playable": false,
    "race": "Elf",
    "subclass": "LightDomain",
    "subrace": "Elf_HighElf"
@@ -16759,6 +16768,7 @@
    "background": "efcb0b57-5d5a-4a54-a7b3-a618829fe379",
    "class": "Druid",
    "lockRace": true,
+   "playable": false,
    "race": "Tiefling",
    "subclass": null,
    "subrace": "Tiefling_Mephistopeles"
@@ -16775,6 +16785,7 @@
    "background": "1252a86e-9baa-4ccb-b8ce-2378ae006f0b",
    "class": "Fighter",
    "lockRace": true,
+   "playable": false,
    "race": "HalfElf",
    "subclass": null,
    "subrace": "HalfElf_Wood"
@@ -16791,6 +16802,7 @@
    "background": "5b1e726f-52bf-4e93-a798-9f93c067ee7f",
    "class": "Monk",
    "lockRace": true,
+   "playable": false,
    "race": "Githyanki",
    "subclass": null,
    "subrace": null
@@ -16807,6 +16819,7 @@
    "background": "7e820dee-a8fc-43b2-8661-2b404454bade",
    "class": "Paladin",
    "lockRace": true,
+   "playable": false,
    "race": "HalfOrc",
    "subclass": "Devotion",
    "subrace": null
@@ -16823,6 +16836,7 @@
    "background": "e8c84134-5e91-4ecc-881a-efc47680129b",
    "class": "Ranger",
    "lockRace": true,
+   "playable": false,
    "race": "Drow",
    "subclass": null,
    "subrace": null
@@ -16839,6 +16853,7 @@
    "background": "ac38525a-222b-4280-9c8e-60d5533b675c",
    "class": "Rogue",
    "lockRace": true,
+   "playable": false,
    "race": "Human",
    "subclass": null,
    "subrace": null
@@ -16855,6 +16870,7 @@
    "background": "e9aeac40-6c4e-4d81-9a24-e9eeb6208e85",
    "class": "Sorcerer",
    "lockRace": true,
+   "playable": false,
    "race": "HalfElf",
    "subclass": null,
    "subrace": "HalfElf_High"
@@ -16871,6 +16887,7 @@
    "background": "76925f0b-3ec8-4f42-86a9-cd4f745af2ac",
    "class": "Warlock",
    "lockRace": true,
+   "playable": false,
    "race": "Dwarf",
    "subclass": "GreatOldOne",
    "subrace": "Duergar"
@@ -16887,6 +16904,7 @@
    "background": "8807a6c6-d8cf-494b-aec2-cc01d7517a56",
    "class": "Wizard",
    "lockRace": true,
+   "playable": false,
    "race": "Gnome",
    "subclass": null,
    "subrace": "Gnome_Rock"
@@ -16903,6 +16921,7 @@
    "background": "1252a86e-9baa-4ccb-b8ce-2378ae006f0b",
    "class": "Druid",
    "lockRace": false,
+   "playable": false,
    "race": "HalfElf",
    "subclass": "CircleOfTheLand",
    "subrace": "HalfElf_High"
@@ -16919,6 +16938,7 @@
    "background": "5b1e726f-52bf-4e93-a798-9f93c067ee7f",
    "class": "Barbarian",
    "lockRace": true,
+   "playable": true,
    "race": "Tiefling",
    "subclass": null,
    "subrace": "Tiefling_Zariel"
@@ -16935,6 +16955,7 @@
    "background": "1252a86e-9baa-4ccb-b8ce-2378ae006f0b",
    "class": "Fighter",
    "lockRace": true,
+   "playable": true,
    "race": "Githyanki",
    "subclass": "BattleMaster",
    "subrace": null
@@ -16951,6 +16972,7 @@
    "background": "efcb0b57-5d5a-4a54-a7b3-a618829fe379",
    "class": "Ranger",
    "lockRace": false,
+   "playable": false,
    "race": "Human",
    "subclass": "Hunter",
    "subrace": null
@@ -16967,6 +16989,7 @@
    "background": "7e820dee-a8fc-43b2-8661-2b404454bade",
    "class": "Paladin",
    "lockRace": false,
+   "playable": false,
    "race": "Drow",
    "subclass": "Vengeance",
    "subrace": "Drow_LolthSworn"
@@ -16983,6 +17006,7 @@
    "background": "633aa4be-365f-4358-ba56-e2b85f9a88ec",
    "class": "Cleric",
    "lockRace": true,
+   "playable": true,
    "race": "HalfElf",
    "subclass": "TrickeryDomain",
    "subrace": "HalfElf_High"
@@ -16999,6 +17023,7 @@
    "background": "efcb0b57-5d5a-4a54-a7b3-a618829fe379",
    "class": "Warlock",
    "lockRace": true,
+   "playable": true,
    "race": "Human",
    "subclass": "Fiend",
    "subrace": null

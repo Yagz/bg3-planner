@@ -174,6 +174,8 @@ export interface OriginDef {
   /** Background UUID. */
   background: string | null;
   lockRace: boolean;
+  /** Whether the game's character creation screen offers the origin to the player (`AvailableInCharacterCreation`). */
+  playable: boolean;
   /** Default base scores: the ability preset of the subclass if any, else of the class; null without a class. */
   abilities: Record<Ability, number> | null;
 }

@@ -47,6 +47,8 @@ describe("game data", () => {
     expect(shadowheart?.class).toBe("Cleric");
     expect(shadowheart?.race).toBe("HalfElf");
     expect(shadowheart?.subrace).toBe("HalfElf_High");
+    const playable = Object.keys(data.rules.origins).filter((id) => data.rules.origins[id]!.playable);
+    expect(playable.sort()).toEqual(["Astarion", "DarkUrge", "Gale", "Generic", "Karlach", "Laezel", "Shadowheart", "Wyll"]);
     expect(data.texts.fr["skill:Athletics"]?.name).toBe("Athlétisme");
     const keys = [
       ...Object.keys(data.rules.origins).map((id) => `origin:${id}`),
