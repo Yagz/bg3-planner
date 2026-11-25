@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import type { GameData } from "../../src/data/types.ts";
 import { I18nContext, LANGS, createI18n } from "./i18n/i18n.ts";
+import Party from "./screens/Party.tsx";
 import Transfer from "./screens/Transfer.tsx";
 import type { Lang } from "./i18n/i18n.ts";
 import { createRun, currentRunId, deleteRun, duplicateRun, renameRun } from "./state/runs.ts";
@@ -223,6 +224,8 @@ export default function App({ data, store, settingsBackend }: Props) {
           <Transfer key={incoming ?? ""} data={data} store={store} runId={currentId} initialText={incoming ?? undefined} onImported={imported} />
         ) : current === null ? (
           <p className="sub">{t("run.none")}</p>
+        ) : route.screen === "party" ? (
+          <Party key={current.id} data={data} store={store} runId={current.id} onChanged={() => setRuns(store.list())} onOpenCharacter={(id) => go({ screen: "character", id })} />
         ) : (
           <p className="sub">{t(`screen.${route.screen}`)}</p>
         )}

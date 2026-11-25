@@ -9,3 +9,8 @@ export function gameName(data: GameData, lang: Lang, kind: TextKind | null, id: 
   const name = kind === null ? bareNameOf(texts, id) : nameOf(texts, kind, id);
   return name === null || name.trim() === "" ? id : name;
 }
+
+/** Label of a character: its origin's name for a companion, `playerLabel` for the player. */
+export function characterLabel(data: GameData, lang: Lang, who: string, playerLabel: string): string {
+  return who === "player" ? playerLabel : gameName(data, lang, "origin", who);
+}
