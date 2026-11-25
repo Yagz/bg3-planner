@@ -1,10 +1,10 @@
 # BG3 Planner
 
-Party planner for Baldur's Gate 3: party, level-by-level builds for your character and companions, key items, run decisions. The app will be available in English and French.
+Party planner for Baldur's Gate 3: party, level-by-level builds for your character and companions, key items, run decisions. The app is available in English and French at <https://yagz.github.io/bg3-planner/>.
 
 ## Status
 
-In development. The game-data import (character creation and progression rules, and key items with their acts, with English and French names) is done; the rules engine and the interface come next.
+In development. The game-data import (character creation and progression rules, and key items with their acts, with English and French names) is done; the rules engine and the web interface are in place.
 
 ## Development
 
@@ -12,6 +12,7 @@ Requirements: Python 3.14 (standard library only) for the data scripts; Node 24 
 
 - Run the tests: `python3.14 -m unittest discover -s tests -t .`
 - Install the Node dev dependencies: `npm ci`; type-check: `npx tsc --noEmit`; run the TypeScript tests: `npx vitest run`
+- Web app: `npm run dev` (development server), `npm run build` (static site in `web/dist/`), `npm run preview`; check the build with `node scripts/check-dist.ts web/dist` (prints nothing and exits 0 when no resource is loaded from another site and every file the site needs is there; exits 1 with the list otherwise). Pushing to `main` publishes the site on GitHub Pages.
 - Read, edit and validate a run string (a string, a file or `-` for stdin): `node scripts/run.ts decode <run>` (readable JSON), `node scripts/run.ts encode <file.json>` (export string), `node scripts/run.ts validate <run> [--lang en|fr]` (exit 0 valid, 1 incomplete, 2 invalid, 3 unreadable input; any command exits 4 when the tool itself fails), `node scripts/run.ts slots <run> <character id>` (open choice slots with the allowed identifiers)
 - Check the committed game data: `python3.14 -m scripts.data.checks data/larian`
 - Refresh the bg3.wiki item data (slow, polite, cached in `cache/wiki/`): `python3.14 -m scripts.wiki.fetch --output data/wiki` — see [`data/wiki/README.md`](data/wiki/README.md).

@@ -33,6 +33,10 @@ Machine-specific context (game paths, local tools, working rules, state of the p
 - Never complete a build's game decisions (subclass, spells, feats, skills) unless the user asks: `incomplete` (exit 1, a choice still `"todo"`) is a normal state, `invalid` (exit 2, an impossible choice) is a defect to report, not to correct silently.
 - Exit 3 means unreadable input or a usage error; exit 4 means the tool itself failed (`error: <message>` on stderr), not a run status: report it, do not read it as `incomplete`.
 
+## Web app
+
+- `npm run dev` serves the site locally, `npm run build` writes the static site to `web/dist/`, `node scripts/check-dist.ts web/dist` must print nothing and exit 0 (an external resource, a missing page asset or a missing data file is listed, exit 1; usage error exit 3). Pushing to `main` builds, checks and publishes it on GitHub Pages (`.github/workflows/pages.yml`).
+
 ## Conventions
 
 - **Everything public is in English**: code (identifiers, comments, docstrings, tests, error messages, keys of produced JSON, folder names), documentation and commit messages. French appears only as product content (French game texts, the French UI and notices). Maintainer-local material (`docs/`, `CLAUDE.local.md`) may be in French and is not versioned.

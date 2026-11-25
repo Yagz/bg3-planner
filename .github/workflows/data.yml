@@ -30,3 +30,7 @@ jobs:
         run: npx tsc --noEmit
       - name: Tests
         run: npx vitest run
+      - name: Build the site
+        run: npm run build
+      - name: Refuse any resource loaded from another site
+        run: node scripts/check-dist.ts web/dist
