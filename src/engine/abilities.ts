@@ -12,19 +12,23 @@ export const POINT_BUY = {
 
 export const ABILITY_CAP = 20;
 
+function costOf(value: number): number | undefined {
+  return Number.isInteger(value) ? POINT_BUY.cost[value] : undefined;
+}
+
+/** Point-buy points the base scores spend; a score outside the point-buy range costs nothing (`checkPointBuy` reports it). */
+export function pointsSpent(abilities: Record<Ability, number>): number {
+  return ABILITIES.reduce((spent, ability) => spent + (costOf(abilities[ability]) ?? 0), 0);
+}
+
 export function checkPointBuy(character: Character): Issue[] {
   const issues: Issue[] = [];
   const base = { character: character.id, level: null, slot: null };
-  let spent = 0;
   for (const ability of ABILITIES) {
     const value = character.abilities[ability];
-    const cost = Number.isInteger(value) ? POINT_BUY.cost[value] : undefined;
-    if (cost === undefined) {
-      issues.push({ severity: "invalid", code: "abilityOutOfRange", ...base, params: { ability, value } });
-    } else {
-      spent += cost;
-    }
+    if (costOf(value) === undefined) issues.push({ severity: "invalid", code: "abilityOutOfRange", ...base, params: { ability, value } });
   }
+  const spent = pointsSpent(character.abilities);
   if (spent > POINT_BUY.budget) {
     issues.push({ severity: "invalid", code: "pointBuyOverBudget", ...base, params: { spent, budget: POINT_BUY.budget } });
   } else if (spent < POINT_BUY.budget) {

@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { loadGameData } from "../../src/data/load.ts";
 import type { GameData } from "../../src/data/types.ts";
-import { abilityTotals, checkPointBuy, POINT_BUY } from "../../src/engine/abilities.ts";
+import { abilityTotals, checkPointBuy, pointsSpent, POINT_BUY } from "../../src/engine/abilities.ts";
 import { reportFrom } from "../../src/engine/issues.ts";
 import type { Issue } from "../../src/engine/issues.ts";
 import type { Ability, Character } from "../../src/plan/model.ts";
@@ -112,5 +112,16 @@ describe("reportFrom", () => {
     expect(reportFrom([mk("notice")]).status).toBe("valid");
     expect(reportFrom([mk("notice"), mk("incomplete")]).status).toBe("incomplete");
     expect(reportFrom([mk("incomplete"), mk("invalid")]).status).toBe("invalid");
+  });
+});
+
+describe("pointsSpent", () => {
+  it("counts the point-buy cost of the base scores", () => {
+    expect(pointsSpent(character([15, 15, 15, 8, 8, 8]).abilities)).toBe(27);
+    expect(pointsSpent(character([8, 8, 8, 8, 8, 8]).abilities)).toBe(0);
+    expect(pointsSpent(character([14, 13, 8, 8, 8, 8]).abilities)).toBe(12);
+  });
+  it("leaves a score outside the point-buy range uncounted", () => {
+    expect(pointsSpent(character([16, 8, 8, 8, 8, 8]).abilities)).toBe(0);
   });
 });

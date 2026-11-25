@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { loadGameData } from "../../src/data/load.ts";
 import type { GameData, Selector } from "../../src/data/types.ts";
 import { resolve } from "../../src/engine/progression.ts";
-import { validate } from "../../src/engine/validate.ts";
+import { knownSpellsBefore, validate } from "../../src/engine/validate.ts";
 import { emptyRun } from "../../src/plan/model.ts";
 import type { Ability, Character, Choice, Level } from "../../src/plan/model.ts";
 
@@ -510,5 +510,18 @@ describe("validate, off-data identity fields", () => {
     expect(report.issues.map((i) => i.slot)).toEqual(["race", "background", "class"]);
     expect(report.issues.every((i) => i.severity === "notice")).toBe(true);
     expect(report.status).toBe("valid");
+  });
+});
+
+describe("knownSpellsBefore", () => {
+  it("lists the spells picked in a scope at earlier levels, after their swaps", () => {
+    const c = ranger((choices) => {
+      choices[4]![slot(5, "SelectSpells")] = ["Target_HuntersMark>Shout_PassWithoutTrace"];
+    });
+    expect(knownSpellsBefore(c, data, 1, "Ranger")).toEqual([]);
+    expect(knownSpellsBefore(c, data, 3, "Ranger")).toEqual(["Target_HuntersMark", "Target_CureWounds"]);
+    expect(knownSpellsBefore(c, data, 5, "Ranger")).toEqual(["Target_HuntersMark", "Target_CureWounds", "Target_Goodberry"]);
+    expect(knownSpellsBefore(c, data, 6, "Ranger")).toEqual(["Target_CureWounds", "Target_Goodberry", "Shout_PassWithoutTrace"]);
+    expect(knownSpellsBefore(c, data, 6, "Wizard")).toEqual([]);
   });
 });

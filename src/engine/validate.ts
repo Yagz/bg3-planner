@@ -77,6 +77,26 @@ export function slotIds(slots: LevelSlots): Set<string> {
   return ids;
 }
 
+/**
+ * Spells picked by `SelectSpells` in `scope` (see `SelectorSlot.scope`) over the levels before `level`, after their swaps,
+ * in the order they were gained: what a swap at `level` may replace. Unusable picks are skipped as `validate` skips them.
+ */
+export function knownSpellsBefore(character: Character, data: GameData, level: number, scope: string): string[] {
+  const known = emptyKnown();
+  const scores = { ...character.abilities };
+  for (const resolved of resolve(character, data).levels) {
+    if (resolved.level >= level) break;
+    const choices = character.levels[resolved.level - 1]?.choices ?? {};
+    const slots = levelSlots(resolved, choices, data);
+    for (const { id, selector, scope: slotScope } of [...slots.selectors, ...(slots.feat?.selectors ?? [])]) {
+      const choice = Object.hasOwn(choices, id) ? choices[id] : undefined;
+      if (selector.function !== "SelectSpells" || slotScope !== scope || !Array.isArray(choice)) continue;
+      checkChoice(selector, choice, { data, character: character.id, level: resolved.level, scope, slot: id, scores, known });
+    }
+  }
+  return [...(known.spells.get(scope) ?? [])];
+}
+
 /** Checks every character of a run: point buy, progression, then each choice slot. Never corrects anything. */
 export function validate(run: Run, data: GameData): Report {
   return reportFrom(run.characters.flatMap((character) => validateCharacter(character, data)));

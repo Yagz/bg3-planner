@@ -35,3 +35,16 @@ export function bareNameOf(texts: Texts, id: string): string | null {
   }
   return found;
 }
+
+/** Description of `id` of a known kind as plain text (the game's markup tags dropped, line breaks as spaces), or null when there is none. */
+export function descriptionOf(texts: Texts, kind: TextKind, id: string): string | null {
+  const key = `${kind}:${id}`;
+  const description = Object.hasOwn(texts, key) ? (texts[key]?.description ?? null) : null;
+  if (description === null) return null;
+  const plain = description
+    .replace(/<br\s*\/?>/gi, " ")
+    .replace(/<[^>]*>/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  return plain === "" ? null : plain;
+}

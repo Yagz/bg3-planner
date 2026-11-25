@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import type { GameData } from "../../src/data/types.ts";
 import { I18nContext, LANGS, createI18n } from "./i18n/i18n.ts";
+import Character from "./screens/Character.tsx";
 import Party from "./screens/Party.tsx";
 import Transfer from "./screens/Transfer.tsx";
 import type { Lang } from "./i18n/i18n.ts";
@@ -239,7 +240,7 @@ export default function App({ data, store, settingsBackend }: Props) {
         ) : route.screen === "party" ? (
           <Party data={data} run={run} saveRun={saveRun} onOpenCharacter={(id) => go({ screen: "character", id })} />
         ) : (
-          <p className="sub">{t(`screen.${route.screen}`)}</p>
+          <Character data={data} run={run} saveRun={saveRun} characterId={route.id} onSelect={(id) => go({ screen: "character", id })} />
         )}
       </main>
     </I18nContext.Provider>
