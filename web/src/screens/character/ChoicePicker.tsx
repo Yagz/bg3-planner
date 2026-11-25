@@ -125,7 +125,9 @@ export default function ChoicePicker({ data, spec, onSave, onClear, onClose }: P
       expected = mode.count;
       ready = count === expected && [...counts.values()].every((n) => n <= mode.max);
   }
-  const swapsReady = swaps.length <= (spec.swaps?.max ?? 0) && swaps.every((swap) => swap.old !== "" && swap.new !== "");
+  // Replacements stored on a slot that allows none (or fewer) stay shown, so they can be removed.
+  const swapRules = spec.swaps ?? { max: 0, known: [] };
+  const swapsReady = swaps.length <= swapRules.max && swaps.every((swap) => swap.old !== "" && swap.new !== "");
   const valid = offData ? offText.trim() !== "" : ready && swapsReady;
 
   const save = () => {
@@ -272,14 +274,14 @@ export default function ChoicePicker({ data, spec, onSave, onClear, onClose }: P
             <legend className="sr">{t("picker.options")}</legend>
             {list()}
           </fieldset>
-          {spec.swaps !== undefined && spec.swaps.max > 0 && (
+          {(swapRules.max > 0 || swaps.length > 0) && (
             <fieldset className="options swaps" disabled={offData}>
-              <legend>{t("picker.swaps", { count: swaps.length, max: spec.swaps.max })}</legend>
+              <legend>{t("picker.swaps", { count: swaps.length, max: swapRules.max })}</legend>
               {swaps.map((swap, i) => (
                 <div key={i} className="swap">
                   <select aria-label={t("picker.swapOld")} value={swap.old} onChange={(event) => editSwap(i, { old: event.target.value })}>
                     <option value="">{t("picker.swapOld")}…</option>
-                    {[...new Set([...spec.swaps!.known, ...(swap.old === "" ? [] : [swap.old])])].map((entry) => (
+                    {[...new Set([...swapRules.known, ...(swap.old === "" ? [] : [swap.old])])].map((entry) => (
                       <option key={entry} value={entry}>
                         {name(entry)}
                       </option>
@@ -299,7 +301,7 @@ export default function ChoicePicker({ data, spec, onSave, onClear, onClose }: P
                   </button>
                 </div>
               ))}
-              <button type="button" className="btn" disabled={swaps.length >= spec.swaps.max} onClick={() => setSwaps((previous) => [...previous, { old: "", new: "" }])}>
+              <button type="button" className="btn" disabled={swaps.length >= swapRules.max} onClick={() => setSwaps((previous) => [...previous, { old: "", new: "" }])}>
                 {t("picker.addSwap")}
               </button>
             </fieldset>

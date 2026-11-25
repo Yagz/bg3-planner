@@ -214,6 +214,25 @@ describe("Character screen", () => {
     expect(store.load(runId)!.characters[0]!.levels[2]!.choices[level3.id]).toEqual([items[2], `${items[0]}>${items[3]}`]);
   });
 
+  it("shows a stored replacement on a slot that allows none, so it can be removed", () => {
+    const c = ranger(2);
+    const { slot, items } = rangerSpells(c);
+    expect(resolve(c, data).levels[1]!.slots.find((s) => s.id === slot)!.selector).toMatchObject({ swaps: 0 });
+    c.levels[1]!.choices[slot] = [items[0]!, items[1]!, `${items[2]}>${items[3]}`];
+    const { store, runId } = setup(runWith([c]), c.id);
+    openSpells();
+    const dialog = screen.getByRole("dialog");
+    const validate = within(dialog).getByRole("button", { name: "Validate" });
+    expect(validate).toHaveProperty("disabled", true);
+    const swaps = within(dialog).getByRole("group", { name: "Replacements (1 / 0)" });
+    expect(within(swaps).getByRole("combobox", { name: "Replace" })).toHaveProperty("value", items[2]);
+    expect(within(swaps).getByRole("button", { name: "Add a replacement" })).toHaveProperty("disabled", true);
+    fireEvent.click(within(swaps).getByRole("button", { name: "Remove" }));
+    expect(validate).toHaveProperty("disabled", false);
+    fireEvent.click(validate);
+    expect(store.load(runId)!.characters[0]!.levels[1]!.choices[slot]).toEqual([items[0], items[1]]);
+  });
+
   it("offers a hidden background only to its origin: Haunted One to a Dark Urge player", () => {
     const hauntedOne = data.rules.origins["DarkUrge"]!.background!;
     expect(data.rules.backgrounds[hauntedOne]!.origin).toBe(true);
