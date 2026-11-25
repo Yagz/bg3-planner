@@ -9,20 +9,32 @@ export type HistoryEntry = { at: string; text: string };
 /** A stored run that could not be read; it is kept in storage untouched. */
 export type UnreadableRun = { id: string; message: string };
 
+export type SaveOptions = {
+  /**
+   * Keeps the run's own `updatedAt` (an imported run keeps the date of its last edit, so a re-exported copy never looks
+   * newer than a later real edit); a run without a date is stamped. The saved version's history time still increases.
+   */
+  keepDate?: boolean;
+};
+
 export type RunStore = {
   /** Readable runs, most recently updated first. */
   list(): RunSummary[];
   load(id: string): Run | null;
   /**
-   * Saves a new version (`updatedAt` set now, strictly after the previous version); an empty id gets a UUID. Returns the saved run.
+   * Saves a new version; an empty id gets a UUID. Returns the saved run. A real edit gets `updatedAt` set now, strictly after
+   * the run's previous `updatedAt` and its newest version. Before writing, the run's stored record is read again and the
+   * versions another tab saved meanwhile are merged in by time, never dropped.
    * Throws, writing nothing, when the id is that of an unreadable stored run: it is never overwritten (save a copy instead).
    */
-  save(run: Run): Run;
-  /** Saved versions, newest first; the first one is the current run. */
+  save(run: Run, options?: SaveOptions): Run;
+  /** Saved versions, newest first; the first one is the current run. `at` is the time the version was saved. */
   history(id: string): HistoryEntry[];
   /** Saves version `at` as the current run (so the replaced one stays in history) and returns it. */
   restore(id: string, at: string): Run;
   remove(id: string): void;
+  /** Reads the stored runs again (another tab may have added, changed or removed some); a no-op without storage. */
+  refresh(): void;
   unreadable(): UnreadableRun[];
   /** False once the browser storage is absent or refused a read or write: runs then live in memory only. */
   readonly available: boolean;
@@ -56,13 +68,17 @@ export function createStore(backend: Storage | null): RunStore {
   const broken = new Map<string, string>();
   let available = backend !== null;
 
-  if (backend !== null) {
+  /** Reads every stored run again, replacing what is held in memory; switches to memory when the storage refuses. */
+  const scan = () => {
+    if (!available || backend === null) return;
     try {
       const keys: string[] = [];
       for (let i = 0; i < backend.length; i++) {
         const key = backend.key(i);
         if (key?.startsWith(RUN_PREFIX)) keys.push(key);
       }
+      entries.clear();
+      broken.clear();
       for (const key of keys) {
         const id = key.slice(RUN_PREFIX.length);
         try {
@@ -75,7 +91,19 @@ export function createStore(backend: Storage | null): RunStore {
     } catch {
       available = false;
     }
-  }
+  };
+  scan();
+
+  /** The versions of run `id` stored now (another tab may have saved some), or null when none can be read. */
+  const storedHistory = (id: string): HistoryEntry[] | null => {
+    if (!available || backend === null) return null;
+    try {
+      const text = backend.getItem(RUN_PREFIX + id);
+      return text === null ? null : readRecord(text).history;
+    } catch {
+      return null;
+    }
+  };
 
   const write = (change: (storage: Storage) => void) => {
     if (!available || backend === null) return;
@@ -90,15 +118,26 @@ export function createStore(backend: Storage | null): RunStore {
   const list = (): RunSummary[] =>
     [...entries.values()].map((entry) => ({ ...entry.summary })).sort((a, b) => (b.updatedAt ?? "").localeCompare(a.updatedAt ?? ""));
 
-  const save = (input: Run): Run => {
+  const save = (input: Run, options: SaveOptions = {}): Run => {
     const run = structuredClone(input);
     if (run.id === "") run.id = crypto.randomUUID();
     if (broken.has(run.id)) throw new Error(`The stored run ${run.id} could not be read; it is kept and not overwritten`);
-    const previous = entries.get(run.id)?.history ?? [];
+    const held = entries.get(run.id);
+    // Versions are merged by time with what another tab stored meanwhile: none is dropped.
+    const merged = new Map<string, HistoryEntry>();
+    for (const entry of [...(storedHistory(run.id) ?? []), ...(held?.history ?? [])]) if (!merged.has(entry.at)) merged.set(entry.at, entry);
+    const previous = [...merged.values()].sort((a, b) => Date.parse(b.at) - Date.parse(a.at));
+    const newest = previous[0] === undefined ? Number.NEGATIVE_INFINITY : Date.parse(previous[0].at);
     const now = Date.now();
-    const last = previous[0] === undefined ? Number.NEGATIVE_INFINITY : Date.parse(previous[0].at);
-    run.updatedAt = new Date(now > last ? now : last + 1).toISOString();
-    const history = [{ at: run.updatedAt, text: JSON.stringify(run) }, ...previous].slice(0, HISTORY_LIMIT);
+    const at = new Date(now > newest ? now : newest + 1).toISOString();
+    const keep = options.keepDate === true && run.updatedAt !== null && !Number.isNaN(Date.parse(run.updatedAt));
+    if (!keep) {
+      // A real edit is dated after the run's previous date too, which an imported copy may have set ahead of this clock.
+      const dates = [Date.parse(at), ...[held?.summary.updatedAt, previous[0] === undefined ? null : decodeJson(previous[0].text).updatedAt].map((date) => (date == null ? Number.NaN : Date.parse(date) + 1))];
+      run.updatedAt = new Date(Math.max(...dates.filter((date) => !Number.isNaN(date)))).toISOString();
+    }
+    const stamp = keep ? at : (run.updatedAt as string);
+    const history = [{ at: stamp, text: JSON.stringify(run) }, ...previous].slice(0, HISTORY_LIMIT);
     entries.set(run.id, { summary: summaryOf(run), history });
     write((storage) => storage.setItem(RUN_PREFIX + run.id, JSON.stringify({ history })));
     return structuredClone(run);
@@ -119,6 +158,7 @@ export function createStore(backend: Storage | null): RunStore {
       if (entry === undefined) throw new Error(`No saved version of run ${id} at ${at}`);
       return save(decodeJson(entry.text));
     },
+    refresh: scan,
     remove(id) {
       if (!entries.delete(id)) return;
       write((storage) => storage.removeItem(RUN_PREFIX + id));

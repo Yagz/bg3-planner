@@ -66,10 +66,11 @@ export async function importRun(text: string, store: RunStore, data: GameData): 
  * Saves a ready import: "replace" saves it over the run with the same id (the store keeps the replaced version in history),
  * "copy" saves it under a new id and leaves the stored run alone. Returns the saved run.
  * A run whose id is that of an unreadable stored record is never written over it: it is saved under a new id.
+ * The run keeps its own edit date (`updatedAt`), so a re-exported unchanged copy never looks newer than a later real edit.
  */
 export function commitImport(result: ImportResult, store: RunStore, mode: "replace" | "copy"): Run {
   if (result.kind !== "ready") throw new Error("Nothing to import");
   const unreadable = store.unreadable().some((record) => record.id === result.run.id);
   const id = mode === "copy" || unreadable ? crypto.randomUUID() : result.run.id;
-  return store.save({ ...result.run, id });
+  return store.save({ ...result.run, id }, { keepDate: true });
 }

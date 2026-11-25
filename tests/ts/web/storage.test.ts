@@ -169,6 +169,81 @@ describe("run store", () => {
   });
 });
 
+describe("run store: dates kept on import", () => {
+  it("keeps an imported run's own edit date while its history time still increases", () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-11-25T10:00:00.000Z"));
+    const store = createStore(new MemoryBackend());
+    store.save(named("Local"));
+    vi.setSystemTime(new Date("2026-11-25T12:00:00.000Z"));
+    const imported = store.save({ ...named("Imported"), updatedAt: "2026-11-25T08:00:00.000Z" }, { keepDate: true });
+    expect(imported.updatedAt).toBe("2026-11-25T08:00:00.000Z");
+    expect(store.load("run-1")?.updatedAt).toBe("2026-11-25T08:00:00.000Z");
+    expect(store.list()[0]?.updatedAt).toBe("2026-11-25T08:00:00.000Z");
+    expect(store.history("run-1").map((entry) => entry.at)).toEqual(["2026-11-25T12:00:00.000Z", "2026-11-25T10:00:00.000Z"]);
+  });
+
+  it("stamps a real edit after both the newest version and an imported date from a clock that ran ahead", () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-11-25T10:00:00.000Z"));
+    const store = createStore(new MemoryBackend());
+    store.save({ ...named("Ahead"), updatedAt: "2026-11-26T00:00:00.000Z" }, { keepDate: true });
+    const edited = store.save(named("Edited"));
+    expect(Date.parse(edited.updatedAt!)).toBeGreaterThan(Date.parse("2026-11-26T00:00:00.000Z"));
+    expect(store.history("run-1")[0]?.at).toBe(edited.updatedAt);
+  });
+
+  it("stamps an imported run that has no edit date", () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-11-25T10:00:00.000Z"));
+    const store = createStore(new MemoryBackend());
+    expect(store.save(named("Migrated"), { keepDate: true }).updatedAt).toBe("2026-11-25T10:00:00.000Z");
+  });
+});
+
+describe("run store: two tabs on the same storage", () => {
+  it("never drops the other tab's versions when a stale tab saves", () => {
+    const backend = new MemoryBackend();
+    const first = createStore(backend);
+    first.save(named("Start"));
+    const second = createStore(backend);
+    first.save(named("Edited in the first tab"));
+    second.save(named("Edited in the stale tab"));
+    const names = (store: ReturnType<typeof createStore>) => store.history("run-1").map((entry) => decodeJson(entry.text).name);
+    expect(names(second)).toEqual(["Edited in the stale tab", "Edited in the first tab", "Start"]);
+    expect(names(createStore(backend))).toEqual(["Edited in the stale tab", "Edited in the first tab", "Start"]);
+    const ats = second.history("run-1").map((entry) => entry.at);
+    expect([...ats].sort().reverse()).toEqual(ats);
+    expect(new Set(ats).size).toBe(3);
+  });
+
+  it("merges the other tab's versions before a restore too", () => {
+    const backend = new MemoryBackend();
+    const first = createStore(backend);
+    first.save(named("Start"));
+    const second = createStore(backend);
+    first.save(named("Edited in the first tab"));
+    second.restore("run-1", second.history("run-1")[0]!.at);
+    expect(createStore(backend).history("run-1").map((entry) => decodeJson(entry.text).name)).toEqual(["Start", "Edited in the first tab", "Start"]);
+  });
+
+  it("refresh reads the runs another tab added, changed or removed", () => {
+    const backend = new MemoryBackend();
+    const first = createStore(backend);
+    first.save(named("Kept", "kept"));
+    first.save(named("Gone", "gone"));
+    const second = createStore(backend);
+    first.save(named("Kept, renamed", "kept"));
+    first.save(named("New", "new"));
+    first.remove("gone");
+    second.refresh();
+    expect(second.list().map((summary) => summary.name).sort()).toEqual(["Kept, renamed", "New"]);
+    expect(second.load("kept")?.name).toBe("Kept, renamed");
+    expect(second.history("kept")).toHaveLength(2);
+    expect(second.load("gone")).toBeNull();
+  });
+});
+
 describe("settings", () => {
   it("default the language from the browser and the rest to system, list view, no run", () => {
     expect(loadSettings(null, "fr-CA")).toEqual({ lang: "fr", theme: "system", tree: false, currentRun: null });

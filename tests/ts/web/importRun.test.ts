@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { commitImport, importRun } from "../../../web/src/state/importRun.ts";
 import { createStore } from "../../../web/src/state/storage.ts";
 import { encode } from "../../../src/plan/codec.ts";
@@ -9,6 +9,10 @@ import { MemoryBackend } from "./memoryBackend.ts";
 import { stubData } from "./stubData.ts";
 
 const data = stubData();
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 describe("importRun", () => {
   it("reports garbage as an error with the codec message", async () => {
@@ -86,5 +90,25 @@ describe("importRun", () => {
     const saved = commitImport(result, store, "replace");
     expect(saved.id).not.toBe("broken");
     expect(backend.items.get("bg3p:run:broken")).toBe("{nope");
+  });
+
+  it("keeps an imported copy's edit date, so a re-exported unchanged copy never looks newer than a later real edit", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    const deviceA = createStore(new MemoryBackend());
+    const deviceB = createStore(new MemoryBackend());
+    vi.setSystemTime(new Date("2026-11-25T10:00:00.000Z"));
+    const s1 = deviceA.save({ ...emptyRun("shared"), name: "S1" });
+    const exported = await encode(s1);
+    vi.setSystemTime(new Date("2026-11-25T11:00:00.000Z"));
+    deviceA.save({ ...s1, name: "S2" });
+
+    vi.setSystemTime(new Date("2026-11-25T12:00:00.000Z"));
+    const onB = commitImport(await importRun(exported, deviceB, data), deviceB, "replace");
+    expect(onB.updatedAt).toBe(s1.updatedAt);
+    const reExported = await encode(deviceB.load("shared")!);
+
+    vi.setSystemTime(new Date("2026-11-25T13:00:00.000Z"));
+    const back = await importRun(reExported, deviceA, data);
+    expect(back.kind === "ready" && back.conflict?.newer).toBe("stored");
   });
 });
