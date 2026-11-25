@@ -4,7 +4,10 @@ import type { Run } from "../../../src/plan/model.ts";
 export type RunSummary = { id: string; name: string; updatedAt: string | null };
 
 /** One saved version of a run; `text` is the run's JSON, readable by `decodeJson` (and `decode`) across versions. */
-export type HistoryEntry = { at: string; text: string };
+export type HistoryEntry = { at: string; text: string; note?: HistoryNote };
+
+/** Why a version was saved when it is not an edit: an import, or the restore of the version saved at `from`. */
+export type HistoryNote = { kind: "import" } | { kind: "restore"; from: string };
 
 /** A stored run that could not be read; it is kept in storage untouched. */
 export type UnreadableRun = { id: string; message: string };
@@ -15,6 +18,8 @@ export type SaveOptions = {
    * newer than a later real edit); a run without a date is stamped. The saved version's history time still increases.
    */
   keepDate?: boolean;
+  /** Recorded with the saved version. */
+  note?: HistoryNote;
 };
 
 export type RunStore = {
@@ -46,6 +51,13 @@ export const HISTORY_LIMIT = 20;
 
 type Entry = { summary: RunSummary; history: HistoryEntry[] };
 
+/** A note this site wrote; anything else (a later version's note kind, a damaged one) is dropped when read. */
+function validNote(note: unknown): note is HistoryNote | undefined {
+  if (note === undefined) return true;
+  const { kind, from } = (note ?? {}) as { kind?: unknown; from?: unknown };
+  return kind === "import" || (kind === "restore" && typeof from === "string");
+}
+
 /** Reads a stored record; throws on anything that is not a readable run. */
 function readRecord(text: string): { history: HistoryEntry[]; run: Run } {
   const record: unknown = JSON.parse(text);
@@ -55,6 +67,7 @@ function readRecord(text: string): { history: HistoryEntry[]; run: Run } {
     if (typeof entry?.at !== "string" || typeof entry?.text !== "string") throw new Error("Malformed history entry");
     if (Number.isNaN(Date.parse(entry.at))) throw new Error(`Saved version date ${JSON.stringify(entry.at)} is not a date`);
   }
+  for (const entry of history as HistoryEntry[]) if (!validNote(entry.note)) delete entry.note;
   return { history: history as HistoryEntry[], run: decodeJson((history[0] as HistoryEntry).text) };
 }
 
@@ -149,7 +162,9 @@ export function createStore(backend: Storage | null): RunStore {
       run.updatedAt = new Date(Math.max(...dates.filter((date) => !Number.isNaN(date)))).toISOString();
     }
     const stamp = keep ? at : (run.updatedAt as string);
-    const history = [{ at: stamp, text: JSON.stringify(run) }, ...previous].slice(0, HISTORY_LIMIT);
+    const saved: HistoryEntry = { at: stamp, text: JSON.stringify(run) };
+    if (options.note !== undefined) saved.note = options.note;
+    const history = [saved, ...previous].slice(0, HISTORY_LIMIT);
     entries.set(run.id, { summary: summaryOf(run), history });
     write((storage) => storage.setItem(RUN_PREFIX + run.id, JSON.stringify({ history })));
     return structuredClone(run);
@@ -168,7 +183,7 @@ export function createStore(backend: Storage | null): RunStore {
     restore(id, at) {
       const entry = entries.get(id)?.history.find((version) => version.at === at);
       if (entry === undefined) throw new Error(`No saved version of run ${id} at ${at}`);
-      return save(decodeJson(entry.text));
+      return save(decodeJson(entry.text), { note: { kind: "restore", from: at } });
     },
     refresh: scan,
     remove(id) {

@@ -261,7 +261,7 @@ export default function App({ data, store, settingsBackend }: Props) {
         ) : current === null || run === null ? (
           <p className="sub">{t("run.none")}</p>
         ) : route.screen === "history" ? (
-          <HistoryPanel name={runLabel(current.name)} versions={store.history(current.id)} onRestore={restoreVersion} />
+          <HistoryPanel data={data} name={runLabel(current.name)} versions={store.history(current.id)} onRestore={restoreVersion} />
         ) : route.screen === "party" ? (
           <Party data={data} run={run} saveRun={saveRun} onOpenCharacter={(id) => go({ screen: "character", id })} />
         ) : (

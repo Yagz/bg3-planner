@@ -2,12 +2,13 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testi
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { encode } from "../../../src/plan/codec.ts";
 import { emptyRun } from "../../../src/plan/model.ts";
+import type { Character, Run } from "../../../src/plan/model.ts";
 import App from "../../../web/src/App.tsx";
 import { createStore } from "../../../web/src/state/storage.ts";
 import type { RunStore } from "../../../web/src/state/storage.ts";
 import { MemoryBackend } from "./memoryBackend.ts";
 import { StreamingBlob } from "./streamingBlob.ts";
-import { stubData } from "./stubData.ts";
+import { stubData, text } from "./stubData.ts";
 
 beforeAll(() => {
   vi.stubGlobal("Blob", StreamingBlob);
@@ -248,3 +249,87 @@ describe("history panel", () => {
     await waitFor(() => expect(json()).toContain('"New run"'));
   });
 });
+
+describe("history panel: what each version changed", () => {
+  const fighter = (classes: string[]): Character => ({
+    id: "c1",
+    who: "player",
+    race: "Human",
+    subrace: null,
+    background: "Soldier",
+    abilities: { Strength: 8, Dexterity: 8, Constitution: 8, Intelligence: 8, Wisdom: 8, Charisma: 8 },
+    levels: classes.map((cls) => ({ class: cls, choices: {} })),
+    items: [],
+    notes: "",
+  });
+  const withSubclass = (subclass: string, extra: Partial<Run> = {}): Run => {
+    const run = { ...emptyRun("h"), name: "Main", characters: [fighter(["Fighter", "Fighter", "Fighter"])], ...extra };
+    run.characters[0]!.levels[2]!.choices = { "u/0": [subclass] };
+    return run;
+  };
+  const frenchApp = (store: RunStore) => {
+    const settings = new MemoryBackend();
+    settings.items.set("bg3p:settings", JSON.stringify({ lang: "fr", currentRun: "h" }));
+    window.history.replaceState(null, "", "/#/history");
+    const data = stubData({}, { "class:Champion": text("Champion (fr)"), "class:BattleMaster": text("Maître de guerre (fr)"), "origin:Gale": text("Gale (fr)"), "origin:Astarion": text("Astarion (fr)") });
+    render(<App data={data} store={store} settingsBackend={settings} />);
+  };
+
+  it("names the changed choice by its French name with the old one struck, and notes imports and restores", () => {
+    const store = createStore(new MemoryBackend());
+    store.save(withSubclass("Champion"));
+    store.save(withSubclass("BattleMaster"));
+    store.save(withSubclass("BattleMaster"), { note: { kind: "import" } });
+    const atFirst = store.history("h")[2]!.at;
+    store.restore("h", atFirst);
+    frenchApp(store);
+    const items = within(screen.getByRole("list", { name: "Versions enregistrées" })).getAllByRole("listitem");
+    expect(items).toHaveLength(4);
+    expect(items[0]!.textContent).toContain("Restauration de la version du ");
+    expect(items[0]!.textContent).toContain("version actuelle");
+    expect(items[1]!.textContent).toContain("Import");
+    const line = items[0]!.querySelector(".diffline")!;
+    expect(line.textContent).toContain("Joueur");
+    expect(line.textContent).toContain("Champion (fr)");
+    expect(line.querySelector("s.was")?.textContent).toBe("Maître de guerre (fr)");
+    expect(items[2]!.querySelector("s.was")?.textContent).toBe("Champion (fr)");
+    expect(items[3]!.textContent).toContain("Première version");
+    expect(items[3]!.querySelector(".diffline")).toBeNull();
+  });
+
+  it("shows the first two changes and folds the others under '+N autres'", () => {
+    const store = createStore(new MemoryBackend());
+    const before = withSubclass("Champion");
+    store.save(before);
+    const after = withSubclass("BattleMaster", { name: "Renamed" });
+    after.party["2"].active = ["Gale"];
+    after.party["3"].active = ["Astarion"];
+    store.save(after);
+    frenchApp(store);
+    const newest = within(screen.getByRole("list", { name: "Versions enregistrées" })).getAllByRole("listitem")[0]!;
+    const details = newest.querySelector("details")!;
+    expect(details.querySelector("summary")?.textContent).toBe("+2 autres");
+    expect(newest.querySelectorAll(".what > .diffline")).toHaveLength(2);
+    expect(details.querySelectorAll(".diffline")).toHaveLength(2);
+    expect(details.hasAttribute("open")).toBe(false);
+    fireEvent.click(details.querySelector("summary")!);
+    expect(details.hasAttribute("open")).toBe(true);
+    expect(newest.textContent).toContain("Groupe · acte 3");
+    expect(newest.textContent).toContain("Astarion (fr)");
+  });
+
+  it("describes versions saved by the previous site: version-2 JSON without a note", () => {
+    const backend = new MemoryBackend();
+    const strip = (run: Run, at: string) => {
+      const { difficulty: _difficulty, ...rest } = { ...run, updatedAt: at };
+      return { at, text: JSON.stringify({ ...rest, version: 2, difficulty: "Balanced" }) };
+    };
+    const history = [strip(withSubclass("BattleMaster"), "2026-11-24T11:00:00.000Z"), strip(withSubclass("Champion"), "2026-11-24T10:00:00.000Z")];
+    backend.items.set("bg3p:run:h", JSON.stringify({ history }));
+    frenchApp(createStore(backend));
+    const newest = within(screen.getByRole("list", { name: "Versions enregistrées" })).getAllByRole("listitem")[0]!;
+    expect(newest.querySelector("s.was")?.textContent).toBe("Champion (fr)");
+    expect(newest.textContent).toContain("Maître de guerre (fr)");
+  });
+});
+

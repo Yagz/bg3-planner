@@ -72,5 +72,5 @@ export function commitImport(result: ImportResult, store: RunStore, mode: "repla
   if (result.kind !== "ready") throw new Error("Nothing to import");
   const unreadable = store.unreadable().some((record) => record.id === result.run.id);
   const id = mode === "copy" || unreadable ? crypto.randomUUID() : result.run.id;
-  return store.save({ ...result.run, id }, { keepDate: true });
+  return store.save({ ...result.run, id }, { keepDate: true, note: { kind: "import" } });
 }

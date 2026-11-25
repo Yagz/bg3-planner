@@ -82,6 +82,30 @@ describe("run store", () => {
     expect(() => store.restore("run-1", "1999-01-01T00:00:00.000Z")).toThrow();
   });
 
+  it("notes a restore with the restored version's time, and keeps the note across a reload", () => {
+    const backend = new MemoryBackend();
+    const store = createStore(backend);
+    store.save(named("A"));
+    store.save(named("B"));
+    const atA = store.history("run-1")[1]!.at;
+    store.restore("run-1", atA);
+    expect(store.history("run-1")[0]!.note).toEqual({ kind: "restore", from: atA });
+    expect(store.history("run-1")[1]!.note).toBeUndefined();
+    expect(createStore(backend).history("run-1")[0]!.note).toEqual({ kind: "restore", from: atA });
+  });
+
+  it("stores the note given to save, and still reads a record written without notes", () => {
+    const backend = new MemoryBackend();
+    const store = createStore(backend);
+    store.save(named("A"), { note: { kind: "import" } });
+    expect(store.history("run-1")[0]!.note).toEqual({ kind: "import" });
+    const old = JSON.stringify({ history: [{ at: "2026-11-25T10:00:00.000Z", text: JSON.stringify({ ...named("Old"), updatedAt: "2026-11-25T10:00:00.000Z" }) }] });
+    backend.items.set("bg3p:run:old", old);
+    const reopened = createStore(backend);
+    expect(reopened.history("old")).toEqual([{ at: "2026-11-25T10:00:00.000Z", text: expect.any(String) }]);
+    expect(reopened.load("old")?.name).toBe("Old");
+  });
+
   it("removes a run and its history", () => {
     const backend = new MemoryBackend();
     const store = createStore(backend);
