@@ -266,8 +266,6 @@
   "difficulty.label": "Difficulty",
   "difficulty.choose": "Difficulty to choose",
   "difficulty.unknown": "Unknown difficulty: {id}",
-  "difficulty.multiclassing": "Multiclassing",
-  "difficulty.proficiencyBonus": "Proficiency bonus",
   "difficulty.noMulticlass": "Multiclassing disabled",
   "difficulty.bonusUp": "+{n} to the proficiency bonus",
   "difficulty.bonusDown": "{n} to the proficiency bonus",

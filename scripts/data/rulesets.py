@@ -59,13 +59,16 @@ def _definitions(modifiers: dict[str, dict], errors: list[str]) -> tuple[dict[st
             continue
         definition["custom"] = a.get("ShowInCustom") == "true"
         definitions[name] = {k: definition[k] for k in ("type", "default", "min", "max", "custom") if k in definition}
+        text = model._text(a)
+        if text["name"] is not None:
+            definitions[name]["text"] = text
     return definitions, names
 
 
 def build(rulesets: dict[str, dict], modifiers: dict[str, dict], values: dict[str, dict]
           ) -> tuple[dict[str, dict], dict[str, dict], list[str]]:
     """(shown rulesets by Name, each with its `order` (index among the shown rulesets in file order), `values` and `text` handles; definitions of the build
-    modifiers by Name; every error found). The arguments are the merged LSX nodes by UUID. A value of a modifier
+    modifiers by Name, each with its `text` handles when the game names it; every error found). The arguments are the merged LSX nodes by UUID. A value of a modifier
     that is not a build modifier, or of a ruleset the custom-mode screen does not show, is ignored; a value naming
     an unknown ruleset or modifier is an error."""
     errors: list[str] = []

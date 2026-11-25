@@ -64,14 +64,14 @@ export default function DifficultyPicker({ data, run, saveRun }: Props) {
         ))}
       </select>
       {custom && rulesetModifiers.MULTICLASSING.custom && (
-        <label className="check">
+        <label className="check" title={gameDescription(data, lang, "modifier", "MULTICLASSING") ?? undefined}>
           <input type="checkbox" checked={effects.multiclass} onChange={(event) => setOverride("MULTICLASSING", event.target.checked)} />
-          {t("difficulty.multiclassing")}
+          {gameName(data, lang, "modifier", "MULTICLASSING")}
         </label>
       )}
       {custom && bonusRange.custom && (
-        <label className="check">
-          {t("difficulty.proficiencyBonus")}
+        <label className="check" title={gameDescription(data, lang, "modifier", "PROFICIENCY_BONUS") ?? undefined}>
+          {gameName(data, lang, "modifier", "PROFICIENCY_BONUS")}
           <input
             type="number"
             min={bonusRange.min}

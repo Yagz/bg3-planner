@@ -28,7 +28,7 @@ describe("game data", () => {
     expect(Object.keys(data.texts.en).length).toBeGreaterThan(0);
     expect(Object.keys(data.texts.fr).length).toBeGreaterThan(0);
     for (const texts of [data.texts.en, data.texts.fr]) {
-      for (const key of Object.keys(texts)) expect(key, key).toMatch(/^(ability|background|class|feat|item|label|origin|passive|race|ruleset|skill|spell):./);
+      for (const key of Object.keys(texts)) expect(key, key).toMatch(/^(ability|background|class|feat|item|label|modifier|origin|passive|race|ruleset|skill|spell):./);
     }
     expect(data.texts.en["class:Ranger"]?.name).toBeTruthy();
     expect(data.meta.game).toMatch(/^\d/);

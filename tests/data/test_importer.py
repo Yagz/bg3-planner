@@ -114,9 +114,9 @@ def rules_files() -> dict[str, dict[str, bytes]]:
         "Public/Shared/Ruleset/RulesetModifiers.lsx": lsx(
             "RulesetModifier",
             {"UUID": "rm-multi", "Name": "MULTICLASSING", "RulesetModifierType": "4", "Default": "true",
-             "ShowInCustom": "true"},
+             "ShowInCustom": "true", "DisplayName": "hMulti", "Description": "hMultiDesc"},
             {"UUID": "rm-prof", "Name": "PROFICIENCY_BONUS", "RulesetModifierType": "1", "Default": "0", "Min": "-1",
-             "Max": "4", "ShowInCustom": "true"}),
+             "Max": "4", "ShowInCustom": "true", "DisplayName": "hProf"}),
         "Public/Shared/Ruleset/RulesetValues.lsx": lsx(
             "RulesetValue", {"UUID": "rv-1", "Ruleset": "rs-easy", "Modifier": "rm-multi", "Value": "false"},
             {"UUID": "rv-2", "Ruleset": "rs-easy", "Modifier": "rm-prof", "Value": "2"}),
@@ -131,7 +131,7 @@ def rules_files() -> dict[str, dict[str, bytes]]:
 CUSTOM_MODE = ui_names.LABELS[0][1]
 HANDLES = ["hFighter", "hFighterDesc", "hElf", "hElfDesc", "hAcolyte", "hAcolyteDesc", "hAlert", "hAlertDesc",
            "hFighterPassive", "hAlertPassive", "hFireBolt2", "hBoots", "hBootsDesc", "hBase", "hFancy", "hHero",
-           "hHeroOld", "hEasy", "hEasyDesc", CUSTOM_MODE]
+           "hHeroOld", "hEasy", "hEasyDesc", "hMulti", "hMultiDesc", "hProf", CUSTOM_MODE]
 # The skill and ability name families, as the game writes them.
 UI_TEXTS = ({f"{ui_names.SKILL_HANDLE}_{i}": (ui_names.label(s), f"FR {s}") for i, s in enumerate(ui_names.SKILLS)}
             | {f"{ui_names.ABILITY_HANDLE}_{i}": (a, f"FR {a}") for i, a in enumerate(ui_names.ABILITIES, 1)})
@@ -246,6 +246,9 @@ class ImporterTest(unittest.TestCase):
         self.assertEqual(rules["rulesetModifiers"]["HONOUR_STATS"], {"type": "bool", "default": False, "custom": False})
         fr = json.loads((self.out / "texts.fr.json").read_text(encoding="utf-8"))
         self.assertEqual(fr["ruleset:DIFFICULTY_EASY"], {"name": "Explorateur", "description": "FR hEasyDesc"})
+        self.assertEqual(fr["modifier:MULTICLASSING"], {"name": "FR hMulti", "description": "FR hMultiDesc"})
+        self.assertEqual(fr["modifier:PROFICIENCY_BONUS"], {"name": "FR hProf", "description": None})
+        self.assertNotIn("modifier:HONOUR_STATS", fr)
         self.assertEqual(fr["label:customMode"], {"name": "Mode Personnalisé", "description": None})
 
     def test_ruleset_errors_join_the_other_import_errors(self):

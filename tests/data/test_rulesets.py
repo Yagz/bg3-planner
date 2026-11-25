@@ -13,7 +13,8 @@ def ruleset(uuid: str, name: str, **attributes: str) -> dict:
 
 
 def modifier(uuid: str, name: str, kind: str, default: str, **attributes: str) -> dict:
-    return {"UUID": uuid, "Name": name, "RulesetModifierType": kind, "Default": default, **attributes}
+    named = {"DisplayName": f"h{name};1", "Description": f"h{name}Desc;1"} if name in ("MULTICLASSING", "PROFICIENCY_BONUS") else {}
+    return {"UUID": uuid, "Name": name, "RulesetModifierType": kind, "Default": default, **named, **attributes}
 
 
 RULESETS = (ruleset("r-easy", "DIFFICULTY_EASY", ShowInCustom="true"), ruleset("r-hard", "DIFFICULTY_HARD", ShowInCustom="true"),
@@ -49,8 +50,10 @@ class RulesetsTest(unittest.TestCase):
         _, modifiers, errors = build()
         self.assertEqual(errors, [])
         self.assertEqual(modifiers, {
-            "MULTICLASSING": {"type": "bool", "default": True, "custom": True},
-            "PROFICIENCY_BONUS": {"type": "int", "default": 0, "min": -1, "max": 4, "custom": True},
+            "MULTICLASSING": {"type": "bool", "default": True, "custom": True,
+                              "text": {"name": "hMULTICLASSING", "description": "hMULTICLASSINGDesc"}},
+            "PROFICIENCY_BONUS": {"type": "int", "default": 0, "min": -1, "max": 4, "custom": True,
+                                  "text": {"name": "hPROFICIENCY_BONUS", "description": "hPROFICIENCY_BONUSDesc"}},
             "HONOUR_STATS": {"type": "bool", "default": False, "custom": False}})
 
     def test_errors_listed(self):

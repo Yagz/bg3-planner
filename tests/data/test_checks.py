@@ -53,7 +53,7 @@ ABILITIES = ["Strength", "Dexterity", "Constitution", "Intelligence", "Wisdom", 
 SKILLS = {"Athletics": "Strength", "Stealth": "Dexterity"}
 KEYS = (["class:Wizard", "class:Evocation", "race:Elf", "race:HighElf", "background:bg-1", "feat:Alert",
          "spell:Fireball", "passive:Soldier", "item:MAG_Boots", "origin:Sh", "origin:Generic", "ruleset:EASY",
-         "ruleset:HONOUR", "label:customMode"]
+         "ruleset:HONOUR", "modifier:MULTICLASSING", "modifier:PROFICIENCY_BONUS", "label:customMode"]
         + [f"skill:{s}" for s in ui_names.SKILLS] + [f"ability:{a}" for a in ABILITIES])
 WIKI = {"MAG_Boots": {"uuid": "t-boots", "kind": "equipment", "rarity": "rare", "legacy": None, "locations": []},
         "MAG_Gone": {"uuid": None, "kind": "equipment", "rarity": "rare", "legacy": "unobtainable",
@@ -321,6 +321,10 @@ class ChecksTest(unittest.TestCase):
         problems = self.problems(rules=rules)
         self.assertEqual(len(problems), 1, problems)
         self.assertIn("HONOUR_STATS missing", problems[0])
+
+    def test_custom_modifier_needs_a_name(self):
+        problems = self.problems(keys=[k for k in KEYS if k != "modifier:MULTICLASSING"])
+        self.assertTrue(any("modifier:MULTICLASSING: no entry" in p for p in problems), problems)
 
     def test_missing_notice(self):
         problems = self.problems(meta={"game": "1.0", "notice": {"en": "Notice.", "fr": ""}})

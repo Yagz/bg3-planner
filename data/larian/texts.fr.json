@@ -5227,6 +5227,14 @@
   "description": null,
   "name": "Mode Personnalisé"
  },
+ "modifier:MULTICLASSING": {
+  "description": "Permet de choisir une autre classe lorsque vous gagnez un niveau.",
+  "name": "Multiclassage"
+ },
+ "modifier:PROFICIENCY_BONUS": {
+  "description": "Augmente le bonus de maîtrise de tous les personnages, ce qui réduit l'impact des jets de dés aléatoires.<br><br>Ceci a un impact sur l'équilibre du jeu.",
+  "name": "Bonus de maîtrise"
+ },
  "origin:Alfira": {
   "description": null,
   "name": "Alfira"

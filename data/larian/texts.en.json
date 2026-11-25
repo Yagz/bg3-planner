@@ -5227,6 +5227,14 @@
   "description": null,
   "name": "Custom Mode"
  },
+ "modifier:MULTICLASSING": {
+  "description": "Enable to allow choosing an additional class upon level-up.",
+  "name": "Multiclassing"
+ },
+ "modifier:PROFICIENCY_BONUS": {
+  "description": "Increase the proficiency bonus of all characters - reducing the impact of random rolls. <br><br>This will impact game balance. ",
+  "name": "Proficiency Bonus"
+ },
  "origin:Alfira": {
   "description": null,
   "name": "Alfira"

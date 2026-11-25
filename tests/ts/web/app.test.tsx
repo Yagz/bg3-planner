@@ -1,5 +1,6 @@
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { validate } from "../../../src/engine/validate.ts";
 import { encode } from "../../../src/plan/codec.ts";
 import { emptyRun } from "../../../src/plan/model.ts";
 import type { Character, Run } from "../../../src/plan/model.ts";
@@ -10,7 +11,6 @@ import { MemoryBackend } from "./memoryBackend.ts";
 import { StreamingBlob } from "./streamingBlob.ts";
 import { realData } from "./realData.ts";
 import { stubData, text } from "./stubData.ts";
-import { validate } from "../../../src/engine/validate.ts";
 
 beforeAll(() => {
   vi.stubGlobal("Blob", StreamingBlob);
@@ -365,10 +365,9 @@ describe("history panel: what each version changed", () => {
   });
 });
 
-
 describe("difficulty picker", () => {
   const data = () => realData();
-  const render2 = (run: Run, lang: "en" | "fr" = "fr") => {
+  const renderRun = (run: Run, lang: "en" | "fr" = "fr") => {
     const store = createStore(new MemoryBackend());
     const saved = store.save(run);
     const settings = new MemoryBackend();
@@ -380,7 +379,7 @@ describe("difficulty picker", () => {
   const optionNames = () => Array.from(picker().options).map((o) => o.textContent);
 
   it("offers the game's rulesets in order, Custom Mode last, and saves a preset with its effect pills", () => {
-    const { store, id } = render2({ ...emptyRun("d1"), difficulty: { ruleset: "DIFFICULTY_MEDIUM", overrides: { MULTICLASSING: false } } });
+    const { store, id } = renderRun({ ...emptyRun("d1"), difficulty: { ruleset: "DIFFICULTY_MEDIUM", overrides: { MULTICLASSING: false } } });
     expect(optionNames()).toEqual(["Explorateur", "Équilibré", "Tacticien", "Règles du mode Honneur", "Mode Personnalisé"]);
     expect(picker().value).toBe("DIFFICULTY_MEDIUM");
     fireEvent.change(picker(), { target: { value: "DIFFICULTY_EASY" } });
@@ -393,7 +392,7 @@ describe("difficulty picker", () => {
   });
 
   it("shows an empty first option for an undecided difficulty", () => {
-    const { store, id } = render2(emptyRun("d2"));
+    const { store, id } = renderRun(emptyRun("d2"));
     expect(optionNames()[0]).toBe("Difficulté à choisir");
     expect(picker().value).toBe("");
     fireEvent.change(picker(), { target: { value: "DIFFICULTY_HARD" } });
@@ -402,7 +401,7 @@ describe("difficulty picker", () => {
   });
 
   it("edits the custom modifiers in the overrides, bounded by the game's range", () => {
-    const { store, id } = render2({ ...emptyRun("d3"), difficulty: { ruleset: "DIFFICULTY_EASY", overrides: {} } });
+    const { store, id } = renderRun({ ...emptyRun("d3"), difficulty: { ruleset: "DIFFICULTY_EASY", overrides: {} } });
     expect(screen.queryByRole("checkbox", { name: "Multiclassage" })).toBeNull();
     fireEvent.change(picker(), { target: { value: "RULESET_LARIAN" } });
     expect(store.load(id)!.difficulty).toEqual({ ruleset: "RULESET_LARIAN", overrides: {} });
@@ -410,6 +409,7 @@ describe("difficulty picker", () => {
     expect(picker().selectedOptions[0]!.textContent).toBe("Mode Personnalisé");
     const box = screen.getByRole("checkbox", { name: "Multiclassage" }) as HTMLInputElement;
     expect(box.checked).toBe(true);
+    expect(box.closest("label")!.title).toBe("Permet de choisir une autre classe lorsque vous gagnez un niveau.");
     fireEvent.click(box);
     expect(store.load(id)!.difficulty.overrides).toEqual({ MULTICLASSING: false });
     const bonus = screen.getByRole("spinbutton", { name: "Bonus de maîtrise" }) as HTMLInputElement;
@@ -423,8 +423,33 @@ describe("difficulty picker", () => {
     expect(screen.getByText("+3 au bonus de maîtrise")).toBeTruthy();
   });
 
+  it("saves one history version per difficulty change", () => {
+    const { store, id } = renderRun({ ...emptyRun("d6"), difficulty: { ruleset: "DIFFICULTY_MEDIUM", overrides: {} } });
+    const before = store.history(id).length;
+    fireEvent.change(picker(), { target: { value: "DIFFICULTY_EASY" } });
+    expect(store.history(id).length).toBe(before + 1);
+    fireEvent.change(picker(), { target: { value: "RULESET_LARIAN" } });
+    expect(store.history(id).length).toBe(before + 2);
+    fireEvent.click(screen.getByRole("checkbox", { name: "Multiclassage" }));
+    expect(store.history(id).length).toBe(before + 3);
+  });
+
+  it("drops an override that equals what the ruleset gives", () => {
+    const { store, id } = renderRun({ ...emptyRun("d7"), difficulty: { ruleset: "RULESET_LARIAN", overrides: {} } });
+    const box = screen.getByRole("checkbox", { name: "Multiclassage" });
+    fireEvent.click(box);
+    expect(store.load(id)!.difficulty.overrides).toEqual({ MULTICLASSING: false });
+    fireEvent.click(box);
+    expect(store.load(id)!.difficulty.overrides).toEqual({});
+    const bonus = screen.getByRole("spinbutton", { name: "Bonus de maîtrise" });
+    fireEvent.change(bonus, { target: { value: "2" } });
+    expect(store.load(id)!.difficulty.overrides).toEqual({ PROFICIENCY_BONUS: 2 });
+    fireEvent.change(bonus, { target: { value: "0" } });
+    expect(store.load(id)!.difficulty.overrides).toEqual({});
+  });
+
   it("keeps an unknown ruleset and says so", () => {
-    const { store, id } = render2({ ...emptyRun("d4"), difficulty: { ruleset: "Nightmare", overrides: {} } });
+    const { store, id } = renderRun({ ...emptyRun("d4"), difficulty: { ruleset: "Nightmare", overrides: {} } });
     expect(screen.getByText("Difficulté inconnue : Nightmare")).toBeTruthy();
     expect(picker().value).toBe("Nightmare");
     expect(store.load(id)!.difficulty.ruleset).toBe("Nightmare");
@@ -439,7 +464,7 @@ describe("difficulty picker", () => {
       characters: [{ id: "p", who: "player", race: "Halfling", subrace: "Halfling_Lightfoot", background: Object.keys(d.rules.backgrounds)[0]!, abilities: { Strength: 8, Dexterity: 15, Constitution: 14, Intelligence: 8, Wisdom: 15, Charisma: 10 }, levels, items: [], notes: "" }],
     };
     run.party["1"].active = ["p"];
-    const { store, id } = render2(run, "en");
+    const { store, id } = renderRun(run, "en");
     const flagged = () => validate(store.load(id)!, d).issues.filter((issue) => issue.code === "multiclassDisabled").map((issue) => issue.level);
     expect(flagged()).toEqual([]);
     fireEvent.change(picker(), { target: { value: "DIFFICULTY_EASY" } });

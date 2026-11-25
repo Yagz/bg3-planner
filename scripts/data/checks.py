@@ -29,7 +29,7 @@ COOLDOWN_VALUES = {None, "UntilRest"}
 
 _CATEGORIES = {"classes": "class", "races": "race", "backgrounds": "background", "feats": "feat",
                "spells": "spell", "passives": "passive", "items": "item", "origins": "origin",
-               "rulesets": "ruleset"}
+               "rulesets": "ruleset", "rulesetModifiers": "modifier"}
 _LANGUAGES = {"texts.en": "English", "texts.fr": "French"}
 
 
@@ -45,7 +45,8 @@ def skill_ids(rules: dict) -> set[str]:
 def _check_texts(rules: dict, tables: dict, unnamed: set[str], descriptionless: set[str]) -> list[str]:
     problems = []
     expected = {f"{category}:{ident}" for section, category in _CATEGORIES.items()
-                for ident in rules.get(section, {})}
+                for ident, element in rules.get(section, {}).items()
+                if category != "modifier" or element.get("custom") is True}
     expected |= ({f"skill:{ident}" for ident in skill_ids(rules) | set(ui_names.SKILLS)}
                  | {f"ability:{a}" for a in ui_names.ABILITIES} | {key for key, _ in ui_names.LABELS})
     idents = expected | {key.split(":", 1)[1] for key in expected}
@@ -64,7 +65,9 @@ def _check_texts(rules: dict, tables: dict, unnamed: set[str], descriptionless: 
                 problems.append(f"{key}: empty name in the {language} table")
             elif key in no_description and entry.get("description") is not None:
                 problems.append(f"{key}: listed with a missing description but has one in the {language} table")
-        for key in sorted(set(table) - expected):
+        # A build modifier the game names without showing it in custom mode may keep its text.
+        optional = {f"modifier:{ident}" for ident in rules.get("rulesetModifiers", {})}
+        for key in sorted(set(table) - expected - optional):
             problems.append(f"{key}: stray key in the {language} table")
     return problems
 

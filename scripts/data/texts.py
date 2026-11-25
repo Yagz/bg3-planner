@@ -9,7 +9,7 @@ from pathlib import Path
 # Rules category -> text table category.
 _CATEGORIES = {"classes": "class", "races": "race", "backgrounds": "background", "feats": "feat",
                "spells": "spell", "passives": "passive", "items": "item", "origins": "origin",
-               "rulesets": "ruleset"}
+               "rulesets": "ruleset", "rulesetModifiers": "modifier"}
 
 # The game's marker for an unknown translation handle: as a handle or as a text, it counts as missing.
 UNKNOWN_HANDLE = "ls::TranslatedStringRepository::s_HandleUnknown"
@@ -86,7 +86,9 @@ def resolve(rules: dict, en: dict[str, str], fr: dict[str, str], unnamed: set[st
     matched: set[str] = set()
     for section, category in _CATEGORIES.items():
         for ident, element in sorted(out.get(section, {}).items()):
-            text = element.pop("text")
+            text = element.pop("text", None)
+            if text is None and category == "modifier":
+                continue  # the game names only some modifiers; a modifier without handles has no text
             key = f"{category}:{ident}"
             entries, problems = _entries(key, text, en, fr)
             listed = {key, ident} & descriptionless
