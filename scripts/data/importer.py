@@ -13,7 +13,7 @@ import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-from scripts.data import items, loca, lsx, model, origins, sources, stats, templates, texts, ui_names
+from scripts.data import items, loca, lsx, model, origins, rulesets, sources, stats, templates, texts, ui_names
 
 NOTICE = {"fr": "Projet de fans non commercial ; contenu propriété de Larian Studios.",
           "en": "Non-commercial fan project; content owned by Larian Studios."}
@@ -42,6 +42,9 @@ LSX_FILES = {
 }
 PRESETS = ("CharacterCreationPresets/CharacterCreationPresets.lsx", "CharacterCreationPreset")
 ORIGINS = ("Origins/Origins.lsx", "Origin")
+RULESETS = ("Ruleset/Rulesets.lsx", "Ruleset")
+RULESET_MODIFIERS = ("Ruleset/RulesetModifiers.lsx", "RulesetModifier")
+RULESET_VALUES = ("Ruleset/RulesetValues.lsx", "RulesetValue")
 ABILITY_PRESETS = ("CharacterCreationPresets/AbilityDistributionPresets.lsx", "AbilityDistributionPreset")
 # Spell_*.txt and Passive.txt only: the other Data/*.txt files hold other formats.
 STATS_PATTERN = re.compile(r"^Stats/Generated/Data/(?:Spell_[^/]+|Passive)\.txt$")
@@ -131,6 +134,7 @@ def build(game: Path, game_version: str, wiki: Path | None = None) -> dict[str, 
     presets = _lsx(game, *PRESETS, errors)
     origin_nodes = _lsx(game, *ORIGINS, errors)
     ability_presets = _lsx(game, *ABILITY_PRESETS, errors)
+    ruleset_nodes = [_lsx(game, *file, errors) for file in (RULESETS, RULESET_MODIFIERS, RULESET_VALUES)]
     stats_by_name = _stats(game, STATS_PATTERN, errors)
     item_stats = _stats(game, ITEM_STATS_PATTERN, errors)
     resolved_templates = _templates(game, errors)
@@ -145,6 +149,8 @@ def build(game: Path, game_version: str, wiki: Path | None = None) -> dict[str, 
     rules["origins"], problems = origins.build(origin_nodes, ability_presets, rules,
                                                origins.read_excluded(ORIGINS_EXCLUDED),
                                                origins.read_references(ORIGIN_REFERENCES))
+    rules["rulesets"], rules["rulesetModifiers"], ruleset_problems = rulesets.build(*ruleset_nodes)
+    problems.extend(ruleset_problems)
     en = loca.table(game / "Data" / ENGLISH_PAK, "English")
     fr = loca.table(game / "Data" / FRENCH_PAK, "French")
     try:

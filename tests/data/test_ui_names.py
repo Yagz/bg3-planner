@@ -3,6 +3,7 @@ import unittest
 from scripts.data import texts, ui_names
 
 SKILL, ABILITY = ui_names.SKILL_HANDLE, ui_names.ABILITY_HANDLE
+LABEL = ui_names.LABELS[0][1]
 FRENCH_SKILLS = ["Supercherie", "Intimidation", "Représentation", "Persuasion", "Acrobaties", "Escamotage",
                  "Discrétion", "Arcanes", "Histoire", "Investigation", "Nature", "Religion", "Athlétisme", "Dressage",
                  "Perspicacité", "Médecine", "Perception", "Survie"]
@@ -13,6 +14,7 @@ def tables() -> tuple[dict[str, str], dict[str, str]]:
     """The two indexed families as the game writes them ("Sleight Of Hand"), plus the ability family's `_0`."""
     en = {f"{SKILL}_{i}": ui_names.label(s).replace(" of ", " Of ") for i, s in enumerate(ui_names.SKILLS)}
     fr = {f"{SKILL}_{i}": t for i, t in enumerate(FRENCH_SKILLS)}
+    en[LABEL], fr[LABEL] = "Custom Mode", "Mode Personnalisé"
     en |= {f"{ABILITY}_{i + 1}": a for i, a in enumerate(ui_names.ABILITIES)} | {f"{ABILITY}_0": "None"}
     fr |= {f"{ABILITY}_{i + 1}": t for i, t in enumerate(FRENCH_ABILITIES)} | {f"{ABILITY}_0": "Aucune"}
     return en, fr
@@ -28,7 +30,8 @@ class LabelTest(unittest.TestCase):
 class ResolveTest(unittest.TestCase):
     def test_names_read_from_the_indexed_families(self):
         en, fr = ui_names.resolve(*tables())
-        self.assertEqual(len(en), 24)
+        self.assertEqual(len(en), 25)
+        self.assertEqual(fr["label:customMode"], {"name": "Mode Personnalisé", "description": None})
         self.assertEqual(sorted(en), sorted(fr))
         self.assertEqual(en["skill:SleightOfHand"], {"name": "Sleight Of Hand", "description": None})
         self.assertEqual(fr["skill:Deception"], {"name": "Supercherie", "description": None})

@@ -180,6 +180,23 @@ export interface OriginDef {
   abilities: Record<Ability, number> | null;
 }
 
+/** The ruleset modifiers that shape a build (`RulesetModifiers.lsx`). */
+export type BuildModifier = "MULTICLASSING" | "PROFICIENCY_BONUS" | "HONOUR_STATS";
+
+/** A ruleset the game's custom-mode screen shows (`Rulesets.lsx`), with its values for the build modifiers; a modifier without a value keeps its default. */
+export interface RulesetDef {
+  values: Partial<Record<BuildModifier, boolean | number>>;
+}
+
+export interface RulesetModifierDef {
+  type: "bool" | "int";
+  default: boolean | number;
+  min?: number;
+  max?: number;
+  /** Whether the game's custom-mode screen shows the modifier. */
+  custom: boolean;
+}
+
 export interface ItemDef {
   kind: "weapon" | "equipment";
   found_by: "stats" | "template";
@@ -206,6 +223,9 @@ export interface Rules {
   items: Record<string, ItemDef>;
   /** Keyed by origin `Name`. */
   origins: Record<string, OriginDef>;
+  /** Keyed by ruleset `Name`. */
+  rulesets: Record<string, RulesetDef>;
+  rulesetModifiers: Record<BuildModifier, RulesetModifierDef>;
 }
 
 /** Translations keyed by `<kind>:<identifier>` (e.g. `background:<uuid>`). */

@@ -43,11 +43,17 @@ RULES = {
                                      "Wisdom": 12, "Charisma": 10}},
                 "Generic": {"class": None, "subclass": None, "race": None, "subrace": None, "background": None,
                             "lockRace": False, "playable": True, "abilities": None}},
+    "rulesets": {"EASY": {"values": {"MULTICLASSING": False, "PROFICIENCY_BONUS": 2}},
+                 "HONOUR": {"values": {"HONOUR_STATS": True}}},
+    "rulesetModifiers": {"MULTICLASSING": {"type": "bool", "default": True, "custom": True},
+                         "PROFICIENCY_BONUS": {"type": "int", "default": 0, "min": -1, "max": 4, "custom": True},
+                         "HONOUR_STATS": {"type": "bool", "default": False, "custom": False}},
 }
 ABILITIES = ["Strength", "Dexterity", "Constitution", "Intelligence", "Wisdom", "Charisma"]
 SKILLS = {"Athletics": "Strength", "Stealth": "Dexterity"}
 KEYS = (["class:Wizard", "class:Evocation", "race:Elf", "race:HighElf", "background:bg-1", "feat:Alert",
-         "spell:Fireball", "passive:Soldier", "item:MAG_Boots", "origin:Sh", "origin:Generic"]
+         "spell:Fireball", "passive:Soldier", "item:MAG_Boots", "origin:Sh", "origin:Generic", "ruleset:EASY",
+         "ruleset:HONOUR", "label:customMode"]
         + [f"skill:{s}" for s in ui_names.SKILLS] + [f"ability:{a}" for a in ABILITIES])
 WIKI = {"MAG_Boots": {"uuid": "t-boots", "kind": "equipment", "rarity": "rare", "legacy": None, "locations": []},
         "MAG_Gone": {"uuid": None, "kind": "equipment", "rarity": "rare", "legacy": "unobtainable",
@@ -284,6 +290,30 @@ class ChecksTest(unittest.TestCase):
         self.assertEqual(len(problems), 1)
         self.assertIn("origins", problems[0])
         self.assertEqual(checks.COUNTS["origins"], 25)
+
+    def test_rulesets_count(self):
+        write(self.folder)
+        self.assertEqual(verify(self.folder, {"rulesets": 2}), [])
+        problems = verify(self.folder, {"rulesets": 5})
+        self.assertEqual(len(problems), 1)
+        self.assertIn("rulesets", problems[0])
+        self.assertEqual(checks.COUNTS["rulesets"], 5)
+
+    def test_ruleset_values_are_checked_against_the_modifiers(self):
+        rules = copy.deepcopy(RULES)
+        rules["rulesets"]["EASY"]["values"] = {"MULTICLASSING": 1, "PROFICIENCY_BONUS": 9, "NOPE": True}
+        problems = self.problems(rules=rules)
+        self.assertEqual(len(problems), 3, problems)
+        for needle in ("MULTICLASSING: 1 is not a bool", "PROFICIENCY_BONUS: 9 is outside -1..4", "NOPE: not a known"):
+            self.assertTrue(any(needle in p for p in problems), (needle, problems))
+
+    def test_missing_build_modifier(self):
+        rules = copy.deepcopy(RULES)
+        del rules["rulesetModifiers"]["HONOUR_STATS"]
+        rules["rulesets"]["HONOUR"]["values"] = {}
+        problems = self.problems(rules=rules)
+        self.assertEqual(len(problems), 1, problems)
+        self.assertIn("HONOUR_STATS missing", problems[0])
 
     def test_missing_notice(self):
         problems = self.problems(meta={"game": "1.0", "notice": {"en": "Notice.", "fr": ""}})

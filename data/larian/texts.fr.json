@@ -5223,6 +5223,10 @@
   "description": "Le porteur de ce manteau est toujours légèrement mouillé. ",
   "name": "Imperméable inversé"
  },
+ "label:customMode": {
+  "description": null,
+  "name": "Mode Personnalisé"
+ },
  "origin:Alfira": {
   "description": null,
   "name": "Alfira"
@@ -7258,6 +7262,26 @@
  "race:Tiefling_Zariel": {
   "description": "Les tieffelins de la lignée de Zariel possèdent une force hors du commun et ont la possibilité de faire apparaître des flammes pour incinérer leurs ennemis.",
   "name": "Tieffelin de la lignée de Zariel"
+ },
+ "ruleset:DIFFICULTY_EASY": {
+  "description": "Expérience narrative donnant la priorité à l'histoire par rapport aux combats.",
+  "name": "Explorateur"
+ },
+ "ruleset:DIFFICULTY_HARD": {
+  "description": "Campagne difficile mettant l'accent sur les combats tactiques.",
+  "name": "Tacticien"
+ },
+ "ruleset:DIFFICULTY_MEDIUM": {
+  "description": "Aventure de difficulté équilibrée, qui vous propose de nombreux choix cornéliens.",
+  "name": "Équilibré"
+ },
+ "ruleset:RULESET_HONOUR": {
+  "description": "Les boss combattent à l'aide de mécaniques différentes, tandis que les règles de gestion des actions et de bonus aux dégâts sont moins à votre avantage.",
+  "name": "Règles du mode Honneur"
+ },
+ "ruleset:RULESET_LARIAN": {
+  "description": "L'expérience classique de Baldur's Gate 3, une adaptation des règles de Dungeons and Dragons 5e Édition en jeu vidéo.",
+  "name": "Règles classiques"
  },
  "skill:Acrobatics": {
   "description": null,

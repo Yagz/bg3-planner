@@ -1,4 +1,4 @@
-"""Names of the skills and abilities, which no data file links to a translation handle.
+"""Names of the skills and abilities, and a few interface labels, which no data file links to a translation handle.
 
 The translation tables hold them as two indexed families of entries (`<handle>_<index>`) in the engine's
 enum order. Each entry's English text must equal the label derived from its identifier (`SleightOfHand` ->
@@ -16,6 +16,8 @@ SKILLS = ("Deception", "Intimidation", "Performance", "Persuasion", "Acrobatics"
           "Medicine", "Perception", "Survival")
 # The engine's Ability enum order, from 1 (0 is "None"): entry `<ABILITY_HANDLE>_<i>` names ABILITIES[i - 1].
 ABILITIES = ("Strength", "Dexterity", "Constitution", "Intelligence", "Wisdom", "Charisma")
+# Interface labels: `label:<id>` -> handle (name only). The handle holds the whole text, no indexed family.
+LABELS = (("label:customMode", "h13c8454aga02eg491ag8cd2g6713a62a98ee"),)
 # Words written in lower case inside a label.
 _MINOR_WORDS = {"Of", "And", "The"}
 
@@ -33,10 +35,17 @@ def _entries() -> list[tuple[str, str]]:
 
 
 def resolve(en: dict[str, str], fr: dict[str, str]) -> tuple[dict[str, dict], dict[str, dict]]:
-    """English and French `{"<kind>:<Id>": {"name", "description": None}}` for the 18 skills and six abilities;
+    """English and French `{"<kind>:<Id>": {"name", "description": None}}` for the 18 skills, the six abilities and the labels;
     raises texts.MissingText with every missing entry and every English text that does not match its id."""
     tables: tuple[dict, dict] = ({}, {})
     errors: list[str] = []
+    for key, h in LABELS:
+        missing = [language for language, table in (("English", en), ("French", fr)) if not texts._present(table, h)]
+        if missing:
+            errors.append(f"{key}: handle {h} missing or empty in the {' and '.join(missing)} table")
+            continue
+        tables[0][key] = {"name": en[h], "description": None}
+        tables[1][key] = {"name": fr[h], "description": None}
     for key, h in _entries():
         missing = [language for language, table in (("English", en), ("French", fr)) if not texts._present(table, h)]
         if missing:

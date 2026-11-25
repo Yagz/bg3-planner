@@ -5223,6 +5223,10 @@
   "description": "The wearer is perpetually just a little bit damp. ",
   "name": "Reverse Rain Cloak"
  },
+ "label:customMode": {
+  "description": null,
+  "name": "Custom Mode"
+ },
  "origin:Alfira": {
   "description": null,
   "name": "Alfira"
@@ -7258,6 +7262,26 @@
  "race:Tiefling_Zariel": {
   "description": "Tieflings from Zariel's bloodline are empowered with martial strength, and can channel searing flame to punish their enemies.",
   "name": "Zariel Tiefling"
+ },
+ "ruleset:DIFFICULTY_EASY": {
+  "description": "A narrative experience placing story before combat.",
+  "name": "Explorer"
+ },
+ "ruleset:DIFFICULTY_HARD": {
+  "description": "A tough campaign emphasising strategic combat.",
+  "name": "Tactician"
+ },
+ "ruleset:DIFFICULTY_MEDIUM": {
+  "description": "A balanced adventure full of challenging choices.",
+  "name": "Balanced"
+ },
+ "ruleset:RULESET_HONOUR": {
+  "description": "Bosses are empowered with new mechanics, while action economy and damage bonus rules are made stricter.",
+  "name": "Honour Ruleset"
+ },
+ "ruleset:RULESET_LARIAN": {
+  "description": "The classic Baldur's Gate 3 experience - an adaptation of Dungeons and Dragons 5th Edition rules to best suit a videogame.",
+  "name": "Standard Ruleset"
  },
  "skill:Acrobatics": {
   "description": null,

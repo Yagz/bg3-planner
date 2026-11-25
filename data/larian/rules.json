@@ -36827,6 +36827,47 @@
    "uuid": "88d0d219-9dcb-462b-aab6-ccf31eeee2e3"
   }
  },
+ "rulesetModifiers": {
+  "HONOUR_STATS": {
+   "custom": false,
+   "default": false,
+   "type": "bool"
+  },
+  "MULTICLASSING": {
+   "custom": true,
+   "default": true,
+   "type": "bool"
+  },
+  "PROFICIENCY_BONUS": {
+   "custom": true,
+   "default": 0,
+   "max": 4,
+   "min": -1,
+   "type": "int"
+  }
+ },
+ "rulesets": {
+  "DIFFICULTY_EASY": {
+   "values": {
+    "MULTICLASSING": false,
+    "PROFICIENCY_BONUS": 2
+   }
+  },
+  "DIFFICULTY_HARD": {
+   "values": {}
+  },
+  "DIFFICULTY_MEDIUM": {
+   "values": {}
+  },
+  "RULESET_HONOUR": {
+   "values": {
+    "HONOUR_STATS": true
+   }
+  },
+  "RULESET_LARIAN": {
+   "values": {}
+  }
+ },
  "spells": {
   "Projectile_AcidArrow": {
    "level": 2,

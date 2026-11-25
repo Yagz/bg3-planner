@@ -8,7 +8,8 @@ from pathlib import Path
 
 # Rules category -> text table category.
 _CATEGORIES = {"classes": "class", "races": "race", "backgrounds": "background", "feats": "feat",
-               "spells": "spell", "passives": "passive", "items": "item", "origins": "origin"}
+               "spells": "spell", "passives": "passive", "items": "item", "origins": "origin",
+               "rulesets": "ruleset"}
 
 # The game's marker for an unknown translation handle: as a handle or as a text, it counts as missing.
 UNKNOWN_HANDLE = "ls::TranslatedStringRepository::s_HandleUnknown"

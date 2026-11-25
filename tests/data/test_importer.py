@@ -106,18 +106,37 @@ def rules_files() -> dict[str, dict[str, bytes]]:
     shared["Public/Shared/Origins/Origins.lsx"] = lsx(
         "Origin", {"UUID": "o-hero", "Name": "Hero", "LockRace": "false", "AvailableInCharacterCreation": "2",
                    "DisplayName": "hHeroOld"})
-    gustavx = {"Public/GustavX/Other/Nothing.txt": b"x"}
+    shared.update({
+        "Public/Shared/Ruleset/Rulesets.lsx": lsx(
+            "Ruleset", {"UUID": "rs-easy", "Name": "DIFFICULTY_EASY", "ShowInCustom": "true", "DisplayName": "hEasy",
+                        "Description": "hEasyDesc"},
+            {"UUID": "rs-test", "Name": "RULESET_TEST"}),
+        "Public/Shared/Ruleset/RulesetModifiers.lsx": lsx(
+            "RulesetModifier",
+            {"UUID": "rm-multi", "Name": "MULTICLASSING", "RulesetModifierType": "4", "Default": "true",
+             "ShowInCustom": "true"},
+            {"UUID": "rm-prof", "Name": "PROFICIENCY_BONUS", "RulesetModifierType": "1", "Default": "0", "Min": "-1",
+             "Max": "4", "ShowInCustom": "true"}),
+        "Public/Shared/Ruleset/RulesetValues.lsx": lsx(
+            "RulesetValue", {"UUID": "rv-1", "Ruleset": "rs-easy", "Modifier": "rm-multi", "Value": "false"},
+            {"UUID": "rv-2", "Ruleset": "rs-easy", "Modifier": "rm-prof", "Value": "2"}),
+    })
+    gustavx = {"Public/GustavX/Other/Nothing.txt": b"x",
+               "Public/GustavX/Ruleset/RulesetModifiers.lsx": lsx(
+                   "RulesetModifier", {"UUID": "rm-honour", "Name": "HONOUR_STATS", "RulesetModifierType": "4",
+                                       "Default": "false", "LoadModule": "HonourX"})}
     return {"Shared.pak": shared, "Gustav.pak": gustav, "GustavX.pak": gustavx}
 
 
+CUSTOM_MODE = ui_names.LABELS[0][1]
 HANDLES = ["hFighter", "hFighterDesc", "hElf", "hElfDesc", "hAcolyte", "hAcolyteDesc", "hAlert", "hAlertDesc",
            "hFighterPassive", "hAlertPassive", "hFireBolt2", "hBoots", "hBootsDesc", "hBase", "hFancy", "hHero",
-           "hHeroOld"]
+           "hHeroOld", "hEasy", "hEasyDesc", CUSTOM_MODE]
 # The skill and ability name families, as the game writes them.
 UI_TEXTS = ({f"{ui_names.SKILL_HANDLE}_{i}": (ui_names.label(s), f"FR {s}") for i, s in enumerate(ui_names.SKILLS)}
             | {f"{ui_names.ABILITY_HANDLE}_{i}": (a, f"FR {a}") for i, a in enumerate(ui_names.ABILITIES, 1)})
 ATHLETICS = f"{ui_names.SKILL_HANDLE}_12"
-FRENCH = {"hFighter": "Guerrier", "hFireBolt2": "Trait de feu", "hBase": "Épée"}
+FRENCH = {"hEasy": "Explorateur", CUSTOM_MODE: "Mode Personnalisé", "hFighter": "Guerrier", "hFireBolt2": "Trait de feu", "hBase": "Épée"}
 WIKI = {"source": "https://example.org", "license": "test", "items": {
     "MAG_Boots": {"uuid": "t-boots", "kind": "equipment", "rarity": "rare", "legacy": None, "locations": []},
     "WPN_Sword": {"uuid": None, "kind": "weapon", "rarity": "common", "legacy": None, "locations": []},
@@ -219,6 +238,24 @@ class ImporterTest(unittest.TestCase):
         self.assertEqual(en["skill:SleightOfHand"], {"name": "Sleight of Hand", "description": None})
         self.assertEqual(fr["ability:Strength"], {"name": "FR Strength", "description": None})
         self.assertEqual(len([k for k in fr if k.startswith(("skill:", "ability:"))]), 24)
+
+    def test_rulesets_end_to_end(self):
+        importer.run(self.game, self.out, "1.2.3")
+        rules = json.loads((self.out / "rules.json").read_text(encoding="utf-8"))
+        self.assertEqual(rules["rulesets"], {"DIFFICULTY_EASY": {"values": {"MULTICLASSING": False, "PROFICIENCY_BONUS": 2}}})
+        self.assertEqual(rules["rulesetModifiers"]["HONOUR_STATS"], {"type": "bool", "default": False, "custom": False})
+        fr = json.loads((self.out / "texts.fr.json").read_text(encoding="utf-8"))
+        self.assertEqual(fr["ruleset:DIFFICULTY_EASY"], {"name": "Explorateur", "description": "FR hEasyDesc"})
+        self.assertEqual(fr["label:customMode"], {"name": "Mode Personnalisé", "description": None})
+
+    def test_ruleset_errors_join_the_other_import_errors(self):
+        files = rules_files()
+        path = "Public/Shared/Ruleset/RulesetValues.lsx"
+        files["Shared.pak"][path] = files["Shared.pak"][path].replace(b'value="2"', b'value="9"')
+        (self.game / "Data" / "Shared.pak").write_bytes(fixtures.pak(files["Shared.pak"]))
+        with self.assertRaises(importer.SourceErrors) as ctx:
+            importer.run(self.game, self.out, "1.2.3")
+        self.assertTrue(any("PROFICIENCY_BONUS" in e for e in ctx.exception.errors), ctx.exception.errors)
 
     def test_excluded_origin_and_technical_passive(self):
         self.set_list("ORIGINS_EXCLUDED", "Hero  # test exclusion\n")

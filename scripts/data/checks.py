@@ -6,7 +6,7 @@ import json
 import sys
 from pathlib import Path
 
-from scripts.data import items, model, origins, texts, ui_names
+from scripts.data import items, model, origins, rulesets, texts, ui_names
 
 UNNAMED = Path(__file__).with_name("unnamed.txt")
 KNOWN_DUPLICATES = Path(__file__).with_name("known_duplicates.txt")
@@ -17,7 +17,7 @@ TECHNICAL_PASSIVES = model.TECHNICAL_PASSIVES
 
 COUNTS = {"base_classes": 12, "subclasses": 58, "races": 39, "base_races": 11, "backgrounds": 22,
           "origin_backgrounds": 11, "feats": 41, "progressions": 663, "lists": 342, "spells": 416, "passives": 475,
-          "items": 1167, "origins": 25}
+          "items": 1167, "origins": 25, "rulesets": 5}
 # Type of the list each selector function picks from.
 SELECTOR_LIST_TYPES = {"AddSpells": "spells", "SelectSpells": "spells", "SelectPassives": "passives",
                        "ReplacePassives": "passives", "SelectSkills": "skills", "SelectSkillsExpertise": "skills",
@@ -28,7 +28,8 @@ PREPARE_VALUES = {None, "AlwaysPrepared"}
 COOLDOWN_VALUES = {None, "UntilRest"}
 
 _CATEGORIES = {"classes": "class", "races": "race", "backgrounds": "background", "feats": "feat",
-               "spells": "spell", "passives": "passive", "items": "item", "origins": "origin"}
+               "spells": "spell", "passives": "passive", "items": "item", "origins": "origin",
+               "rulesets": "ruleset"}
 _LANGUAGES = {"texts.en": "English", "texts.fr": "French"}
 
 
@@ -46,7 +47,7 @@ def _check_texts(rules: dict, tables: dict, unnamed: set[str], descriptionless: 
     expected = {f"{category}:{ident}" for section, category in _CATEGORIES.items()
                 for ident in rules.get(section, {})}
     expected |= ({f"skill:{ident}" for ident in skill_ids(rules) | set(ui_names.SKILLS)}
-                 | {f"ability:{a}" for a in ui_names.ABILITIES})
+                 | {f"ability:{a}" for a in ui_names.ABILITIES} | {key for key, _ in ui_names.LABELS})
     idents = expected | {key.split(":", 1)[1] for key in expected}
     for listed in sorted(descriptionless - idents):
         problems.append(f"{listed}: listed with a missing description but not found")
@@ -149,6 +150,39 @@ def _check_origins(rules: dict) -> list[str]:
     return problems
 
 
+def _check_rulesets(rules: dict) -> list[str]:
+    problems = []
+    modifiers = rules.get("rulesetModifiers", {})
+    for name in rulesets.BUILD_MODIFIERS:
+        if name not in modifiers:
+            problems.append(f"rulesetModifiers: build modifier {name} missing")
+    for name, m in sorted(modifiers.items()):
+        kind = m.get("type")
+        if kind not in ("bool", "int"):
+            problems.append(f"rulesetModifiers:{name}: type must be bool or int")
+            continue
+        for field in ("default", "min", "max"):
+            if field in m and not _is_kind(m[field], kind):
+                problems.append(f"rulesetModifiers:{name}: {field} {m[field]!r} is not a {kind}")
+        if not isinstance(m.get("custom"), bool):
+            problems.append(f"rulesetModifiers:{name}: custom must be true or false")
+    for ident, r in sorted(rules.get("rulesets", {}).items()):
+        for name, value in sorted(r.get("values", {}).items()):
+            where = f"ruleset:{ident}: {name}"
+            m = modifiers.get(name)
+            if m is None:
+                problems.append(f"{where}: not a known build modifier")
+            elif m.get("type") in ("bool", "int") and not _is_kind(value, m["type"]):
+                problems.append(f"{where}: {value!r} is not a {m['type']}")
+            elif m.get("type") == "int" and not (m.get("min", value) <= value <= m.get("max", value)):
+                problems.append(f"{where}: {value} is outside {m.get('min')}..{m.get('max')}")
+    return problems
+
+
+def _is_kind(value, kind: str) -> bool:
+    return isinstance(value, bool) if kind == "bool" else isinstance(value, int) and not isinstance(value, bool)
+
+
 def read_skills(path: Path) -> dict[str, str]:
     """Hand-written skill-to-ability map: `{skill: ability}`."""
     return json.loads(Path(path).read_text(encoding="utf-8"))
@@ -240,6 +274,7 @@ def _check_counts(rules: dict, counts: dict[str, int]) -> list[str]:
         "passives": len(rules.get("passives", {})),
         "items": len(rules.get("items", {})),
         "origins": len(rules.get("origins", {})),
+        "rulesets": len(rules.get("rulesets", {})),
     }
     return [f"count {key}: expected {expected}, found {actual[key]}"
             for key, expected in counts.items() if actual.get(key) != expected]
@@ -313,7 +348,7 @@ def verify(folder: Path, counts: dict[str, int] = COUNTS, unnamed: set[str] | No
     problems = (_check_texts(rules, tables, unnamed, descriptionless) + _check_references(rules)
                 + _check_items(rules, wiki, excluded) + _check_counts(rules, counts) + _check_meta(_load(folder, "meta"))
                 + model.duplicate_problems(rules.get("progressions", []), duplicates) + check_unlocked(rules, unlocked)
-                + _check_origins(rules) + check_skills(rules, skills) + check_technical(rules, technical))
+                + _check_origins(rules) + _check_rulesets(rules) + check_skills(rules, skills) + check_technical(rules, technical))
     return sorted(problems)
 
 
