@@ -110,4 +110,16 @@ describe("app shell", () => {
     expect(window.location.hash).toBe("#/party");
     expect(within(screen.getByRole("main")).getByText(/BG3P2:abc/)).toBeTruthy();
   });
+
+  it("survives a malformed fragment", () => {
+    window.history.replaceState(null, "", "/#/character/%E0");
+    renderApp();
+    expect(screen.getByRole("button", { name: "Character" }).getAttribute("aria-current")).toBe("page");
+    act(() => {
+      window.history.replaceState(null, "", "/#BG3P%E0");
+      window.dispatchEvent(new HashChangeEvent("hashchange"));
+    });
+    expect(window.location.hash).toBe("#/party");
+    expect(within(screen.getByRole("main")).getByText(/BG3P%E0/)).toBeTruthy();
+  });
 });

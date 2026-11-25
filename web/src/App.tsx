@@ -12,10 +12,19 @@ type Route = { screen: "party" } | { screen: "character"; id: string | null } | 
 
 const THEMES: Theme[] = ["system", "light", "dark"];
 
+/** Percent-decoding that keeps a malformed fragment as written instead of throwing. */
+function decodeFragment(text: string): string {
+  try {
+    return decodeURIComponent(text);
+  } catch {
+    return text;
+  }
+}
+
 function parseRoute(hash: string): Route {
   if (hash === "#/transfer") return { screen: "transfer" };
   const character = /^#\/character(?:\/(.+))?$/.exec(hash);
-  if (character !== null) return { screen: "character", id: character[1] === undefined ? null : decodeURIComponent(character[1]) };
+  if (character !== null) return { screen: "character", id: character[1] === undefined ? null : decodeFragment(character[1]) };
   return { screen: "party" };
 }
 
@@ -26,7 +35,7 @@ function hashOf(route: Route): string {
 
 /** A run link carries the export string in the fragment (`#BG3P<version>:…`). */
 function runLinkIn(hash: string): string | null {
-  return hash.startsWith("#BG3P") ? decodeURIComponent(hash.slice(1)) : null;
+  return hash.startsWith("#BG3P") ? decodeFragment(hash.slice(1)) : null;
 }
 
 type Props = {

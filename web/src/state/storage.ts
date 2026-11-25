@@ -13,7 +13,10 @@ export type RunStore = {
   /** Readable runs, most recently updated first. */
   list(): RunSummary[];
   load(id: string): Run | null;
-  /** Saves a new version (`updatedAt` set now, strictly after the previous version); an empty id gets a UUID. Returns the saved run. */
+  /**
+   * Saves a new version (`updatedAt` set now, strictly after the previous version); an empty id gets a UUID. Returns the saved run.
+   * Throws, writing nothing, when the id is that of an unreadable stored run: it is never overwritten (save a copy instead).
+   */
   save(run: Run): Run;
   /** Saved versions, newest first; the first one is the current run. */
   history(id: string): HistoryEntry[];
@@ -89,6 +92,7 @@ export function createStore(backend: Storage | null): RunStore {
   const save = (input: Run): Run => {
     const run = structuredClone(input);
     if (run.id === "") run.id = crypto.randomUUID();
+    if (broken.has(run.id)) throw new Error(`The stored run ${run.id} could not be read; it is kept and not overwritten`);
     const previous = entries.get(run.id)?.history ?? [];
     const now = Date.now();
     const last = previous[0] === undefined ? Number.NEGATIVE_INFINITY : Date.parse(previous[0].at);

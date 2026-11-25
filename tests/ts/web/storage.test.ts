@@ -147,6 +147,15 @@ describe("run store", () => {
     expect(backend.items.get("bg3p:run:bad")).toBe("{not json");
     expect(backend.items.has("bg3p:run:old")).toBe(true);
   });
+  it("refuses to save over an unreadable stored run and leaves it byte for byte", () => {
+    const backend = new MemoryBackend();
+    backend.items.set("bg3p:run:bad", "{not json");
+    const store = createStore(backend);
+    expect(() => store.save(named("Over it", "bad"))).toThrow(/bad/);
+    expect(backend.items.get("bg3p:run:bad")).toBe("{not json");
+    expect(store.load("bad")).toBeNull();
+    expect(store.list()).toEqual([]);
+  });
 });
 
 describe("settings", () => {
