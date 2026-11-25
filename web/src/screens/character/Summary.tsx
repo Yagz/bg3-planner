@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import type { GameData } from "../../../../src/data/types.ts";
 import { abilityTotals } from "../../../../src/engine/abilities.ts";
 import { contribution } from "../../../../src/engine/contribution.ts";
@@ -22,13 +23,17 @@ export default function Summary({ character, run, data, lang }: Props) {
   const { level, act } = run.progress;
   const cut = truncate(character, level);
   const totals = abilityTotals(cut, data, cut.levels.length);
-  const members = activeParty(run);
-  const inGroup = members.some((member) => member.id === character.id);
-  const brings = inGroup ? (contribution(run, data, level).get(character.id) ?? { only: [], best: [], highest: [] }) : null;
-  const skillValues = inGroup ? Object.fromEntries(coverage(run, data, level).flatMap((row) => (row.best === null ? [] : [[row.skill, row.best.value]]))) : {};
+  // The engine passes over the whole party: computed again only when the run, the character or the data change.
+  const { members, brings, skillValues, undecided } = useMemo(() => {
+    const members = activeParty(run);
+    const inGroup = members.some((member) => member.id === character.id);
+    const brings = inGroup ? (contribution(run, data, level).get(character.id) ?? { only: [], best: [], highest: [] }) : null;
+    const skillValues: Record<string, number> = inGroup ? Object.fromEntries(coverage(run, data, level).flatMap((row) => (row.best === null ? [] : [[row.skill, row.best.value]]))) : {};
+    const undecided = validate({ ...run, characters: [character] }, data).issues.filter((issue) => issue.code === "choiceMissing").length;
+    return { members, brings, skillValues, undecided };
+  }, [run, character, data, level]);
   const { proficient, expertise } = skillProficiencies(cut, data);
   const skills = [...proficient].map((id) => ({ id, name: gameName(data, lang, "skill", id), expert: expertise.has(id) })).sort((a, b) => a.name.localeCompare(b.name, lang));
-  const undecided = validate({ ...run, characters: [character] }, data).issues.filter((issue) => issue.code === "choiceMissing").length;
   const skillsId = `summary-skills-${character.id}`;
 
   return (

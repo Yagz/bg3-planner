@@ -119,6 +119,7 @@ export function LevelClass({ data, cls, step, classLevel, multiclass, flagged, o
   return (
     <>
       <ClassPick data={data} cls={cls} onPick={onPick} /> {counter}
+      {/* No pill when the ruleset forbids multiclassing: the engine flags each such level with its own message. */}
       {step === "changes" && multiclass && <span className="pill acc">{t("tree.multiclass")}</span>}
     </>
   );

@@ -447,8 +447,14 @@ describe("Character screen", () => {
       pick();
       fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Apply" }));
       const saved = store.load(runId)!.characters[0]!;
+      // Multiclass changes that level only: the later level keeps its class, as the help line says (no carry-forward).
       expect(saved.levels.map((entry) => entry.class)).toEqual(["Ranger", "Rogue", "Ranger"]);
       expect(store.history(runId).length).toBe(versions + 1);
+      const levels = screen.getByRole("region", { name: "Levels" });
+      expect(within(levels).getByText("A level continues the previous one's class; “Multiclass” changes the class of that level only, and a new level takes the last level's class.")).toBeTruthy();
+      expect(within(levels).queryByText(/from that level/)).toBeNull();
+      fireEvent.change(screen.getByRole("combobox", { name: "Language" }), { target: { value: "fr" } });
+      expect(within(screen.getByRole("region", { name: "Niveaux" })).getByText("Un niveau continue la classe du précédent ; « Multiclasser » change la classe de ce niveau seulement, et un niveau ajouté reprend la classe du dernier niveau.")).toBeTruthy();
     });
 
     it("adds a level that continues the last class", () => {

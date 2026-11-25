@@ -199,7 +199,7 @@
   "character.summary.choices": "{count} choices to make",
   "character.summary.nothing": "nothing",
   "character.levels": "Levels",
-  "character.levels.help": "A level continues the class of the one before; “Multiclass” changes the class from that level.",
+  "character.levels.help": "A level continues the previous one's class; “Multiclass” changes the class of that level only, and a new level takes the last level's class.",
   "character.multiclass": "Multiclass",
   "tree.untaken": "Untaken branches",
   "tree.multiclass": "multiclass",

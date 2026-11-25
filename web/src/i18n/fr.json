@@ -199,7 +199,7 @@
   "character.summary.choices": "{count} choix à faire",
   "character.summary.nothing": "rien",
   "character.levels": "Niveaux",
-  "character.levels.help": "Un niveau continue la classe du précédent ; « Multiclasser » change la classe à partir de ce niveau.",
+  "character.levels.help": "Un niveau continue la classe du précédent ; « Multiclasser » change la classe de ce niveau seulement, et un niveau ajouté reprend la classe du dernier niveau.",
   "character.multiclass": "Multiclasser",
   "tree.untaken": "Branches non prises",
   "tree.multiclass": "multiclasse",
