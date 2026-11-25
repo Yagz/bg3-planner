@@ -52,12 +52,14 @@ export default function Transfer({ data, store, runId, initialText, onImported }
   const [exports, setExports] = useState<Exports | null>(null);
   const [text, setText] = useState(initialText ?? "");
   const [result, setResult] = useState<ImportResult | null>(null);
+  const [exportError, setExportError] = useState<string | null>(null);
   const [checking, setChecking] = useState(false);
   const names = (kind: Parameters<typeof gameName>[2], id: string) => gameName(data, lang, kind, id);
 
   useEffect(() => {
     let live = true;
     const run = runId === null ? null : store.load(runId);
+    setExportError(null);
     if (run === null) {
       setExports(null);
       return;
@@ -66,8 +68,10 @@ export default function Transfer({ data, store, runId, initialText, onImported }
       (string) => {
         if (live) setExports({ string, json: toReadableJson(run, data.texts[lang]), link: `${window.location.origin}${import.meta.env.BASE_URL}#${string}` });
       },
-      () => {
-        if (live) setExports(null);
+      (error: unknown) => {
+        if (!live) return;
+        setExports(null);
+        setExportError(error instanceof Error ? error.message : String(error));
       },
     );
     return () => {
@@ -77,8 +81,13 @@ export default function Transfer({ data, store, runId, initialText, onImported }
 
   const check = async (input: string) => {
     setChecking(true);
-    setResult(await importRun(input, store, data));
-    setChecking(false);
+    try {
+      setResult(await importRun(input, store, data));
+    } catch (error) {
+      setResult({ kind: "error", message: error instanceof Error ? error.message : String(error) });
+    } finally {
+      setChecking(false);
+    }
   };
 
   useEffect(() => {
@@ -89,10 +98,14 @@ export default function Transfer({ data, store, runId, initialText, onImported }
 
   const commit = (mode: "replace" | "copy") => {
     if (result === null) return;
-    const saved = commitImport(result, store, mode);
-    setResult(null);
-    setText("");
-    onImported(saved.id);
+    try {
+      const saved = commitImport(result, store, mode);
+      setResult(null);
+      setText("");
+      onImported(saved.id);
+    } catch (error) {
+      setResult({ kind: "error", message: error instanceof Error ? error.message : String(error) });
+    }
   };
 
   const conflict = result?.kind === "ready" ? result.conflict : null;
@@ -100,7 +113,11 @@ export default function Transfer({ data, store, runId, initialText, onImported }
   return (
     <div className="transfer">
       <h2>{t("transfer.export")}</h2>
-      {exports === null ? (
+      {exportError !== null ? (
+        <p role="alert" className="banner">
+          {t("transfer.exportError", { message: exportError })}
+        </p>
+      ) : exports === null ? (
         <p className="sub">{t("transfer.noRun")}</p>
       ) : (
         <>
@@ -144,9 +161,13 @@ export default function Transfer({ data, store, runId, initialText, onImported }
               ))}
             </ul>
           )}
-          {conflict !== null && <p role="alert">{t(`transfer.conflict.${conflict.newer}`, { name: conflict.stored.name })}</p>}
+          {conflict !== null && <p role="alert">{t(`transfer.conflict.${conflict.newer}`, { name: conflict.stored?.name ?? "" })}</p>}
           <div className="runbar">
-            {conflict === null ? (
+            {conflict?.newer === "unreadable" ? (
+              <button className="btn primary" onClick={() => commit("copy")}>
+                {t("transfer.saveNew")}
+              </button>
+            ) : conflict === null ? (
               <button className="btn primary" onClick={() => commit("replace")}>
                 {t("transfer.import.confirm")}
               </button>
@@ -163,7 +184,7 @@ export default function Transfer({ data, store, runId, initialText, onImported }
                 </button>
               </>
             )}
-            {conflict === null && (
+            {(conflict === null || conflict.newer === "unreadable") && (
               <button className="btn" onClick={() => setResult(null)}>
                 {t("run.cancel")}
               </button>

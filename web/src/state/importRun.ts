@@ -6,10 +6,13 @@ import type { Run } from "../../../src/plan/model.ts";
 import type { RunStore, RunSummary } from "./storage.ts";
 
 export type Conflict = {
-  /** The stored run with the same id. */
-  stored: RunSummary;
-  /** Which of the two versions was edited last; "unknown" when either date is missing or unreadable. */
-  newer: "stored" | "incoming" | "unknown";
+  /** The readable stored run with the same id; null when the stored record of that id could not be read. */
+  stored: RunSummary | null;
+  /**
+   * Which of the two versions was edited last: "same" for identical dates, "unknown" when either date is missing or unreadable,
+   * "unreadable" when the stored record with this id cannot be read (it is kept; the import would be saved as a new run).
+   */
+  newer: "stored" | "incoming" | "unknown" | "same" | "unreadable";
 };
 
 export type ImportResult =
@@ -29,12 +32,12 @@ function stringOf(text: string): string {
   }
 }
 
-function newerOf(stored: string | null, incoming: string | null): Conflict["newer"] {
+function newerOf(stored: string | null, incoming: string | null): Exclude<Conflict["newer"], "unreadable"> {
   if (stored === null || incoming === null) return "unknown";
   const a = Date.parse(stored);
   const b = Date.parse(incoming);
-  if (Number.isNaN(a) || Number.isNaN(b) || a === b) return "unknown";
-  return a > b ? "stored" : "incoming";
+  if (Number.isNaN(a) || Number.isNaN(b)) return "unknown";
+  return a === b ? "same" : a > b ? "stored" : "incoming";
 }
 
 /**
@@ -50,7 +53,12 @@ export async function importRun(text: string, store: RunStore, data: GameData): 
   }
   const { run, warnings } = decoded;
   const stored = run.id === "" ? undefined : store.list().find((summary) => summary.id === run.id);
-  const conflict = stored === undefined ? null : { stored, newer: newerOf(stored.updatedAt, run.updatedAt) };
+  const conflict: Conflict | null =
+    stored !== undefined
+      ? { stored, newer: newerOf(stored.updatedAt, run.updatedAt) }
+      : run.id !== "" && store.unreadable().some((record) => record.id === run.id)
+        ? { stored: null, newer: "unreadable" }
+        : null;
   return { kind: "ready", run, report: validate(run, data), warnings, conflict };
 }
 

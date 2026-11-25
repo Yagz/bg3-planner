@@ -81,5 +81,9 @@
   "transfer.keep": "Garder la version enregistrée",
   "transfer.replace": "Remplacer",
   "transfer.copyRun": "Importer comme copie",
-  "transfer.import.confirm": "Importer"
+  "transfer.import.confirm": "Importer",
+  "transfer.exportError": "L’export est impossible : {message}",
+  "transfer.conflict.same": "La version enregistrée est identique à celle-ci (même date).",
+  "transfer.conflict.unreadable": "Une partie enregistrée de même identité est illisible et reste telle quelle ; celle-ci sera enregistrée comme nouvelle partie.",
+  "transfer.saveNew": "Enregistrer comme nouvelle partie"
 }

@@ -81,5 +81,9 @@
   "transfer.keep": "Keep the stored version",
   "transfer.replace": "Replace",
   "transfer.copyRun": "Import as a copy",
-  "transfer.import.confirm": "Import"
+  "transfer.import.confirm": "Import",
+  "transfer.exportError": "The run could not be exported: {message}",
+  "transfer.conflict.same": "The stored version is the same as this one (same date).",
+  "transfer.conflict.unreadable": "A stored run with this identity could not be read and is kept as it is; this run will be saved as a new run.",
+  "transfer.saveNew": "Save as a new run"
 }

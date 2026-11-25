@@ -6,6 +6,7 @@ import type { Run } from "../../../src/plan/model.ts";
 import Transfer from "../../../web/src/screens/Transfer.tsx";
 import { createStore } from "../../../web/src/state/storage.ts";
 import type { RunStore } from "../../../web/src/state/storage.ts";
+import { v1String } from "./v1Run.ts";
 import { MemoryBackend } from "./memoryBackend.ts";
 import { stubData } from "./stubData.ts";
 
@@ -127,5 +128,59 @@ describe("Transfer", () => {
     const panel = linkBox.closest("section")!;
     fireEvent.click(within(panel).getByRole("button", { name: "Copy" }));
     await waitFor(() => expect(writeText).toHaveBeenCalledWith(linkBox.value));
+  });
+
+  it("shows a v1 string's report before saving, then saves it with an id and nothing lost", async () => {
+    const store = createStore(new MemoryBackend());
+    renderTransfer(store);
+    await paste(await v1String());
+    expect(await screen.findByText("Unknown race: Race_X.")).toBeTruthy();
+    expect(screen.getByRole("list", { name: "Choice by choice" })).toBeTruthy();
+    expect(store.list()).toEqual([]);
+    fireEvent.click(screen.getByRole("button", { name: "Import" }));
+    const saved = store.load(store.list()[0]!.id)!;
+    expect(saved.id).not.toBe("");
+    expect(saved.characters[0]?.levels[0]?.choices["uuid-1/0"]).toEqual(["Skill_A", "Skill_B"]);
+    expect(saved.characters[0]?.levels[1]?.choices["uuid-3/1"]).toEqual(["Spell_A"]);
+  });
+
+  it("says so when the stored version has the same date", async () => {
+    const store = createStore(new MemoryBackend());
+    const stored = store.save(badRun("Stored"));
+    renderTransfer(store);
+    await paste(await encode(stored));
+    expect(await screen.findByText("The stored version is the same as this one (same date).")).toBeTruthy();
+  });
+
+  it("tells that an unreadable stored run with the same id is kept and asks before saving a new run", async () => {
+    const backend = new MemoryBackend();
+    backend.items.set("bg3p:run:same", "{nope");
+    const store = createStore(backend);
+    const onImported = renderTransfer(store);
+    await paste(await encode(badRun("Incoming")));
+    expect(await screen.findByText(/could not be read and is kept as it is/)).toBeTruthy();
+    expect(store.list()).toEqual([]);
+    fireEvent.click(screen.getByRole("button", { name: "Save as a new run" }));
+    expect(store.list().map((s) => s.name)).toEqual(["Incoming"]);
+    expect(store.list()[0]?.id).not.toBe("same");
+    expect(backend.items.get("bg3p:run:same")).toBe("{nope");
+    expect(onImported).toHaveBeenCalled();
+  });
+
+  it("shows an export failure as an error, not as a missing run", async () => {
+    const store = createStore(new MemoryBackend());
+    const broken = { ...store, load: () => ({ ...emptyRun("x"), version: 9 }) as unknown as Run } as RunStore;
+    renderTransfer(broken, "x");
+    expect((await screen.findByRole("alert")).textContent).toMatch(/could not be exported/);
+    expect(screen.queryByText("No run to export yet.")).toBeNull();
+  });
+
+  it("shows an error, and lets the user retry, when checking throws", async () => {
+    const store = createStore(new MemoryBackend());
+    const failing = { ...store, list: () => { throw new Error("storage exploded"); } } as RunStore;
+    renderTransfer(failing);
+    await paste(await encode(badRun("Incoming")));
+    expect((await screen.findByRole("alert")).textContent).toMatch(/storage exploded/);
+    expect((screen.getByRole("button", { name: "Check" }) as HTMLButtonElement).disabled).toBe(false);
   });
 });
