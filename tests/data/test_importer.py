@@ -242,7 +242,7 @@ class ImporterTest(unittest.TestCase):
     def test_rulesets_end_to_end(self):
         importer.run(self.game, self.out, "1.2.3")
         rules = json.loads((self.out / "rules.json").read_text(encoding="utf-8"))
-        self.assertEqual(rules["rulesets"], {"DIFFICULTY_EASY": {"values": {"MULTICLASSING": False, "PROFICIENCY_BONUS": 2}}})
+        self.assertEqual(rules["rulesets"], {"DIFFICULTY_EASY": {"order": 0, "values": {"MULTICLASSING": False, "PROFICIENCY_BONUS": 2}}})
         self.assertEqual(rules["rulesetModifiers"]["HONOUR_STATS"], {"type": "bool", "default": False, "custom": False})
         fr = json.loads((self.out / "texts.fr.json").read_text(encoding="utf-8"))
         self.assertEqual(fr["ruleset:DIFFICULTY_EASY"], {"name": "Explorateur", "description": "FR hEasyDesc"})

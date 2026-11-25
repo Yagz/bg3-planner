@@ -38,7 +38,7 @@ class RulesetsTest(unittest.TestCase):
     def test_shown_rulesets_with_build_values(self):
         shown, _, errors = build()
         self.assertEqual(errors, [])
-        self.assertEqual(list(shown), ["DIFFICULTY_EASY", "DIFFICULTY_HARD", "RULESET_HONOUR"])
+        self.assertEqual({k: v["order"] for k, v in shown.items()}, {"DIFFICULTY_EASY": 0, "DIFFICULTY_HARD": 1, "RULESET_HONOUR": 2})
         self.assertEqual(shown["DIFFICULTY_EASY"]["values"], {"MULTICLASSING": False, "PROFICIENCY_BONUS": 2})
         self.assertEqual(shown["DIFFICULTY_HARD"]["values"], {})
         self.assertEqual(shown["RULESET_HONOUR"]["values"], {"HONOUR_STATS": True})
@@ -63,13 +63,20 @@ class RulesetsTest(unittest.TestCase):
         _, _, errors = build(modifiers=modifiers, values=values)
         joined = "\n".join(errors)
         self.assertEqual(len(errors), 5, joined)
-        for word in ("MULTICLASSING", "HONOUR_STATS", "PROFICIENCY_BONUS", "9", "r-nope", "m-nope"):
+        for word in ("MULTICLASSING", "HONOUR_STATS", "PROFICIENCY_BONUS", "9 is outside -1..4", "r-nope", "m-nope"):
             self.assertIn(word, joined)
 
     def test_missing_build_modifier(self):
         _, _, errors = build(modifiers=MODIFIERS[:2], values=())
         self.assertEqual(len(errors), 1, errors)
         self.assertIn("HONOUR_STATS", errors[0])
+
+    def test_two_values_for_one_ruleset_and_modifier(self):
+        values = VALUES + ({"UUID": "v6", "Ruleset": "r-easy", "Modifier": "m-prof", "Value": "3"},)
+        _, _, errors = build(values=values)
+        self.assertEqual(len(errors), 1, errors)
+        self.assertIn("PROFICIENCY_BONUS", errors[0])
+        self.assertIn("second value", errors[0])
 
     def test_non_boolean_value(self):
         values = ({"UUID": "v1", "Ruleset": "r-easy", "Modifier": "m-multi", "Value": "yes"},)

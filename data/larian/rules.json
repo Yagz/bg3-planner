@@ -36848,23 +36848,28 @@
  },
  "rulesets": {
   "DIFFICULTY_EASY": {
+   "order": 0,
    "values": {
     "MULTICLASSING": false,
     "PROFICIENCY_BONUS": 2
    }
   },
   "DIFFICULTY_HARD": {
+   "order": 2,
    "values": {}
   },
   "DIFFICULTY_MEDIUM": {
+   "order": 1,
    "values": {}
   },
   "RULESET_HONOUR": {
+   "order": 4,
    "values": {
     "HONOUR_STATS": true
    }
   },
   "RULESET_LARIAN": {
+   "order": 3,
    "values": {}
   }
  },

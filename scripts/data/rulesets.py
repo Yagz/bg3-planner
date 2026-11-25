@@ -64,7 +64,7 @@ def _definitions(modifiers: dict[str, dict], errors: list[str]) -> tuple[dict[st
 
 def build(rulesets: dict[str, dict], modifiers: dict[str, dict], values: dict[str, dict]
           ) -> tuple[dict[str, dict], dict[str, dict], list[str]]:
-    """(shown rulesets by Name in file order, each with `values` and `text` handles; definitions of the build
+    """(shown rulesets by Name, each with its `order` (index among the shown rulesets in file order), `values` and `text` handles; definitions of the build
     modifiers by Name; every error found). The arguments are the merged LSX nodes by UUID. A value of a modifier
     that is not a build modifier, or of a ruleset the custom-mode screen does not show, is ignored; a value naming
     an unknown ruleset or modifier is an error."""
@@ -85,10 +85,11 @@ def build(rulesets: dict[str, dict], modifiers: dict[str, dict], values: dict[st
         if flag == "true":
             if name in shown:
                 errors.append(f"duplicate ruleset Name {name}")
-            shown[name] = {"values": {}, "text": model._text(a)}
+            shown[name] = {"order": len(shown), "values": {}, "text": model._text(a)}
             by_uuid[uuid] = shown[name]
         else:
             by_uuid[uuid] = None
+    seen: set[tuple[str, str]] = set()
     for uuid, n in values.items():
         a = n["attributes"]
         ruleset_uuid, modifier_uuid = a.get("Ruleset", ""), a.get("Modifier", "")
@@ -103,6 +104,10 @@ def build(rulesets: dict[str, dict], modifiers: dict[str, dict], values: dict[st
         if not known or names[modifier_uuid] not in BUILD_MODIFIERS:
             continue
         name = names[modifier_uuid]
+        if (ruleset_uuid, name) in seen:
+            errors.append(f"{where} ({name}): second value for ruleset {ruleset_uuid}")
+            continue
+        seen.add((ruleset_uuid, name))
         definition = definitions.get(name)
         if definition is None:
             continue

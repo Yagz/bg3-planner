@@ -63,10 +63,9 @@ describe("game data", () => {
   it("loads the rulesets, their build values and the Custom Mode label", async () => {
     const data = await loadGameData("data/larian");
     expect(data.rules.rulesets.DIFFICULTY_EASY?.values).toEqual({ MULTICLASSING: false, PROFICIENCY_BONUS: 2 });
-    // The produced JSON has sorted keys, so the file order of the game is not kept.
-    expect(Object.keys(data.rules.rulesets).sort()).toEqual(
-      ["DIFFICULTY_EASY", "DIFFICULTY_MEDIUM", "DIFFICULTY_HARD", "RULESET_LARIAN", "RULESET_HONOUR"].sort(),
-    );
+    // The produced JSON sorts its keys: the game's order is the `order` field.
+    const ids = Object.keys(data.rules.rulesets).sort((a, b) => data.rules.rulesets[a]!.order - data.rules.rulesets[b]!.order);
+    expect(ids).toEqual(["DIFFICULTY_EASY", "DIFFICULTY_MEDIUM", "DIFFICULTY_HARD", "RULESET_LARIAN", "RULESET_HONOUR"]);
     expect(data.rules.rulesetModifiers.PROFICIENCY_BONUS).toEqual({ type: "int", default: 0, min: -1, max: 4, custom: true });
     expect(data.texts.fr["ruleset:DIFFICULTY_EASY"]?.name).toBe("Explorateur");
     expect(data.texts.fr["label:customMode"]?.name).toBe("Mode Personnalisé");

@@ -166,6 +166,9 @@ def _check_rulesets(rules: dict) -> list[str]:
                 problems.append(f"rulesetModifiers:{name}: {field} {m[field]!r} is not a {kind}")
         if not isinstance(m.get("custom"), bool):
             problems.append(f"rulesetModifiers:{name}: custom must be true or false")
+    orders = sorted(r.get("order") for r in rules.get("rulesets", {}).values())
+    if orders != list(range(len(orders))):
+        problems.append(f"rulesets: order must be 0..{len(orders) - 1} without gaps or duplicates, found {orders}")
     for ident, r in sorted(rules.get("rulesets", {}).items()):
         for name, value in sorted(r.get("values", {}).items()):
             where = f"ruleset:{ident}: {name}"

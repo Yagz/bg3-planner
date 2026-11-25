@@ -185,6 +185,8 @@ export type BuildModifier = "MULTICLASSING" | "PROFICIENCY_BONUS" | "HONOUR_STAT
 
 /** A ruleset the game's custom-mode screen shows (`Rulesets.lsx`), with its values for the build modifiers; a modifier without a value keeps its default. */
 export interface RulesetDef {
+  /** Position among the shown rulesets in the game's file (the produced JSON sorts its keys). */
+  order: number;
   values: Partial<Record<BuildModifier, boolean | number>>;
 }
 

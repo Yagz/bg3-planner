@@ -43,8 +43,8 @@ RULES = {
                                      "Wisdom": 12, "Charisma": 10}},
                 "Generic": {"class": None, "subclass": None, "race": None, "subrace": None, "background": None,
                             "lockRace": False, "playable": True, "abilities": None}},
-    "rulesets": {"EASY": {"values": {"MULTICLASSING": False, "PROFICIENCY_BONUS": 2}},
-                 "HONOUR": {"values": {"HONOUR_STATS": True}}},
+    "rulesets": {"EASY": {"order": 0, "values": {"MULTICLASSING": False, "PROFICIENCY_BONUS": 2}},
+                 "HONOUR": {"order": 1, "values": {"HONOUR_STATS": True}}},
     "rulesetModifiers": {"MULTICLASSING": {"type": "bool", "default": True, "custom": True},
                          "PROFICIENCY_BONUS": {"type": "int", "default": 0, "min": -1, "max": 4, "custom": True},
                          "HONOUR_STATS": {"type": "bool", "default": False, "custom": False}},
@@ -306,6 +306,13 @@ class ChecksTest(unittest.TestCase):
         self.assertEqual(len(problems), 3, problems)
         for needle in ("MULTICLASSING: 1 is not a bool", "PROFICIENCY_BONUS: 9 is outside -1..4", "NOPE: not a known"):
             self.assertTrue(any(needle in p for p in problems), (needle, problems))
+
+    def test_ruleset_orders_must_be_contiguous(self):
+        rules = copy.deepcopy(RULES)
+        rules["rulesets"]["HONOUR"]["order"] = 0
+        problems = self.problems(rules=rules)
+        self.assertEqual(len(problems), 1, problems)
+        self.assertIn("order", problems[0])
 
     def test_missing_build_modifier(self):
         rules = copy.deepcopy(RULES)
