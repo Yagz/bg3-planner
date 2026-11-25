@@ -99,8 +99,9 @@ select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
 .roster label { display: flex; gap: 8px; align-items: center }
 .roster .cls { flex: 1; margin: 0; min-width: 0; font-size: 13px }
 .roster .add, .composer .row { margin-bottom: 0 }
-.frame > .sub { margin-bottom: 12px }
-.frame > .empty { margin: 0; display: flex; flex-wrap: wrap; gap: 8px; align-items: center }
+.party .frame > .sub { margin-bottom: 12px }
+.party .frame > .fill:last-child { margin-bottom: 0 }
+.party .frame > .empty { margin: 0; display: flex; flex-wrap: wrap; gap: 8px; align-items: center }
 .member { padding: 14px; gap: 8px }
 .member .top { display: flex; justify-content: space-between; gap: 8px; align-items: baseline }
 .member .name { font-size: 16px; margin: 0 }

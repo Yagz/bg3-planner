@@ -4,7 +4,7 @@ import type { GameData } from "../../../src/data/types.ts";
 import { resolve, subclassSlot } from "../../../src/engine/progression.ts";
 import { contribution } from "../../../src/engine/contribution.ts";
 import { coverage } from "../../../src/engine/coverage.ts";
-import { decodeJson } from "../../../src/plan/codec.ts";
+import { decode, encode } from "../../../src/plan/codec.ts";
 import { emptyRun } from "../../../src/plan/model.ts";
 import type { Character, Choice, Run } from "../../../src/plan/model.ts";
 import App from "../../../web/src/App.tsx";
@@ -13,6 +13,7 @@ import { gameName } from "../../../web/src/names.ts";
 import { addCharacter } from "../../../web/src/state/partyOps.ts";
 import { createStore } from "../../../web/src/state/storage.ts";
 import { MemoryBackend } from "./memoryBackend.ts";
+import { StreamingBlob } from "./streamingBlob.ts";
 import { realData } from "./realData.ts";
 
 let data: GameData;
@@ -193,7 +194,7 @@ describe("Party screen", () => {
     expect(arcana.textContent).toContain("personne");
   });
 
-  it("keeps every act's stored status when the party is edited", () => {
+  it("keeps every act's stored status in the export string when the party is edited", async () => {
     let run = addCharacter(runWith(ranger(4), 3), data, "Gale");
     run = addCharacter(run, data, "Karlach");
     const [, gale, karlach] = run.characters as [Character, Character, Character];
@@ -208,8 +209,13 @@ describe("Party screen", () => {
     fireEvent.change(screen.getByRole("spinbutton", { name: "Party size" }), { target: { value: "5" } });
     const saved = store.load(id)!;
     expect(saved.party["2"].active).toEqual(["ranger", gale.id, karlach.id]);
-    const exported = decodeJson(JSON.stringify(saved));
-    expect([exported.party["1"].status, exported.party["2"].status, exported.party["3"].status]).toEqual(statuses);
+    // jsdom's Blob cannot stream, which the export string's compression needs.
+    vi.stubGlobal("Blob", StreamingBlob);
+    const exported = await encode(saved)
+      .then((string) => decode(string))
+      .finally(() => vi.unstubAllGlobals());
+    expect(exported.warnings).toEqual([]);
+    expect([exported.run.party["1"].status, exported.run.party["2"].status, exported.run.party["3"].status]).toEqual(statuses);
   });
 
   it("saves the progress and the active party through the store", () => {
