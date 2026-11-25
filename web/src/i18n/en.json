@@ -99,8 +99,6 @@
   "party.next.none": "No level {level} planned",
   "party.next.top": "Top level reached.",
   "party.next.nothing": "Nothing to choose",
-  "party.next.asks.one": "{count} choice to make",
-  "party.next.asks": "{count} choices to make",
   "party.undecided.one": "{count} undecided by then",
   "party.undecided": "{count} undecided by then",
   "party.decided": "Nothing undecided by then",
@@ -130,5 +128,16 @@
   "party.error": "The change could not be saved: {message}",
   "status.core": "core",
   "status.alternative": "alternative",
-  "status.bench": "bench"
+  "status.bench": "bench",
+  "choice.subclass": "subclass",
+  "choice.feat": "feat",
+  "choice.SelectSpells": "spells",
+  "choice.SelectPassives": "passives",
+  "choice.SelectSkills": "skills",
+  "choice.SelectSkillsExpertise": "expertise",
+  "choice.SelectAbilities": "ability scores",
+  "choice.SelectAbilityBonus": "ability scores",
+  "choice.SelectEquipment": "equipment",
+  "choice.AddSpells": "spells",
+  "choice.ReplacePassives": "passive swap"
 }

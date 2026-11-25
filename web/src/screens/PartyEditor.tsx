@@ -6,10 +6,10 @@ import { characterLabel, gameName } from "../names.ts";
 import { ACTS, STATUSES, addCharacter, copyPartyFromPreviousAct, isRecruitable, setActive, setStatus } from "../state/partyOps.ts";
 import type { Act } from "../state/partyOps.ts";
 
-type Props = { run: Run; data: GameData; onChange: (next: Run) => void };
+type Props = { run: Run; data: GameData; apply: (operation: (run: Run) => Run) => void };
 
 /** Edits the party act by act: who is active, each member's status, copying the previous act, adding characters. */
-export default function PartyEditor({ run, data, onChange }: Props) {
+export default function PartyEditor({ run, data, apply }: Props) {
   const { t, lang } = useI18n();
   const [act, setAct] = useState<Act>(run.progress.act);
   const [adding, setAdding] = useState("");
@@ -18,7 +18,7 @@ export default function PartyEditor({ run, data, onChange }: Props) {
   const label = (who: string) => characterLabel(data, lang, who, t("party.player"));
 
   const toggle = (id: string, on: boolean) =>
-    onChange(setActive(run, act, on ? [...party.active, id] : party.active.filter((other) => other !== id)));
+    apply((current) => setActive(current, act, on ? [...party.active, id] : party.active.filter((other) => other !== id)));
 
   const present = new Set(run.characters.map((character) => character.who));
   const candidates = [
@@ -29,7 +29,7 @@ export default function PartyEditor({ run, data, onChange }: Props) {
   ];
   const add = () => {
     if (adding === "") return;
-    onChange(addCharacter(run, data, adding));
+    apply((current) => addCharacter(current, data, adding));
     setAdding("");
   };
 
@@ -58,7 +58,7 @@ export default function PartyEditor({ run, data, onChange }: Props) {
               <select
                 aria-label={`${t("party.editor.status", { act })}: ${name}`}
                 value={party.status[character.id] ?? ""}
-                onChange={(event) => onChange(setStatus(run, act, character.id, event.target.value as PartyStatus))}
+                onChange={(event) => apply((current) => setStatus(current, act, character.id, event.target.value as PartyStatus))}
               >
                 {party.status[character.id] === undefined && <option value="">{t("party.editor.noStatus")}</option>}
                 {STATUSES.map((status) => (
@@ -73,7 +73,7 @@ export default function PartyEditor({ run, data, onChange }: Props) {
       </ul>
       <div className="row">
         {act > 1 && (
-          <button className="btn" disabled={party.active.length > 0} onClick={() => onChange(copyPartyFromPreviousAct(run, act))}>
+          <button className="btn" disabled={party.active.length > 0} onClick={() => apply((current) => copyPartyFromPreviousAct(current, act))}>
             {t("party.editor.copy")}
           </button>
         )}

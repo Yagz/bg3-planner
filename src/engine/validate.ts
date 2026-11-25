@@ -55,6 +55,16 @@ export function levelSlots(level: ResolvedLevel, choices: Record<string, Choice>
   };
 }
 
+/** Whether a picking slot may stay unset: nothing to pick (`count` 0) or an optional replacement. A pick made there is still checked. */
+export function isOptionalSelector(selector: Selector): boolean {
+  return selector.function === "ReplacePassives" || ("count" in selector && selector.count === 0);
+}
+
+/** The picking slots of a level that must be answered (not optional), in the order `validate` checks them. */
+export function requiredSelectors(slots: LevelSlots): SelectorSlot[] {
+  return slots.selectors.filter(({ selector }) => !isOptionalSelector(selector));
+}
+
 /** Every slot id of a level where a choice may be stored. */
 export function slotIds(slots: LevelSlots): Set<string> {
   const ids = new Set<string>();
@@ -116,7 +126,7 @@ function validateCharacter(character: Character, data: GameData): Issue[] {
 
     const checkSlot = ({ id: slot, selector, scope }: SelectorSlot) => {
       const choice = Object.hasOwn(choices, slot) ? choices[slot] : undefined;
-      if (choice === undefined && (selector.function === "ReplacePassives" || ("count" in selector && selector.count === 0))) {
+      if (choice === undefined && isOptionalSelector(selector)) {
         // Nothing to pick, or an optional replacement: leaving the key out keeps what is held.
       } else if (choice === undefined || choice === "todo") {
         issue("incomplete", "choiceMissing", slot, { selector: selector.function });

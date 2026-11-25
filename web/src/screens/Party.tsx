@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import type { GameData } from "../../../src/data/types.ts";
 import { coverage, truncate } from "../../../src/engine/coverage.ts";
 import { resolve, subclassSlot } from "../../../src/engine/progression.ts";
-import { levelSlots, validate } from "../../../src/engine/validate.ts";
+import { levelSlots, requiredSelectors, validate } from "../../../src/engine/validate.ts";
 import { MAX_LEVELS, isOffData } from "../../../src/plan/model.ts";
 import type { Character, Run } from "../../../src/plan/model.ts";
 import { useI18n } from "../i18n/i18n.ts";
@@ -10,28 +10,30 @@ import type { Translate } from "../i18n/i18n.ts";
 import { characterLabel, gameName } from "../names.ts";
 import { ACTS, setProgress } from "../state/partyOps.ts";
 import type { Act } from "../state/partyOps.ts";
-import type { RunStore } from "../state/storage.ts";
 import Coverage, { signed } from "./Coverage.tsx";
 import PartyEditor from "./PartyEditor.tsx";
 
 type Props = {
   data: GameData;
-  store: RunStore;
-  runId: string;
-  /** Called after every saved change so the shell can refresh its run list. */
-  onChanged: () => void;
+  /** The current run, owned by the app shell. */
+  run: Run;
+  /** Saves a new version of the run; throws when the store refuses. */
+  saveRun: (run: Run) => void;
   onOpenCharacter: (id: string) => void;
 };
 
 const plural = (t: Translate, key: string, count: number) => t(count === 1 ? `${key}.one` : key, { count });
 
-/** The choices a level asks: its subclass, its feat and its picking slots, minus the optional ones (nothing to pick, or a replacement). */
-function choicesAsked(character: Character, level: number, data: GameData): number {
+/** What a level asks, as `[kind, count]` pairs in display order: subclass, feat, then the required picks by kind. */
+function choicesAsked(character: Character, level: number, data: GameData): [string, number][] {
   const resolved = resolve(character, data).levels[level - 1];
-  if (resolved === undefined) return 0;
+  if (resolved === undefined) return [];
   const slots = levelSlots(resolved, character.levels[level - 1]?.choices ?? {}, data);
-  const required = slots.selectors.filter(({ selector }) => selector.function !== "ReplacePassives" && !("count" in selector && selector.count === 0));
-  return required.length + (slots.subclass === null ? 0 : 1) + (slots.feat === null ? 0 : 1);
+  const kinds = new Map<string, number>();
+  if (slots.subclass !== null) kinds.set("subclass", 1);
+  if (slots.feat !== null) kinds.set("feat", 1);
+  for (const { selector } of requiredSelectors(slots)) kinds.set(selector.function, (kinds.get(selector.function) ?? 0) + 1);
+  return [...kinds];
 }
 
 /** "Ranger 3 / Rogue 1" with the subclass chosen so far, from the first `level` levels. */
@@ -51,27 +53,25 @@ function classesAt(character: Character, level: number, data: GameData, lang: "f
 }
 
 /** The in-game reference: what each active member takes next, what is still undecided, and the party's skill coverage. */
-export default function Party({ data, store, runId, onChanged, onOpenCharacter }: Props) {
+export default function Party({ data, run, saveRun, onOpenCharacter }: Props) {
   const { t, lang } = useI18n();
-  const [run, setRun] = useState<Run | null>(() => store.load(runId));
   const [error, setError] = useState<string | null>(null);
 
-  const commit = (next: Run) => {
+  /** Applies an operation to the run and saves the result; anything that throws (the operation or the save) shows the error banner. */
+  const apply = (operation: (run: Run) => Run) => {
     try {
-      setRun(store.save(next));
+      saveRun(operation(run));
       setError(null);
-      onChanged();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause));
     }
   };
 
-  const level = run?.progress.level ?? 1;
-  const act = run?.progress.act ?? 1;
-  const issues = useMemo(() => (run === null ? [] : validate(run, data).issues), [run, data]);
-  const skills = useMemo(() => (run === null ? [] : coverage(run, data, level)), [run, data, level]);
+  const level = run.progress.level;
+  const act = run.progress.act;
+  const issues = useMemo(() => validate(run, data).issues, [run, data]);
+  const skills = useMemo(() => coverage(run, data, level), [run, data, level]);
 
-  if (run === null) return <p className="sub">{t("run.none")}</p>;
   const label = (character: Character) => characterLabel(data, lang, character.who, t("party.player"));
   const active = run.party[String(act) as "1" | "2" | "3"].active.flatMap((id) => run.characters.filter((c) => c.id === id).slice(0, 1));
   const others = run.characters.filter((c) => !active.includes(c));
@@ -96,12 +96,13 @@ export default function Party({ data, store, runId, onChanged, onOpenCharacter }
     if (entry === undefined) return <p className="sub">{t("party.next.none", { level: n })}</p>;
     if (isOffData(entry.class) || entry.class === "") return <p className="sub">{t("party.next.noClass", { level: n })}</p>;
     const asked = choicesAsked(character, n, data);
+    const askedText = asked.map(([kind, count]) => (count > 1 ? `${t(`choice.${kind}`)} (${count})` : t(`choice.${kind}`))).join(", ");
     const undecided = issues.filter((i) => i.character === character.id && i.code === "choiceMissing" && i.level !== null && i.level <= n).length;
     return (
       <>
         <p>
           <strong>{t("party.next", { level: n, class: gameName(data, lang, "class", entry.class) })}</strong>{" "}
-          <span className={`pill ${asked === 0 ? "muted" : "acc"}`}>{asked === 0 ? t("party.next.nothing") : plural(t, "party.next.asks", asked)}</span>
+          <span className={`pill ${asked.length === 0 ? "muted" : "acc"}`}>{asked.length === 0 ? t("party.next.nothing") : askedText}</span>
         </p>
         <p>
           <span className={`pill ${undecided === 0 ? "good" : "todo"}`}>{undecided === 0 ? t("party.decided") : plural(t, "party.undecided", undecided)}</span>
@@ -121,7 +122,7 @@ export default function Party({ data, store, runId, onChanged, onOpenCharacter }
       <div className="row progress" role="group" aria-label={t("party.progress")}>
         <label>
           {t("party.progress.level")}{" "}
-          <select value={level} onChange={(event) => commit(setProgress(run, Number(event.target.value), act))}>
+          <select value={level} onChange={(event) => apply((current) => setProgress(current, Number(event.target.value), act))}>
             {Array.from({ length: MAX_LEVELS }, (_, i) => i + 1).map((n) => (
               <option key={n} value={n}>
                 {n}
@@ -131,7 +132,7 @@ export default function Party({ data, store, runId, onChanged, onOpenCharacter }
         </label>
         <label>
           {t("party.progress.act")}{" "}
-          <select value={act} onChange={(event) => commit(setProgress(run, level, Number(event.target.value) as Act))}>
+          <select value={act} onChange={(event) => apply((current) => setProgress(current, level, Number(event.target.value) as Act))}>
             {ACTS.map((n) => (
               <option key={n} value={n}>
                 {n}
@@ -195,7 +196,7 @@ export default function Party({ data, store, runId, onChanged, onOpenCharacter }
         </section>
       )}
 
-      <PartyEditor run={run} data={data} onChange={commit} />
+      <PartyEditor run={run} data={data} apply={apply} />
     </div>
   );
 }

@@ -99,8 +99,6 @@
   "party.next.none": "Pas de niveau {level} prévu",
   "party.next.top": "Niveau maximal atteint.",
   "party.next.nothing": "Rien à choisir",
-  "party.next.asks.one": "{count} choix à faire",
-  "party.next.asks": "{count} choix à faire",
   "party.undecided.one": "{count} à décider d’ici là",
   "party.undecided": "{count} à décider d’ici là",
   "party.decided": "Rien à décider d’ici là",
@@ -130,5 +128,16 @@
   "party.error": "La modification n’a pas pu être enregistrée : {message}",
   "status.core": "cœur",
   "status.alternative": "alternative",
-  "status.bench": "banc"
+  "status.bench": "banc",
+  "choice.subclass": "sous-classe",
+  "choice.feat": "don",
+  "choice.SelectSpells": "sorts",
+  "choice.SelectPassives": "aptitudes",
+  "choice.SelectSkills": "compétences",
+  "choice.SelectSkillsExpertise": "expertise",
+  "choice.SelectAbilities": "caractéristiques",
+  "choice.SelectAbilityBonus": "caractéristiques",
+  "choice.SelectEquipment": "équipement",
+  "choice.AddSpells": "sorts",
+  "choice.ReplacePassives": "remplacement d’aptitude"
 }

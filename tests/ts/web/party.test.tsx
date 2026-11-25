@@ -4,9 +4,8 @@ import type { GameData } from "../../../src/data/types.ts";
 import { resolve, subclassSlot } from "../../../src/engine/progression.ts";
 import { emptyRun } from "../../../src/plan/model.ts";
 import type { Character, Choice, Run } from "../../../src/plan/model.ts";
-import { I18nContext, createI18n } from "../../../web/src/i18n/i18n.ts";
+import App from "../../../web/src/App.tsx";
 import type { Lang } from "../../../web/src/i18n/i18n.ts";
-import Party from "../../../web/src/screens/Party.tsx";
 import { addCharacter } from "../../../web/src/state/partyOps.ts";
 import { createStore } from "../../../web/src/state/storage.ts";
 import { MemoryBackend } from "./memoryBackend.ts";
@@ -16,7 +15,10 @@ let data: GameData;
 beforeAll(() => {
   data = realData();
 });
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  document.documentElement.removeAttribute("data-theme");
+});
 
 /** A Haunted One Lightfoot Halfling Ranger of `levels` levels, its skills and its level-3 subclass chosen, nothing else. */
 function ranger(levels: number): Character {
@@ -39,16 +41,13 @@ function ranger(levels: number): Character {
   return c;
 }
 
-function setup(run: Run, lang: Lang = "en") {
-  const store = createStore(new MemoryBackend());
+/** The whole app over a store holding `run`, on the Party screen; the language is switched through the interface. */
+function setup(run: Run, lang: Lang = "en", store = createStore(new MemoryBackend())) {
   const saved = store.save(run);
-  const onOpen = vi.fn();
-  render(
-    <I18nContext.Provider value={createI18n(lang)}>
-      <Party data={data} store={store} runId={saved.id} onChanged={vi.fn()} onOpenCharacter={onOpen} />
-    </I18nContext.Provider>,
-  );
-  return { store, id: saved.id, onOpen };
+  window.history.replaceState(null, "", "#/party");
+  render(<App data={data} store={store} settingsBackend={new MemoryBackend()} />);
+  if (lang === "fr") fireEvent.change(screen.getByRole("combobox", { name: "Language" }), { target: { value: "fr" } });
+  return { store, id: saved.id };
 }
 
 function runWith(character: Character, level: number): Run {
@@ -61,21 +60,28 @@ function runWith(character: Character, level: number): Run {
 
 describe("Party screen", () => {
   it("tells a Ranger at level 3 what level 4 asks and how many choices are undecided by then", () => {
-    const { onOpen } = setup(runWith(ranger(4), 3));
+    setup(runWith(ranger(4), 3));
     const card = screen.getByRole("article");
     expect(within(card).getByText(/Ranger 3/)).toBeTruthy();
     expect(within(card).getByText(/Gloom Stalker/)).toBeTruthy();
     expect(within(card).getByText(/Level 4: Ranger/)).toBeTruthy();
     // Level 4 grants a feat; levels 1 to 4 still hold their other open choices.
-    expect(within(card).getByText(/1 choice to make/)).toBeTruthy();
+    expect(within(card).getByText("feat")).toBeTruthy();
     const open = within(card).getByText(/(\d+) undecided by then/);
     const count = Number(/(\d+) undecided/.exec(open.textContent!)![1]);
     expect(count).toBeGreaterThan(1);
     fireEvent.click(within(card).getByRole("button", { name: "Open the build" }));
-    expect(onOpen).toHaveBeenCalledWith("ranger");
+    expect(window.location.hash).toBe("#/character/ranger");
   });
 
-  it("says there is nothing to choose when the next level asks nothing, and when the top is reached", () => {
+  it("names the subclass choice a next level asks", () => {
+    const c = ranger(3);
+    delete c.levels[2]!.choices[subclassSlot("Ranger")];
+    setup(runWith(c, 2));
+    expect(within(screen.getByRole("article")).getByText(/Level 3: Ranger/).closest("p")!.textContent).toContain("subclass");
+  });
+
+  it("says the top is reached at level 12", () => {
     setup(runWith(ranger(12), 12));
     expect(screen.getByText("Top level reached.")).toBeTruthy();
   });
@@ -99,6 +105,7 @@ describe("Party screen", () => {
     const others = screen.getByRole("region", { name: "Hors du groupe actif" });
     expect(within(others).getByText("Gayle")).toBeTruthy();
     expect(within(others).getByText("alternative")).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Groupe" })).toBeTruthy();
   });
 
   it("saves the progress and the active party through the store", () => {
@@ -123,5 +130,31 @@ describe("Party screen", () => {
     fireEvent.click(screen.getByRole("button", { name: "Add" }));
     expect(store.load(id)!.characters.map((c) => c.who)).toEqual(["player", "Shadowheart"]);
     expect(within(screen.getByRole("combobox", { name: "Add a character" })).queryByRole("option", { name: "Shadowheart" })).toBeNull();
+  });
+
+  it("keeps a rename made in the run bar when the party is edited afterwards", () => {
+    const { store, id } = setup(runWith(ranger(3), 3));
+    fireEvent.click(screen.getByRole("button", { name: "Rename" }));
+    fireEvent.change(screen.getByRole("textbox", { name: "Run name" }), { target: { value: "Renamed" } });
+    fireEvent.click(screen.getByRole("button", { name: "OK" }));
+    fireEvent.change(screen.getByRole("combobox", { name: "Level reached" }), { target: { value: "5" } });
+    expect(store.load(id)!.name).toBe("Renamed");
+    expect(store.load(id)!.progress.level).toBe(5);
+  });
+
+  it("shows the error banner when an operation throws, and when the store refuses the save", () => {
+    let run = runWith(ranger(3), 3);
+    run = addCharacter(run, data, "Gale");
+    run.party["1"].active = ["ghost", "ranger"];
+    const { store } = setup(run);
+    fireEvent.click(screen.getByRole("checkbox", { name: "Gale" }));
+    expect(screen.getByRole("alert").textContent).toBe("The change could not be saved: Unknown character: ghost");
+    expect(store.history(run.id).length).toBe(1);
+
+    vi.spyOn(store, "save").mockImplementation(() => {
+      throw new Error("disk full");
+    });
+    fireEvent.change(screen.getByRole("combobox", { name: "Level reached" }), { target: { value: "5" } });
+    expect(screen.getByRole("alert").textContent).toBe("The change could not be saved: disk full");
   });
 });

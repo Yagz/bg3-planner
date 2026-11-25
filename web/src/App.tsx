@@ -9,6 +9,7 @@ import { createRun, currentRunId, deleteRun, duplicateRun, renameRun } from "./s
 import { loadSettings, saveSettings } from "./state/settings.ts";
 import type { Settings, Theme } from "./state/settings.ts";
 import type { RunStore } from "./state/storage.ts";
+import type { Run } from "../../src/plan/model.ts";
 
 type Route = { screen: "party" } | { screen: "character"; id: string | null } | { screen: "transfer" };
 
@@ -59,7 +60,9 @@ export default function App({ data, store, settingsBackend }: Props) {
   const { t } = i18n;
 
   const currentId = currentRunId(runs, settings.currentRun);
-  const current = runs.find((run) => run.id === currentId) ?? null;
+  const current = runs.find((summary) => summary.id === currentId) ?? null;
+  // The current run is read from the store here and nowhere else; screens receive it and `saveRun`.
+  const [run, setRun] = useState<Run | null>(() => (currentId === null ? null : store.load(currentId)));
   const unreadable = store.unreadable().length;
 
   useEffect(() => saveSettings(settingsBackend, settings), [settingsBackend, settings]);
@@ -98,10 +101,19 @@ export default function App({ data, store, settingsBackend }: Props) {
   };
   const update = (patch: Partial<Settings>) => setSettings((previous) => ({ ...previous, ...patch }));
   const select = (id: string | null) => {
-    setRuns(store.list());
+    const list = store.list();
+    const target = currentRunId(list, id);
+    setRun(target === null ? null : store.load(target));
+    setRuns(list);
     setRenaming(null);
     setDeleting(false);
     update({ currentRun: id });
+  };
+  /** Saves a new version of the current run through the store and shows it; throws (nothing changed) when the store refuses. */
+  const saveRun = (next: Run) => {
+    const saved = store.save(next);
+    setRun(saved);
+    setRuns(store.list());
   };
   const imported = (id: string) => {
     select(id);
@@ -222,10 +234,10 @@ export default function App({ data, store, settingsBackend }: Props) {
       <main className="wrap">
         {route.screen === "transfer" ? (
           <Transfer key={incoming ?? ""} data={data} store={store} runId={currentId} initialText={incoming ?? undefined} onImported={imported} />
-        ) : current === null ? (
+        ) : current === null || run === null ? (
           <p className="sub">{t("run.none")}</p>
         ) : route.screen === "party" ? (
-          <Party key={current.id} data={data} store={store} runId={current.id} onChanged={() => setRuns(store.list())} onOpenCharacter={(id) => go({ screen: "character", id })} />
+          <Party data={data} run={run} saveRun={saveRun} onOpenCharacter={(id) => go({ screen: "character", id })} />
         ) : (
           <p className="sub">{t(`screen.${route.screen}`)}</p>
         )}
