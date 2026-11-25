@@ -17,7 +17,7 @@
 
 - `meta.json`: game version, modules read, and the ownership notice in English and French (shown by the app in each language).
 - `rules.json`: classes and subclasses, playable races, backgrounds, feats, progressions, the lists they reference, spells and passives (with their boosts, and `technical: true` on the passives listed in `scripts/data/technical_passives.txt`), the origins (`class`, `subclass`, `race`, `subrace`, `background`, `lockRace`, `abilities`), the rulesets (`values`) and the build modifiers (`rulesetModifiers`), and the key items (`kind`, `found_by` — `stats` or `template`, the lookup that found the item —, `stats_type`, `slot`, `rarity`, `root_template`). `spells.*.level` is `null` when the game's stats give the spell no `Level`; an item's `slot` or `rarity` is `null` when its stats entry has none.
-- `texts.en.json`, `texts.fr.json`: name and description of every element, keyed `<category>:<identifier>`; also `origin:<Name>`, `skill:<Id>` for the items of the skill lists and `ability:<Ability>` for the six abilities (names only, null description), `ruleset:<Name>` (name and description) and `label:customMode` (name only).
+- `texts.en.json`, `texts.fr.json`: name and description of every element, keyed `<category>:<identifier>`; also `origin:<Name>`, `skill:<Id>` for the items of the skill lists and `ability:<Ability>` for the six abilities (names only, null description), `ruleset:<Name>` (name and description), `modifier:<Name>` (name and description) for the build modifiers the game names (`MULTICLASSING`, `PROFICIENCY_BONUS`) and `label:customMode` (name only).
 
 ## Command
 

@@ -19,7 +19,7 @@ export type ImportResult =
   | { kind: "error"; message: string }
   | { kind: "ready"; run: Run; report: Report; warnings: string[]; conflict: Conflict | null };
 
-/** The export string of a pasted run link (`…#BG3P2:…`), or the text itself. */
+/** The export string of a pasted run link (`…#BG3P<version>:…`), or the text itself. */
 function stringOf(text: string): string {
   const trimmed = text.trim();
   const hash = trimmed.indexOf("#BG3P");
