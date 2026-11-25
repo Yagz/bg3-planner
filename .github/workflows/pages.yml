@@ -23,6 +23,12 @@ jobs:
           node-version: "24"
           cache: npm
       - run: npm ci
+      - name: Run the tests
+        run: npx vitest run
+      - name: Type-check the engine and scripts
+        run: npx tsc --noEmit -p .
+      - name: Type-check the web app
+        run: npx tsc --noEmit -p web
       - run: npm run build
       - name: Refuse any resource loaded from another site
         run: node scripts/check-dist.ts web/dist
