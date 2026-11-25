@@ -1,10 +1,9 @@
 import type { GameData } from "../../../src/data/types.ts";
 import { MAX_LEVELS } from "../../../src/plan/model.ts";
-import type { Character, PartyStatus, Run } from "../../../src/plan/model.ts";
+import type { Character, Run } from "../../../src/plan/model.ts";
 
 export type Act = 1 | 2 | 3;
 export const ACTS: Act[] = [1, 2, 3];
-export const STATUSES: PartyStatus[] = ["core", "alternative", "bench"];
 
 const key = (act: Act): "1" | "2" | "3" => String(act) as "1" | "2" | "3";
 
@@ -71,17 +70,15 @@ export function setActive(run: Run, act: Act, ids: string[]): Run {
   return { ...run, party: { ...run.party, [key(act)]: { ...party, active: [...ids] } } };
 }
 
-export function setStatus(run: Run, act: Act, id: string, status: PartyStatus): Run {
-  if (!run.characters.some((character) => character.id === id)) throw new Error(`Unknown character: ${id}`);
-  const party = run.party[key(act)];
-  return { ...run, party: { ...run.party, [key(act)]: { ...party, status: { ...party.status, [id]: status } } } };
-}
-
-/** Replaces the party of act 2 or 3 with a copy of the previous act's (members and statuses). Only called on a user action. */
+/**
+ * Replaces the active members of act 2 or 3 with a copy of the previous act's; the act's stored status, no longer shown
+ * nor edited, is kept as it is. Only called on a user action.
+ */
 export function copyPartyFromPreviousAct(run: Run, act: Act): Run {
   if (act === 1) throw new Error("Act 1 has no previous act");
   const previous = run.party[key((act - 1) as Act)];
-  return { ...run, party: { ...run.party, [key(act)]: { active: [...previous.active], status: { ...previous.status } } } };
+  const party = run.party[key(act)];
+  return { ...run, party: { ...run.party, [key(act)]: { ...party, active: [...previous.active] } } };
 }
 
 export function setProgress(run: Run, level: number, act: Act): Run {

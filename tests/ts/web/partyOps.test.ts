@@ -3,7 +3,7 @@ import type { GameData } from "../../../src/data/types.ts";
 import { decodeJson } from "../../../src/plan/codec.ts";
 import { emptyRun } from "../../../src/plan/model.ts";
 import { realData } from "./realData.ts";
-import { PARTY_SIZE, addCharacter, copyPartyFromPreviousAct, overFullActs, setActive, setPartySize, setProgress, setStatus } from "../../../web/src/state/partyOps.ts";
+import { PARTY_SIZE, addCharacter, copyPartyFromPreviousAct, overFullActs, setActive, setPartySize, setProgress } from "../../../web/src/state/partyOps.ts";
 
 let data: GameData;
 beforeAll(() => {
@@ -80,21 +80,15 @@ describe("party operations", () => {
     expect(() => setActive(setActive(smaller, 2, [ids[0]!]), 2, ids)).toThrow();
   });
 
-  it("sets a status per act without touching the other acts", () => {
-    const run = two();
-    const id = run.characters[0]!.id;
-    const next = setStatus(run, 2, id, "alternative");
-    expect(next.party["2"].status).toEqual({ [id]: "alternative" });
-    expect(next.party["1"].status).toEqual({});
-  });
-
-  it("copies the previous act's party only when called", () => {
+  it("copies the previous act's active members only when called, keeping the act's own stored status", () => {
     let run = two();
     const ids = run.characters.map((c) => c.id);
-    run = setStatus(setActive(run, 1, ids), 1, ids[0]!, "core");
+    run = setActive(run, 1, ids);
+    run = { ...run, party: { ...run.party, "1": { ...run.party["1"], status: { [ids[0]!]: "core" } }, "2": { active: [], status: { [ids[1]!]: "bench" } } } };
     expect(run.party["2"].active).toEqual([]);
     const copied = copyPartyFromPreviousAct(run, 2);
-    expect(copied.party["2"]).toEqual({ active: ids, status: { [ids[0]!]: "core" } });
+    expect(copied.party["2"]).toEqual({ active: ids, status: { [ids[1]!]: "bench" } });
+    expect(copied.party["1"]).toEqual(run.party["1"]);
     expect(copied.party["3"].active).toEqual([]);
     expect(() => copyPartyFromPreviousAct(run, 1)).toThrow();
   });

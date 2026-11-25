@@ -82,26 +82,47 @@ select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
 /* Party screen */
 .row { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin-bottom: 12px }
 .row select, .roster select { font: inherit; color: var(--fg); background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; max-width: 100% }
-.fill, .cards { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px }
-.fill > *, .cards > * { flex: 1 1 260px; min-width: 0 }
+.fill { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px }
+.fill > * { flex: 1 1 260px; min-width: 0 }
 .card { border: 1px solid var(--border); border-radius: 8px; background: var(--bg); padding: 12px 14px; display: grid; gap: 6px; align-content: start }
 .card p { margin: 0 }
-.editor { margin-bottom: 20px }
-.others ul, .roster { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px }
-.others li, .roster li { display: flex; flex-wrap: wrap; gap: 8px; align-items: center }
-.roster li { justify-content: space-between }
-.roster li { border-top: 1px solid var(--border); padding-top: 6px }
-.roster label { display: flex; gap: 8px; align-items: center }
 .chip { font: inherit; border: 1px solid var(--border); background: var(--bg-muted); color: var(--fg); border-radius: 999px; padding: 1px 10px; cursor: pointer }
 .seg { display: inline-flex; gap: 4px; margin: 8px 0 }
 .seg button.on { background: var(--bg); border-color: var(--border); font-weight: 600 }
-.summary details { margin-top: 8px }
-.coverage { border-collapse: collapse; width: 100%; margin-top: 8px }
-.coverage th, .coverage td { text-align: left; font-weight: 400; padding: 4px 6px; border-top: 1px solid var(--border); vertical-align: top }
-.coverage thead th { font-weight: 600; border-top: 0 }
+.pills { display: flex; flex-wrap: wrap; gap: 4px; align-items: center }
+.party h4 { font-size: 12px; margin: 6px 0; color: var(--fg-muted); text-transform: uppercase; letter-spacing: .05em }
+.composer .head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 24px }
+.composer .head h2, .composer .head .seg, .composer .head .sub { margin: 0 }
+.composer input[type=number] { font: inherit; color: var(--fg); background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; width: 4em }
+.roster { list-style: none; margin: 8px 0 12px; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); column-gap: 24px }
+.roster li { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--border) }
+.roster label { display: flex; gap: 8px; align-items: center }
+.roster .cls { flex: 1; margin: 0; min-width: 0; font-size: 13px }
+.roster .add, .composer .row { margin-bottom: 0 }
+.frame > .sub { margin-bottom: 12px }
+.frame > .empty { margin: 0; display: flex; flex-wrap: wrap; gap: 8px; align-items: center }
+.member { padding: 14px; gap: 8px }
+.member .top { display: flex; justify-content: space-between; gap: 8px; align-items: baseline }
+.member .name { font-size: 16px; margin: 0 }
+.member .cls { font-size: 13px }
+.member .brings h4 { margin-top: 0 }
+.member .pills .sub { margin: 0; font-size: 13px }
+.ab6 { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px }
+.ab { text-align: center; border: 1px solid var(--border); border-radius: 6px; padding: 3px 0; min-width: 0 }
+.ab span { font-size: 10px; color: var(--fg-muted); letter-spacing: .04em }
+.ab b { display: block; font-size: 15px; font-variant-numeric: tabular-nums }
+.ab small { display: block; font-size: 11px; color: var(--fg-muted); font-variant-numeric: tabular-nums }
+.ab.hi { border-color: var(--accent); background: var(--accent-bg) }
+.kv { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 12px; font-size: 13px; align-items: baseline }
+.kv .k { color: var(--fg-muted) }
+.cov { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); gap: 0 16px; margin-top: 12px }
+.cov .grp { padding: 8px 0; border-top: 1px solid var(--border) }
+.cov .grp h4 { margin-top: 0 }
+.cov .row { display: flex; flex-wrap: nowrap; justify-content: space-between; gap: 8px; font-size: 13px; padding: 2px 0; margin: 0 }
 @media (max-width: 640px) {
-  .coverage { font-size: 13px }
   .row { flex-direction: column; align-items: stretch }
+  .cov .row { flex-direction: row; align-items: center }
+  .ab6 { grid-template-columns: repeat(3, minmax(0, 1fr)) }
 }
 
 /* Character screen (mockup: .creation, .abil/.ab, .levels/.lv, .divider, .choice/.pick) */
