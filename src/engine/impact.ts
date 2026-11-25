@@ -7,7 +7,7 @@ import type { Issue } from "./issues.ts";
 import { resolve } from "./progression.ts";
 import { levelSlots, slotIds, validate } from "./validate.ts";
 
-/** A pick stored under a slot that no longer exists. */
+/** A pick stored under a slot that no longer exists, or on a level the change drops. */
 export type RemovedPick = { level: number; slot: string; choice: Choice };
 
 export type Impact = {
@@ -69,7 +69,12 @@ function partyProficiencies(run: Run, data: GameData): Set<string> {
 
 /** Previews replacing `before` with `after`: what is gained and lost, which picks are removed, and what becomes invalid. */
 export function impact(before: Character, after: Character, run: Run, data: GameData): Impact {
-  const { character: result, removed } = pruneRemovedSlots(after, data);
+  const { character: result, removed: pruned } = pruneRemovedSlots(after, data);
+  // The picks of levels `after` no longer has are removed with them.
+  const dropped = before.levels.slice(after.levels.length).flatMap((entry, i) =>
+    Object.entries(entry.choices).map(([slot, choice]): RemovedPick => ({ level: after.levels.length + i + 1, slot, choice })),
+  );
+  const removed = [...pruned, ...dropped];
 
   const beforeFeatures = features(before, data);
   const resultFeatures = features(result, data);

@@ -133,6 +133,36 @@ describe("previewNeeded", () => {
     expect(preview!.gained.length + preview!.lost.length).toBeGreaterThan(0);
   });
 
+  it("applies a first pick directly: a first subclass, a first race, the class of a new level", () => {
+    const noSubclass = clearChoice(ranger(), 3, subclassSlot("Ranger"));
+    expect(previewNeeded(noSubclass, setChoice(noSubclass, 3, subclassSlot("Ranger"), ["Hunter"]), runOf(noSubclass), data)).toBeNull();
+    const noRace = setIdentity(setIdentity(ranger(), "race", ""), "subrace", null);
+    expect(previewNeeded(noRace, setIdentity(noRace, "race", "Human"), runOf(noRace), data)).toBeNull();
+    const added = addLevel(ranger());
+    expect(previewNeeded(added, setLevelClass(added, 4, "Ranger"), runOf(added), data)).toBeNull();
+  });
+
+  it("applies an ability step directly even when it goes over the point-buy budget", () => {
+    const before = ranger();
+    const after = setAbilities(before, { ...before.abilities, Strength: 15 });
+    expect(previewNeeded(before, after, runOf(before), data)).toBeNull();
+  });
+
+  it("asks for the preview when an ability change makes a later feat impossible", () => {
+    const before: Character = { ...ranger(), abilities: { Strength: 8, Dexterity: 13, Constitution: 14, Intelligence: 8, Wisdom: 15, Charisma: 12 } };
+    before.levels = [...before.levels, { class: "Ranger", choices: { "feat:4": ["DefensiveDuelist"] } }];
+    const preview = previewNeeded(before, setAbilities(before, { ...before.abilities, Dexterity: 12, Charisma: 13 }), runOf(before), data);
+    expect(preview?.newlyInvalid.map((issue) => [issue.code, issue.level, issue.slot])).toEqual([["requirementNotMet", 4, "feat:4"]]);
+  });
+
+  it("asks for the preview when removing a last level that holds picks, even one that grants nothing", () => {
+    const before: Character = { ...ranger(), levels: ranger().levels.slice(0, 2) };
+    const preview = previewNeeded(before, removeLastLevel(before), runOf(before), data);
+    expect(preview?.gained).toEqual([]);
+    expect(preview?.lost).toEqual([]);
+    expect(preview?.slotsRemoved).toEqual([{ level: 2, slot: spellSlot(before), choice: ["Target_HuntersMark", "Target_CureWounds"] }]);
+  });
+
   it("asks for the preview when a class change leaves picks under slots that no longer exist", () => {
     const before = ranger();
     const preview = previewNeeded(before, setLevelClass(before, 2, "Wizard"), runOf(before), data);

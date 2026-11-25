@@ -199,6 +199,51 @@ describe("Tree view and impact preview", () => {
     expect(store.load(runId)!.characters[0]).toEqual(before);
   });
 
+  it("names the picks of a removed last level that grants nothing; Apply removes them, Cancel changes nothing", async () => {
+    // A Ranger's level 2 grants no feature; its spells are its only content.
+    const c: Character = {
+      id: "r",
+      who: "player",
+      race: "Halfling",
+      subrace: "Halfling_Lightfoot",
+      background: Object.keys(data.rules.backgrounds)[0]!,
+      abilities: { Strength: 8, Dexterity: 15, Constitution: 14, Intelligence: 8, Wisdom: 15, Charisma: 10 },
+      levels: [1, 2].map(() => ({ class: "Ranger", choices: {} as Record<string, Choice> })),
+      items: [],
+      notes: "",
+    };
+    const spells = resolve(c, data).levels[1]!.slots.find((s) => s.selector.function === "SelectSpells")!;
+    const picks = data.rules.lists[spells.selector.list]!.items.slice(0, 2);
+    c.levels[1]!.choices[spells.id] = picks;
+    const { store, runId } = setup(runOf(c), c.id);
+    const stored = await encode(store.load(runId)!);
+    const versions = store.history(runId).length;
+
+    fireEvent.click(screen.getByRole("button", { name: "Remove level 2" }));
+    const removed = within(screen.getByRole("dialog")).getByRole("group", { name: "Removed choices" });
+    expect(removed.querySelectorAll(".pill")).toHaveLength(1);
+    for (const id of picks) expect(removed.textContent).toContain(gameName(data, "en", "spell", id));
+    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Cancel" }));
+    expect(store.history(runId).length).toBe(versions);
+    expect(await encode(store.load(runId)!)).toBe(stored);
+
+    fireEvent.click(screen.getByRole("button", { name: "Remove level 2" }));
+    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Apply" }));
+    expect(store.history(runId).length).toBe(versions + 1);
+    expect(store.load(runId)!.characters[0]!.levels).toEqual([c.levels[0]]);
+  });
+
+  it("applies an ability step over the point-buy budget directly, without a preview", () => {
+    const c = gale(1, "EvocationSchool");
+    const { store, runId } = setup(runOf(c), c.id);
+    const strength = gameName(data, "en", "ability", "Strength");
+    const next = c.abilities.Strength + 1;
+    fireEvent.change(screen.getByRole("combobox", { name: `Base ${strength}` }), { target: { value: String(next) } });
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(store.load(runId)!.characters[0]!.abilities.Strength).toBe(next);
+    expect(screen.getByText("Point buy: 28 points spent for a budget of 27.")).toBeTruthy();
+  });
+
   it("changes nothing on Cancel: the run encodes byte for byte as before", async () => {
     const before = gale(4, "EvocationSchool");
     const { store, runId } = setup(runOf(before), before.id);

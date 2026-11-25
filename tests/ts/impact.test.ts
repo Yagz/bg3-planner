@@ -148,6 +148,16 @@ describe("impact", () => {
     expect(result.coverage).toEqual({ gained: [], lost: [] });
   });
 
+  it("reports the picks of a dropped level as removed picks", () => {
+    const before = fill(gale(4, "EvocationSchool"));
+    const after = { ...before, levels: before.levels.slice(0, 3) };
+    const result = impact(before, after, runOf(before), data);
+    const dropped = Object.entries(before.levels[3]!.choices).map(([slot, choice]) => ({ level: 4, slot, choice }));
+    expect(dropped.length).toBeGreaterThan(0);
+    expect(result.slotsRemoved).toEqual(dropped);
+    expect(result.result).toEqual(after);
+  });
+
   it("flags a feat whose requirement fails after an ability-bonus change, and keeps it", () => {
     const scores: Record<Ability, number> = { Strength: 15, Dexterity: 12, Constitution: 15, Intelligence: 8, Wisdom: 13, Charisma: 8 };
     const ranger = (bonus: string[]): Character => {
