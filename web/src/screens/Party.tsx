@@ -169,7 +169,7 @@ export default function Party({ data, run, saveRun, onOpenCharacter }: Props) {
       )}
 
       {others.length > 0 && (
-        <section className="others" aria-label={t("party.others")}>
+        <section className="others frame" aria-label={t("party.others")}>
           <h2>{t("party.others")}</h2>
           <ul>
             {others.map((character) => (
@@ -185,7 +185,7 @@ export default function Party({ data, run, saveRun, onOpenCharacter }: Props) {
       )}
 
       {active.length > 0 && (
-        <section className="summary" aria-label={t("party.coverage")}>
+        <section className="summary frame" aria-label={t("party.coverage")}>
           <h2>{t("party.coverage")}</h2>
           <p>{uncovered.length > 0 ? t("party.coverage.uncovered", { skills: uncovered.join(", ") }) : t("party.coverage.all")}</p>
           <p>{t("party.coverage.best", { skills: best.join(", ") })}</p>

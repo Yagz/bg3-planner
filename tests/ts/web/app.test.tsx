@@ -38,6 +38,7 @@ describe("app shell", () => {
     expect(screen.getByRole("button", { name: "Party" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Character" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Import / export" })).toBeTruthy();
+    expect(within(screen.getByRole("navigation")).getAllByRole("button").map((b) => b.textContent)).toEqual(["Party", "Character", "History", "Import / export"]);
     expect(screen.getByText("No run yet: create one or import one.")).toBeTruthy();
     expect(screen.queryByRole("alert")).toBeNull();
   });
@@ -166,6 +167,17 @@ describe("app shell", () => {
 });
 
 describe("history panel", () => {
+  it("is a tab of its own: no history button in the run bar, and #/history shows the list", () => {
+    window.history.replaceState(null, "", "/#/history");
+    const store = createStore(new MemoryBackend());
+    store.save({ ...emptyRun("h1"), name: "Kept" });
+    renderApp(store);
+    expect(screen.getAllByRole("button", { name: "History" })).toHaveLength(1);
+    expect(screen.getByRole("button", { name: "History" }).closest("nav")).not.toBeNull();
+    expect(screen.getByRole("button", { name: "History" }).getAttribute("aria-current")).toBe("page");
+    expect(within(screen.getByRole("main")).getByRole("list", { name: "Saved versions" })).toBeTruthy();
+  });
+
   const rename = (name: string) => {
     fireEvent.click(screen.getByRole("button", { name: "Rename" }));
     fireEvent.change(screen.getByRole("textbox", { name: "Run name" }), { target: { value: name } });
@@ -232,6 +244,7 @@ describe("history panel", () => {
     fireEvent.click(screen.getByRole("button", { name: "History" }));
     fireEvent.click(restoreButtons()[0]!);
     fireEvent.click(screen.getByRole("button", { name: "Restore this version" }));
+    fireEvent.click(screen.getByRole("button", { name: "Import / export" }));
     await waitFor(() => expect(json()).toContain('"New run"'));
   });
 });

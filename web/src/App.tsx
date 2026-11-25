@@ -13,7 +13,7 @@ import type { Settings, Theme } from "./state/settings.ts";
 import type { RunStore } from "./state/storage.ts";
 import type { Run } from "../../src/plan/model.ts";
 
-type Route = { screen: "party" } | { screen: "character"; id: string | null } | { screen: "transfer" };
+type Route = { screen: "party" } | { screen: "character"; id: string | null } | { screen: "history" } | { screen: "transfer" };
 
 const THEMES: Theme[] = ["system", "light", "dark"];
 
@@ -27,6 +27,7 @@ function decodeFragment(text: string): string {
 }
 
 function parseRoute(hash: string): Route {
+  if (hash === "#/history") return { screen: "history" };
   if (hash === "#/transfer") return { screen: "transfer" };
   const character = /^#\/character(?:\/(.+))?$/.exec(hash);
   if (character !== null) return { screen: "character", id: character[1] === undefined ? null : decodeFragment(character[1]) };
@@ -58,7 +59,6 @@ export default function App({ data, store, settingsBackend }: Props) {
   const [incoming, setIncoming] = useState<string | null>(null);
   const [renaming, setRenaming] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const [showHistory, setShowHistory] = useState(false);
   const i18n = useMemo(() => createI18n(settings.lang), [settings.lang]);
   const { t } = i18n;
 
@@ -124,7 +124,6 @@ export default function App({ data, store, settingsBackend }: Props) {
     setRuns(list);
     setRenaming(null);
     setDeleting(false);
-    setShowHistory(false);
     update({ currentRun: id });
   };
   /** Saves a new version of the current run through the store and shows it; throws (nothing changed) when the store refuses. */
@@ -160,6 +159,7 @@ export default function App({ data, store, settingsBackend }: Props) {
   const tabs = [
     { route: { screen: "party" } as Route, label: t("nav.party") },
     { route: { screen: "character", id: null } as Route, label: t("nav.character") },
+    { route: { screen: "history" } as Route, label: t("nav.history") },
     { route: { screen: "transfer" } as Route, label: t("nav.transfer") },
   ];
 
@@ -193,9 +193,6 @@ export default function App({ data, store, settingsBackend }: Props) {
                     </button>
                     <button className="btn" onClick={() => setDeleting(true)}>
                       {t("run.delete")}
-                    </button>
-                    <button className="btn" aria-expanded={showHistory} onClick={() => setShowHistory((open) => !open)}>
-                      {t("history.open")}
                     </button>
                   </>
                 )}
@@ -247,9 +244,6 @@ export default function App({ data, store, settingsBackend }: Props) {
             </button>
           </div>
         )}
-        {showHistory && current !== null && currentId !== null && (
-          <HistoryPanel name={runLabel(current.name)} versions={store.history(currentId)} onRestore={restoreVersion} />
-        )}
       </header>
       {!store.available && (
         <div className="banner wrap" role="alert">
@@ -266,6 +260,8 @@ export default function App({ data, store, settingsBackend }: Props) {
           <Transfer key={incoming ?? ""} data={data} store={store} run={run} initialText={incoming ?? undefined} onImported={imported} />
         ) : current === null || run === null ? (
           <p className="sub">{t("run.none")}</p>
+        ) : route.screen === "history" ? (
+          <HistoryPanel name={runLabel(current.name)} versions={store.history(current.id)} onRestore={restoreVersion} />
         ) : route.screen === "party" ? (
           <Party data={data} run={run} saveRun={saveRun} onOpenCharacter={(id) => go({ screen: "character", id })} />
         ) : (

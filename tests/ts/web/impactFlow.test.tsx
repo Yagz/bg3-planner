@@ -96,6 +96,7 @@ function restorePrevious() {
   fireEvent.click(screen.getByRole("button", { name: "History" }));
   fireEvent.click(screen.getAllByRole("button", { name: /^Restore the version of / })[0]!);
   fireEvent.click(screen.getByRole("button", { name: "Restore this version" }));
+  fireEvent.click(screen.getByRole("button", { name: "Character" }));
 }
 const names = (region: HTMLElement) => within(region).getAllByRole("listitem").map((li) => li.textContent ?? "");
 

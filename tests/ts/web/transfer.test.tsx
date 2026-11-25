@@ -123,7 +123,7 @@ describe("Transfer", () => {
     expect(linkBox.value).toBe(`${window.location.origin}/#${string}`);
     expect((screen.getByRole("textbox", { name: "Export string" }) as HTMLTextAreaElement).value).toBe(string);
     expect((screen.getByRole("textbox", { name: "Readable JSON" }) as HTMLTextAreaElement).value).toContain('"name": "Mine"');
-    const panel = linkBox.closest("section")!;
+    const panel = linkBox.closest(".field")! as HTMLElement;
     fireEvent.click(within(panel).getByRole("button", { name: "Copy" }));
     await waitFor(() => expect(writeText).toHaveBeenCalledWith(linkBox.value));
   });
@@ -163,6 +163,31 @@ describe("Transfer", () => {
     expect(store.list()[0]?.id).not.toBe("same");
     expect(backend.items.get("bg3p:run:same")).toBe("{nope");
     expect(onImported).toHaveBeenCalled();
+  });
+
+  it("lays out two frames: Export with a label and a Copy button above each of three same-size boxes, and Import with the paste box", async () => {
+    const store = createStore(new MemoryBackend());
+    const saved = store.save(badRun("Mine"));
+    renderTransfer(store, store.load(saved.id));
+    await screen.findByRole("textbox", { name: "Link" });
+    const exportFrame = screen.getByRole("region", { name: "Export" });
+    const importFrame = screen.getByRole("region", { name: "Import" });
+    expect(exportFrame.classList.contains("frame")).toBe(true);
+    expect(importFrame.classList.contains("frame")).toBe(true);
+    expect(exportFrame.parentElement).toBe(importFrame.parentElement);
+    expect(exportFrame.parentElement?.classList.contains("pair")).toBe(true);
+    const boxes = within(exportFrame).getAllByRole("textbox");
+    expect(boxes).toHaveLength(3);
+    expect(new Set(boxes.map((box) => box.className)).size).toBe(1);
+    expect(boxes[0]!.className).not.toBe("");
+    for (const box of boxes) {
+      const field = box.closest(".field")!;
+      expect(within(field as HTMLElement).getByRole("button", { name: "Copy" })).toBeTruthy();
+      expect(field.firstElementChild?.contains(within(field as HTMLElement).getByRole("button", { name: "Copy" }))).toBe(true);
+      expect(field.firstElementChild?.nextElementSibling).toBe(box);
+    }
+    expect(within(importFrame).getByRole("textbox", { name: "Paste a run" })).toBeTruthy();
+    expect(within(exportFrame).queryByRole("textbox", { name: "Paste a run" })).toBeNull();
   });
 
   it("shows an export failure as an error, not as a missing run", async () => {

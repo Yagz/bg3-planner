@@ -35,7 +35,7 @@ export default function HistoryPanel({ name, versions, onRestore }: Props) {
   };
 
   return (
-    <section className="wrap history" aria-label={t("history.title", { name })}>
+    <section className="frame history" aria-label={t("history.title", { name })}>
       <h2>{t("history.title", { name })}</h2>
       <p className="sub">{t("history.hint", { count: HISTORY_LIMIT })}</p>
       {error !== null && (

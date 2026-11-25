@@ -31,19 +31,19 @@ async function copy(text: string, box: HTMLTextAreaElement | null): Promise<void
   }
 }
 
-function ExportBox({ label, value }: { label: string; value: string }) {
+function ExportBox({ id, label, value }: { id: string; label: string; value: string }) {
   const { t } = useI18n();
   const box = useRef<HTMLTextAreaElement>(null);
   return (
-    <section className="xbox">
-      <label>
-        <span className="sub">{label}</span>
-        <textarea ref={box} readOnly rows={3} value={value} onFocus={(event) => event.currentTarget.select()} />
-      </label>
-      <button className="btn" onClick={() => void copy(value, box.current)}>
-        {t("transfer.copy")}
-      </button>
-    </section>
+    <div className="field">
+      <div className="lab">
+        <label htmlFor={id}>{label}</label>
+        <button className="btn small" onClick={() => void copy(value, box.current)}>
+          {t("transfer.copy")}
+        </button>
+      </div>
+      <textarea id={id} className="box" ref={box} readOnly value={value} onFocus={(event) => event.currentTarget.select()} />
+    </div>
   );
 }
 
@@ -123,7 +123,8 @@ export default function Transfer({ data, store, run, initialText, onImported }: 
   };
 
   return (
-    <div className="transfer">
+    <div className="pair">
+      <section className="frame exportframe" aria-label={t("transfer.export")}>
       <h2>{t("transfer.export")}</h2>
       {exportError !== null ? (
         <p role="alert" className="banner">
@@ -133,19 +134,23 @@ export default function Transfer({ data, store, run, initialText, onImported }: 
         <p className="sub">{t("transfer.noRun")}</p>
       ) : (
         <>
-          <ExportBox label={t("transfer.string")} value={exports.string} />
-          <ExportBox label={t("transfer.link")} value={exports.link} />
-          <ExportBox label={t("transfer.json")} value={exports.json} />
+          <ExportBox id="export-string" label={t("transfer.string")} value={exports.string} />
+          <ExportBox id="export-link" label={t("transfer.link")} value={exports.link} />
+          <ExportBox id="export-json" label={t("transfer.json")} value={exports.json} />
         </>
       )}
+      </section>
+      <section className="frame importframe" aria-label={t("transfer.import")}>
       <h2>{t("transfer.import")}</h2>
-      <label>
-        <span className="sub">{t("transfer.paste")}</span>
-        <textarea rows={4} value={text} onChange={(event) => setText(event.target.value)} />
-      </label>
-      <button className="btn primary" disabled={checking || text.trim() === ""} onClick={() => void check(text)}>
-        {t("transfer.check")}
-      </button>
+      <div className="field grow">
+        <div className="lab">
+          <label htmlFor="import-text">{t("transfer.paste")}</label>
+          <button className="btn small primary" disabled={checking || text.trim() === ""} onClick={() => void check(text)}>
+            {t("transfer.check")}
+          </button>
+        </div>
+        <textarea id="import-text" value={text} onChange={(event) => setText(event.target.value)} />
+      </div>
       {result?.kind === "error" && (
         <p role="alert" className="banner">
           {t("transfer.error", { message: result.message })}
@@ -211,6 +216,7 @@ export default function Transfer({ data, store, run, initialText, onImported }: 
           </div>
         </div>
       )}
+      </section>
     </div>
   );
 }
