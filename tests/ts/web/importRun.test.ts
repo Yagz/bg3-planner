@@ -25,7 +25,7 @@ describe("importRun", () => {
     const store = createStore(new MemoryBackend());
     const result = await importRun(await v1String(), store, data);
     if (result.kind !== "ready") throw new Error("expected ready");
-    expect(result.run.version).toBe(2);
+    expect(result.run.version).toBe(3);
     expect(result.run.id).toBe("");
     expect(result.run.name).toBe("Old");
     const { version: _v, ...original } = v1Document();

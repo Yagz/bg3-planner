@@ -87,16 +87,16 @@ describe("run command line", () => {
     expect(result.out).toMatch(/invalid c1 level 1 class unknownClass/);
   });
 
-  it("still reads a v1 string, migrated to v2", async () => {
-    const { id, updatedAt, ...rest } = rangerRun(3);
-    const stream = new Blob([new TextEncoder().encode(JSON.stringify({ ...rest, version: 1 }))]).stream().pipeThrough(new CompressionStream("deflate-raw"));
+  it("still reads a v1 string, migrated to the current version", async () => {
+    const { id, updatedAt, difficulty, ...rest } = rangerRun(3);
+    const stream = new Blob([new TextEncoder().encode(JSON.stringify({ ...rest, version: 1, difficulty: "" }))]).stream().pipeThrough(new CompressionStream("deflate-raw"));
     const bytes = new Uint8Array(await new Response(stream).arrayBuffer());
     const v1 = `BG3P1:${Buffer.from(bytes).toString("base64url")}`;
     const result = cli("validate", v1);
     expect(result.code).toBe(1);
     expect(result.out).toMatch(/incomplete c1 level 3 subclass:Ranger choiceMissing/);
     const decoded = JSON.parse(cli("decode", v1).out);
-    expect(decoded).toMatchObject({ version: 2, id: "", updatedAt: null });
+    expect(decoded).toMatchObject({ version: 3, id: "", updatedAt: null });
   });
 
   it("exits 3 on unreadable input and usage errors", () => {

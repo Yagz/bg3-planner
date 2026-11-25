@@ -147,6 +147,15 @@ describe("run store", () => {
     expect(backend.items.get("bg3p:run:bad")).toBe("{not json");
     expect(backend.items.has("bg3p:run:old")).toBe(true);
   });
+  it("loads a stored v2 record, its difficulty label migrated to a ruleset", () => {
+    const backend = new MemoryBackend();
+    const v2 = { ...named("Old", "old"), version: 2, difficulty: "Balanced" };
+    backend.items.set("bg3p:run:old", JSON.stringify({ history: [{ at: "2026-11-25T10:00:00.000Z", text: JSON.stringify(v2) }] }));
+    const run = createStore(backend).load("old");
+    expect(run?.version).toBe(3);
+    expect(run?.difficulty).toEqual({ ruleset: "DIFFICULTY_MEDIUM", overrides: {} });
+  });
+
   it("treats a stored version whose date is not a date as unreadable, and keeps it", () => {
     const backend = new MemoryBackend();
     const record = JSON.stringify({ history: [{ at: "yesterday", text: JSON.stringify(named("Dated")) }] });

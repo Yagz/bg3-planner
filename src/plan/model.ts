@@ -42,15 +42,22 @@ export type ActParty = {
   status: Record<string, PartyStatus>;
 };
 
+/** A ruleset identifier (`""` = not chosen) and the ruleset modifiers set away from that ruleset's values. */
+export type Difficulty = {
+  ruleset: string;
+  overrides: Partial<Record<string, boolean | number>>;
+};
+
 export type Run = {
-  version: 2;
+  version: 3;
   /** Stable identity of the run, kept across exports and renames; empty for a run migrated from version 1. */
   id: string;
   /** ISO date of the last edit; null when unknown. */
   updatedAt: string | null;
   name: string;
   origin: string;
-  difficulty: string;
+  /** The game ruleset the run plays under, with the modifiers the player changed from its values. */
+  difficulty: Difficulty;
   partySize: number;
   progress: { level: number; act: 1 | 2 | 3 };
   party: Record<"1" | "2" | "3", ActParty>;
@@ -63,12 +70,12 @@ export type Run = {
 
 export function emptyRun(id: string = crypto.randomUUID()): Run {
   return {
-    version: 2,
+    version: 3,
     id,
     updatedAt: null,
     name: "",
     origin: "",
-    difficulty: "",
+    difficulty: { ruleset: "", overrides: {} },
     partySize: 4,
     progress: { level: 1, act: 1 },
     party: {

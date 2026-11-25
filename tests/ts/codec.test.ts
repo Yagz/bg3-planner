@@ -44,7 +44,7 @@ describe("export string", () => {
   it("round trips losslessly", async () => {
     const run = sampleRun();
     const text = await encode(run);
-    expect(text.startsWith(`${PREFIX}2:`)).toBe(true);
+    expect(text.startsWith(`${PREFIX}3:`)).toBe(true);
     const decoded = await decode(text);
     expect(decoded.run).toEqual(run);
     expect(decoded.warnings).toEqual([]);
@@ -170,7 +170,7 @@ describe("errors", () => {
     expect((await mutate((r) => (r.characters[0].levels = Array.from({ length: 13 }, () => ({ class: "Ranger", choices: {} }))))).message).toContain("levels");
     expect((await mutate((r) => (r.characters[0].levels[0].choices["a/0"] = "done"))).message).toContain("choices");
     expect((await mutate((r) => (r.characters[0].levels[0].choices["a/0"] = [1]))).message).toContain("choices");
-    expect((await mutate((r) => (r.version = 3))).message).toMatch(/version/);
+    expect((await mutate((r) => (r.version = 4))).message).toMatch(/version/);
   });
 });
 
@@ -237,7 +237,7 @@ describe("__proto__ keys", () => {
 
 describe("migrations", () => {
   it("an older version goes through the registry", async () => {
-    expect(CURRENT_VERSION).toBe(2);
+    expect(CURRENT_VERSION).toBe(3);
     const old: Record<string, unknown> = { ...emptyRun("r1"), version: 0 };
     delete old["notes"];
     old["comment"] = "legacy";
@@ -250,7 +250,7 @@ describe("migrations", () => {
     };
     const decoded = await decode(JSON.stringify(old), registry);
     expect(decoded.run.notes).toBe("legacy");
-    expect(decoded.run.version).toBe(2);
+    expect(decoded.run.version).toBe(3);
   });
 
   it("works for the string form with an older prefix", async () => {
@@ -263,20 +263,75 @@ describe("migrations", () => {
     expect((await decode(`BG3P0:${b64}`, registry)).run).toEqual({ ...emptyRun("r1"), id: "" });
   });
 
-  it("a v1 string decodes to v2 with id \"\" and updatedAt null", async () => {
-    const { id, updatedAt, ...rest } = sampleRun();
-    const v1 = { ...rest, version: 1 };
-    const stream = new Blob([new TextEncoder().encode(JSON.stringify(v1))]).stream().pipeThrough(new CompressionStream("deflate-raw"));
+  async function packed(document: unknown): Promise<string> {
+    const stream = new Blob([new TextEncoder().encode(JSON.stringify(document))]).stream().pipeThrough(new CompressionStream("deflate-raw"));
     const bytes = new Uint8Array(await new Response(stream).arrayBuffer());
-    const b64 = btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-    const { run, warnings } = await decode(`BG3P1:${b64}`);
+    return btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  }
+
+  it("migrates a v2 difficulty label to its ruleset", () => {
+    const table: [unknown, string][] = [
+      ["Explorer", "DIFFICULTY_EASY"], ["Balanced", "DIFFICULTY_MEDIUM"], ["Tactician", "DIFFICULTY_HARD"], ["Honour", "RULESET_HONOUR"],
+      ["", ""], ["RULESET_LARIAN", "RULESET_LARIAN"], ["balanced", "DIFFICULTY_MEDIUM"], ["EXPLORER", "DIFFICULTY_EASY"], ["Nightmare", "Nightmare"],
+    ];
+    for (const [label, ruleset] of table) {
+      const migrated = MIGRATIONS[2]!({ version: 2, difficulty: label }) as { version: number; difficulty: unknown };
+      expect(migrated.version).toBe(3);
+      expect(migrated.difficulty).toEqual({ ruleset, overrides: {} });
+    }
+  });
+
+  it("decodes a v2 document with a difficulty label to a v3 run", () => {
+    const { difficulty: _d, ...rest } = sampleRun();
+    const run = decodeJson(JSON.stringify({ ...rest, version: 2, difficulty: "Balanced" }));
+    expect(run.version).toBe(3);
+    expect(run.difficulty).toEqual({ ruleset: "DIFFICULTY_MEDIUM", overrides: {} });
+  });
+
+  it("decodes a BG3P1 string through both migrations", async () => {
+    const { id, updatedAt, difficulty, ...rest } = sampleRun();
+    const { run, warnings } = await decode(`BG3P1:${await packed({ ...rest, version: 1, difficulty: "Explorer" })}`);
     expect(warnings).toEqual([]);
-    expect(run.version).toBe(2);
+    expect(run.version).toBe(3);
+    expect(run.id).toBe("");
+    expect(run.difficulty).toEqual({ ruleset: "DIFFICULTY_EASY", overrides: {} });
+  });
+
+  it("decodes a BG3P2 string", async () => {
+    const { difficulty, ...rest } = sampleRun();
+    const { run } = await decode(`BG3P2:${await packed({ ...rest, version: 2, difficulty: "Tactician" })}`);
+    expect(run.difficulty).toEqual({ ruleset: "DIFFICULTY_HARD", overrides: {} });
+  });
+
+  it("encodes with the BG3P3 prefix and round-trips", async () => {
+    const run = sampleRun();
+    run.difficulty = { ruleset: "DIFFICULTY_EASY", overrides: { MULTICLASSING: true, PROFICIENCY_BONUS: 3 } };
+    const text = await encode(run);
+    expect(text.startsWith("BG3P3:")).toBe(true);
+    expect(await decode(text)).toEqual({ run, warnings: [] });
+  });
+
+  it("rejects a difficulty that is not an object with a string ruleset and boolean or integer overrides", () => {
+    const bad: unknown[] = [
+      "Balanced", null, [], {}, { ruleset: 1, overrides: {} }, { ruleset: "", overrides: [] }, { ruleset: "", overrides: { A: "x" } },
+      { ruleset: "", overrides: { A: 1.5 } }, { ruleset: "", overrides: null }, { ruleset: "", overrides: {}, extra: 1 },
+    ];
+    for (const difficulty of bad) {
+      expect(() => decodeJson(JSON.stringify({ ...sampleRun(), difficulty }))).toThrow(/difficulty/);
+    }
+  });
+
+  it("a v1 string decodes to the current version with id \"\" and updatedAt null", async () => {
+    const { id, updatedAt, difficulty, ...rest } = sampleRun();
+    const v1 = { ...rest, version: 1, difficulty: "" };
+    const { run, warnings } = await decode(`BG3P1:${await packed(v1)}`);
+    expect(warnings).toEqual([]);
+    expect(run.version).toBe(3);
     expect(run.id).toBe("");
     expect(run.updatedAt).toBeNull();
     const { id: _i, updatedAt: _u, version: _v, ...others } = run;
-    const { version: _w, ...expected } = v1;
-    expect(others).toEqual(expected);
+    const { version: _w, difficulty: _x, ...expected } = v1;
+    expect(others).toEqual({ ...expected, difficulty: { ruleset: "", overrides: {} } });
     expect(await decode(await encode(run))).toEqual({ run, warnings: [] });
   });
 
@@ -313,9 +368,9 @@ describe("synchronous JSON decoding", () => {
   });
 
   it("migrates a version 1 document", () => {
-    const { id, updatedAt, ...rest } = sampleRun();
-    const run = decodeJson(JSON.stringify({ ...rest, version: 1 }));
-    expect(run.version).toBe(2);
+    const { id, updatedAt, difficulty, ...rest } = sampleRun();
+    const run = decodeJson(JSON.stringify({ ...rest, version: 1, difficulty: "" }));
+    expect(run.version).toBe(3);
     expect(run.id).toBe("");
     expect(run.updatedAt).toBeNull();
   });

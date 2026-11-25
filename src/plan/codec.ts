@@ -251,6 +251,15 @@ function identity(value: unknown, path: string): string | OffData {
   return value;
 }
 
+function difficulty(value: unknown): Run["difficulty"] {
+  const d = object(value, "difficulty", ["ruleset", "overrides"]);
+  const overrides = record(d["overrides"], "difficulty.overrides", (v, p) => {
+    if (typeof v === "boolean") return v;
+    return int(v, p);
+  });
+  return { ruleset: str(d["ruleset"], "difficulty.ruleset"), overrides };
+}
+
 function validateRun(raw: unknown): Run {
   const r = object(raw, "", [
     "version", "id", "updatedAt", "name", "origin", "difficulty", "partySize", "progress", "party",
@@ -306,12 +315,12 @@ function validateRun(raw: unknown): Run {
   });
 
   return {
-    version: 2,
+    version: 3,
     id: str(r["id"], "id"),
     updatedAt,
     name: str(r["name"], "name"),
     origin: str(r["origin"], "origin"),
-    difficulty: str(r["difficulty"], "difficulty"),
+    difficulty: difficulty(r["difficulty"]),
     partySize: int(r["partySize"], "partySize"),
     progress: { level: int(progress["level"], "progress.level"), act },
     party: { "1": actParty("1"), "2": actParty("2"), "3": actParty("3") },
