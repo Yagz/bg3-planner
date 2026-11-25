@@ -1,16 +1,21 @@
 """Names of the skills and abilities, which no data file links to a translation handle.
 
-The English label is derived from the identifier (`SleightOfHand` -> `Sleight of Hand`); the translation
-entries whose English text equals it exactly must all give the same French text. An identifier with no
-match, or with several French texts, is an error unless `ui_names.txt` names its handle.
+The translation tables hold them as two indexed families of entries (`<handle>_<index>`) in the engine's
+enum order. Each entry's English text must equal the label derived from its identifier (`SleightOfHand` ->
+`Sleight of Hand`, compared case-insensitively), so the order assumption is checked on every import.
 """
 import re
-from pathlib import Path
 
-from scripts.data import model, texts
+from scripts.data import texts
 
-UI_NAMES = Path(__file__).with_name("ui_names.txt")
-KINDS = ("skill", "ability")
+SKILL_HANDLE = "h65e11968gf9b6g4c47g9efcg03fb60fb923c"
+ABILITY_HANDLE = "h6c83537fg6358g41e0g8a18g32cc8316ced2"
+# The engine's Skill enum order: entry `<SKILL_HANDLE>_<i>` names SKILLS[i].
+SKILLS = ("Deception", "Intimidation", "Performance", "Persuasion", "Acrobatics", "SleightOfHand", "Stealth",
+          "Arcana", "History", "Investigation", "Nature", "Religion", "Athletics", "AnimalHandling", "Insight",
+          "Medicine", "Perception", "Survival")
+# The engine's Ability enum order, from 1 (0 is "None"): entry `<ABILITY_HANDLE>_<i>` names ABILITIES[i - 1].
+ABILITIES = ("Strength", "Dexterity", "Constitution", "Intelligence", "Wisdom", "Charisma")
 # Words written in lower case inside a label.
 _MINOR_WORDS = {"Of", "And", "The"}
 
@@ -21,53 +26,29 @@ def label(ident: str) -> str:
     return " ".join(w.lower() if i and w in _MINOR_WORDS else w for i, w in enumerate(words))
 
 
-def read_listed(path: Path) -> dict[str, str]:
-    """`<kind>:<Id> <handle>  # reason` per line; `<kind>:<Id>` -> handle."""
-    res = {}
-    for number, content, _ in model._listed_lines(path):
-        words = content.split()
-        kind = words[0].split(":", 1)[0] if words else ""
-        if len(words) != 2 or ":" not in words[0] or kind not in KINDS:
-            raise ValueError(f"{path}:{number}: expected '<{'|'.join(KINDS)}>:<Id> <handle>  # reason': {content!r}")
-        if words[0] in res:
-            raise ValueError(f"{path}:{number}: identifier listed twice: {words[0]!r}")
-        res[words[0]] = words[1]
-    return res
+def _entries() -> list[tuple[str, str]]:
+    """(`<kind>:<Id>`, handle) of every skill and ability."""
+    return ([(f"skill:{s}", f"{SKILL_HANDLE}_{i}") for i, s in enumerate(SKILLS)]
+            + [(f"ability:{a}", f"{ABILITY_HANDLE}_{i}") for i, a in enumerate(ABILITIES, 1)])
 
 
-def resolve(ids: dict[str, list[str]], en: dict[str, str], fr: dict[str, str],
-            listed: dict[str, str]) -> tuple[dict[str, dict], dict[str, dict]]:
-    """English and French `{"<kind>:<Id>": {"name", "description": None}}` for the identifiers of each kind;
-    raises texts.MissingText with every unresolved identifier and every listed entry that is not exact."""
-    by_text: dict[str, list[str]] = {}
-    for h, text in en.items():
-        by_text.setdefault(text, []).append(h)
+def resolve(en: dict[str, str], fr: dict[str, str]) -> tuple[dict[str, dict], dict[str, dict]]:
+    """English and French `{"<kind>:<Id>": {"name", "description": None}}` for the 18 skills and six abilities;
+    raises texts.MissingText with every missing entry and every English text that does not match its id."""
     tables: tuple[dict, dict] = ({}, {})
     errors: list[str] = []
-    keys = {f"{kind}:{ident}" for kind, idents in ids.items() for ident in idents}
-    for key in sorted(keys):
-        english = label(key.split(":", 1)[1])
-        matches = sorted(h for h in by_text.get(english, []) if texts._present(en, h) and texts._present(fr, h))
-        french = sorted({fr[h] for h in matches})
-        if key in listed:
-            h = listed[key]
-            if len(french) == 1:
-                errors.append(f"ui_names.txt: {key} resolves to a single French text {french[0]!r}; remove it")
-            elif not (texts._present(en, h) and texts._present(fr, h)):
-                errors.append(f"ui_names.txt: {key}: handle {h} missing or empty in a translation table")
-            else:
-                tables[0][key] = {"name": en[h], "description": None}
-                tables[1][key] = {"name": fr[h], "description": None}
+    for key, h in _entries():
+        missing = [language for language, table in (("English", en), ("French", fr)) if not texts._present(table, h)]
+        if missing:
+            errors.append(f"{key}: handle {h} missing or empty in the {' and '.join(missing)} table")
             continue
-        if not matches:
-            errors.append(f"{key}: no translation entry whose English text is {english!r} in both tables")
-        elif len(french) > 1:
-            candidates = ", ".join(f"{h} => {fr[h]!r}" for h in matches)
-            errors.append(f"{key}: English text {english!r} has several French texts: {candidates}")
-        else:
-            tables[0][key] = {"name": english, "description": None}
-            tables[1][key] = {"name": french[0], "description": None}
-    errors.extend(f"ui_names.txt: listed identifier not found: {key}" for key in sorted(set(listed) - keys))
+        expected = label(key.split(":", 1)[1])
+        if en[h].casefold() != expected.casefold():
+            errors.append(f"{key}: handle {h} reads {en[h]!r} in English, expected {expected!r}: "
+                          "the family's order changed")
+            continue
+        tables[0][key] = {"name": en[h], "description": None}
+        tables[1][key] = {"name": fr[h], "description": None}
     if errors:
         raise texts.MissingText(errors)
     return tables

@@ -6,7 +6,7 @@ import json
 import sys
 from pathlib import Path
 
-from scripts.data import items, model, origins, texts
+from scripts.data import items, model, origins, texts, ui_names
 
 UNNAMED = Path(__file__).with_name("unnamed.txt")
 KNOWN_DUPLICATES = Path(__file__).with_name("known_duplicates.txt")
@@ -45,7 +45,8 @@ def _check_texts(rules: dict, tables: dict, unnamed: set[str], descriptionless: 
     problems = []
     expected = {f"{category}:{ident}" for section, category in _CATEGORIES.items()
                 for ident in rules.get(section, {})}
-    expected |= {f"skill:{ident}" for ident in skill_ids(rules)} | {f"ability:{a}" for a in origins.ABILITIES}
+    expected |= ({f"skill:{ident}" for ident in skill_ids(rules) | set(ui_names.SKILLS)}
+                 | {f"ability:{a}" for a in ui_names.ABILITIES})
     idents = expected | {key.split(":", 1)[1] for key in expected}
     for listed in sorted(descriptionless - idents):
         problems.append(f"{listed}: listed with a missing description but not found")

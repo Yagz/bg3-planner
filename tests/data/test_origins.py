@@ -95,6 +95,49 @@ class OriginsTest(unittest.TestCase):
         self.assertIn("c-trick", "\n".join(errors))
 
 
+class ReferencesTest(unittest.TestCase):
+    HIDDEN = [origin(SubRaceUUID="r-hidden")]
+
+    def test_listed_reference_replaces_an_unplayable_one(self):
+        result, errors = origins.build(merged(self.HIDDEN), PRESETS, RULES, {},
+                                       {("Shadowheart", "subrace"): "HalfElf_High"})
+        self.assertEqual(errors, [])
+        self.assertEqual(result["Shadowheart"]["subrace"], "HalfElf_High")
+
+    def test_unlisted_unplayable_reference_is_an_error(self):
+        _, errors = origins.build(merged(self.HIDDEN), PRESETS, RULES, {}, {})
+        self.assertEqual(len(errors), 1, errors)
+        self.assertIn("SubRaceUUID r-hidden", errors[0])
+
+    def test_listed_reference_must_stay_exact(self):
+        cases = {"resolves by itself": ([origin()], {("Shadowheart", "subrace"): "HalfElf_High"}, "remove it"),
+                 "missing target": (self.HIDDEN, {("Shadowheart", "subrace"): "Elf_Nowhere"}, "Elf_Nowhere"),
+                 "unknown origin": (self.HIDDEN, {("Shadowheart", "subrace"): "HalfElf_High",
+                                                  ("Nobody", "race"): "HalfElf"}, "Nobody")}
+        for name, (layer, listed, word) in cases.items():
+            with self.subTest(name):
+                _, errors = origins.build(merged(layer), PRESETS, RULES, {}, listed)
+                self.assertEqual(len(errors), 1, errors)
+                self.assertIn("origin_references.txt", errors[0])
+                self.assertIn(word, errors[0])
+
+    def test_read_references(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "origin_references.txt"
+            path.write_text("# header\nAstarion subrace Elf_HighElf  # hidden race\n", encoding="utf-8")
+            self.assertEqual(origins.read_references(path), {("Astarion", "subrace"): "Elf_HighElf"})
+            for bad in ("Astarion subrace Elf_HighElf\n", "Astarion subrace  # no key\n",
+                        "Astarion hair Elf_HighElf  # bad field\n",
+                        "A race B  # r\nA race C  # r\n"):
+                path.write_text(bad, encoding="utf-8")
+                with self.subTest(bad), self.assertRaises(ValueError):
+                    origins.read_references(path)
+
+    def test_committed_file_reads(self):
+        self.assertEqual(origins.read_references(origins.ORIGIN_REFERENCES),
+                         {("Astarion", "subrace"): "Elf_HighElf"})
+
+
 class ReadExcludedTest(unittest.TestCase):
     def test_format(self):
         with tempfile.TemporaryDirectory() as folder:

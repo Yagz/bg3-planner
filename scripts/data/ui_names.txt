@@ -1,2 +1,0 @@
-# Translation handles of skill and ability names whose English label (derived from the identifier, e.g. `SleightOfHand` -> `Sleight of Hand`) matches no entry, or entries with several French texts.
-# One per line: `<skill|ability>:<Id> <handle>  # reason`. A listed identifier that does not exist, that resolves without the entry, or whose handle is missing from a table is an error. The list is the maintainer's decision.

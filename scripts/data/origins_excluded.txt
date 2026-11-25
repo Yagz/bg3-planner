@@ -1,2 +1,4 @@
 # Origins (`Name` in Origins.lsx) left out of rules.json: test, debug or other entries that are not playable or recruitable characters.
 # One per line: `<Name>  # reason`. A listed Name that matches no origin is an error. The list is the maintainer's decision.
+DarkUrge-Debug  # debug copy of DarkUrge
+Losiir  # Lae'zel's stand-in in the prologue when she is the chosen origin, dies in the crash, never playable (bg3.wiki: Losiir)

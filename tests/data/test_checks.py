@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from scripts.data import checks
+from scripts.data import checks, ui_names
 
 COUNTS = {"base_classes": 1, "subclasses": 1, "races": 2, "base_races": 1, "backgrounds": 1,
           "origin_backgrounds": 1, "feats": 1}
@@ -46,9 +46,9 @@ RULES = {
 }
 ABILITIES = ["Strength", "Dexterity", "Constitution", "Intelligence", "Wisdom", "Charisma"]
 SKILLS = {"Athletics": "Strength", "Stealth": "Dexterity"}
-KEYS = ["class:Wizard", "class:Evocation", "race:Elf", "race:HighElf", "background:bg-1", "feat:Alert",
-        "spell:Fireball", "passive:Soldier", "item:MAG_Boots", "origin:Sh", "origin:Generic", "skill:Athletics",
-        "skill:Stealth"] + [f"ability:{a}" for a in ABILITIES]
+KEYS = (["class:Wizard", "class:Evocation", "race:Elf", "race:HighElf", "background:bg-1", "feat:Alert",
+         "spell:Fireball", "passive:Soldier", "item:MAG_Boots", "origin:Sh", "origin:Generic"]
+        + [f"skill:{s}" for s in ui_names.SKILLS] + [f"ability:{a}" for a in ABILITIES])
 WIKI = {"MAG_Boots": {"uuid": "t-boots", "kind": "equipment", "rarity": "rare", "legacy": None, "locations": []},
         "MAG_Gone": {"uuid": None, "kind": "equipment", "rarity": "rare", "legacy": "unobtainable",
                      "locations": []}}

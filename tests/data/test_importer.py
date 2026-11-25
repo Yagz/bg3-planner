@@ -6,7 +6,7 @@ from pathlib import Path
 from unittest import mock
 from xml.sax.saxutils import quoteattr
 
-from scripts.data import importer
+from scripts.data import importer, ui_names
 from tests.data import fixtures
 
 
@@ -111,11 +111,10 @@ def rules_files() -> dict[str, dict[str, bytes]]:
 HANDLES = ["hFighter", "hFighterDesc", "hElf", "hElfDesc", "hAcolyte", "hAcolyteDesc", "hAlert", "hAlertDesc",
            "hFighterPassive", "hAlertPassive", "hFireBolt2", "hBoots", "hBootsDesc", "hBase", "hFancy", "hHero",
            "hHeroOld"]
-# UI strings whose English text is the label derived from a skill or ability identifier.
-UI_TEXTS = {"hAthletics": ("Athletics", "Athlétisme"), "hHistory": ("History", "Histoire"),
-            "hStrength": ("Strength", "Force"), "hDexterity": ("Dexterity", "Dextérité"),
-            "hConstitution": ("Constitution", "Constitution"), "hIntelligence": ("Intelligence", "Intelligence"),
-            "hWisdom": ("Wisdom", "Sagesse"), "hCharisma": ("Charisma", "Charisme")}
+# The skill and ability name families, as the game writes them.
+UI_TEXTS = ({f"{ui_names.SKILL_HANDLE}_{i}": (ui_names.label(s), f"FR {s}") for i, s in enumerate(ui_names.SKILLS)}
+            | {f"{ui_names.ABILITY_HANDLE}_{i}": (a, f"FR {a}") for i, a in enumerate(ui_names.ABILITIES, 1)})
+ATHLETICS = f"{ui_names.SKILL_HANDLE}_12"
 FRENCH = {"hFighter": "Guerrier", "hFireBolt2": "Trait de feu", "hBase": "Épée"}
 WIKI = {"source": "https://example.org", "license": "test", "items": {
     "MAG_Boots": {"uuid": "t-boots", "kind": "equipment", "rarity": "rare", "legacy": None, "locations": []},
@@ -147,7 +146,7 @@ FILES = ["meta.json", "rules.json", "texts.en.json", "texts.fr.json"]
 
 # Committed lists that describe the real game; the synthetic game gets empty ones.
 LISTS = ("GAME_TYPOS", "KNOWN_DUPLICATES", "UNNAMED", "ITEMS_EXCLUDED", "TECHNICAL_PASSIVES", "ORIGINS_EXCLUDED",
-         "UI_NAMES")
+         "ORIGIN_REFERENCES")
 
 
 class ImporterTest(unittest.TestCase):
@@ -214,12 +213,10 @@ class ImporterTest(unittest.TestCase):
         en = json.loads((self.out / "texts.en.json").read_text(encoding="utf-8"))
         fr = json.loads((self.out / "texts.fr.json").read_text(encoding="utf-8"))
         self.assertEqual(en["origin:Hero"], {"name": "EN hHero", "description": None})
-        self.assertEqual(fr["skill:Athletics"], {"name": "Athlétisme", "description": None})
-        self.assertEqual(en["skill:History"], {"name": "History", "description": None})
-        self.assertEqual(fr["ability:Strength"], {"name": "Force", "description": None})
-        self.assertEqual(sorted(k for k in fr if k.startswith(("skill:", "ability:"))),
-                         sorted(["skill:Athletics", "skill:History"] + [f"ability:{h[1:]}" for h in UI_TEXTS
-                                                                       if h[1:] not in ("Athletics", "History")]))
+        self.assertEqual(fr["skill:Athletics"], {"name": "FR Athletics", "description": None})
+        self.assertEqual(en["skill:SleightOfHand"], {"name": "Sleight of Hand", "description": None})
+        self.assertEqual(fr["ability:Strength"], {"name": "FR Strength", "description": None})
+        self.assertEqual(len([k for k in fr if k.startswith(("skill:", "ability:"))]), 24)
 
     def test_excluded_origin_and_technical_passive(self):
         self.set_list("ORIGINS_EXCLUDED", "Hero  # test exclusion\n")
@@ -231,17 +228,30 @@ class ImporterTest(unittest.TestCase):
         self.assertNotIn("origin:Hero", json.loads((self.out / "texts.en.json").read_text(encoding="utf-8")))
 
     def test_ui_name_errors_listed(self):
-        game, folder = make_game(drop_french="hHistory")
+        game, folder = make_game(drop_french=ATHLETICS)
         self.addCleanup(folder.cleanup)
         with mock.patch("sys.stderr") as stderr:
             code = importer.main(["--game", str(game), "--game-version", "1.2.3", "--output", str(self.out)])
         self.assertEqual(code, 1)
-        self.assertIn("skill:History", "".join(c.args[0] for c in stderr.write.call_args_list))
-        self.set_list("UI_NAMES", "skill:History hHistory  # test\n")
+        printed = "".join(c.args[0] for c in stderr.write.call_args_list)
+        self.assertIn("skill:Athletics", printed)
+        self.assertIn(ATHLETICS, printed)
+        self.assertFalse(self.out.exists())
+
+    def test_listed_origin_reference(self):
+        files = rules_files()
+        origins_file = "Public/Gustav/Origins/Origins.lsx"
+        files["Gustav.pak"][origins_file] = files["Gustav.pak"][origins_file].replace(
+            b'value="r-elf"', b'value="r-hidden"')
+        (self.game / "Data" / "Gustav.pak").write_bytes(fixtures.pak(files["Gustav.pak"]))
         with mock.patch("sys.stderr") as stderr:
-            self.assertEqual(importer.main(["--game", str(game), "--game-version", "1.2.3", "--output",
+            self.assertEqual(importer.main(["--game", str(self.game), "--game-version", "1.2.3", "--output",
                                             str(self.out)]), 1)
-        self.assertIn("hHistory", "".join(c.args[0] for c in stderr.write.call_args_list))
+        self.assertIn("RaceUUID r-hidden", "".join(c.args[0] for c in stderr.write.call_args_list))
+        self.set_list("ORIGIN_REFERENCES", "Hero race Elf  # test reference\n")
+        importer.run(self.game, self.out, "1.2.3")
+        self.assertEqual(json.loads((self.out / "rules.json").read_text(encoding="utf-8"))["origins"]["Hero"]["race"],
+                         "Elf")
 
     def test_items_end_to_end(self):
         importer.run(self.game, self.out, "1.2.3")

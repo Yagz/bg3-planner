@@ -1,0 +1,3 @@
+# References of an origin that the game gives as a non-playable element, replaced by the playable rules key the planner uses.
+# One per line: `<origin> <class|subclass|race|subrace> <rules key>  # reason`. A listed reference that resolves by itself, whose rules key is missing, or whose origin is unknown or excluded is an error. The list is the maintainer's decision.
+Astarion subrace Elf_HighElf  # Origins.lsx gives UndeadHighElfHidden, not a playable race; its parent is Elf_HighElf, its display name reads High Elf / Haut-elfe and it uses the High Elf progression table

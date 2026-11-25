@@ -1,3 +1,39 @@
 # Technical passives: engine helpers (toggles, unlocks, messages, visual effects) that the interface hides from the player's lists.
 # One per line: `<passive name>  # reason`. The passive is marked `technical: true` in rules.json; a listed name that is not a passive of the rules is an error.
 # The list is the maintainer's decision: `python3.14 -m scripts.data.checks data/larian --technical-candidates` prints the passives to review.
+ArcaneWard_Cast  # no name in either table
+BardSpellcasting  # no name in either table
+Bladesong_Armor_Message  # no name in either table
+Bladesong_Shield  # no name in either table
+Bladesong_Shield_Message  # no name in either table
+Bladesong_Unarmed  # no name in either table
+Bladesong_Weapon  # no name in either table
+Bladesong_Weapon_Message  # no name in either table
+CheekyTipple_Drunk  # no name in either table
+CosmicOmen_Ability  # no name in either table
+Divine_Strike_Death  # no name in either table
+Divine_Strike_Life_Toggle  # no name in either table
+Divine_Strike_Nature_Toggle  # no name in either table
+Divine_Strike_Tempest_Toggle  # no name in either table
+Divine_Strike_Trickery_Toggle  # no name in either table
+Divine_Strike_War_Toggle  # no name in either table
+FungalInfestation  # no name in either table
+MantleOfInspiration_Unlock2  # no name in either table
+MantleOfInspiration_Unlock3  # no name in either table
+Monk_SoundSwitch  # no name in either table
+Rage_Armour_Message  # no name in either table
+Rage_NoHeavyArmour_VFX  # no name in either table
+SneakAttackSwitch  # no name in either table
+SneakAttack_Unlock  # no name in either table
+SongOfDefense_6  # no name in either table
+ThirstingBlade_Blade  # no name in either table
+ThirstingBlade_Tome  # no name in either table
+TidesOfChaos_Unlock  # no name in either table
+TransmutationStone_Activation  # no name in either table
+WrithingTide_Technical  # no name in either table
+UnlockedSpellSlotLevel1  # spell-slot unlock helper whose name is a sentence fragment
+UnlockedSpellSlotLevel2  # spell-slot unlock helper whose name is a sentence fragment
+UnlockedSpellSlotLevel3  # spell-slot unlock helper whose name is a sentence fragment
+UnlockedWarlockSpellSlotLevel1  # spell-slot unlock helper whose name is a sentence fragment
+UnlockedWarlockSpellSlotLevel2  # spell-slot unlock helper whose name is a sentence fragment
+UnlockedWarlockSpellSlotLevel3  # spell-slot unlock helper whose name is a sentence fragment

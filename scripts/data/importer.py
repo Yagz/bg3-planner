@@ -23,7 +23,7 @@ KNOWN_DUPLICATES = Path(__file__).with_name("known_duplicates.txt")
 ITEMS_EXCLUDED = Path(__file__).with_name("items_excluded.txt")
 TECHNICAL_PASSIVES = model.TECHNICAL_PASSIVES
 ORIGINS_EXCLUDED = origins.ORIGINS_EXCLUDED
-UI_NAMES = ui_names.UI_NAMES
+ORIGIN_REFERENCES = origins.ORIGIN_REFERENCES
 WIKI = items.WIKI
 
 # Key expected by model.build -> (path relative to the module, node type).
@@ -143,7 +143,8 @@ def build(game: Path, game_version: str, wiki: Path | None = None) -> dict[str, 
                         technical=model.read_technical(TECHNICAL_PASSIVES))
     # Origins, texts and UI names fail together, so that one run lists every exception to decide.
     rules["origins"], problems = origins.build(origin_nodes, ability_presets, rules,
-                                               origins.read_excluded(ORIGINS_EXCLUDED))
+                                               origins.read_excluded(ORIGINS_EXCLUDED),
+                                               origins.read_references(ORIGIN_REFERENCES))
     en = loca.table(game / "Data" / ENGLISH_PAK, "English")
     fr = loca.table(game / "Data" / FRENCH_PAK, "French")
     try:
@@ -152,9 +153,9 @@ def build(game: Path, game_version: str, wiki: Path | None = None) -> dict[str, 
     except texts.MissingText as e:
         problems.extend(e.errors)
     skills = sorted({item for l in rules["lists"].values() if l["type"] == "skills" for item in l["items"]})
+    problems.extend(f"skill list item {s} is not in the skill name family" for s in skills if s not in ui_names.SKILLS)
     try:
-        ui_en, ui_fr = ui_names.resolve({"skill": skills, "ability": list(origins.ABILITIES)}, en, fr,
-                                        ui_names.read_listed(UI_NAMES))
+        ui_en, ui_fr = ui_names.resolve(en, fr)
     except texts.MissingText as e:
         problems.extend(e.errors)
     if problems:

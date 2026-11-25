@@ -1,14 +1,15 @@
 """Origins (`Origins/Origins.lsx`): the predefined characters, with their class, race, background and
 default ability scores (`CharacterCreationPresets/AbilityDistributionPresets.lsx`).
 
-Every reference is resolved to a rules key; one that does not resolve is an error, never a null. An
-origin is left out only when listed in `origins_excluded.txt`.
+Every reference is resolved to a rules key; one that does not resolve is an error, never a null, unless
+`origin_references.txt` gives its rules key. An origin is left out only when listed in `origins_excluded.txt`.
 """
 from pathlib import Path
 
 from scripts.data import model
 
 ORIGINS_EXCLUDED = Path(__file__).with_name("origins_excluded.txt")
+ORIGIN_REFERENCES = Path(__file__).with_name("origin_references.txt")
 ABILITIES = tuple(a for a in model._ABILITIES.values() if a)
 # Origin attribute -> (output field, rules section).
 _REFERENCES = (("ClassUUID", "class", "classes"), ("SubClassUUID", "subclass", "classes"),
@@ -24,6 +25,22 @@ def read_excluded(path: Path) -> dict[str, str]:
         if content in res:
             raise ValueError(f"{path}:{number}: origin listed twice: {content!r}")
         res[content] = reason
+    return res
+
+
+def read_references(path: Path) -> dict[tuple[str, str], str]:
+    """References the game gives as a non-playable element: `<origin> <field> <rules key>  # reason` per line,
+    field among class, subclass, race, subrace; (origin, field) -> rules key."""
+    fields = {field for _, field, _ in _REFERENCES}
+    res = {}
+    for number, content, _ in model._listed_lines(path):
+        words = content.split()
+        if len(words) != 3 or words[1] not in fields:
+            raise ValueError(f"{path}:{number}: expected '<origin> <{'|'.join(sorted(fields))}> <rules key>  # reason': "
+                             f"{content!r}")
+        if (words[0], words[1]) in res:
+            raise ValueError(f"{path}:{number}: reference listed twice: {words[0]} {words[1]}")
+        res[(words[0], words[1])] = words[2]
     return res
 
 
@@ -47,9 +64,14 @@ def _presets(presets: dict[str, dict], errors: list[str]) -> dict[str, dict[str,
 
 
 def build(origins: dict[str, dict], presets: dict[str, dict], rules: dict,
-          excluded: dict[str, str]) -> tuple[dict[str, dict], list[str]]:
+          excluded: dict[str, str], references: dict[tuple[str, str], str] | None = None
+          ) -> tuple[dict[str, dict], list[str]]:
     """(origins keyed by Name, each with its `text` handles; every error found). `origins` and `presets` are
-    the merged LSX nodes by UUID; `rules` holds the classes, races and backgrounds to resolve against."""
+    the merged LSX nodes by UUID; `rules` holds the classes, races and backgrounds to resolve against;
+    `references` (see `read_references`) gives the rules key of a reference that does not resolve: a listed
+    reference that resolves by itself, names a missing key or an unknown origin is an error."""
+    references = references or {}
+    used: set[tuple[str, str]] = set()
     errors: list[str] = []
     scores = _presets(presets, errors)
     keys = {section: {e["uuid"]: name for name, e in rules[section].items()} for section in ("classes", "races")}
@@ -74,7 +96,17 @@ def build(origins: dict[str, dict], presets: dict[str, dict], rules: dict,
         for attribute, field, section in _REFERENCES:
             target = model._uuid(a.get(attribute))
             origin[field] = keys[section].get(target) if target else None
-            if target and origin[field] is None:
+            listed = references.get((name, field))
+            if listed is not None:
+                used.add((name, field))
+                if origin[field] is not None or not target:
+                    errors.append(f"origin_references.txt: {name} {field} resolves by itself to {origin[field]}; "
+                                  "remove it")
+                elif listed not in rules[section]:
+                    errors.append(f"origin_references.txt: {name} {field}: {listed} is not in rules {section}")
+                else:
+                    origin[field] = listed
+            elif target and origin[field] is None:
                 errors.append(f"{where}: {attribute} {target} is not in rules {section}")
         background = model._uuid(a.get("BackgroundUUID"))
         if background and background not in rules["backgrounds"]:
@@ -90,5 +122,7 @@ def build(origins: dict[str, dict], presets: dict[str, dict], rules: dict,
             errors.append(f"{where}: no ability preset for its class {class_uuid} or subclass {subclass_uuid}")
         origin["text"] = model._text(a)
         res[name] = origin
+    errors.extend(f"origin_references.txt: listed reference of an unknown or excluded origin: {o} {f}"
+                  for o, f in sorted(set(references) - used))
     errors.extend(f"origins_excluded.txt: listed origin not found: {name}" for name in sorted(set(excluded) - set(names)))
     return dict(sorted(res.items())), errors
