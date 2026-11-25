@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import type { TextKind } from "../../../src/data/names.ts";
 import type { GameData } from "../../../src/data/types.ts";
 import { decodeJson } from "../../../src/plan/codec.ts";
+import { ABILITIES } from "../../../src/plan/model.ts";
 import type { Run } from "../../../src/plan/model.ts";
 import { useI18n } from "../i18n/i18n.ts";
 import type { Lang } from "../i18n/i18n.ts";
@@ -74,6 +75,18 @@ export default function HistoryPanel({ data, name, versions, onRestore }: Props)
   const named = (kind: TextKind | null, id: string) => (id === "" ? t("history.none") : gameName(data, lang, kind, id));
   const list = (kind: TextKind | null, ids: string[]) => ids.map((id) => named(kind, id)).join(", ");
   const members = (ids: string[]) => ids.map((id) => characterLabel(data, lang, id, t("party.player"))).join(", ");
+  const sep = t("history.sep");
+  /**
+   * The scores that changed between two `runDiff` ability strings (six numbers in the game's ability order), each under
+   * the game's ability name; the whole strings when either is not six numbers.
+   */
+  const changedScores = (before: string, after: string): { was: string; now: string } => {
+    const a = before.split("/");
+    const b = after.split("/");
+    if (a.length !== ABILITIES.length || b.length !== ABILITIES.length) return { was: before, now: after };
+    const changed = ABILITIES.flatMap((ability, i) => (a[i] === b[i] ? [] : [{ name: gameName(data, lang, "ability", ability), was: a[i]!, now: b[i]! }]));
+    return { was: changed.map((entry) => `${entry.name} ${entry.was}`).join(", "), now: changed.map((entry) => `${entry.name} ${entry.now}`).join(", ") };
+  };
   const ruleset = (id: string) =>
     id === "" ? t("history.none") : id === "RULESET_LARIAN" ? gameName(data, lang, "label", "customMode") : gameName(data, lang, "ruleset", id);
 
@@ -90,7 +103,7 @@ export default function HistoryPanel({ data, name, versions, onRestore }: Props)
       case "name":
         return {
           who,
-          what: t("diff.name"),
+          what: t("diff.name", { name: change.after ?? "" }),
           was: change.before === "" ? undefined : change.before,
         };
       case "difficulty":
@@ -135,8 +148,10 @@ export default function HistoryPanel({ data, name, versions, onRestore }: Props)
         return swap(`${t(`diff.${change.kind}`)} `, "race");
       case "background":
         return swap(`${t("diff.background")} `, "background");
-      case "abilities":
-        return { who, what: t("diff.abilities"), was: change.before };
+      case "abilities": {
+        const scores = changedScores(change.before ?? "", change.after ?? "");
+        return { who, what: `${t("diff.abilities")}${sep}${scores.now}`, was: scores.was };
+      }
       case "levelAdded":
         return { who, what: t("diff.levelAdded", { level }) };
       case "levelRemoved":
@@ -149,11 +164,11 @@ export default function HistoryPanel({ data, name, versions, onRestore }: Props)
           const removed = change.removed ?? [];
           return {
             who,
-            what: `${t("diff.choice", { level })} : ${added.length === 0 ? t("history.none") : `+ ${list(null, added)}`}`,
+            what: `${t("diff.choice", { level })}${sep}${added.length === 0 ? t("history.none") : `+ ${list(null, added)}`}`,
             was: removed.length === 0 ? undefined : `− ${list(null, removed)}`,
           };
         }
-        return swap(`${t("diff.choice", { level })} : `, null);
+        return swap(`${t("diff.choice", { level })}${sep}`, null);
       case "notes":
         return { who, what: t("diff.notes") };
       default:
@@ -162,7 +177,12 @@ export default function HistoryPanel({ data, name, versions, onRestore }: Props)
   };
   const renderLine = (line: Line, key: number) => (
     <div className="diffline" key={key}>
-      <span className="muted">{line.who} :</span> {line.what}
+      <span className="muted">
+        {line.who}
+        {sep.trimEnd()}
+      </span>
+      {sep.slice(sep.trimEnd().length)}
+      {line.what}
       {line.was !== undefined && (
         <>
           {" "}
@@ -231,7 +251,7 @@ export default function HistoryPanel({ data, name, versions, onRestore }: Props)
                   {lines.length === 0 && info?.unreadable === true && <span className="note">{t("history.unreadable")}</span>}
                   {lines.length === 0 && info?.unreadable !== true && info?.other === true && <span className="note">{t("history.other")}</span>}
                   {lines.length === 0 && info?.unreadable !== true && info?.other !== true && note === undefined && (
-                    <span className="note">{index === versions.length - 1 ? t("history.first") : t("history.nothing")}</span>
+                    <span className="note">{index < versions.length - 1 ? t("history.nothing") : versions.length >= HISTORY_LIMIT ? t("history.older") : t("history.first")}</span>
                   )}
                   {lines.slice(0, 2).map(renderLine)}
                   {rest.length > 0 && (

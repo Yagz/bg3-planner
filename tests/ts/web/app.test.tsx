@@ -5,7 +5,7 @@ import { encode } from "../../../src/plan/codec.ts";
 import { emptyRun } from "../../../src/plan/model.ts";
 import type { Character, Run } from "../../../src/plan/model.ts";
 import App from "../../../web/src/App.tsx";
-import { createStore } from "../../../web/src/state/storage.ts";
+import { HISTORY_LIMIT, createStore } from "../../../web/src/state/storage.ts";
 import type { RunStore } from "../../../web/src/state/storage.ts";
 import { MemoryBackend } from "./memoryBackend.ts";
 import { StreamingBlob } from "./streamingBlob.ts";
@@ -362,6 +362,67 @@ describe("history panel: what each version changed", () => {
     const newest = within(screen.getByRole("list", { name: "Versions enregistrées" })).getAllByRole("listitem")[0]!;
     expect(newest.querySelector("s.was")?.textContent).toBe("Champion (fr)");
     expect(newest.textContent).toContain("Maître de guerre (fr)");
+  });
+});
+
+describe("history panel: new values, separators and the kept window (English, game data)", () => {
+  const player = (abilities: Character["abilities"]): Character => ({ id: "c1", who: "player", race: "Human", subrace: null, background: "", abilities, levels: [{ class: "Fighter", choices: {} }], items: [], notes: "" });
+  const SCORES = { Strength: 8, Dexterity: 15, Constitution: 14, Intelligence: 8, Wisdom: 15, Charisma: 10 };
+  const englishApp = (store: RunStore) => {
+    window.history.replaceState(null, "", "/#/history");
+    render(<App data={realData()} store={store} settingsBackend={new MemoryBackend()} />);
+    return within(screen.getByRole("list", { name: "Saved versions" })).getAllByRole("listitem");
+  };
+
+  it("shows a rename with the new name and the old one struck", () => {
+    const store = createStore(new MemoryBackend());
+    store.save({ ...emptyRun("n"), name: "Main" });
+    store.save({ ...emptyRun("n"), name: "Dark urges" });
+    const line = englishApp(store)[0]!.querySelector(".diffline")!;
+    expect(line.textContent).toContain("Dark urges");
+    expect(line.querySelector("s.was")?.textContent).toBe("Main");
+  });
+
+  it("shows the changed ability scores under the game's ability names, the old ones struck", () => {
+    const store = createStore(new MemoryBackend());
+    store.save({ ...emptyRun("a"), characters: [player(SCORES)] });
+    store.save({ ...emptyRun("a"), characters: [player({ ...SCORES, Strength: 10, Dexterity: 14 })] });
+    const line = englishApp(store)[0]!.querySelector(".diffline")!;
+    const was = line.querySelector("s.was")!;
+    expect(was.textContent).toBe("Strength 8, Dexterity 15");
+    expect(line.textContent!.replace(was.textContent!, "")).toContain("Strength 10, Dexterity 14");
+  });
+
+  it("separates the subject and a choice's level with the English separator", () => {
+    const store = createStore(new MemoryBackend());
+    const run = (picks: string[]) => {
+      const r = { ...emptyRun("s"), characters: [player(SCORES)] };
+      r.characters[0]!.levels[0]!.choices = { "u/1": picks };
+      return r;
+    };
+    store.save(run(["A", "B"]));
+    store.save(run(["C", "D"]));
+    const line = englishApp(store)[0]!.querySelector(".diffline")!;
+    expect(line.textContent).toMatch(/^Player: Level 1: \+ /);
+    expect(line.textContent).not.toContain(" : ");
+  });
+
+  it("says older versions are no longer kept on the oldest kept version once the history is full", () => {
+    const store = createStore(new MemoryBackend());
+    for (let i = 0; i <= HISTORY_LIMIT; i++) store.save({ ...emptyRun("cap"), name: `Name ${i}` });
+    expect(store.history("cap")).toHaveLength(HISTORY_LIMIT);
+    const items = englishApp(store);
+    expect(items).toHaveLength(HISTORY_LIMIT);
+    expect(items[HISTORY_LIMIT - 1]!.textContent).toContain("Older versions are no longer kept");
+    expect(items[HISTORY_LIMIT - 1]!.textContent).not.toContain("First saved version");
+  });
+
+  it("still calls the oldest version the first one while the history is not full", () => {
+    const store = createStore(new MemoryBackend());
+    store.save({ ...emptyRun("few"), name: "One" });
+    store.save({ ...emptyRun("few"), name: "Two" });
+    const items = englishApp(store);
+    expect(items[1]!.textContent).toContain("First saved version");
   });
 });
 
