@@ -8,6 +8,7 @@ import type { GameData } from "../src/data/types.ts";
 import { resolve } from "../src/engine/progression.ts";
 import { validate } from "../src/engine/validate.ts";
 import { CodecError, decode, encode, toReadableJson } from "../src/plan/codec.ts";
+import { isOffData } from "../src/plan/model.ts";
 import type { Run } from "../src/plan/model.ts";
 
 const USAGE = `Usage:
@@ -102,7 +103,7 @@ function slotsCommand(run: Run, data: GameData, lang: "en" | "fr", characterId: 
   const baseRaces = Object.keys(races).filter((id) => races[id]?.parent === null);
   const subraces = Object.keys(races).filter((id) => races[id]?.parent === character.race);
   if (character.race === "") pick("race", "race", baseRaces);
-  else if (baseRaces.includes(character.race) && character.subrace === null && subraces.length > 0) pick("subrace", "race", subraces);
+  else if (typeof character.race === "string" && baseRaces.includes(character.race) && character.subrace === null && subraces.length > 0) pick("subrace", "race", subraces);
   if (character.background === "") pick("background", "background", Object.keys(backgrounds));
   if (out.length > 0) out.unshift("character");
   const baseClasses = Object.keys(classes).filter((id) => classes[id]?.parent === null);
@@ -114,8 +115,9 @@ function slotsCommand(run: Run, data: GameData, lang: "en" | "fr", characterId: 
       out.push(`  ${slot}: ${header}`);
       for (const id of allowed) out.push(`    ${label(id, data, lang)}${unlocked.includes(id) ? " (unlocked in play)" : ""}`);
     };
-    out.push(`level ${level.level} (${level.class === "" ? "no class" : label(level.class, data, lang)})`);
-    if (level.class === "") pick("class", "class", baseClasses);
+    const offClass = isOffData(character.levels[level.level - 1]?.class);
+    out.push(`level ${level.level} (${offClass ? "class outside the game data" : level.class === "" ? "no class" : label(level.class, data, lang)})`);
+    if (level.class === "" && !offClass) pick("class", "class", baseClasses);
     for (const slot of level.slots) {
       const selector = slot.selector;
       if (selector.function === "AddSpells" || selector.function === "ReplacePassives") continue;

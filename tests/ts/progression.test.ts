@@ -15,7 +15,7 @@ function level(cls: string, choices: Record<string, Choice> = {}): Level {
   return { class: cls, choices };
 }
 
-function character(levels: Level[], race = "Human", subrace: string | null = null): Character {
+function character(levels: Level[], race: Character["race"] = "Human", subrace: Character["subrace"] = null): Character {
   const abilities = { Strength: 8, Dexterity: 8, Constitution: 8, Intelligence: 8, Wisdom: 8, Charisma: 8 };
   return { id: "c1", who: "player", race, subrace, background, abilities, levels, items: [], notes: "" };
 }
@@ -190,5 +190,36 @@ describe("resolve", () => {
     const { levels, issues } = resolve(character(thirteen), data);
     expect(issues).toContainEqual({ severity: "invalid", code: "tooManyLevels", character: "c1", level: null, slot: null, params: { count: 13, max: 12 } });
     expect(levels).toHaveLength(12);
+  });
+});
+
+describe("off-data identity fields", () => {
+  it("an off-data race gives a notice and no race rows", () => {
+    const plain = resolve(character([level("Fighter"), level("Fighter")], "Human"), data);
+    const { levels, issues } = resolve(character([level("Fighter"), level("Fighter")], { offData: "Mod race" }, { offData: "Mod subrace" }), data);
+    expect(issues.map((i) => [i.severity, i.code, i.slot, i.level])).toEqual([
+      ["notice", "offData", "race", null],
+      ["notice", "offData", "subrace", null],
+    ]);
+    const raceRows = (r: typeof levels) => r.flatMap((l) => l.rows).filter((row) => row.type === "race");
+    expect(raceRows(plain.levels).length).toBeGreaterThan(0);
+    expect(raceRows(levels)).toEqual([]);
+  });
+
+  it("an off-data subrace and background give notices, the race rows stay", () => {
+    const c = { ...character([level("Fighter")], "Halfling", { offData: "x" }), background: { offData: "y" } };
+    const { issues, levels } = resolve(c, data);
+    expect(issues.map((i) => [i.severity, i.slot])).toEqual([["notice", "subrace"], ["notice", "background"]]);
+    expect(levels[0]?.rows.some((r) => r.type === "race")).toBe(true);
+  });
+
+  it("an off-data class at level 2 gives a notice and no class rows for that level", () => {
+    const c = character([level("Fighter"), { class: { offData: "Mod class" }, choices: {} }, level("Fighter")]);
+    const { levels, issues } = resolve(c, data);
+    expect(issues).toEqual([{ severity: "notice", code: "offData", character: "c1", level: 2, slot: "class", params: {} }]);
+    expect(levels[1]?.rows.filter((r) => r.type === "class" || r.type === "subclass")).toEqual([]);
+    expect(levels[1]?.class).toBe("");
+    // The Fighter levels around it keep counting: level 3 is Fighter level 2.
+    expect(levels[2]?.classLevel).toBe(2);
   });
 });

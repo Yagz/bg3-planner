@@ -21,7 +21,7 @@ const DEX12_SCORES: Scores = { Strength: 15, Dexterity: 12, Constitution: 15, In
 /** 27 points. */
 const FIGHTER_SCORES: Scores = { Strength: 15, Dexterity: 15, Constitution: 15, Intelligence: 8, Wisdom: 8, Charisma: 8 };
 
-function character(classes: string[], choices: Record<string, Choice>[], scores: Scores, race = "Halfling", subrace: string | null = "Halfling_Lightfoot"): Character {
+function character(classes: string[], choices: Record<string, Choice>[], scores: Scores, race: Character["race"] = "Halfling", subrace: Character["subrace"] = "Halfling_Lightfoot"): Character {
   const levels: Level[] = classes.map((cls, i) => ({ class: cls, choices: choices[i] ?? {} }));
   return { id: "c1", who: "player", race, subrace, background, abilities: { ...scores }, levels, items: [], notes: "" };
 }
@@ -486,5 +486,29 @@ describe("validate, subclasses unlocked in play", () => {
     expect(issues).toEqual([
       { severity: "invalid", code: "subclassNotOffered", character: "c1", level: 3, slot: "subclass:Fighter", params: { class: "Fighter", subclass: "Oathbreaker" } },
     ]);
+  });
+});
+
+describe("validate, off-data identity fields", () => {
+  it("an off-data class at level 2 is a notice that never makes the run invalid", () => {
+    const c = character(["Fighter", "Fighter", "Fighter"], [], FIGHTER_SCORES, "Human", null);
+    c.levels[1] = { class: { offData: "Mod class" }, choices: {} };
+    const report = validate(runOf(c), data);
+    expect(report.issues.filter((i) => i.severity === "notice")).toEqual([
+      { severity: "notice", code: "offData", character: "c1", level: 2, slot: "class", params: {} },
+    ]);
+    expect(report.status).not.toBe("invalid");
+  });
+
+  it("an off-data race, background and class together never give invalid", () => {
+    const c = character(["Fighter"], [], FIGHTER_SCORES);
+    c.race = { offData: "r" };
+    c.subrace = null;
+    c.background = { offData: "b" };
+    c.levels[0] = { class: { offData: "c" }, choices: {} };
+    const report = validate(runOf(c), data);
+    expect(report.issues.map((i) => i.slot)).toEqual(["race", "background", "class"]);
+    expect(report.issues.every((i) => i.severity === "notice")).toBe(true);
+    expect(report.status).toBe("valid");
   });
 });

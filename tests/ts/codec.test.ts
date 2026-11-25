@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { CodecError, PREFIX, decode, encode, toReadableJson } from "../../src/plan/codec.ts";
 import { loadGameData } from "../../src/data/load.ts";
-import { emptyRun } from "../../src/plan/model.ts";
+import { emptyRun, isOffData } from "../../src/plan/model.ts";
 import type { Run } from "../../src/plan/model.ts";
-import { CURRENT_VERSION, migrate } from "../../src/plan/migrations.ts";
+import { CURRENT_VERSION, MIGRATIONS, migrate } from "../../src/plan/migrations.ts";
 
 function sampleRun(): Run {
-  const run = emptyRun();
+  const run = emptyRun("r1");
   run.name = "Anaïs — 日本語 🎲";
   run.decisions = { SavedHalsin: "yes" };
   run.uniqueItems = ["MAG_Acrobat_Shoes"];
@@ -44,7 +44,7 @@ describe("export string", () => {
   it("round trips losslessly", async () => {
     const run = sampleRun();
     const text = await encode(run);
-    expect(text.startsWith(`${PREFIX}1:`)).toBe(true);
+    expect(text.startsWith(`${PREFIX}2:`)).toBe(true);
     const decoded = await decode(text);
     expect(decoded.run).toEqual(run);
     expect(decoded.warnings).toEqual([]);
@@ -56,8 +56,8 @@ describe("export string", () => {
   });
 
   it("tolerates surrounding whitespace", async () => {
-    const text = await encode(emptyRun());
-    expect((await decode(`  ${text}\n`)).run).toEqual(emptyRun());
+    const text = await encode(emptyRun("r1"));
+    expect((await decode(`  ${text}\n`)).run).toEqual(emptyRun("r1"));
   });
 });
 
@@ -83,7 +83,7 @@ describe("readable JSON", () => {
     const data = await loadGameData("data/larian");
     const background = Object.keys(data.rules.backgrounds)[0] ?? "";
     const spell = Object.keys(data.rules.spells)[0] ?? "";
-    const run = emptyRun();
+    const run = emptyRun("r1");
     run.characters = [
       {
         id: "c1", who: "player", race: "Halfling", subrace: "LightfootHalfling", background,
@@ -107,7 +107,7 @@ describe("readable JSON", () => {
   });
 
   it("accepts a hand-written _name hint", async () => {
-    const run = emptyRun();
+    const run = emptyRun("r1");
     const raw = { ...run, _name: "x" };
     const decoded = await decode(JSON.stringify(raw));
     expect(decoded.run).toEqual(run);
@@ -117,9 +117,9 @@ describe("readable JSON", () => {
 
 describe("errors", () => {
   it("each failure kind throws a distinct CodecError", async () => {
-    const good = await encode(emptyRun());
+    const good = await encode(emptyRun("r1"));
     const body = good.slice("BG3P1:".length);
-    const deflateOfNonJson = await encode(emptyRun()).then(() => "BG3P1:" + btoa("not deflate data").replace(/=+$/, ""));
+    const deflateOfNonJson = await encode(emptyRun("r1")).then(() => "BG3P1:" + btoa("not deflate data").replace(/=+$/, ""));
     const messages = [
       (await rejects(decode("XYZ1:abcd"))).message,
       (await rejects(decode("BG3Px:abcd"))).message,
@@ -142,7 +142,7 @@ describe("errors", () => {
   });
 
   it("a missing field is an error naming its path", async () => {
-    const raw: Record<string, unknown> = { ...emptyRun() };
+    const raw: Record<string, unknown> = { ...emptyRun("r1") };
     delete raw["notes"];
     const error = await rejects(decode(JSON.stringify(raw)));
     expect(error.message).toContain("notes");
@@ -170,15 +170,66 @@ describe("errors", () => {
     expect((await mutate((r) => (r.characters[0].levels = Array.from({ length: 13 }, () => ({ class: "Ranger", choices: {} }))))).message).toContain("levels");
     expect((await mutate((r) => (r.characters[0].levels[0].choices["a/0"] = "done"))).message).toContain("choices");
     expect((await mutate((r) => (r.characters[0].levels[0].choices["a/0"] = [1]))).message).toContain("choices");
-    expect((await mutate((r) => (r.version = 2))).message).toMatch(/version/);
+    expect((await mutate((r) => (r.version = 3))).message).toMatch(/version/);
+  });
+});
+
+describe("hardening", () => {
+  it("encode refuses a run with a bad shape", async () => {
+    const run = sampleRun();
+    (run.characters[0]!.levels[0] as unknown as { class: unknown }).class = 3;
+    const error = await rejects(encode(run));
+    expect(error.message).toContain("characters[0].levels[0].class");
+  });
+
+  it("decode wraps deep nesting in a CodecError", async () => {
+    const raw = JSON.stringify(emptyRun("r1")).replace('"notes":""', `"notes":${"[".repeat(20000)}${"]".repeat(20000)}`);
+    await rejects(decode(raw));
+  });
+
+  it("decode wraps a failing migration in a CodecError", async () => {
+    const registry = { ...MIGRATIONS, 1: () => { throw new TypeError("boom"); } };
+    const error = await rejects(decode(JSON.stringify({ ...emptyRun("r1"), version: 1 }), registry));
+    expect(error.message).toContain("boom");
+  });
+});
+
+describe("off-data identity fields", () => {
+  it("round trip for race, subrace, background and class", async () => {
+    const run = sampleRun();
+    const c = run.characters[0]!;
+    c.race = { offData: "Mod race ✓" };
+    c.subrace = { offData: "Mod subrace" };
+    c.background = { offData: "Mod background" };
+    c.levels[1]!.class = { offData: "Mod class" };
+    const text = await encode(run);
+    expect((await decode(text)).run).toEqual(run);
+    expect(isOffData(c.race)).toBe(true);
+    expect(isOffData("Human")).toBe(false);
+    expect(isOffData(null)).toBe(false);
+  });
+
+  it("rejects a malformed off-data value naming its path", async () => {
+    const raw = JSON.parse(JSON.stringify(sampleRun()));
+    raw.characters[0].race = { offData: 3 };
+    expect((await rejects(decode(JSON.stringify(raw)))).message).toContain("characters[0].race.offData");
+  });
+
+  it("gives no readable-JSON hint to an off-data value", () => {
+    const run = sampleRun();
+    run.characters[0]!.race = { offData: "Mod race" };
+    run.characters[0]!.levels[0]!.class = { offData: "Mod class" };
+    const parsed = JSON.parse(toReadableJson(run, { "race:Halfling": { name: "Halfelin", description: null } }));
+    expect(parsed.characters[0]._names ?? {}).not.toHaveProperty("Mod race");
+    expect(JSON.stringify(parsed.characters[0]._names ?? {})).not.toContain("Mod");
   });
 });
 
 describe("__proto__ keys", () => {
   it("are rejected at the top level and as record keys, never silently lost", async () => {
-    const top = JSON.stringify(emptyRun()).replace("{", '{"__proto__":{"x":1},');
+    const top = JSON.stringify(emptyRun("r1")).replace("{", '{"__proto__":{"x":1},');
     expect((await rejects(decode(top))).message).toContain("__proto__");
-    const deco = JSON.stringify(emptyRun()).replace('"decisions":{}', '"decisions":{"__proto__":"keep"}');
+    const deco = JSON.stringify(emptyRun("r1")).replace('"decisions":{}', '"decisions":{"__proto__":"keep"}');
     expect(deco).toContain("keep");
     expect((await rejects(decode(deco))).message).toContain("decisions.__proto__");
   });
@@ -186,11 +237,12 @@ describe("__proto__ keys", () => {
 
 describe("migrations", () => {
   it("an older version goes through the registry", async () => {
-    expect(CURRENT_VERSION).toBe(1);
-    const old: Record<string, unknown> = { ...emptyRun(), version: 0 };
+    expect(CURRENT_VERSION).toBe(2);
+    const old: Record<string, unknown> = { ...emptyRun("r1"), version: 0 };
     delete old["notes"];
     old["comment"] = "legacy";
     const registry = {
+      ...MIGRATIONS,
       0: (raw: unknown) => {
         const { comment, ...rest } = raw as Record<string, unknown>;
         return { ...rest, version: 1, notes: String(comment) };
@@ -198,24 +250,42 @@ describe("migrations", () => {
     };
     const decoded = await decode(JSON.stringify(old), registry);
     expect(decoded.run.notes).toBe("legacy");
-    expect(decoded.run.version).toBe(1);
+    expect(decoded.run.version).toBe(2);
   });
 
   it("works for the string form with an older prefix", async () => {
-    const old = { ...emptyRun(), version: 0 };
+    const { id, updatedAt, ...v0 } = emptyRun("r1");
+    const old = { ...v0, version: 0 };
     const stream = new Blob([new TextEncoder().encode(JSON.stringify(old))]).stream().pipeThrough(new CompressionStream("deflate-raw"));
     const bytes = new Uint8Array(await new Response(stream).arrayBuffer());
     const b64 = btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-    const registry = { 0: (raw: unknown) => ({ ...(raw as object), version: 1 }) };
-    expect((await decode(`BG3P0:${b64}`, registry)).run).toEqual(emptyRun());
+    const registry = { ...MIGRATIONS, 0: (raw: unknown) => ({ ...(raw as object), version: 1 }) };
+    expect((await decode(`BG3P0:${b64}`, registry)).run).toEqual({ ...emptyRun("r1"), id: "" });
+  });
+
+  it("a v1 string decodes to v2 with id \"\" and updatedAt null", async () => {
+    const { id, updatedAt, ...rest } = sampleRun();
+    const v1 = { ...rest, version: 1 };
+    const stream = new Blob([new TextEncoder().encode(JSON.stringify(v1))]).stream().pipeThrough(new CompressionStream("deflate-raw"));
+    const bytes = new Uint8Array(await new Response(stream).arrayBuffer());
+    const b64 = btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+    const { run, warnings } = await decode(`BG3P1:${b64}`);
+    expect(warnings).toEqual([]);
+    expect(run.version).toBe(2);
+    expect(run.id).toBe("");
+    expect(run.updatedAt).toBeNull();
+    const { id: _i, updatedAt: _u, version: _v, ...others } = run;
+    const { version: _w, ...expected } = v1;
+    expect(others).toEqual(expected);
+    expect(await decode(await encode(run))).toEqual({ run, warnings: [] });
   });
 
   it("a missing step, a future version or a version mismatch is an error", async () => {
     expect(() => migrate({}, 0, {})).toThrow(CodecError);
     expect(() => migrate({}, CURRENT_VERSION + 1, {})).toThrow(CodecError);
-    await rejects(decode(JSON.stringify({ ...emptyRun(), version: 0 })));
-    await rejects(decode(JSON.stringify({ ...emptyRun(), version: 99 })));
+    await rejects(decode(JSON.stringify({ ...emptyRun("r1"), version: 0 })));
+    await rejects(decode(JSON.stringify({ ...emptyRun("r1"), version: 99 })));
     const bad = { 0: (raw: unknown) => raw };
-    await rejects(decode(JSON.stringify({ ...emptyRun(), version: 0 }), bad));
+    await rejects(decode(JSON.stringify({ ...emptyRun("r1"), version: 0 }), bad));
   });
 });

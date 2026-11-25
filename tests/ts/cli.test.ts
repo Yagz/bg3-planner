@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -87,6 +87,18 @@ describe("run command line", () => {
     expect(result.out).toMatch(/invalid c1 level 1 class unknownClass/);
   });
 
+  it("still reads a v1 string, migrated to v2", async () => {
+    const { id, updatedAt, ...rest } = rangerRun(3);
+    const stream = new Blob([new TextEncoder().encode(JSON.stringify({ ...rest, version: 1 }))]).stream().pipeThrough(new CompressionStream("deflate-raw"));
+    const bytes = new Uint8Array(await new Response(stream).arrayBuffer());
+    const v1 = `BG3P1:${Buffer.from(bytes).toString("base64url")}`;
+    const result = cli("validate", v1);
+    expect(result.code).toBe(1);
+    expect(result.out).toMatch(/incomplete c1 level 3 subclass:Ranger choiceMissing/);
+    const decoded = JSON.parse(cli("decode", v1).out);
+    expect(decoded).toMatchObject({ version: 2, id: "", updatedAt: null });
+  });
+
   it("exits 3 on unreadable input and usage errors", () => {
     expect(cli("validate", "not a run").code).toBe(3);
     expect(cli("decode", join(dir, "missing")).code).toBe(3);
@@ -97,11 +109,20 @@ describe("run command line", () => {
     expect(cli("validate", "not a run").err).not.toBe("");
   });
 
-  it("exits 4 with a one-line error when the tool itself fails", () => {
+  it("exits 3 for a document too deeply nested to read", () => {
     const deep = join(dir, "deep.json");
     const run = JSON.stringify(rangerRun(1));
     writeFileSync(deep, run.replace('"notes":""', `"notes":${"[".repeat(20000)}${"]".repeat(20000)}`));
     const result = cli("validate", deep);
+    expect(result.code).toBe(3);
+    expect(result.err).not.toMatch(/^\s+at /m);
+  });
+
+  it.skipIf(process.getuid?.() === 0)("exits 4 with a one-line error when the tool itself fails", () => {
+    const locked = join(dir, "locked.json");
+    writeFileSync(locked, JSON.stringify(rangerRun(1)));
+    chmodSync(locked, 0o000);
+    const result = cli("validate", locked);
     expect(result.code).toBe(4);
     expect(result.err).toMatch(/^error: /);
     expect(result.err).not.toMatch(/^\s+at /m);

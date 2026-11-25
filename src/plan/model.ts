@@ -3,12 +3,19 @@ export type Ability = (typeof ABILITIES)[number];
 
 export const MAX_LEVELS = 12;
 
+/** A value outside the game data (e.g. from a mod), kept as written and never interpreted. */
+export type OffData = { offData: string };
+
+export function isOffData(value: unknown): value is OffData {
+  return typeof value === "object" && value !== null && !Array.isArray(value) && typeof (value as OffData).offData === "string";
+}
+
 /** The picks made at one slot: identifiers, not decided yet, or a value outside the game data. */
-export type Choice = string[] | "todo" | { offData: string };
+export type Choice = string[] | "todo" | OffData;
 
 export type Level = {
   /** The class taken at this level. */
-  class: string;
+  class: string | OffData;
   /** Choices by slot id (`<progression UUID>/<selector index>`). */
   choices: Record<string, Choice>;
 };
@@ -17,9 +24,9 @@ export type Character = {
   id: string;
   /** "player" or a companion id. */
   who: string;
-  race: string;
-  subrace: string | null;
-  background: string;
+  race: string | OffData;
+  subrace: string | null | OffData;
+  background: string | OffData;
   /** Base scores, before any bonus. */
   abilities: Record<Ability, number>;
   /** Index 0 is character level 1; at most 12. */
@@ -36,7 +43,11 @@ export type ActParty = {
 };
 
 export type Run = {
-  version: 1;
+  version: 2;
+  /** Stable identity of the run, kept across exports and renames; empty for a run migrated from version 1. */
+  id: string;
+  /** ISO date of the last edit; null when unknown. */
+  updatedAt: string | null;
   name: string;
   origin: string;
   difficulty: string;
@@ -50,9 +61,11 @@ export type Run = {
   notes: string;
 };
 
-export function emptyRun(): Run {
+export function emptyRun(id: string = crypto.randomUUID()): Run {
   return {
-    version: 1,
+    version: 2,
+    id,
+    updatedAt: null,
     name: "",
     origin: "",
     difficulty: "",

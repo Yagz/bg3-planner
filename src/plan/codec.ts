@@ -5,7 +5,8 @@ import { CodecError } from "./errors.ts";
 import { CURRENT_VERSION, MIGRATIONS, migrate } from "./migrations.ts";
 import type { Migration } from "./migrations.ts";
 import { ABILITIES, MAX_LEVELS } from "./model.ts";
-import type { Run } from "./model.ts";
+import { isOffData } from "./model.ts";
+import type { OffData, Run } from "./model.ts";
 
 export { CodecError };
 
@@ -47,18 +48,31 @@ async function pipe(bytes: Uint8Array<ArrayBuffer>, transform: CompressionStream
   return new Uint8Array(await new Response(stream).arrayBuffer());
 }
 
+/** Encodes a run; a run of the wrong shape is refused with the same messages as a decoding failure. */
 export async function encode(run: Run): Promise<string> {
-  const json = new TextEncoder().encode(JSON.stringify(run));
+  const valid = validateRun(run);
+  const json = new TextEncoder().encode(JSON.stringify(valid));
   const packed = await pipe(json, new CompressionStream("deflate-raw"));
   return `${PREFIX}${CURRENT_VERSION}:${toBase64Url(packed)}`;
 }
 
 // ---------------------------------------------------------------- decoding
 
+/** Reads an export string or a JSON document; throws nothing but a `CodecError`. */
 export async function decode(
   text: string,
   registry: Record<number, Migration> = MIGRATIONS,
 ): Promise<{ run: Run; warnings: string[] }> {
+  try {
+    return await decodeText(text, registry);
+  } catch (error) {
+    if (error instanceof CodecError) throw error;
+    // Deep nesting overflows the stack; a migration may throw anything.
+    throw new CodecError(`The document could not be read: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+async function decodeText(text: string, registry: Record<number, Migration>): Promise<{ run: Run; warnings: string[] }> {
   const trimmed = text.trim();
   if (trimmed === "") throw new CodecError("Nothing to import: the text is empty");
 
@@ -189,22 +203,34 @@ function record<T>(value: unknown, path: string, item: (v: unknown, p: string) =
   return out;
 }
 
+function offData(value: unknown, path: string): OffData {
+  const obj = object(value, path, ["offData"]);
+  return { offData: str(obj["offData"], at(path, "offData")) };
+}
+
 function choice(value: unknown, path: string): Run["characters"][number]["levels"][number]["choices"][string] {
   if (value === "todo") return "todo";
   if (Array.isArray(value)) return strings(value, path);
-  if (isObject(value)) {
-    const obj = object(value, path, ["offData"]);
-    return { offData: str(obj["offData"], at(path, "offData")) };
-  }
+  if (isObject(value)) return offData(value, path);
   return fail(path, 'a list of identifiers, "todo" or {"offData": string}');
 }
 
-function validateRun(raw: Obj): Run {
+/** An identifier (or null where allowed) or a value outside the game data. */
+function identity(value: unknown, path: string): string | OffData {
+  if (isObject(value)) return offData(value, path);
+  if (typeof value !== "string") fail(path, 'a string or {"offData": string}');
+  return value;
+}
+
+function validateRun(raw: unknown): Run {
   const r = object(raw, "", [
-    "version", "name", "origin", "difficulty", "partySize", "progress", "party",
+    "version", "id", "updatedAt", "name", "origin", "difficulty", "partySize", "progress", "party",
     "characters", "decisions", "bonuses", "uniqueItems", "notes",
   ]);
   if (r["version"] !== CURRENT_VERSION) fail("version", String(CURRENT_VERSION));
+
+  const updatedAt = r["updatedAt"];
+  if (updatedAt !== null && typeof updatedAt !== "string") fail("updatedAt", "a string or null");
 
   const progress = object(r["progress"], "progress", ["level", "act"]);
   const act = progress["act"];
@@ -234,15 +260,15 @@ function validateRun(raw: Obj): Run {
     const levels = levelsRaw.map((lv, j) => {
       const lp = at(at(path, "levels"), j);
       const l = object(lv, lp, ["class", "choices"]);
-      return { class: str(l["class"], at(lp, "class")), choices: record(l["choices"], at(lp, "choices"), choice) };
+      return { class: identity(l["class"], at(lp, "class")), choices: record(l["choices"], at(lp, "choices"), choice) };
     });
     const subrace = c["subrace"];
     return {
       id: str(c["id"], at(path, "id")),
       who: str(c["who"], at(path, "who")),
-      race: str(c["race"], at(path, "race")),
-      subrace: subrace === null ? null : str(subrace, at(path, "subrace")),
-      background: str(c["background"], at(path, "background")),
+      race: identity(c["race"], at(path, "race")),
+      subrace: subrace === null ? null : identity(subrace, at(path, "subrace")),
+      background: identity(c["background"], at(path, "background")),
       abilities,
       levels,
       items: strings(c["items"], at(path, "items")),
@@ -251,7 +277,9 @@ function validateRun(raw: Obj): Run {
   });
 
   return {
-    version: 1,
+    version: 2,
+    id: str(r["id"], "id"),
+    updatedAt,
     name: str(r["name"], "name"),
     origin: str(r["origin"], "origin"),
     difficulty: str(r["difficulty"], "difficulty"),
@@ -267,6 +295,11 @@ function validateRun(raw: Obj): Run {
 }
 
 // ---------------------------------------------------------------- readable JSON
+
+/** The identifier of a value, or null for a missing one or a value outside the game data (which has no hint). */
+function idOf(value: string | null | OffData): string | null {
+  return isOffData(value) ? null : value;
+}
 
 /** A hint entry per identifier; `kind` is null for choices, whose kind is not known. */
 function names(ids: Iterable<string | null>, texts: Texts, kind: TextKind | null): Record<string, string> {
@@ -290,16 +323,16 @@ export function toReadableJson(run: Run, texts: Texts): string {
       withNames(
         level,
         {
-          ...names([level.class], texts, "class"),
+          ...names([idOf(level.class)], texts, "class"),
           ...names(Object.values(level.choices).flatMap((ch) => (Array.isArray(ch) ? ch : [])), texts, null),
         },
       ),
     );
     const found = {
-      ...names([c.race, c.subrace], texts, "race"),
-      ...names([c.background], texts, "background"),
+      ...names([idOf(c.race), idOf(c.subrace)], texts, "race"),
+      ...names([idOf(c.background)], texts, "background"),
       ...names(c.items, texts, "item"),
-      ...names(c.levels.map((l) => l.class), texts, "class"),
+      ...names(c.levels.map((l) => idOf(l.class)), texts, "class"),
     };
     return withNames({ ...c, levels }, found);
   });

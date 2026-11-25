@@ -1,5 +1,5 @@
 import type { GameData, Progression, Selector } from "../data/types.ts";
-import { MAX_LEVELS } from "../plan/model.ts";
+import { MAX_LEVELS, isOffData } from "../plan/model.ts";
 import type { Character } from "../plan/model.ts";
 import type { Issue } from "./issues.ts";
 
@@ -15,6 +15,7 @@ export type Slot = {
 export type ResolvedLevel = {
   /** Character level (1-based). */
   level: number;
+  /** The class taken; empty when the level has none or its class is outside the game data. */
   class: string;
   /** Level reached in `class` at this character level. */
   classLevel: number;
@@ -76,14 +77,19 @@ export function resolve(character: Character, data: GameData): { levels: Resolve
   let raceTable: string | null = null;
   let subraceTable: string | null = null;
   const { race, subrace } = character;
-  if (race === "") {
+  if (isOffData(race)) {
+    issue("notice", "offData", null, "race");
+    if (isOffData(subrace)) issue("notice", "offData", null, "subrace");
+  } else if (race === "") {
     issue("incomplete", "choiceMissing", null, "race");
   } else if (!Object.hasOwn(races, race) || races[race]?.parent !== null) {
     issue("invalid", "unknownRace", null, "race", { race });
   } else {
     raceTable = races[race]?.table ?? null;
     const hasSubraces = Object.values(races).some((r) => r.parent === race);
-    if (subrace === null) {
+    if (isOffData(subrace)) {
+      issue("notice", "offData", null, "subrace");
+    } else if (subrace === null) {
       if (hasSubraces) issue("incomplete", "choiceMissing", null, "subrace");
     } else if (!Object.hasOwn(races, subrace) || races[subrace]?.parent === null) {
       issue("invalid", "unknownSubrace", null, "subrace", { subrace });
@@ -95,17 +101,21 @@ export function resolve(character: Character, data: GameData): { levels: Resolve
   }
 
   // Background.
-  if (character.background === "") {
+  const { background } = character;
+  if (isOffData(background)) {
+    issue("notice", "offData", null, "background");
+  } else if (background === "") {
     issue("incomplete", "choiceMissing", null, "background");
-  } else if (!Object.hasOwn(backgrounds, character.background)) {
-    issue("invalid", "unknownBackground", null, "background", { background: character.background });
+  } else if (!Object.hasOwn(backgrounds, background)) {
+    issue("invalid", "unknownBackground", null, "background", { background });
   }
 
   if (character.levels.length > MAX_LEVELS) {
     issue("invalid", "tooManyLevels", null, null, { count: character.levels.length, max: MAX_LEVELS });
   }
 
-  const firstClass = character.levels[0]?.class;
+  const first = character.levels[0]?.class;
+  const firstClass = isOffData(first) ? undefined : first;
   const classLevels = new Map<string, number>();
   /** Subclass chosen per class, once its choice is valid. */
   const subclasses = new Map<string, string>();
@@ -113,16 +123,20 @@ export function resolve(character: Character, data: GameData): { levels: Resolve
 
   character.levels.slice(0, MAX_LEVELS).forEach((entry, i) => {
     const n = i + 1;
-    const cls = entry.class;
-    const classLevel = (classLevels.get(cls) ?? 0) + 1;
-    classLevels.set(cls, classLevel);
+    const offData = isOffData(entry.class);
+    const cls = isOffData(entry.class) ? "" : entry.class;
+    // A class outside the game data has no known level to count.
+    const classLevel = offData ? 0 : (classLevels.get(cls) ?? 0) + 1;
+    if (!offData) classLevels.set(cls, classLevel);
 
     const classRows: Progression[] = [];
     const subclassRows: Progression[] = [];
     let subclassChoice: string[] | null = null;
     let unlocked: string[] = [];
 
-    if (cls === "") {
+    if (offData) {
+      issue("notice", "offData", n, "class");
+    } else if (cls === "") {
       issue("incomplete", "choiceMissing", n, "class");
     } else if (!Object.hasOwn(classes, cls) || classes[cls]?.parent !== null) {
       issue("invalid", "unknownClass", n, "class", { class: cls });
