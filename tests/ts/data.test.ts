@@ -40,4 +40,22 @@ describe("game data", () => {
     expect(data.skills.SleightOfHand).toBe("Dexterity");
     expect(Object.keys(data.skills)).toHaveLength(18);
   });
+
+  it("names every origin, skill and ability in both languages", async () => {
+    const data = await loadGameData("data/larian");
+    const shadowheart = data.rules.origins.Shadowheart;
+    expect(shadowheart?.class).toBe("Cleric");
+    expect(shadowheart?.race).toBe("HalfElf");
+    expect(shadowheart?.subrace).toBe("HalfElf_High");
+    expect(data.texts.fr["skill:Athletics"]?.name).toBe("Athlétisme");
+    const keys = [
+      ...Object.keys(data.rules.origins).map((id) => `origin:${id}`),
+      ...Object.keys(data.skills).map((id) => `skill:${id}`),
+      ...["Strength", "Dexterity", "Constitution", "Intelligence", "Wisdom", "Charisma"].map((id) => `ability:${id}`),
+    ];
+    expect(Object.keys(data.rules.origins).length).toBeGreaterThan(0);
+    for (const texts of [data.texts.en, data.texts.fr]) {
+      for (const key of keys) expect(texts[key]?.name, key).toBeTruthy();
+    }
+  });
 });

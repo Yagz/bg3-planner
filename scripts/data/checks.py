@@ -17,7 +17,7 @@ TECHNICAL_PASSIVES = model.TECHNICAL_PASSIVES
 
 COUNTS = {"base_classes": 12, "subclasses": 58, "races": 39, "base_races": 11, "backgrounds": 22,
           "origin_backgrounds": 11, "feats": 41, "progressions": 663, "lists": 342, "spells": 416, "passives": 475,
-          "items": 1167}
+          "items": 1167, "origins": 25}
 # Type of the list each selector function picks from.
 SELECTOR_LIST_TYPES = {"AddSpells": "spells", "SelectSpells": "spells", "SelectPassives": "passives",
                        "ReplacePassives": "passives", "SelectSkills": "skills", "SelectSkillsExpertise": "skills",
@@ -237,6 +237,7 @@ def _check_counts(rules: dict, counts: dict[str, int]) -> list[str]:
         "spells": len(rules.get("spells", {})),
         "passives": len(rules.get("passives", {})),
         "items": len(rules.get("items", {})),
+        "origins": len(rules.get("origins", {})),
     }
     return [f"count {key}: expected {expected}, found {actual[key]}"
             for key, expected in counts.items() if actual.get(key) != expected]

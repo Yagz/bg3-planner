@@ -16609,6 +16609,401 @@
    "type": "spells"
   }
  },
+ "origins": {
+  "Alfira": {
+   "abilities": {
+    "Charisma": 15,
+    "Constitution": 13,
+    "Dexterity": 14,
+    "Intelligence": 12,
+    "Strength": 8,
+    "Wisdom": 10
+   },
+   "background": "229775c9-3044-4779-a3bb-532c39238e03",
+   "class": "Bard",
+   "lockRace": false,
+   "race": "Tiefling",
+   "subclass": "LoreCollege",
+   "subrace": "Tiefling_Asmodeus"
+  },
+  "Astarion": {
+   "abilities": {
+    "Charisma": 10,
+    "Constitution": 14,
+    "Dexterity": 15,
+    "Intelligence": 12,
+    "Strength": 8,
+    "Wisdom": 13
+   },
+   "background": "76925f0b-3ec8-4f42-86a9-cd4f745af2ac",
+   "class": "Rogue",
+   "lockRace": true,
+   "race": "Elf",
+   "subclass": "ArcaneTrickster",
+   "subrace": "Elf_HighElf"
+  },
+  "DarkUrge": {
+   "abilities": {
+    "Charisma": 15,
+    "Constitution": 14,
+    "Dexterity": 13,
+    "Intelligence": 12,
+    "Strength": 8,
+    "Wisdom": 10
+   },
+   "background": "20d865ea-03bd-47bf-97d3-777e1b36b073",
+   "class": "Sorcerer",
+   "lockRace": false,
+   "race": "Dragonborn",
+   "subclass": "StormSorcery",
+   "subrace": "Dragonborn_White"
+  },
+  "Gale": {
+   "abilities": {
+    "Charisma": 12,
+    "Constitution": 14,
+    "Dexterity": 13,
+    "Intelligence": 15,
+    "Strength": 8,
+    "Wisdom": 10
+   },
+   "background": "8807a6c6-d8cf-494b-aec2-cc01d7517a56",
+   "class": "Wizard",
+   "lockRace": true,
+   "race": "Human",
+   "subclass": "EvocationSchool",
+   "subrace": null
+  },
+  "Generic": {
+   "abilities": null,
+   "background": null,
+   "class": null,
+   "lockRace": false,
+   "race": null,
+   "subclass": null,
+   "subrace": null
+  },
+  "Halsin": {
+   "abilities": {
+    "Charisma": 12,
+    "Constitution": 13,
+    "Dexterity": 14,
+    "Intelligence": 8,
+    "Strength": 10,
+    "Wisdom": 15
+   },
+   "background": "5b1e726f-52bf-4e93-a798-9f93c067ee7f",
+   "class": "Druid",
+   "lockRace": false,
+   "race": "Elf",
+   "subclass": "CircleOfTheMoon",
+   "subrace": "Elf_WoodElf"
+  },
+  "Hireling_Barbarian": {
+   "abilities": {
+    "Charisma": 10,
+    "Constitution": 14,
+    "Dexterity": 13,
+    "Intelligence": 8,
+    "Strength": 15,
+    "Wisdom": 12
+   },
+   "background": "5b1e726f-52bf-4e93-a798-9f93c067ee7f",
+   "class": "Barbarian",
+   "lockRace": true,
+   "race": "Dwarf",
+   "subclass": null,
+   "subrace": "Dwarf_GoldHill"
+  },
+  "Hireling_Bard": {
+   "abilities": {
+    "Charisma": 15,
+    "Constitution": 13,
+    "Dexterity": 14,
+    "Intelligence": 12,
+    "Strength": 8,
+    "Wisdom": 10
+   },
+   "background": "229775c9-3044-4779-a3bb-532c39238e03",
+   "class": "Bard",
+   "lockRace": true,
+   "race": "Halfling",
+   "subclass": null,
+   "subrace": "Halfling_Lightfoot"
+  },
+  "Hireling_Cleric": {
+   "abilities": {
+    "Charisma": 12,
+    "Constitution": 13,
+    "Dexterity": 14,
+    "Intelligence": 8,
+    "Strength": 10,
+    "Wisdom": 15
+   },
+   "background": "633aa4be-365f-4358-ba56-e2b85f9a88ec",
+   "class": "Cleric",
+   "lockRace": true,
+   "race": "Elf",
+   "subclass": "LightDomain",
+   "subrace": "Elf_HighElf"
+  },
+  "Hireling_Druid": {
+   "abilities": {
+    "Charisma": 12,
+    "Constitution": 13,
+    "Dexterity": 14,
+    "Intelligence": 8,
+    "Strength": 10,
+    "Wisdom": 15
+   },
+   "background": "efcb0b57-5d5a-4a54-a7b3-a618829fe379",
+   "class": "Druid",
+   "lockRace": true,
+   "race": "Tiefling",
+   "subclass": null,
+   "subrace": "Tiefling_Mephistopeles"
+  },
+  "Hireling_Fighter": {
+   "abilities": {
+    "Charisma": 8,
+    "Constitution": 14,
+    "Dexterity": 13,
+    "Intelligence": 10,
+    "Strength": 15,
+    "Wisdom": 12
+   },
+   "background": "1252a86e-9baa-4ccb-b8ce-2378ae006f0b",
+   "class": "Fighter",
+   "lockRace": true,
+   "race": "HalfElf",
+   "subclass": null,
+   "subrace": "HalfElf_Wood"
+  },
+  "Hireling_Monk": {
+   "abilities": {
+    "Charisma": 10,
+    "Constitution": 13,
+    "Dexterity": 15,
+    "Intelligence": 8,
+    "Strength": 12,
+    "Wisdom": 14
+   },
+   "background": "5b1e726f-52bf-4e93-a798-9f93c067ee7f",
+   "class": "Monk",
+   "lockRace": true,
+   "race": "Githyanki",
+   "subclass": null,
+   "subrace": null
+  },
+  "Hireling_Paladin": {
+   "abilities": {
+    "Charisma": 14,
+    "Constitution": 13,
+    "Dexterity": 12,
+    "Intelligence": 8,
+    "Strength": 15,
+    "Wisdom": 10
+   },
+   "background": "7e820dee-a8fc-43b2-8661-2b404454bade",
+   "class": "Paladin",
+   "lockRace": true,
+   "race": "HalfOrc",
+   "subclass": "Devotion",
+   "subrace": null
+  },
+  "Hireling_Ranger": {
+   "abilities": {
+    "Charisma": 10,
+    "Constitution": 13,
+    "Dexterity": 15,
+    "Intelligence": 8,
+    "Strength": 12,
+    "Wisdom": 14
+   },
+   "background": "e8c84134-5e91-4ecc-881a-efc47680129b",
+   "class": "Ranger",
+   "lockRace": true,
+   "race": "Drow",
+   "subclass": null,
+   "subrace": null
+  },
+  "Hireling_Rogue": {
+   "abilities": {
+    "Charisma": 10,
+    "Constitution": 14,
+    "Dexterity": 15,
+    "Intelligence": 12,
+    "Strength": 8,
+    "Wisdom": 13
+   },
+   "background": "ac38525a-222b-4280-9c8e-60d5533b675c",
+   "class": "Rogue",
+   "lockRace": true,
+   "race": "Human",
+   "subclass": null,
+   "subrace": null
+  },
+  "Hireling_Sorcerer": {
+   "abilities": {
+    "Charisma": 15,
+    "Constitution": 14,
+    "Dexterity": 13,
+    "Intelligence": 12,
+    "Strength": 8,
+    "Wisdom": 10
+   },
+   "background": "e9aeac40-6c4e-4d81-9a24-e9eeb6208e85",
+   "class": "Sorcerer",
+   "lockRace": true,
+   "race": "HalfElf",
+   "subclass": null,
+   "subrace": "HalfElf_High"
+  },
+  "Hireling_Warlock": {
+   "abilities": {
+    "Charisma": 15,
+    "Constitution": 14,
+    "Dexterity": 12,
+    "Intelligence": 13,
+    "Strength": 8,
+    "Wisdom": 10
+   },
+   "background": "76925f0b-3ec8-4f42-86a9-cd4f745af2ac",
+   "class": "Warlock",
+   "lockRace": true,
+   "race": "Dwarf",
+   "subclass": "GreatOldOne",
+   "subrace": "Duergar"
+  },
+  "Hireling_Wizard": {
+   "abilities": {
+    "Charisma": 15,
+    "Constitution": 14,
+    "Dexterity": 13,
+    "Intelligence": 12,
+    "Strength": 8,
+    "Wisdom": 10
+   },
+   "background": "8807a6c6-d8cf-494b-aec2-cc01d7517a56",
+   "class": "Wizard",
+   "lockRace": true,
+   "race": "Gnome",
+   "subclass": "DraconicBloodline",
+   "subrace": "Gnome_Rock"
+  },
+  "Jaheira": {
+   "abilities": {
+    "Charisma": 12,
+    "Constitution": 13,
+    "Dexterity": 14,
+    "Intelligence": 8,
+    "Strength": 10,
+    "Wisdom": 15
+   },
+   "background": "1252a86e-9baa-4ccb-b8ce-2378ae006f0b",
+   "class": "Druid",
+   "lockRace": false,
+   "race": "HalfElf",
+   "subclass": "CircleOfTheLand",
+   "subrace": "HalfElf_High"
+  },
+  "Karlach": {
+   "abilities": {
+    "Charisma": 10,
+    "Constitution": 14,
+    "Dexterity": 13,
+    "Intelligence": 8,
+    "Strength": 15,
+    "Wisdom": 12
+   },
+   "background": "5b1e726f-52bf-4e93-a798-9f93c067ee7f",
+   "class": "Barbarian",
+   "lockRace": true,
+   "race": "Tiefling",
+   "subclass": null,
+   "subrace": "Tiefling_Zariel"
+  },
+  "Laezel": {
+   "abilities": {
+    "Charisma": 8,
+    "Constitution": 14,
+    "Dexterity": 13,
+    "Intelligence": 10,
+    "Strength": 15,
+    "Wisdom": 12
+   },
+   "background": "1252a86e-9baa-4ccb-b8ce-2378ae006f0b",
+   "class": "Fighter",
+   "lockRace": true,
+   "race": "Githyanki",
+   "subclass": "BattleMaster",
+   "subrace": null
+  },
+  "Minsc": {
+   "abilities": {
+    "Charisma": 10,
+    "Constitution": 13,
+    "Dexterity": 15,
+    "Intelligence": 8,
+    "Strength": 12,
+    "Wisdom": 14
+   },
+   "background": "efcb0b57-5d5a-4a54-a7b3-a618829fe379",
+   "class": "Ranger",
+   "lockRace": false,
+   "race": "Human",
+   "subclass": "Hunter",
+   "subrace": null
+  },
+  "Minthara": {
+   "abilities": {
+    "Charisma": 14,
+    "Constitution": 13,
+    "Dexterity": 12,
+    "Intelligence": 8,
+    "Strength": 15,
+    "Wisdom": 10
+   },
+   "background": "7e820dee-a8fc-43b2-8661-2b404454bade",
+   "class": "Paladin",
+   "lockRace": false,
+   "race": "Drow",
+   "subclass": "Vengeance",
+   "subrace": "Drow_LolthSworn"
+  },
+  "Shadowheart": {
+   "abilities": {
+    "Charisma": 8,
+    "Constitution": 14,
+    "Dexterity": 13,
+    "Intelligence": 10,
+    "Strength": 12,
+    "Wisdom": 15
+   },
+   "background": "633aa4be-365f-4358-ba56-e2b85f9a88ec",
+   "class": "Cleric",
+   "lockRace": true,
+   "race": "HalfElf",
+   "subclass": "TrickeryDomain",
+   "subrace": "HalfElf_High"
+  },
+  "Wyll": {
+   "abilities": {
+    "Charisma": 15,
+    "Constitution": 14,
+    "Dexterity": 12,
+    "Intelligence": 13,
+    "Strength": 8,
+    "Wisdom": 10
+   },
+   "background": "efcb0b57-5d5a-4a54-a7b3-a618829fe379",
+   "class": "Warlock",
+   "lockRace": true,
+   "race": "Human",
+   "subclass": "Fiend",
+   "subrace": null
+  }
+ },
  "passives": {
   "AccursedSpecter": {
    "boosts": [
@@ -16651,7 +17046,8 @@
    "boosts": []
   },
   "ArcaneWard_Cast": {
-   "boosts": []
+   "boosts": [],
+   "technical": true
   },
   "ArmorOfHexes": {
    "boosts": [
@@ -16867,7 +17263,8 @@
   "BardSpellcasting": {
    "boosts": [
     "UnlockSpellVariant(IsAnInstrumentRequired(),ModifyTargetRadius(Multiplicative,1))"
-   ]
+   ],
+   "technical": true
   },
   "BardicInspiration": {
    "boosts": [
@@ -16907,22 +17304,28 @@
    "boosts": []
   },
   "Bladesong_Armor_Message": {
-   "boosts": []
+   "boosts": [],
+   "technical": true
   },
   "Bladesong_Shield": {
-   "boosts": []
+   "boosts": [],
+   "technical": true
   },
   "Bladesong_Shield_Message": {
-   "boosts": []
+   "boosts": [],
+   "technical": true
   },
   "Bladesong_Unarmed": {
-   "boosts": []
+   "boosts": [],
+   "technical": true
   },
   "Bladesong_Weapon": {
-   "boosts": []
+   "boosts": [],
+   "technical": true
   },
   "Bladesong_Weapon_Message": {
-   "boosts": []
+   "boosts": [],
+   "technical": true
   },
   "BlessedHealer": {
    "boosts": []
@@ -16950,7 +17353,8 @@
    "boosts": []
   },
   "CheekyTipple_Drunk": {
-   "boosts": []
+   "boosts": [],
+   "technical": true
   },
   "ClarifiedMortality": {
    "boosts": []
@@ -16982,7 +17386,8 @@
   "CosmicOmen_Ability": {
    "boosts": [
     "UnlockSpell(Target_CosmicOmen_AbilityCheck)"
-   ]
+   ],
+   "technical": true
   },
   "CosmicOmen_Rest": {
    "boosts": []
@@ -17100,14 +17505,16 @@
     "UnlockInterrupt(Interrupt_DivineStrike_Necrotic)",
     "UnlockInterrupt(Interrupt_DivineStrike_Necrotic_Critical)",
     "ActionResource(Interrupt_DivineStrike,1,0)"
-   ]
+   ],
+   "technical": true
   },
   "Divine_Strike_Life_Toggle": {
    "boosts": [
     "UnlockInterrupt(Interrupt_DivineStrike_Radiant)",
     "UnlockInterrupt(Interrupt_DivineStrike_Radiant_Critical)",
     "ActionResource(Interrupt_DivineStrike,1,0)"
-   ]
+   ],
+   "technical": true
   },
   "Divine_Strike_Nature_Toggle": {
    "boosts": [
@@ -17118,21 +17525,24 @@
     "UnlockInterrupt(Interrupt_DivineStrike_Lightning)",
     "UnlockInterrupt(Interrupt_DivineStrike_Lightning_Critical)",
     "ActionResource(Interrupt_DivineStrike,1,0)"
-   ]
+   ],
+   "technical": true
   },
   "Divine_Strike_Tempest_Toggle": {
    "boosts": [
     "UnlockInterrupt(Interrupt_DivineStrike_Thunder)",
     "UnlockInterrupt(Interrupt_DivineStrike_Thunder_Critical)",
     "ActionResource(Interrupt_DivineStrike,1,0)"
-   ]
+   ],
+   "technical": true
   },
   "Divine_Strike_Trickery_Toggle": {
    "boosts": [
     "UnlockInterrupt(Interrupt_DivineStrike_Poison)",
     "UnlockInterrupt(Interrupt_DivineStrike_Poison_Critical)",
     "ActionResource(Interrupt_DivineStrike,1,0)"
-   ]
+   ],
+   "technical": true
   },
   "Divine_Strike_War_Toggle": {
    "boosts": [
@@ -17141,7 +17551,8 @@
     "UnlockInterrupt(Interrupt_DivineStrike_RangedWeapon)",
     "UnlockInterrupt(Interrupt_DivineStrike_RangedWeapon_Critical)",
     "ActionResource(Interrupt_DivineStrike,1,0)"
-   ]
+   ],
+   "technical": true
   },
   "DomainSpells": {
    "boosts": []
@@ -17521,7 +17932,8 @@
   "FungalInfestation": {
    "boosts": [
     "UnlockInterrupt(Interrupt_FungalInfestation)"
-   ]
+   ],
+   "technical": true
   },
   "GiantKiller": {
    "boosts": [
@@ -18056,12 +18468,14 @@
   "MantleOfInspiration_Unlock2": {
    "boosts": [
     "UnlockSpell(Target_MantleOfInspiration_2)"
-   ]
+   ],
+   "technical": true
   },
   "MantleOfInspiration_Unlock3": {
    "boosts": [
     "UnlockSpell(Target_MantleOfInspiration_3)"
-   ]
+   ],
+   "technical": true
   },
   "MartialAdept": {
    "boosts": [
@@ -18182,7 +18596,8 @@
    ]
   },
   "Monk_SoundSwitch": {
-   "boosts": []
+   "boosts": [],
+   "technical": true
   },
   "MountainDwarf_DwarvenArmorTraining": {
    "boosts": [
@@ -18491,10 +18906,12 @@
    ]
   },
   "Rage_Armour_Message": {
-   "boosts": []
+   "boosts": [],
+   "technical": true
   },
   "Rage_NoHeavyArmour_VFX": {
-   "boosts": []
+   "boosts": [],
+   "technical": true
   },
   "RakishAudacity": {
    "boosts": [
@@ -18694,7 +19111,8 @@
     "UnlockInterrupt(Interrupt_SneakAttack_Rakish_Critical)",
     "UnlockSpell(Target_SneakAttack_Rakish)",
     "UnlockSpell(Projectile_SneakAttack_Rakish)"
-   ]
+   ],
+   "technical": true
   },
   "SneakAttack_Unlock": {
    "boosts": [
@@ -18702,7 +19120,8 @@
     "UnlockInterrupt(Interrupt_SneakAttack_Critical)",
     "UnlockSpell(Target_SneakAttack)",
     "UnlockSpell(Projectile_SneakAttack)"
-   ]
+   ],
+   "technical": true
   },
   "SongOfDefense": {
    "boosts": [
@@ -18716,7 +19135,8 @@
   "SongOfDefense_6": {
    "boosts": [
     "UnlockInterrupt(Interrupt_SongOfDefense_6)"
-   ]
+   ],
+   "technical": true
   },
   "SpellSniper_Critical": {
    "boosts": [
@@ -18804,7 +19224,8 @@
    ]
   },
   "ThirstingBlade_Blade": {
-   "boosts": []
+   "boosts": [],
+   "technical": true
   },
   "ThirstingBlade_Check": {
    "boosts": []
@@ -18814,7 +19235,8 @@
     "UnlockSpell(Target_AnimateDead,Singular,,UntilRest,Charisma)",
     "UnlockSpell(Target_CallLightning,Singular,,UntilRest,Charisma)",
     "UnlockSpell(Target_Haste,Singular,,UntilRest,Charisma)"
-   ]
+   ],
+   "technical": true
   },
   "Thought_Shield_Psychic_Reflection": {
    "boosts": [
@@ -18837,7 +19259,8 @@
   "TidesOfChaos_Unlock": {
    "boosts": [
     "UnlockInterrupt(Interrupt_TidesOfChaos)"
-   ]
+   ],
+   "technical": true
   },
   "Tiefling_HellishResistance": {
    "boosts": [
@@ -18896,7 +19319,8 @@
    ]
   },
   "TransmutationStone_Activation": {
-   "boosts": []
+   "boosts": [],
+   "technical": true
   },
   "TripAttack": {
    "boosts": [
@@ -18960,22 +19384,28 @@
    ]
   },
   "UnlockedSpellSlotLevel1": {
-   "boosts": []
+   "boosts": [],
+   "technical": true
   },
   "UnlockedSpellSlotLevel2": {
-   "boosts": []
+   "boosts": [],
+   "technical": true
   },
   "UnlockedSpellSlotLevel3": {
-   "boosts": []
+   "boosts": [],
+   "technical": true
   },
   "UnlockedWarlockSpellSlotLevel1": {
-   "boosts": []
+   "boosts": [],
+   "technical": true
   },
   "UnlockedWarlockSpellSlotLevel2": {
-   "boosts": []
+   "boosts": [],
+   "technical": true
   },
   "UnlockedWarlockSpellSlotLevel3": {
-   "boosts": []
+   "boosts": [],
+   "technical": true
   },
   "Unstable_Backlash": {
    "boosts": [
@@ -19055,7 +19485,8 @@
     "IF(HasPassive('Swarmkeeper_Bee',context.Source)):UnlockSpell(Projectile_Fly_WrithingTide_Bee)",
     "IF(HasPassive('Swarmkeeper_Jellyfish',context.Source)):UnlockSpell(Projectile_Fly_WrithingTide_Jellyfish)",
     "IF(HasPassive('Swarmkeeper_Moth',context.Source)):UnlockSpell(Projectile_Fly_WrithingTide_Moth)"
-   ]
+   ],
+   "technical": true
   }
  },
  "progressions": [

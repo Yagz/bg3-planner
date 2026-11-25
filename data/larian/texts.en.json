@@ -1,4 +1,28 @@
 {
+ "ability:Charisma": {
+  "description": null,
+  "name": "Charisma"
+ },
+ "ability:Constitution": {
+  "description": null,
+  "name": "Constitution"
+ },
+ "ability:Dexterity": {
+  "description": null,
+  "name": "Dexterity"
+ },
+ "ability:Intelligence": {
+  "description": null,
+  "name": "Intelligence"
+ },
+ "ability:Strength": {
+  "description": null,
+  "name": "Strength"
+ },
+ "ability:Wisdom": {
+  "description": null,
+  "name": "Wisdom"
+ },
  "background:1252a86e-9baa-4ccb-b8ce-2378ae006f0b": {
   "description": "You are trained in battlefield tactics and combat, having served in a militia, mercenary company, or officer corps. Show smart tactics and bravery on the battlefield to enhance your prowess.",
   "name": "Soldier"
@@ -5199,6 +5223,106 @@
   "description": "The wearer is perpetually just a little bit damp. ",
   "name": "Reverse Rain Cloak"
  },
+ "origin:Alfira": {
+  "description": null,
+  "name": "Alfira"
+ },
+ "origin:Astarion": {
+  "description": "After two hundred years serving a cruel master, the vampire spawn Astarion is finally free - free to walk in the sun, free to chase power, and free to take revenge.",
+  "name": "Astarion"
+ },
+ "origin:DarkUrge": {
+  "description": "You remember nothing but a path paved with blood. Unimaginable cruelty whispers to you from within. Can you escape it? Would you even want to?<br><br><LSTag Type=\"Image\" Info=\"SoftWarning\"/>Your appearance and class can be fully customised.",
+  "name": "The Dark Urge"
+ },
+ "origin:Gale": {
+  "description": "Gale's wizarding prowess once earned him the love of Mystra, the goddess of magic, until his ambition led him to the brink of catastrophe...",
+  "name": "Gale"
+ },
+ "origin:Generic": {
+  "description": "You've always felt you had a greater calling, but it has never borne fruit. Everything changes when you awaken imprisoned on an alien ship. Perhaps your time has finally come.",
+  "name": "Custom"
+ },
+ "origin:Halsin": {
+  "description": null,
+  "name": "Halsin"
+ },
+ "origin:Hireling_Barbarian": {
+  "description": "Eldra Luthrinn, slayer of people, monsters, and cups of sweet pear tea, was shown a watery grave when hunting Absolutists in the valleys of the Chionthar.",
+  "name": "Eldra Luthrinn"
+ },
+ "origin:Hireling_Bard": {
+  "description": "Brinna Brightsong's bawdy crooning was silenced by an Absolute bloodbutcher after a controversial performance in a Triel tavern. ",
+  "name": "Brinna Brightsong"
+ },
+ "origin:Hireling_Cleric": {
+  "description": "Zenith, once an optimistic Evereskan Graycloak, journeyed to Faerûn in search of a new sunrise. An Absolute warband proved his dour father right: Zenith was doomed!",
+  "name": "Zenith Feur'sel"
+ },
+ "origin:Hireling_Druid": {
+  "description": "Danton was a refined druid and rearer of peacocks - until he thought transforming into one would help him escape Absolutist marauders. He was wrong. ",
+  "name": "Danton"
+ },
+ "origin:Hireling_Fighter": {
+  "description": "Once a battle-worn veteran fighting for the Absolute, Varanna learnt that loyalty to the would-be god did not protect you from the murderous whims of jealous generals.",
+  "name": "Varanna Sunblossom"
+ },
+ "origin:Hireling_Monk": {
+  "description": "Sina'zith's monastic preferences marked her a misfit among her kin - as did the illithid tadpole an Absolutist forced in her mind. For this, the githyanki slew her as an aberration. ",
+  "name": "Sina'zith"
+ },
+ "origin:Hireling_Paladin": {
+  "description": "Kerz lived many years as a paladin and mercenary, years which took a hard toll on them. Befriending a group of pleasant ogres, they laid down their weapon and taught a rudimentary etiquette class, before the ogres were attacked one night, and Kerz once more took up their steel.",
+  "name": "Kerz"
+ },
+ "origin:Hireling_Ranger": {
+  "description": "Ver'yll spent his twilights scribbling odes to leafy canopies, bushels, and the merits of the noble hedgehog. When he refused to join the Absolute, its forces tore his forest and body apart. ",
+  "name": "Ver'yll Wenkiir"
+ },
+ "origin:Hireling_Rogue": {
+  "description": "Maddala's blindness was cured by another True Soul passing through her village - so they could watch it being burnt to the ground around them. Such was the price of refusing the Absolute. ",
+  "name": "Maddala Deadeye"
+ },
+ "origin:Hireling_Sorcerer": {
+  "description": "Jacelyn was born a sorcerer, the seventh son of a seventh son. The agent of the Absolute that killed him knew this, and is rumored to have remarked, 'Probably should've left it at six.'",
+  "name": "Jacelyn"
+ },
+ "origin:Hireling_Warlock": {
+  "description": "Kree's penchant for killing folk with a mere whisper was prized in the Absolute's ranks, but the utter devotion to her patron was met with lethal disapproval.",
+  "name": "Kree Derryck"
+ },
+ "origin:Hireling_Wizard": {
+  "description": "Sir Fuzzalump was much mocked amongst his playful kind for his dour demeanour and single-minded devotion to the magical investigation of cave moss. He claims not to have giggled in over a decade, and has never frolicked.",
+  "name": "Sir Fuzzalump"
+ },
+ "origin:Jaheira": {
+  "description": null,
+  "name": "Jaheira"
+ },
+ "origin:Karlach": {
+  "description": "Karlach has escaped ten years of service in the Hells with nothing but the axe on her back - and the infernal engine blazing furiously where her heart used to be.",
+  "name": "Karlach"
+ },
+ "origin:Laezel": {
+  "description": "Lae'zel was raised ready for a life amongst the stars, mercilessly conquering the cosmos as a githyanki soldier. Grounded, she must deal with a world she doesn't understand, and find a way to serve her people in a plane that despises her militant kin.",
+  "name": "Lae'zel"
+ },
+ "origin:Minsc": {
+  "description": null,
+  "name": "Minsc"
+ },
+ "origin:Minthara": {
+  "description": null,
+  "name": "Minthara"
+ },
+ "origin:Shadowheart": {
+  "description": "Shadowheart willingly undertook a ritual to remove her memories in order to protect the secrets of her fellow Shar worshippers. Loss and pain are sacred to her, but her faith is now being tested like never before.",
+  "name": "Shadowheart"
+ },
+ "origin:Wyll": {
+  "description": "Known as 'The Blade of Frontiers', Wyll uses his magic to fell the monsters and devils menacing the Sword Coast. In a moment of desperation, he accepted an offer of greater power, forcing him into an infernal game he is struggling to play.",
+  "name": "Wyll"
+ },
  "passive:AccursedSpecter": {
   "description": "When you or an ally within [1] slay a creature that is afflicted with <LSTag Type=\"Status\" Tooltip=\"HEXBLADES_CURSE\">Hexblade's Curse</LSTag>, you can raise an Accursed Spectre that will fight alongside you for a short period of time.",
   "name": "Accursed Spectre"
@@ -7134,6 +7258,78 @@
  "race:Tiefling_Zariel": {
   "description": "Tieflings from Zariel's bloodline are empowered with martial strength, and can channel searing flame to punish their enemies.",
   "name": "Zariel Tiefling"
+ },
+ "skill:Acrobatics": {
+  "description": null,
+  "name": "Acrobatics"
+ },
+ "skill:AnimalHandling": {
+  "description": null,
+  "name": "Animal Handling"
+ },
+ "skill:Arcana": {
+  "description": null,
+  "name": "Arcana"
+ },
+ "skill:Athletics": {
+  "description": null,
+  "name": "Athletics"
+ },
+ "skill:Deception": {
+  "description": null,
+  "name": "Deception"
+ },
+ "skill:History": {
+  "description": null,
+  "name": "History"
+ },
+ "skill:Insight": {
+  "description": null,
+  "name": "Insight"
+ },
+ "skill:Intimidation": {
+  "description": null,
+  "name": "Intimidation"
+ },
+ "skill:Investigation": {
+  "description": null,
+  "name": "Investigation"
+ },
+ "skill:Medicine": {
+  "description": null,
+  "name": "Medicine"
+ },
+ "skill:Nature": {
+  "description": null,
+  "name": "Nature"
+ },
+ "skill:Perception": {
+  "description": null,
+  "name": "Perception"
+ },
+ "skill:Performance": {
+  "description": null,
+  "name": "Performance"
+ },
+ "skill:Persuasion": {
+  "description": null,
+  "name": "Persuasion"
+ },
+ "skill:Religion": {
+  "description": null,
+  "name": "Religion"
+ },
+ "skill:SleightOfHand": {
+  "description": null,
+  "name": "Sleight Of Hand"
+ },
+ "skill:Stealth": {
+  "description": null,
+  "name": "Stealth"
+ },
+ "skill:Survival": {
+  "description": null,
+  "name": "Survival"
  },
  "spell:Projectile_AcidArrow": {
   "description": "Shoot a green arrow that covers the target and the ground with acid. Deals [1] immediately and [2] at the end of the target's turn.",

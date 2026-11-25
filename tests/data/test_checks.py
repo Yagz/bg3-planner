@@ -277,6 +277,14 @@ class ChecksTest(unittest.TestCase):
         self.assertIn("items", problems[0])
         self.assertEqual(checks.COUNTS["items"], 1167)
 
+    def test_origins_count(self):
+        write(self.folder)
+        self.assertEqual(verify(self.folder, {"origins": 2}), [])
+        problems = verify(self.folder, {"origins": 3})
+        self.assertEqual(len(problems), 1)
+        self.assertIn("origins", problems[0])
+        self.assertEqual(checks.COUNTS["origins"], 25)
+
     def test_missing_notice(self):
         problems = self.problems(meta={"game": "1.0", "notice": {"en": "Notice.", "fr": ""}})
         self.assertEqual(len(problems), 1)

@@ -1,4 +1,28 @@
 {
+ "ability:Charisma": {
+  "description": null,
+  "name": "Charisme"
+ },
+ "ability:Constitution": {
+  "description": null,
+  "name": "Constitution"
+ },
+ "ability:Dexterity": {
+  "description": null,
+  "name": "Dextérité"
+ },
+ "ability:Intelligence": {
+  "description": null,
+  "name": "Intelligence"
+ },
+ "ability:Strength": {
+  "description": null,
+  "name": "Force"
+ },
+ "ability:Wisdom": {
+  "description": null,
+  "name": "Sagesse"
+ },
  "background:1252a86e-9baa-4ccb-b8ce-2378ae006f0b": {
   "description": "Vous avez servi dans une milice, une compagnie de mercenaires ou un corps d'officiers, ce qui vous confère une grande connaissance des combats de masse et des tactiques les plus couramment employées. Faites preuve de bravoure et de sens tactique sur le champ de bataille pour accroître votre prouesse.",
   "name": "Soldat"
@@ -5199,6 +5223,106 @@
   "description": "Le porteur de ce manteau est toujours légèrement mouillé. ",
   "name": "Imperméable inversé"
  },
+ "origin:Alfira": {
+  "description": null,
+  "name": "Alfira"
+ },
+ "origin:Astarion": {
+  "description": "Après avoir passé deux cents ans à servir un maître cruel, Astarion, le rejeton de vampire, est enfin libre... de sortir au grand jour, d'accroître sa puissance, et peut-être aussi de se venger.",
+  "name": "Astarion"
+ },
+ "origin:DarkUrge": {
+  "description": "Vous ne vous souvenez pas de votre passé, si ce n'est que la voie que vous empruntez a toujours été maculée de sang et que les actes d'une grande cruauté vous attirent de plus en plus. D'où ces pensées peuvent-elles bien provenir ?",
+  "name": "Sombres pulsions"
+ },
+ "origin:Gale": {
+  "description": "Gayle était autrefois un magicien si puissant que cela finit par lui valoir l'amour de Mystra, la déesse de la Magie, jusqu'à ce que son ambition le conduise à la catastrophe...",
+  "name": "Gayle"
+ },
+ "origin:Generic": {
+  "description": "Vous avez toujours eu la conviction qu'un grand destin vous attendait, mais il ne s'est jamais réalisé... jusqu'au jour où vous vous réveillez en cellule, dans un bien étrange vaisseau. Et si votre heure était enfin arrivée ?",
+  "name": "Personnalisé"
+ },
+ "origin:Halsin": {
+  "description": null,
+  "name": "Halsin"
+ },
+ "origin:Hireling_Barbarian": {
+  "description": "Eldra Luthrinn, tueuse de monstres et de gens et grande consommatrice de thé à la pêche, a fini au fond de l'eau alors qu'elle traquait les serviteurs de l'Absolue dans les vallées du Chiontar.",
+  "name": "Eldra Luthrinn"
+ },
+ "origin:Hireling_Bard": {
+  "description": "Brinna Chantejoie était une ménestrelle spécialisée dans les chansons paillardes. Elle fut tuée par un massacreur de l'Absolue suite à une représentation particulièrement controversée dans une taverne de Triel. ",
+  "name": "Brinna Chantejoie"
+ },
+ "origin:Hireling_Cleric": {
+  "description": "Zenith, qui était un grand optimiste faisant partie des Gris Manteaux d'Evereska, s'est rendu à Faerûn en quête de nouvelles aventures. Son père avait prédit sa fin, et une rencontre avec une troupe de guerre de l'Absolue lui donna raison.",
+  "name": "Zenith Feur'sel"
+ },
+ "origin:Hireling_Druid": {
+  "description": "Danton était un druide qui se spécialisait dans l'élevage des paons. Attaqué par les fidèles de l'Absolue, il a cru que prendre l'apparence de son animal fétiche lui permettrait de s'échapper. Il se trompait. ",
+  "name": "Danton"
+ },
+ "origin:Hireling_Fighter": {
+  "description": "Varanna s'est longtemps battue pour l'Absolue, jusqu'au jour où elle a appris à ses dépens qu'une loyauté aveugle ne constituait pas une protection suffisante contre la jalousie des généraux meurtriers de sa prétendue déesse.",
+  "name": "Varanna Fleurdesoleil"
+ },
+ "origin:Hireling_Monk": {
+  "description": "Les préférences monastiques de Sina'zith la mettaient à part au sein de sa communauté, tout comme la larve d'illithid insérée dans son cerveau par les fidèles de l'Absolue. C'est la raison pour laquelle ses frères githyankis l'ont finalement tuée, la considérant comme une abomination. ",
+  "name": "Sina'zith"
+ },
+ "origin:Hireling_Paladin": {
+  "description": "Kerz a longtemps été un paladin mercenaire, mais cette existence a fini par lui peser. Finalement, il s'est lié d'amitié avec un groupe d'ogres amènes ayant accepté de déposer les armes. Il leur apprenait les rudiments des convenances quand, une nuit, ils se sont fait attaquer. La mort de ses amis a incité Kerz à reprendre les armes.",
+  "name": "Kerz"
+ },
+ "origin:Hireling_Ranger": {
+  "description": "Ver'yll passait ses fins de journée à écrire des odes aux canopées, aux buissons, et aux mérites des nobles hérissons. Quand il refusa de rejoindre les rangs de l'Absolue, sa forêt fut détruite et lui se fit mettre en pièces. ",
+  "name": "Ver'yll Wenkiir"
+ },
+ "origin:Hireling_Rogue": {
+  "description": "La cécité de Maddala fut soignée par une autre âme éveillée de passage dans son village. Cela lui permit de voir ses voisins brûler autour d'elle. Tel est le prix quand on refuse de servir l'Absolue. ",
+  "name": "Maddala Mortelœil"
+ },
+ "origin:Hireling_Sorcerer": {
+  "description": "Jacelyn est né ensorceleur, le septième fils d'un septième fils. L'agent de l'Absolue qui l'a tué le savait, et l'on raconte d'ailleurs qu'on l'aurait entendu dire : \"Ses parents auraient dû en rester à six.\"",
+  "name": "Jacelyn"
+ },
+ "origin:Hireling_Warlock": {
+  "description": "Le penchant de Kree pour le fait de tuer les gens d'un simple murmure était très prisé dans les rangs de l'Absolue. En revanche, sa dévotion sans faille envers son protecteur était très mal vue, et elle finit par causer sa perte.",
+  "name": "Kree Derryck"
+ },
+ "origin:Hireling_Wizard": {
+  "description": "Sire Moussabosse est depuis toujours la risée des siens pour sa morgue permanente et sa fascination tournant souvent à l'obsession pour la mousse qui pousse dans les grottes. Il prétend ne pas avoir ri depuis plus de dix ans, et n'a jamais folâtré de sa vie.",
+  "name": "Sire Moussabosse"
+ },
+ "origin:Jaheira": {
+  "description": null,
+  "name": "Jaheira"
+ },
+ "origin:Karlach": {
+  "description": "Karlach a échappé à dix années de servitude dans les Enfers sans rien d'autre que sa hache... et l'engin infernal brûlant tel un brasier en lieu et place de son cœur.",
+  "name": "Karlach"
+ },
+ "origin:Laezel": {
+  "description": "Lae'zel a été élevée pour vivre au milieu des étoiles et passer son existence à conquérir le cosmos au sein de l'armée githyanki. Désormais clouée au sol, elle se retrouve obligée d'évoluer dans un monde qu'elle ne comprend pas, dans l'espoir de pouvoir servir les siens dans un plan où les giths n'inspirent que mépris et haine aux autres créatures intelligentes.",
+  "name": "Lae'zel"
+ },
+ "origin:Minsc": {
+  "description": null,
+  "name": "Minsc"
+ },
+ "origin:Minthara": {
+  "description": null,
+  "name": "Minthara"
+ },
+ "origin:Shadowheart": {
+  "description": "Ombrecœur a accepté de se soumettre à un rituel effaçant ses souvenirs afin de protéger les secrets des autres fidèles de Shar. L'oubli et la souffrance sont sacrés pour elle, mais jamais sa foi n'avait encore autant été mise à l'épreuve.",
+  "name": "Ombrecœur"
+ },
+ "origin:Wyll": {
+  "description": "Connu sous le nom d'Épée des Confins, Wyll fait usage de sa magie pour terrasser les monstres et les diables qui menacent la Côte des Épées. Un jour, alors qu'il était au fond du désespoir, il a passé un pacte avec une diablesse afin de devenir plus puissant. Mais cela l'a transformé en pion dans un jeu qu'il accepte de moins en moins de devoir jouer.",
+  "name": "Wyll"
+ },
  "passive:AccursedSpecter": {
   "description": "Lorsque vous ou un allié situé à moins de [1] tuez une créature affectée par <LSTag Type=\"Status\" Tooltip=\"HEXBLADES_CURSE\">Malédiction de la Lame maudite</LSTag>, vous pouvez invoquer un spectre maudit qui combat à vos côtés pendant un court moment.",
   "name": "Spectre maudit"
@@ -7134,6 +7258,78 @@
  "race:Tiefling_Zariel": {
   "description": "Les tieffelins de la lignée de Zariel possèdent une force hors du commun et ont la possibilité de faire apparaître des flammes pour incinérer leurs ennemis.",
   "name": "Tieffelin de la lignée de Zariel"
+ },
+ "skill:Acrobatics": {
+  "description": null,
+  "name": "Acrobaties"
+ },
+ "skill:AnimalHandling": {
+  "description": null,
+  "name": "Dressage"
+ },
+ "skill:Arcana": {
+  "description": null,
+  "name": "Arcanes"
+ },
+ "skill:Athletics": {
+  "description": null,
+  "name": "Athlétisme"
+ },
+ "skill:Deception": {
+  "description": null,
+  "name": "Supercherie"
+ },
+ "skill:History": {
+  "description": null,
+  "name": "Histoire"
+ },
+ "skill:Insight": {
+  "description": null,
+  "name": "Perspicacité"
+ },
+ "skill:Intimidation": {
+  "description": null,
+  "name": "Intimidation"
+ },
+ "skill:Investigation": {
+  "description": null,
+  "name": "Investigation"
+ },
+ "skill:Medicine": {
+  "description": null,
+  "name": "Médecine"
+ },
+ "skill:Nature": {
+  "description": null,
+  "name": "Nature"
+ },
+ "skill:Perception": {
+  "description": null,
+  "name": "Perception"
+ },
+ "skill:Performance": {
+  "description": null,
+  "name": "Représentation"
+ },
+ "skill:Persuasion": {
+  "description": null,
+  "name": "Persuasion"
+ },
+ "skill:Religion": {
+  "description": null,
+  "name": "Religion"
+ },
+ "skill:SleightOfHand": {
+  "description": null,
+  "name": "Escamotage"
+ },
+ "skill:Stealth": {
+  "description": null,
+  "name": "Discrétion"
+ },
+ "skill:Survival": {
+  "description": null,
+  "name": "Survie"
  },
  "spell:Projectile_AcidArrow": {
   "description": "Tire une flèche verte qui recouvre d'acide la cible et le sol. Inflige [1] immédiatement, et [2] à la fin du tour de la cible.",
