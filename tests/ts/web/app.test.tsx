@@ -81,6 +81,19 @@ describe("app shell", () => {
     expect(screen.getByRole("alert")).toBeTruthy();
   });
 
+  it("keeps working and shows the banner when storage fills up during a save", () => {
+    const backend = new MemoryBackend();
+    backend.failWrites = "QuotaExceededError";
+    const store = createStore(backend);
+    renderApp(store);
+    expect(screen.queryByRole("alert")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "New run" }));
+    expect(screen.getByRole("alert").textContent).toMatch(/not saved in this browser/);
+    expect(runSelector().selectedOptions[0]?.textContent).toBe("New run");
+    expect(store.list().map((summary) => summary.name)).toEqual(["New run"]);
+    expect(backend.items.size).toBe(0);
+  });
+
   it("warns about stored runs it cannot read", () => {
     const backend = new MemoryBackend();
     backend.items.set("bg3p:run:bad", "{not json");

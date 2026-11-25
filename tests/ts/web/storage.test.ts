@@ -147,6 +147,17 @@ describe("run store", () => {
     expect(backend.items.get("bg3p:run:bad")).toBe("{not json");
     expect(backend.items.has("bg3p:run:old")).toBe(true);
   });
+  it("treats a stored version whose date is not a date as unreadable, and keeps it", () => {
+    const backend = new MemoryBackend();
+    const record = JSON.stringify({ history: [{ at: "yesterday", text: JSON.stringify(named("Dated")) }] });
+    backend.items.set("bg3p:run:run-1", record);
+    const store = createStore(backend);
+    expect(store.load("run-1")).toBeNull();
+    expect(store.unreadable().map((entry) => entry.id)).toEqual(["run-1"]);
+    expect(() => store.save(named("Again"))).toThrow(/run-1/);
+    expect(backend.items.get("bg3p:run:run-1")).toBe(record);
+  });
+
   it("refuses to save over an unreadable stored run and leaves it byte for byte", () => {
     const backend = new MemoryBackend();
     backend.items.set("bg3p:run:bad", "{not json");

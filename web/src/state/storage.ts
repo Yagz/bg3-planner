@@ -41,6 +41,7 @@ function readRecord(text: string): { history: HistoryEntry[]; run: Run } {
   if (!Array.isArray(history) || history.length === 0) throw new Error("No saved version");
   for (const entry of history) {
     if (typeof entry?.at !== "string" || typeof entry?.text !== "string") throw new Error("Malformed history entry");
+    if (Number.isNaN(Date.parse(entry.at))) throw new Error(`Saved version date ${JSON.stringify(entry.at)} is not a date`);
   }
   return { history: history as HistoryEntry[], run: decodeJson((history[0] as HistoryEntry).text) };
 }

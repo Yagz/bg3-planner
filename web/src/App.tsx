@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import type { GameData } from "../../src/data/types.ts";
-import { emptyRun } from "../../src/plan/model.ts";
 import { I18nContext, LANGS, createI18n } from "./i18n/i18n.ts";
 import type { Lang } from "./i18n/i18n.ts";
+import { createRun, currentRunId, deleteRun, duplicateRun, renameRun } from "./state/runs.ts";
 import { loadSettings, saveSettings } from "./state/settings.ts";
 import type { Settings, Theme } from "./state/settings.ts";
 import type { RunStore } from "./state/storage.ts";
@@ -56,7 +56,7 @@ export default function App({ store, settingsBackend }: Props) {
   const i18n = useMemo(() => createI18n(settings.lang), [settings.lang]);
   const { t } = i18n;
 
-  const currentId = runs.some((run) => run.id === settings.currentRun) ? settings.currentRun : (runs[0]?.id ?? null);
+  const currentId = currentRunId(runs, settings.currentRun);
   const current = runs.find((run) => run.id === currentId) ?? null;
   const unreadable = store.unreadable().length;
 
@@ -102,24 +102,16 @@ export default function App({ store, settingsBackend }: Props) {
   };
   const runLabel = (name: string) => (name === "" ? t("run.untitled") : name);
 
-  const create = () => {
-    const run = emptyRun();
-    run.name = t("run.defaultName");
-    select(store.save(run).id);
-  };
+  const create = () => select(createRun(store, t("run.defaultName")));
   const rename = (event: FormEvent) => {
     event.preventDefault();
-    const run = currentId === null ? null : store.load(currentId);
-    if (run !== null && renaming !== null) select(store.save({ ...run, name: renaming.trim() }).id);
+    if (currentId !== null && renaming !== null) select(renameRun(store, currentId, renaming) ?? currentId);
   };
   const duplicate = () => {
-    const run = currentId === null ? null : store.load(currentId);
-    if (run !== null) select(store.save({ ...run, id: "", name: t("run.copyName", { name: runLabel(run.name) }) }).id);
+    if (currentId !== null) select(duplicateRun(store, currentId, (name) => t("run.copyName", { name: runLabel(name) })) ?? currentId);
   };
   const remove = () => {
-    if (currentId === null) return;
-    store.remove(currentId);
-    select(store.list()[0]?.id ?? null);
+    if (currentId !== null) select(deleteRun(store, currentId));
   };
 
   const tabs = [

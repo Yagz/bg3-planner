@@ -7,10 +7,35 @@ import { createI18n } from "../../../web/src/i18n/i18n.ts";
 import { gameName } from "../../../web/src/names.ts";
 import { stubData, text } from "./stubData.ts";
 
-const ALL_PARAMS = {
-  item: "Item_X", list: "list-uuid", count: 3, expected: 2, max: 1, ability: "Strength", value: 18, actual: 12,
-  spent: 30, budget: 27, feat: "Feat_X", requirement: "ability_min", proficiency: "Prof_X", class: "Class_X",
-  subclass: "Sub_X", parent: "Class_X", race: "Race_X", subrace: "Subrace_X", background: "Bg_X", selector: "SelectSpells",
+/** The parameters the engine sends with each message key (src/engine: choices, abilities, progression, validate). */
+const ENGINE_PARAMS: Record<string, Record<string, string | number>> = {
+  "issue.abilityAboveMax": { ability: "Strength", value: 21 },
+  "issue.abilityOutOfRange": { ability: "Strength", value: 18 },
+  "issue.alreadyKnown": { item: "Item_X" },
+  "issue.choiceMissing": { selector: "SelectSpells" },
+  "issue.duplicateChoice": { item: "Item_X" },
+  "issue.featAlreadyTaken": { feat: "Feat_X" },
+  "issue.notInList": { item: "Item_X", list: "list-uuid" },
+  "issue.offData": { selector: "SelectSpells" },
+  "issue.pointBuyOverBudget": { spent: 30, budget: 27 },
+  "issue.pointBuyUnderBudget": { spent: 25, budget: 27 },
+  "issue.requirementNotMet": { feat: "Feat_X", requirement: "ability_min", ability: "Strength", value: 13, actual: 12 },
+  "issue.requirementNotMet.proficiency": { feat: "Feat_X", requirement: "proficiency", proficiency: "Prof_X" },
+  "issue.subclassNotOffered": { class: "Class_X", subclass: "Sub_X" },
+  "issue.subclassUnlockedInPlay": { subclass: "Sub_X", parent: "Class_X" },
+  "issue.subraceMismatch": { race: "Race_X", subrace: "Subrace_X" },
+  "issue.swapNotKnown": { item: "Item_X" },
+  "issue.tooManyLevels": { count: 13, max: 12 },
+  "issue.tooManySwaps": { count: 2, max: 1 },
+  "issue.unknownBackground": { background: "Bg_X" },
+  "issue.unknownClass": { class: "Class_X" },
+  "issue.unknownFeat": { feat: "Feat_X" },
+  "issue.unknownRace": { race: "Race_X" },
+  "issue.unknownSlot": {},
+  "issue.unknownSubrace": { subrace: "Subrace_X" },
+  "issue.wrongCount": { count: 3, expected: 2 },
+  "issue.wrongCount.max": { count: 3, max: 1 },
+  "issue.wrongCount.item": { item: "Strength", count: 3, max: 1 },
 };
 
 function issue(code: Issue["code"], params: Issue["params"]): Issue {
@@ -39,16 +64,33 @@ describe("UI strings", () => {
 });
 
 describe("issue messages", () => {
-  it("render every code in both languages with no placeholder left", () => {
+  it("use only the parameters the engine sends for each code, and render them all", () => {
+    for (const lang of ["en", "fr"] as const) {
+      const table: Record<string, string> = lang === "en" ? en : fr;
+      const issueKeys = Object.keys(table).filter((key) => key.startsWith("issue."));
+      expect(issueKeys.sort()).toEqual(Object.keys(ENGINE_PARAMS).sort());
+      const { issueMessage } = createI18n(lang);
+      for (const [key, sent] of Object.entries(ENGINE_PARAMS)) {
+        const placeholders = [...(table[key] ?? "").matchAll(/\{(\w+)\}/g)].map((match) => match[1]);
+        for (const name of placeholders) expect(sent, `${lang} ${key} uses {${name}}`).toHaveProperty([name!]);
+        const [, code, variant] = /^issue\.(\w+)(?:\.(\w+))?$/.exec(key)!;
+        const params = variant === "proficiency" ? { ...sent, requirement: "proficiency" } : sent;
+        const message = issueMessage(issue(code as Issue["code"], params), (_kind, id) => `<${id}>`);
+        // Identifiers go through the names function (shown here as <id>); numbers are shown as they are.
+        const shown = (value: string | number | undefined) => (typeof value === "number" ? String(value) : `<${value}>`);
+        const expected = placeholders.reduce<string>((text, name) => text.replace(`{${name}}`, shown(params[name!])), table[key]!);
+        expect(message, `${lang} ${key}`).toBe(expected);
+      }
+    }
+  });
+
+  it("render a placeholder the engine left empty as a question mark, never as braces", () => {
     for (const lang of ["en", "fr"] as const) {
       const { issueMessage } = createI18n(lang);
       for (const code of ISSUE_CODES) {
-        const variants: Issue["params"][] = [ALL_PARAMS, { ...ALL_PARAMS, requirement: "proficiency" }, { count: 3, max: 1 }, { item: "Item_X", count: 3, max: 1 }, {}];
-        for (const params of variants) {
-          const message = issueMessage(issue(code, params), (_kind, id) => id);
-          expect(message, `${lang} ${code}`).not.toMatch(/[{}]/);
-          expect(message.trim()).not.toBe("");
-        }
+        const message = issueMessage(issue(code, {}), (_kind, id) => id);
+        expect(message, `${lang} ${code}`).not.toMatch(/[{}]/);
+        expect(message.trim()).not.toBe("");
       }
     }
   });
