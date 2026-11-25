@@ -4,7 +4,7 @@ Party planner for Baldur's Gate 3: party, level-by-level builds for your charact
 
 ## Status
 
-In development. The game-data import (character creation and progression rules, and key items with their acts, with English and French names) is done; the rules engine and the web interface are in place.
+In development. The game-data import (character creation and progression rules, and key items with their acts, with English and French names) is done; the rules engine and the web interface are in place; the run's difficulty is one of the game's rulesets (Explorer, Balanced, Tactician, Honour, Custom Mode), chosen in the header, and its effects on a build (multiclassing, proficiency bonus) come from the game files.
 
 ## Development
 

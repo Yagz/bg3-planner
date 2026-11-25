@@ -3,6 +3,7 @@ import type { FormEvent } from "react";
 import type { GameData } from "../../src/data/types.ts";
 import { I18nContext, LANGS, createI18n } from "./i18n/i18n.ts";
 import Character from "./screens/Character.tsx";
+import DifficultyPicker from "./screens/DifficultyPicker.tsx";
 import HistoryPanel from "./screens/HistoryPanel.tsx";
 import Party from "./screens/Party.tsx";
 import Transfer from "./screens/Transfer.tsx";
@@ -209,6 +210,7 @@ export default function App({ data, store, settingsBackend }: Props) {
               </form>
             )}
           </div>
+          {run !== null && <DifficultyPicker data={data} run={run} saveRun={saveRun} />}
           <nav aria-label={t("nav.label")}>
             {tabs.map((tab) => (
               <button key={tab.route.screen} aria-current={route.screen === tab.route.screen ? "page" : undefined} onClick={() => go(tab.route)}>

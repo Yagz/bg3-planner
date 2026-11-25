@@ -8,7 +8,9 @@ import { createStore } from "../../../web/src/state/storage.ts";
 import type { RunStore } from "../../../web/src/state/storage.ts";
 import { MemoryBackend } from "./memoryBackend.ts";
 import { StreamingBlob } from "./streamingBlob.ts";
+import { realData } from "./realData.ts";
 import { stubData, text } from "./stubData.ts";
+import { validate } from "../../../src/engine/validate.ts";
 
 beforeAll(() => {
   vi.stubGlobal("Blob", StreamingBlob);
@@ -363,3 +365,93 @@ describe("history panel: what each version changed", () => {
   });
 });
 
+
+describe("difficulty picker", () => {
+  const data = () => realData();
+  const render2 = (run: Run, lang: "en" | "fr" = "fr") => {
+    const store = createStore(new MemoryBackend());
+    const saved = store.save(run);
+    const settings = new MemoryBackend();
+    settings.items.set("bg3p:settings", JSON.stringify({ lang }));
+    render(<App data={data()} store={store} settingsBackend={settings} />);
+    return { store, id: saved.id };
+  };
+  const picker = () => screen.getByRole("combobox", { name: /^Difficult/ }) as HTMLSelectElement;
+  const optionNames = () => Array.from(picker().options).map((o) => o.textContent);
+
+  it("offers the game's rulesets in order, Custom Mode last, and saves a preset with its effect pills", () => {
+    const { store, id } = render2({ ...emptyRun("d1"), difficulty: { ruleset: "DIFFICULTY_MEDIUM", overrides: { MULTICLASSING: false } } });
+    expect(optionNames()).toEqual(["Explorateur", "Équilibré", "Tacticien", "Règles du mode Honneur", "Mode Personnalisé"]);
+    expect(picker().value).toBe("DIFFICULTY_MEDIUM");
+    fireEvent.change(picker(), { target: { value: "DIFFICULTY_EASY" } });
+    expect(store.load(id)!.difficulty).toEqual({ ruleset: "DIFFICULTY_EASY", overrides: {} });
+    expect(screen.getByText("Multiclassage désactivé")).toBeTruthy();
+    expect(screen.getByText("+2 au bonus de maîtrise")).toBeTruthy();
+    fireEvent.change(picker(), { target: { value: "RULESET_HONOUR" } });
+    expect(screen.getByText("Statistiques du mode Honneur : certains sorts et objets changent")).toBeTruthy();
+    expect(screen.queryByText("Multiclassage désactivé")).toBeNull();
+  });
+
+  it("shows an empty first option for an undecided difficulty", () => {
+    const { store, id } = render2(emptyRun("d2"));
+    expect(optionNames()[0]).toBe("Difficulté à choisir");
+    expect(picker().value).toBe("");
+    fireEvent.change(picker(), { target: { value: "DIFFICULTY_HARD" } });
+    expect(store.load(id)!.difficulty.ruleset).toBe("DIFFICULTY_HARD");
+    expect(optionNames()).not.toContain("Difficulté à choisir");
+  });
+
+  it("edits the custom modifiers in the overrides, bounded by the game's range", () => {
+    const { store, id } = render2({ ...emptyRun("d3"), difficulty: { ruleset: "DIFFICULTY_EASY", overrides: {} } });
+    expect(screen.queryByRole("checkbox", { name: "Multiclassage" })).toBeNull();
+    fireEvent.change(picker(), { target: { value: "RULESET_LARIAN" } });
+    expect(store.load(id)!.difficulty).toEqual({ ruleset: "RULESET_LARIAN", overrides: {} });
+    expect(optionNames()).not.toContain("Règles classiques");
+    expect(picker().selectedOptions[0]!.textContent).toBe("Mode Personnalisé");
+    const box = screen.getByRole("checkbox", { name: "Multiclassage" }) as HTMLInputElement;
+    expect(box.checked).toBe(true);
+    fireEvent.click(box);
+    expect(store.load(id)!.difficulty.overrides).toEqual({ MULTICLASSING: false });
+    const bonus = screen.getByRole("spinbutton", { name: "Bonus de maîtrise" }) as HTMLInputElement;
+    const modifier = data().rules.rulesetModifiers.PROFICIENCY_BONUS;
+    expect(bonus.min).toBe(String(modifier.min));
+    expect(bonus.max).toBe(String(modifier.max));
+    fireEvent.change(bonus, { target: { value: "3" } });
+    expect(store.load(id)!.difficulty.overrides).toEqual({ MULTICLASSING: false, PROFICIENCY_BONUS: 3 });
+    fireEvent.change(bonus, { target: { value: String(modifier.max! + 1) } });
+    expect(store.load(id)!.difficulty.overrides).toEqual({ MULTICLASSING: false, PROFICIENCY_BONUS: 3 });
+    expect(screen.getByText("+3 au bonus de maîtrise")).toBeTruthy();
+  });
+
+  it("keeps an unknown ruleset and says so", () => {
+    const { store, id } = render2({ ...emptyRun("d4"), difficulty: { ruleset: "Nightmare", overrides: {} } });
+    expect(screen.getByText("Difficulté inconnue : Nightmare")).toBeTruthy();
+    expect(picker().value).toBe("Nightmare");
+    expect(store.load(id)!.difficulty.ruleset).toBe("Nightmare");
+  });
+
+  it("flags then clears the multiclass levels when the difficulty goes to Explorer and back, removing no pick", () => {
+    const d = data();
+    const levels = ["Ranger", "Rogue", "Rogue"].map((cls) => ({ class: cls, choices: {} }));
+    const run: Run = {
+      ...emptyRun("d5"),
+      difficulty: { ruleset: "DIFFICULTY_MEDIUM", overrides: {} },
+      characters: [{ id: "p", who: "player", race: "Halfling", subrace: "Halfling_Lightfoot", background: Object.keys(d.rules.backgrounds)[0]!, abilities: { Strength: 8, Dexterity: 15, Constitution: 14, Intelligence: 8, Wisdom: 15, Charisma: 10 }, levels, items: [], notes: "" }],
+    };
+    run.party["1"].active = ["p"];
+    const { store, id } = render2(run, "en");
+    const flagged = () => validate(store.load(id)!, d).issues.filter((issue) => issue.code === "multiclassDisabled").map((issue) => issue.level);
+    expect(flagged()).toEqual([]);
+    fireEvent.change(picker(), { target: { value: "DIFFICULTY_EASY" } });
+    expect(flagged()).toEqual([2, 3]);
+    expect(store.load(id)!.characters[0]!.levels.map((l) => l.class)).toEqual(["Ranger", "Rogue", "Rogue"]);
+    fireEvent.change(picker(), { target: { value: "DIFFICULTY_MEDIUM" } });
+    expect(flagged()).toEqual([]);
+    expect(store.load(id)!.characters[0]!.levels.map((l) => l.class)).toEqual(["Ranger", "Rogue", "Rogue"]);
+  });
+
+  it("does not show the picker without a run", () => {
+    renderApp();
+    expect(screen.queryByRole("combobox", { name: /^Difficult/ })).toBeNull();
+  });
+});
