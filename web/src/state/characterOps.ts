@@ -1,7 +1,7 @@
 import type { GameData } from "../../../src/data/types.ts";
 import { impact } from "../../../src/engine/impact.ts";
 import type { Impact } from "../../../src/engine/impact.ts";
-import { MAX_LEVELS } from "../../../src/plan/model.ts";
+import { MAX_LEVELS, isOffData } from "../../../src/plan/model.ts";
 import type { Ability, Character, Choice, OffData, Run } from "../../../src/plan/model.ts";
 
 // Pure operations on a character. Levels are 1-based, like the engine's slots. None of them fills a choice.
@@ -55,10 +55,14 @@ export function setLevelClass(character: Character, level: number, cls: string |
   return withLevel(character, level, (entry) => ({ ...entry, class: cls }));
 }
 
-/** Adds a level whose class is still to decide. */
+/**
+ * Adds a level that continues the last level's class as it is (a class, `""` still to decide, or a value outside the
+ * game data), with no picks.
+ */
 export function addLevel(character: Character): Character {
   if (character.levels.length >= MAX_LEVELS) throw new Error(`The game stops at level ${MAX_LEVELS}`);
-  return { ...character, levels: [...character.levels, { class: "", choices: {} }] };
+  const last = character.levels.at(-1)?.class ?? "";
+  return { ...character, levels: [...character.levels, { class: isOffData(last) ? { ...last } : last, choices: {} }] };
 }
 
 /** Removes the last level and its picks; a character keeps at least one level. */

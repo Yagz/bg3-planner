@@ -4,7 +4,7 @@ import type { Contribution } from "../../../../src/engine/contribution.ts";
 import { truncate } from "../../../../src/engine/coverage.ts";
 import { subclassSlot } from "../../../../src/engine/progression.ts";
 import { ABILITIES, MAX_LEVELS, isOffData } from "../../../../src/plan/model.ts";
-import type { Character } from "../../../../src/plan/model.ts";
+import type { Ability, Character } from "../../../../src/plan/model.ts";
 import type { Lang } from "../../i18n/i18n.ts";
 import { useI18n } from "../../i18n/i18n.ts";
 import { characterLabel, gameName } from "../../names.ts";
@@ -58,6 +58,60 @@ function identityName(data: GameData, lang: Lang, kind: "race" | "background", v
 /** The ability's short label: the first three letters of the game's name, upper-cased. */
 const shortLabel = (data: GameData, lang: Lang, ability: string) => gameName(data, lang, "ability", ability).slice(0, 3).toLocaleUpperCase(lang);
 
+/**
+ * The six ability tiles: short label, total and modifier, the group's highest ones marked; with `base`, a last line
+ * gives the base score and what the level choices add to it.
+ */
+export function AbilityTiles({ totals, highest, data, lang, base }: { totals: Record<Ability, number>; highest: Ability[]; data: GameData; lang: Lang; base?: Record<Ability, number> }) {
+  const { t } = useI18n();
+  return (
+    <div className="ab6">
+      {ABILITIES.map((ability) => {
+        const name = gameName(data, lang, "ability", ability);
+        const bonus = base === undefined ? 0 : totals[ability] - base[ability];
+        return (
+          <div key={ability} className={`ab${highest.includes(ability) ? " hi" : ""}`} role="group" aria-label={name} title={name}>
+            <span>{shortLabel(data, lang, ability)}</span>
+            <b>{totals[ability]}</b>
+            <small>{signed(Math.floor((totals[ability] - 10) / 2))}</small>
+            {base !== undefined && (
+              <small className={bonus > 0 ? "up" : undefined}>{bonus > 0 ? t("character.summary.base", { base: base[ability], bonus }) : t("character.summary.baseOnly")}</small>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/** What a member brings as pills: skills only it has, skills where it is best, abilities where it is highest; "alone" or "nothing unique" otherwise. */
+export function BringsPills({ contribution, alone, skillValues, level, data, lang }: { contribution: Contribution; alone: boolean; skillValues: Record<string, number>; level: number; data: GameData; lang: Lang }) {
+  const { t } = useI18n();
+  const skill = (id: string) => gameName(data, lang, "skill", id);
+  const { only, best, highest } = contribution;
+  if (alone) return <span className="sub">{t("party.brings.alone")}</span>;
+  return (
+    <>
+      {only.map((id) => (
+        <span key={id} className="pill good">
+          {t("party.brings.only", { skill: skill(id) })}
+        </span>
+      ))}
+      {best.map((id) => (
+        <span key={id} className="pill acc">
+          {t("party.brings.best", { skill: skillValues[id] === undefined ? skill(id) : `${skill(id)} ${signed(skillValues[id])}` })}
+        </span>
+      ))}
+      {highest.map((ability) => (
+        <span key={ability} className="pill muted">
+          {t("party.brings.highest", { ability: gameName(data, lang, "ability", ability) })}
+        </span>
+      ))}
+      {only.length === 0 && best.length === 0 && highest.length === 0 && <span className="sub">{t("party.brings.nothing", { level })}</span>}
+    </>
+  );
+}
+
 type Props = {
   character: Character;
   /** What the member brings to the active group (`contribution()`). */
@@ -83,9 +137,6 @@ export default function MemberCard({ character, contribution, level, data, lang,
   const race = identityName(data, lang, "race", character.subrace ?? character.race);
   const background = identityName(data, lang, "background", character.background);
   const identity = [race, background].filter((part) => part !== null).join(" · ");
-  const skill = (id: string) => gameName(data, lang, "skill", id);
-  const { only, best, highest } = contribution;
-  const nothing = only.length === 0 && best.length === 0 && highest.length === 0;
 
   return (
     <article className="card member">
@@ -97,40 +148,11 @@ export default function MemberCard({ character, contribution, level, data, lang,
         <ClassLine character={character} level={level} data={data} lang={lang} none={t("party.noClass")} />
       </p>
       {identity !== "" && <p className="sub">{identity}</p>}
-      <div className="ab6">
-        {ABILITIES.map((ability) => (
-          <div key={ability} className={`ab${highest.includes(ability) ? " hi" : ""}`} title={gameName(data, lang, "ability", ability)}>
-            <span>{shortLabel(data, lang, ability)}</span>
-            <b>{totals[ability]}</b>
-            <small>{signed(Math.floor((totals[ability] - 10) / 2))}</small>
-          </div>
-        ))}
-      </div>
+      <AbilityTiles totals={totals} highest={contribution.highest} data={data} lang={lang} />
       <div className="brings">
         <h4>{t("party.brings")}</h4>
         <div className="pills">
-          {alone ? (
-            <span className="sub">{t("party.brings.alone")}</span>
-          ) : (
-            <>
-              {only.map((id) => (
-                <span key={id} className="pill good">
-                  {t("party.brings.only", { skill: skill(id) })}
-                </span>
-              ))}
-              {best.map((id) => (
-                <span key={id} className="pill acc">
-                  {t("party.brings.best", { skill: skillValues[id] === undefined ? skill(id) : `${skill(id)} ${signed(skillValues[id])}` })}
-                </span>
-              ))}
-              {highest.map((ability) => (
-                <span key={ability} className="pill muted">
-                  {t("party.brings.highest", { ability: gameName(data, lang, "ability", ability) })}
-                </span>
-              ))}
-              {nothing && <span className="sub">{t("party.brings.nothing", { level })}</span>}
-            </>
-          )}
+          <BringsPills contribution={contribution} alone={alone} skillValues={skillValues} level={level} data={data} lang={lang} />
         </div>
       </div>
       <p className="sub">{t("party.plan", { level: MAX_LEVELS, classes: classLineText(character, MAX_LEVELS, data, lang) || t("party.noClass") })}</p>

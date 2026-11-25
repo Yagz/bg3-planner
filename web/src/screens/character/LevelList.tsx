@@ -82,6 +82,48 @@ export function ClassPick({ data, cls, onPick }: { data: GameData; cls: string |
   );
 }
 
+/** How the class of a level relates to the level before: the first level, a level that continues it, one that changes it, or a class still to decide on either side. */
+export type ClassStep = "first" | "continues" | "changes" | "undecided";
+
+/** The step of level `level` (1-based); a value outside the game data compares by its text. */
+export function classStep(character: Character, level: number): ClassStep {
+  if (level <= 1) return "first";
+  const key = (cls: string | OffData | undefined) => (cls === undefined ? "" : isOffData(cls) ? `offData:${cls.offData}` : cls);
+  const now = key(character.levels[level - 1]?.class);
+  const before = key(character.levels[level - 2]?.class);
+  if (now === "" || before === "") return "undecided";
+  return now === before ? "continues" : "changes";
+}
+
+/**
+ * The class of a level: a pick for the first level, an undecided class or a level that changes class (marked
+ * "multiclass"); a level that continues the previous class shows it muted with "Multiclass", which opens the class
+ * picker. Neither mark nor button when the run's ruleset forbids multiclassing; a level the engine flags for it
+ * (`flagged`) keeps its class pick, so it can be set back.
+ */
+export function LevelClass({ data, cls, step, classLevel, multiclass, flagged, onPick }: { data: GameData; cls: string | OffData; step: ClassStep; classLevel: number; multiclass: boolean; flagged: boolean; onPick: () => void }) {
+  const { t, lang } = useI18n();
+  const counter = classLevel > 0 && <span className="counter">{classLevel}</span>;
+  if (step === "continues" && !flagged) {
+    return (
+      <>
+        <span className="same">{isOffData(cls) ? cls.offData : gameName(data, lang, "class", cls)}</span> {counter}
+        {multiclass && (
+          <button className="btn small" onClick={onPick}>
+            {t("character.multiclass")}
+          </button>
+        )}
+      </>
+    );
+  }
+  return (
+    <>
+      <ClassPick data={data} cls={cls} onPick={onPick} /> {counter}
+      {step === "changes" && multiclass && <span className="pill acc">{t("tree.multiclass")}</span>}
+    </>
+  );
+}
+
 type Props = {
   data: GameData;
   character: Character;
@@ -89,11 +131,13 @@ type Props = {
   issues: Issue[];
   /** Last level played in the run. */
   progressLevel: number;
+  /** Whether the run's ruleset allows multiclassing. */
+  multiclass: boolean;
   onPick: (level: number, slot: string) => void;
 };
 
-/** One row per level: the class taken, every choice (picks or a dashed "to decide"), what the level grants, and the engine's issues in place. */
-export default function LevelList({ data, character, issues, progressLevel, onPick }: Props) {
+/** One row per level: the class taken (continued, changed or to decide), every choice (picks or a dashed "to decide"), what the level grants, and the engine's issues in place. */
+export default function LevelList({ data, character, issues, progressLevel, multiclass, onPick }: Props) {
   const { t, lang } = useI18n();
   const resolved = resolve(character, data).levels;
 
@@ -120,8 +164,7 @@ export default function LevelList({ data, character, issues, progressLevel, onPi
             <div className={`lv${played ? " played" : ""}`} role="group" aria-label={t("character.level", { level: n })}>
               <span className="n">{String(n).padStart(2, "0")}</span>
               <div className="c">
-                <ClassPick data={data} cls={cls} onPick={() => onPick(n, CLASS_SLOT)} />{" "}
-                {level.classLevel > 0 && <span className="counter">{level.classLevel}</span>}
+                <LevelClass data={data} cls={cls} step={classStep(character, n)} classLevel={level.classLevel} multiclass={multiclass} flagged={here.some((issue) => issue.code === "multiclassDisabled")} onPick={() => onPick(n, CLASS_SLOT)} />
                 <small>{played ? t("character.played") : t("character.planned")}</small>
               </div>
               <div className="body">

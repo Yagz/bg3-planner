@@ -99,10 +99,15 @@ describe("other character operations", () => {
     expect(after.levels[2]).toEqual({ class: "Rogue", choices: { [subclassSlot("Ranger")]: ["GloomStalker"] } });
   });
 
-  it("adds a level with its class to decide, and removes the last one but never the only one", () => {
+  it("adds a level that continues the last level's class as is, with no picks, and removes the last one but never the only one", () => {
     const added = addLevel(ranger());
     expect(added.levels).toHaveLength(4);
-    expect(added.levels[3]).toEqual({ class: "", choices: {} });
+    expect(added.levels[3]).toEqual({ class: "Ranger", choices: {} });
+    const undecided: Character = { ...ranger(), levels: [...ranger().levels, { class: "", choices: {} }] };
+    expect(addLevel(undecided).levels[4]).toEqual({ class: "", choices: {} });
+    const outside: Character = { ...ranger(), levels: [...ranger().levels, { class: { offData: "X" }, choices: { a: ["b"] } }] };
+    expect(addLevel(outside).levels[4]).toEqual({ class: { offData: "X" }, choices: {} });
+    expect(addLevel(outside).levels[4]!.class).not.toBe(outside.levels[3]!.class);
     expect(removeLastLevel(added).levels).toEqual(ranger().levels);
     expect(() => removeLastLevel({ ...ranger(), levels: [{ class: "Ranger", choices: {} }] })).toThrow();
     let full = ranger();
@@ -138,7 +143,7 @@ describe("previewNeeded", () => {
     expect(previewNeeded(noSubclass, setChoice(noSubclass, 3, subclassSlot("Ranger"), ["Hunter"]), runOf(noSubclass), data)).toBeNull();
     const noRace = setIdentity(setIdentity(ranger(), "race", ""), "subrace", null);
     expect(previewNeeded(noRace, setIdentity(noRace, "race", "Human"), runOf(noRace), data)).toBeNull();
-    const added = addLevel(ranger());
+    const added: Character = { ...ranger(), levels: [...ranger().levels, { class: "", choices: {} }] };
     expect(previewNeeded(added, setLevelClass(added, 4, "Ranger"), runOf(added), data)).toBeNull();
   });
 

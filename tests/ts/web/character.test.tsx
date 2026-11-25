@@ -1,7 +1,9 @@
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import type { GameData } from "../../../src/data/types.ts";
+import { skillProficiencies } from "../../../src/engine/coverage.ts";
 import { resolve, subclassSlot } from "../../../src/engine/progression.ts";
+import { validate } from "../../../src/engine/validate.ts";
 import { emptyRun } from "../../../src/plan/model.ts";
 import type { Character, Choice, Run } from "../../../src/plan/model.ts";
 import App from "../../../web/src/App.tsx";
@@ -318,5 +320,159 @@ describe("Character screen", () => {
     expect(openBackgrounds(darkUrge)).not.toBeNull();
     cleanup();
     expect(openBackgrounds(addCharacter(emptyRun("r"), data, "player"))).toBeNull();
+  });
+
+  describe("summary", () => {
+    /** A Lightfoot Halfling Rogue of one level with four skills and expertise in two of them. */
+    function rogue(): Character {
+      const c: Character = { ...ranger(1), id: "rogue", who: "Astarion", levels: [{ class: "Rogue", choices: {} }] };
+      const slots = resolve(c, data).levels[0]!.slots;
+      c.levels[0]!.choices[slots.find((s) => s.selector.function === "SelectSkills")!.id] = ["Acrobatics", "Deception", "Insight", "Stealth"];
+      c.levels[0]!.choices[slots.find((s) => s.selector.function === "SelectSkillsExpertise")!.id] = ["Stealth", "Deception"];
+      return c;
+    }
+    const summary = () => screen.getByRole("region", { name: "Summary" });
+
+    it("shows the classes reached, the level-12 plan, six tiles with base and bonus, the skills and the choices left; Summary comes before Creation and the levels", () => {
+      const c = ranger(3);
+      const bonus = resolve(c, data).levels[0]!.slots.find((s) => s.selector.function === "SelectAbilityBonus")!;
+      c.levels[0]!.choices[bonus.id] = ["Dexterity", "Wisdom"];
+      c.levels[2]!.choices[subclassSlot("Ranger")] = ["GloomStalker"];
+      const run = runWith([c], 2);
+      setup(run, c.id);
+      const region = summary();
+      const order = [region, screen.getByRole("region", { name: "Creation" }), screen.getByRole("region", { name: "Levels" })];
+      for (let i = 1; i < order.length; i++) expect(order[i - 1]!.compareDocumentPosition(order[i]!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(region.querySelector(".cls")!.textContent).toBe("Ranger 2 at level 2");
+      expect(within(region).getByText("Level 12 plan: Ranger 3 (Gloom Stalker)")).toBeTruthy();
+      expect(within(region).getByText("Abilities at level 2")).toBeTruthy();
+      const dexterity = within(region).getByRole("group", { name: "Dexterity" });
+      expect(within(dexterity).getByText("17")).toBeTruthy();
+      expect(within(dexterity).getByText("+3")).toBeTruthy();
+      expect(within(dexterity).getByText("base 15 +2")).toBeTruthy();
+      const strength = within(region).getByRole("group", { name: "Strength" });
+      expect(within(strength).getByText("8")).toBeTruthy();
+      expect(within(strength).queryByText(/base \d+ \+/)).toBeNull();
+      expect(region.querySelectorAll(".ab")).toHaveLength(6);
+      expect(within(region).getByText("Brings to the party (act 1)")).toBeTruthy();
+      expect(within(region).getByText("Alone in the party")).toBeTruthy();
+      const skills = [...within(region).getByRole("group", { name: "Skills" }).querySelectorAll(".pill")].map((pill) => pill.textContent);
+      const known = [...skillProficiencies(c, data).proficient];
+      expect(known).toEqual(expect.arrayContaining(["Perception", "Stealth", "Survival"]));
+      expect(skills.sort()).toEqual(known.map((id) => gameName(data, "en", "skill", id)).sort());
+      const undecided = validate({ ...run, characters: [c] }, data).issues.filter((issue) => issue.code === "choiceMissing").length;
+      expect(undecided).toBeGreaterThan(1);
+      expect(within(region).getByText(`${undecided} choices to make`)).toBeTruthy();
+    });
+
+    it("marks expertise, lists what the character brings next to another member, and says a character outside the active group is at camp, in French", () => {
+      const r = ranger(1);
+      const g = rogue();
+      const run = runWith([r, g]);
+      setup(run, g.id);
+      fireEvent.change(screen.getByRole("combobox", { name: "Language" }), { target: { value: "fr" } });
+      const region = screen.getByRole("region", { name: "Résumé" });
+      expect(within(region).getByText("Caractéristiques au niveau 1")).toBeTruthy();
+      expect(within(region).getByText("Apport au groupe (acte 1)")).toBeTruthy();
+      const skills = within(region).getByRole("group", { name: "Compétences" });
+      expect(within(skills).getByText(`${gameName(data, "fr", "skill", "Stealth")} · expertise`)).toBeTruthy();
+      expect(within(skills).getByText(gameName(data, "fr", "skill", "Insight"))).toBeTruthy();
+      expect(within(region).getByText(`${gameName(data, "fr", "skill", "Deception")} · seul`)).toBeTruthy();
+      cleanup();
+      const camp = runWith([r, g]);
+      camp.party["1"].active = [r.id];
+      setup(camp, g.id);
+      fireEvent.change(screen.getByRole("combobox", { name: "Language" }), { target: { value: "fr" } });
+      const away = screen.getByRole("region", { name: "Résumé" });
+      expect(within(away).getByText("Au camp à l’acte 1")).toBeTruthy();
+      expect(away.querySelectorAll(".brings .pill")).toHaveLength(0);
+    });
+  });
+
+  describe("levels that continue their class, and Multiclass", () => {
+    /** Ranger, Rogue, Rogue, Ranger: level 2 and 4 change class, level 3 continues. */
+    function mixed(): Character {
+      const c = ranger(4);
+      c.levels[1]!.class = "Rogue";
+      c.levels[2]!.class = "Rogue";
+      return c;
+    }
+    const classButton = (n: number) => within(level(n)).queryByRole("button", { name: /^Class:/ });
+    const multiclassButton = (n: number) => within(level(n)).queryByRole("button", { name: "Multiclass" });
+
+    for (const view of ["list", "tree"] as const) {
+      it(`shows a continuing level muted with Multiclass, and a level that changes class with a multiclass pill (${view})`, () => {
+        const c = mixed();
+        setup(runWith([c]), c.id);
+        if (view === "tree") fireEvent.click(screen.getByRole("checkbox", { name: "Tree" }));
+        expect(classButton(1)).not.toBeNull();
+        expect(multiclassButton(1)).toBeNull();
+        for (const n of [2, 4]) {
+          expect(classButton(n)).not.toBeNull();
+          expect(within(level(n)).getByText("multiclass")).toBeTruthy();
+          expect(multiclassButton(n)).toBeNull();
+        }
+        expect(classButton(3)).toBeNull();
+        expect(within(level(3)).getByText(gameName(data, "en", "class", "Rogue")).className).toContain("same");
+        expect(within(level(3)).queryByText("multiclass")).toBeNull();
+        expect(multiclassButton(3)).not.toBeNull();
+      });
+    }
+
+    it("leaves an undecided level as a dashed pick with neither pill nor Multiclass", () => {
+      const c = ranger(2);
+      c.levels[1]!.class = "";
+      setup(runWith([c]), c.id);
+      expect(classButton(2)!.textContent).toBe("to decide");
+      expect(multiclassButton(2)).toBeNull();
+      expect(within(level(2)).queryByText("multiclass")).toBeNull();
+    });
+
+    it("opens the class picker from Multiclass and saves the change through the impact preview", () => {
+      const c = ranger(3);
+      const { slot, items } = rangerSpells(c);
+      c.levels[1]!.choices[slot] = [items[0]!, items[1]!];
+      const { store, runId } = setup(runWith([c]), c.id);
+      const versions = store.history(runId).length;
+      fireEvent.click(multiclassButton(2)!);
+      const pick = () => {
+        const dialog = screen.getByRole("dialog");
+        fireEvent.click(within(dialog).getByRole("radio", { name: gameName(data, "en", "class", "Rogue") }));
+        fireEvent.click(within(dialog).getByRole("button", { name: "Validate" }));
+      };
+      pick();
+      fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Cancel" }));
+      expect(store.history(runId).length).toBe(versions);
+      fireEvent.click(multiclassButton(2)!);
+      pick();
+      fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Apply" }));
+      const saved = store.load(runId)!.characters[0]!;
+      expect(saved.levels.map((entry) => entry.class)).toEqual(["Ranger", "Rogue", "Ranger"]);
+      expect(store.history(runId).length).toBe(versions + 1);
+    });
+
+    it("adds a level that continues the last class", () => {
+      const c = ranger(2);
+      const { store, runId } = setup(runWith([c]), c.id);
+      fireEvent.click(screen.getByRole("button", { name: "Add a level" }));
+      expect(store.load(runId)!.characters[0]!.levels[2]).toEqual({ class: "Ranger", choices: {} });
+      expect(multiclassButton(3)).not.toBeNull();
+    });
+
+    for (const view of ["list", "tree"] as const) {
+      it(`hides Multiclass on Explorer and flags each multiclass level without removing it (${view})`, () => {
+        const c = mixed();
+        const run = { ...runWith([c]), difficulty: { ruleset: "DIFFICULTY_EASY", overrides: {} } };
+        setup(run, c.id);
+        if (view === "tree") fireEvent.click(screen.getByRole("checkbox", { name: "Tree" }));
+        expect(screen.queryByRole("button", { name: "Multiclass" })).toBeNull();
+        const rogue = gameName(data, "en", "class", "Rogue");
+        for (const n of [2, 3]) expect(within(level(n)).getByText(`Multiclassing is disabled by the difficulty: ${rogue} cannot be added.`)).toBeTruthy();
+        expect(within(level(4)).queryByText(/Multiclassing is disabled/)).toBeNull();
+        // A flagged level keeps its class pick, continuing or not, so it can be set back.
+        expect(classButton(2)!.textContent).toBe(rogue);
+        expect(classButton(3)!.textContent).toBe(rogue);
+      });
+    }
   });
 });

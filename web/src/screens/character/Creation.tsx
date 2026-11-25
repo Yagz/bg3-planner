@@ -53,7 +53,7 @@ export default function Creation({ data, character, issues, locked, hasSubraces,
   };
 
   return (
-    <section className="creation" aria-label={t("character.creation")}>
+    <section className="frame creation" aria-label={t("character.creation")}>
       <div className="row">
         <h2>{t("character.creation")}</h2>
         {locked && <span className="pill muted">{t("character.locked")}</span>}

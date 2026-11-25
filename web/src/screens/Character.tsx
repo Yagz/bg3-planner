@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import type { TextKind } from "../../../src/data/names.ts";
 import type { GameData, Selector } from "../../../src/data/types.ts";
 import type { Impact } from "../../../src/engine/impact.ts";
+import { rulesetEffects } from "../../../src/engine/difficulty.ts";
 import { resolve } from "../../../src/engine/progression.ts";
 import { isOptionalSelector, knownSpellsBefore, levelSlots, validate } from "../../../src/engine/validate.ts";
 import { MAX_LEVELS, isOffData } from "../../../src/plan/model.ts";
@@ -27,6 +28,7 @@ import type { IdentityField } from "./character/Creation.tsx";
 import ImpactPreview from "./character/ImpactPreview.tsx";
 import LevelList, { CLASS_SLOT } from "./character/LevelList.tsx";
 import LevelTree from "./character/LevelTree.tsx";
+import Summary from "./character/Summary.tsx";
 
 type Props = {
   data: GameData;
@@ -69,7 +71,7 @@ function single(choice: Choice): string | { offData: string } {
   return Array.isArray(choice) ? (choice[0] ?? "") : "";
 }
 
-/** The character editor: creation block, levels 1 to 12 as a list or a tree, the game's list for each choice, and the impact preview of a change. */
+/** The character editor: summary of what the character brings, creation block, levels 1 to 12 as a list or a tree, the game's list for each choice, and the impact preview of a change. */
 export default function Character({ data, run, saveRun, characterId, onSelect, tree, onTree }: Props) {
   const { t, lang } = useI18n();
   const [target, setTarget] = useState<Target | null>(null);
@@ -188,13 +190,8 @@ export default function Character({ data, run, saveRun, characterId, onSelect, t
 
   const opened = target === null ? null : open(target);
   const close = () => setTarget(null);
-  const undecided = issues.filter((issue) => issue.severity === "incomplete").length;
-  const classes = new Map<string, number>();
-  for (const entry of character.levels) if (!isOffData(entry.class) && entry.class !== "") classes.set(entry.class, (classes.get(entry.class) ?? 0) + 1);
-  const meta = [
-    isOffData(race) ? race.offData : race === "" ? null : gameName(data, lang, "race", race),
-    [...classes].map(([cls, count]) => `${gameName(data, lang, "class", cls)} ${count}`).join(" / ") || null,
-  ].filter((part) => part !== null);
+  const { multiclass } = rulesetEffects(run.difficulty, data);
+  const levelIssues = issues.filter((issue) => issue.level !== null);
 
   return (
     <div className="character">
@@ -207,54 +204,55 @@ export default function Character({ data, run, saveRun, characterId, onSelect, t
           ))}
         </div>
       )}
-      <div className="charhead">
-        <h1>{label(character)}</h1>
-        {meta.length > 0 && <span className="meta">{meta.join(" · ")}</span>}
-        <span className={`pill ${undecided === 0 ? "good" : "todo"}`}>{undecided === 0 ? t("character.complete") : t("character.undecided", { count: undecided })}</span>
-        <label className="switch">
-          <input type="checkbox" checked={tree} onChange={(event) => onTree(event.target.checked)} /> {t("character.tree")}
-        </label>
-      </div>
       {error !== null && (
         <p className="banner" role="alert">
           {t("character.error", { message: error })}
         </p>
       )}
-      <Creation
-        data={data}
-        character={character}
-        issues={issues.filter((issue) => issue.level === null)}
-        locked={locked}
-        hasSubraces={subraces.length > 0}
-        onPick={(field) => setTarget({ field })}
-        origin={character.who === "player" ? { value: run.origin, options: originOptions, onChange: changeOrigin } : undefined}
-        onAbility={(ability, value) => commit(setAbilities(character, { ...character.abilities, [ability]: value }))}
-      />
-      {tree ? (
-        <LevelTree
+      <div className="stack">
+        <Summary character={character} run={run} data={data} lang={lang} />
+        <Creation
           data={data}
           character={character}
-          issues={issues.filter((issue) => issue.level !== null)}
-          progressLevel={run.progress.level}
-          onPick={(level, slot) => setTarget({ level, slot })}
-          onChoose={(level, slot, choice) => commit(setChoice(character, level, slot, choice))}
+          issues={issues.filter((issue) => issue.level === null)}
+          locked={locked}
+          hasSubraces={subraces.length > 0}
+          onPick={(field) => setTarget({ field })}
+          origin={character.who === "player" ? { value: run.origin, options: originOptions, onChange: changeOrigin } : undefined}
+          onAbility={(ability, value) => commit(setAbilities(character, { ...character.abilities, [ability]: value }))}
         />
-      ) : (
-        <LevelList
-          data={data}
-          character={character}
-          issues={issues.filter((issue) => issue.level !== null)}
-          progressLevel={run.progress.level}
-          onPick={(level, slot) => setTarget({ level, slot })}
-        />
-      )}
-      <div className="row levelactions">
-        <button className="btn" disabled={character.levels.length >= MAX_LEVELS} onClick={() => commit(addLevel(character))}>
-          {t("character.addLevel")}
-        </button>
-        <button className="btn" disabled={character.levels.length <= 1} onClick={() => commit(removeLastLevel(character))}>
-          {t("character.removeLevel", { level: character.levels.length })}
-        </button>
+        <section className="frame levelsframe" aria-labelledby="levels-title">
+          <div className="framehead">
+            <div>
+              <h2 id="levels-title">{t("character.levels")}</h2>
+              <p className="sub">{t("character.levels.help")}</p>
+            </div>
+            <label className="switch">
+              <input type="checkbox" checked={tree} onChange={(event) => onTree(event.target.checked)} /> {t("character.tree")}
+            </label>
+          </div>
+          {tree ? (
+            <LevelTree
+              data={data}
+              character={character}
+              issues={levelIssues}
+              progressLevel={run.progress.level}
+              multiclass={multiclass}
+              onPick={(level, slot) => setTarget({ level, slot })}
+              onChoose={(level, slot, choice) => commit(setChoice(character, level, slot, choice))}
+            />
+          ) : (
+            <LevelList data={data} character={character} issues={levelIssues} progressLevel={run.progress.level} multiclass={multiclass} onPick={(level, slot) => setTarget({ level, slot })} />
+          )}
+          <div className="row levelactions">
+            <button className="btn" disabled={character.levels.length >= MAX_LEVELS} onClick={() => commit(addLevel(character))}>
+              {t("character.addLevel")}
+            </button>
+            <button className="btn" disabled={character.levels.length <= 1} onClick={() => commit(removeLastLevel(character))}>
+              {t("character.removeLevel", { level: character.levels.length })}
+            </button>
+          </div>
+        </section>
       </div>
       {opened !== null && (
         <ChoicePicker

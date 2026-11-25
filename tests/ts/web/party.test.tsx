@@ -151,9 +151,9 @@ describe("Party screen", () => {
     const composer = screen.getByRole("region", { name: "Composer le groupe" });
     fireEvent.click(within(composer).getByRole("tab", { name: "Acte 2" }));
     const group = screen.getByRole("region", { name: "Groupe actif" });
-    expect(within(group).getByText(/Personne n'est dans le groupe à l'acte 2\./)).toBeTruthy();
+    expect(within(group).getByText(/Personne n’est dans le groupe à l’acte 2\./)).toBeTruthy();
     expect(within(group).queryByRole("article")).toBeNull();
-    fireEvent.click(within(group).getByRole("button", { name: "Reprendre l'acte précédent" }));
+    fireEvent.click(within(group).getByRole("button", { name: "Reprendre l’acte précédent" }));
     expect(store.load(id)!.party["2"].active).toEqual(run.party["1"].active);
     expect(within(screen.getByRole("region", { name: "Groupe actif" })).getAllByRole("article")).toHaveLength(2);
   });
@@ -163,8 +163,8 @@ describe("Party screen", () => {
     run.party["1"].active = [];
     setup(run, "fr");
     const group = screen.getByRole("region", { name: "Groupe actif" });
-    expect(within(group).getByText(/Personne n'est dans le groupe à l'acte 1\./)).toBeTruthy();
-    expect(within(group).queryByRole("button", { name: "Reprendre l'acte précédent" })).toBeNull();
+    expect(within(group).getByText(/Personne n’est dans le groupe à l’acte 1\./)).toBeTruthy();
+    expect(within(group).queryByRole("button", { name: "Reprendre l’acte précédent" })).toBeNull();
   });
 
   it("sums up the group: classes, covered skills out of 18, the gaps and the coverage under each ability", () => {
