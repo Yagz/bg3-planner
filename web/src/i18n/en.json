@@ -216,6 +216,5 @@
   "history.error": "This version could not be restored: {message}",
   "party.editor.size": "Party size",
   "party.editor.overFull": "Act {act}: {count} active members, more than the party size ({max}).",
-  "character.origin": "Origin",
-  "character.origin.custom": "Custom character"
+  "character.origin": "Origin"
 }

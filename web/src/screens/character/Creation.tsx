@@ -63,7 +63,8 @@ export default function Creation({ data, character, issues, locked, hasSubraces,
           <label className="choice">
             <span className="k">{t("character.origin")}</span>
             <select value={origin.value} onChange={(event) => origin.onChange(event.target.value)}>
-              <option value="">{t("character.origin.custom")}</option>
+              {/* The custom player (run origin "") under the game's own name for its Generic origin. */}
+              <option value="">{gameName(data, lang, "origin", "Generic")}</option>
               {origin.options.map((name) => (
                 <option key={name} value={name}>
                   {gameName(data, lang, "origin", name)}

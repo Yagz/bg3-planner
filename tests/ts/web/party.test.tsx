@@ -158,10 +158,18 @@ describe("Party screen", () => {
     expect(store.load(id)!.partySize).toBe(2);
   });
 
+  it("never offers the player's own origin as a companion", () => {
+    setup({ ...runWith(ranger(3), 3), origin: "Gale" });
+    const select = screen.getByRole("combobox", { name: "Add a character" });
+    expect(within(select).queryByRole("option", { name: "Gale" })).toBeNull();
+    expect(within(select).getByRole("option", { name: "Karlach" })).toBeTruthy();
+  });
+
   it("adds a companion from the origins and never one already present", () => {
     const { store, id } = setup(runWith(ranger(3), 3));
     const select = screen.getByRole("combobox", { name: "Add a character" });
     expect(within(select).queryByRole("option", { name: "Generic" })).toBeNull();
+    expect(within(select).getByRole("option", { name: "Gale" })).toBeTruthy();
     fireEvent.change(select, { target: { value: "Shadowheart" } });
     fireEvent.click(screen.getByRole("button", { name: "Add" }));
     expect(store.load(id)!.characters.map((c) => c.who)).toEqual(["player", "Shadowheart"]);

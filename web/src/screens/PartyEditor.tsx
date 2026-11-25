@@ -24,7 +24,8 @@ export default function PartyEditor({ run, data, apply }: Props) {
   const candidates = [
     ...(present.has("player") ? [] : [{ who: "player", name: t("party.player") }]),
     ...Object.keys(data.rules.origins)
-      .filter((origin) => isRecruitable(data, origin) && !present.has(origin))
+      // The player's own origin is never also a companion.
+      .filter((origin) => isRecruitable(data, origin) && !present.has(origin) && origin !== run.origin)
       .map((origin) => ({ who: origin, name: gameName(data, lang, "origin", origin) })),
   ];
   const add = () => {

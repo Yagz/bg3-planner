@@ -243,6 +243,8 @@ describe("Character screen", () => {
       const values = within(originBox()).getAllByRole("option").map((option) => option.getAttribute("value"));
       expect(values[0]).toBe("");
       expect(originBox().value).toBe("");
+      // The custom player is named by the game's own label for the Generic origin.
+      expect(originBox().selectedOptions[0]!.textContent).toBe(gameName(data, "en", "origin", "Generic"));
       expect(values).toContain("DarkUrge");
       expect(values).toContain("Astarion");
       expect(values).not.toContain("Generic");
