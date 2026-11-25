@@ -203,5 +203,15 @@
   "impact.coverage": "Couverture du groupe",
   "impact.coverageSame": "inchangée",
   "impact.apply": "Appliquer",
-  "impact.cancel": "Annuler"
+  "impact.cancel": "Annuler",
+  "history.open": "Historique",
+  "history.title": "Historique de « {name} »",
+  "history.hint": "Les {count} dernières versions sont gardées dans ce navigateur ; en restaurer une garde la version actuelle dans l’historique.",
+  "history.versions": "Versions enregistrées",
+  "history.current": "actuelle",
+  "history.restore": "Restaurer",
+  "history.restoreLabel": "Restaurer la version du {date}",
+  "history.restoreQuestion": "Restaurer la version du {date} ? La version actuelle reste dans l’historique.",
+  "history.restoreConfirm": "Restaurer cette version",
+  "history.error": "Cette version n’a pas pu être restaurée : {message}"
 }

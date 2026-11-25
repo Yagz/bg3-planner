@@ -1,10 +1,17 @@
-import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { encode } from "../../../src/plan/codec.ts";
+import { emptyRun } from "../../../src/plan/model.ts";
 import App from "../../../web/src/App.tsx";
 import { createStore } from "../../../web/src/state/storage.ts";
 import type { RunStore } from "../../../web/src/state/storage.ts";
 import { MemoryBackend } from "./memoryBackend.ts";
+import { StreamingBlob } from "./streamingBlob.ts";
 import { stubData } from "./stubData.ts";
+
+beforeAll(() => {
+  vi.stubGlobal("Blob", StreamingBlob);
+});
 
 function renderApp(store: RunStore = createStore(new MemoryBackend()), settings = new MemoryBackend()) {
   render(<App data={stubData()} store={store} settingsBackend={settings} />);
@@ -136,5 +143,95 @@ describe("app shell", () => {
     expect(window.location.hash).toBe("#/transfer");
     expect(within(screen.getByRole("main")).getByRole("textbox", { name: "Paste a run" })).toHaveProperty("value", "BG3P%E0");
     expect(await within(screen.getByRole("main")).findByRole("alert")).toBeTruthy();
+  });
+
+  it("reloads the current run when another tab saves it", () => {
+    const backend = new MemoryBackend();
+    const store = createStore(backend);
+    renderApp(store);
+    fireEvent.click(screen.getByRole("button", { name: "New run" }));
+    const id = runSelector().value;
+    const other = createStore(backend);
+    other.save({ ...other.load(id)!, name: "Renamed in another tab" });
+    act(() => {
+      window.dispatchEvent(new StorageEvent("storage", { key: `bg3p:run:${id}` }));
+    });
+    expect(runSelector().selectedOptions[0]?.textContent).toBe("Renamed in another tab");
+    // A save here keeps the other tab's version in the history.
+    fireEvent.click(screen.getByRole("button", { name: "Rename" }));
+    fireEvent.change(screen.getByRole("textbox", { name: "Run name" }), { target: { value: "Renamed here" } });
+    fireEvent.click(screen.getByRole("button", { name: "OK" }));
+    expect(createStore(backend).history(id).map((entry) => JSON.parse(entry.text).name)).toEqual(["Renamed here", "Renamed in another tab", "New run"]);
+  });
+});
+
+describe("history panel", () => {
+  const rename = (name: string) => {
+    fireEvent.click(screen.getByRole("button", { name: "Rename" }));
+    fireEvent.change(screen.getByRole("textbox", { name: "Run name" }), { target: { value: name } });
+    fireEvent.click(screen.getByRole("button", { name: "OK" }));
+  };
+  const versions = () => within(screen.getByRole("list", { name: "Saved versions" })).getAllByRole("listitem");
+  const restoreButtons = () => screen.getAllByRole("button", { name: /^Restore the version of / });
+
+  it("lists the run's versions newest first and restores one after confirmation, itself undoable", () => {
+    const { store } = renderApp();
+    fireEvent.click(screen.getByRole("button", { name: "New run" }));
+    rename("Second");
+    rename("Third");
+    const id = runSelector().value;
+    fireEvent.click(screen.getByRole("button", { name: "History" }));
+    expect(versions()).toHaveLength(3);
+    expect(versions()[0]!.textContent).toContain("current");
+    expect(within(versions()[0]!).queryByRole("button")).toBeNull();
+    expect(restoreButtons()).toHaveLength(2);
+
+    fireEvent.click(restoreButtons()[1]!);
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(store.history(id)).toHaveLength(3);
+
+    fireEvent.click(restoreButtons()[1]!);
+    expect(screen.getByText(/The current version stays in the history/)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Restore this version" }));
+    expect(runSelector().selectedOptions[0]?.textContent).toBe("New run");
+    expect(store.load(id)?.name).toBe("New run");
+    expect(versions()).toHaveLength(4);
+    // Undo the restore: the version it replaced is the second one now.
+    fireEvent.click(restoreButtons()[0]!);
+    fireEvent.click(screen.getByRole("button", { name: "Restore this version" }));
+    expect(store.load(id)?.name).toBe("Third");
+  });
+
+  it("keeps the version an import replaced reachable and restorable from the panel", async () => {
+    const store = createStore(new MemoryBackend());
+    const stored = store.save({ ...emptyRun("same"), name: "Stored" });
+    renderApp(store);
+    fireEvent.click(screen.getByRole("button", { name: "Import / export" }));
+    const main = within(screen.getByRole("main"));
+    fireEvent.change(main.getByRole("textbox", { name: "Paste a run" }), { target: { value: await encode({ ...stored, name: "Incoming", updatedAt: "2000-01-01T00:00:00.000Z" }) } });
+    fireEvent.click(main.getByRole("button", { name: "Check" }));
+    expect(await main.findByText("The stored version is newer than this one.")).toBeTruthy();
+    fireEvent.click(main.getByRole("button", { name: "Replace" }));
+    expect(runSelector().selectedOptions[0]?.textContent).toBe("Incoming");
+
+    fireEvent.click(screen.getByRole("button", { name: "History" }));
+    expect(versions()).toHaveLength(2);
+    fireEvent.click(restoreButtons()[0]!);
+    fireEvent.click(screen.getByRole("button", { name: "Restore this version" }));
+    expect(store.load("same")?.name).toBe("Stored");
+    expect(runSelector().selectedOptions[0]?.textContent).toBe("Stored");
+  });
+
+  it("shows the restored version on the Import / export screen", async () => {
+    renderApp();
+    fireEvent.click(screen.getByRole("button", { name: "New run" }));
+    rename("Later");
+    fireEvent.click(screen.getByRole("button", { name: "Import / export" }));
+    const json = () => (within(screen.getByRole("main")).getByRole("textbox", { name: "Readable JSON" }) as HTMLTextAreaElement).value;
+    await waitFor(() => expect(json()).toContain('"Later"'));
+    fireEvent.click(screen.getByRole("button", { name: "History" }));
+    fireEvent.click(restoreButtons()[0]!);
+    fireEvent.click(screen.getByRole("button", { name: "Restore this version" }));
+    await waitFor(() => expect(json()).toContain('"New run"'));
   });
 });

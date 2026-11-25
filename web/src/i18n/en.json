@@ -203,5 +203,15 @@
   "impact.coverage": "Party skill coverage",
   "impact.coverageSame": "unchanged",
   "impact.apply": "Apply",
-  "impact.cancel": "Cancel"
+  "impact.cancel": "Cancel",
+  "history.open": "History",
+  "history.title": "History of “{name}”",
+  "history.hint": "The last {count} versions are kept in this browser; restoring one keeps the current version in the history.",
+  "history.versions": "Saved versions",
+  "history.current": "current",
+  "history.restore": "Restore",
+  "history.restoreLabel": "Restore the version of {date}",
+  "history.restoreQuestion": "Restore the version of {date}? The current version stays in the history.",
+  "history.restoreConfirm": "Restore this version",
+  "history.error": "This version could not be restored: {message}"
 }

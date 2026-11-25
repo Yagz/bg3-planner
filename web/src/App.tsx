@@ -3,6 +3,7 @@ import type { FormEvent } from "react";
 import type { GameData } from "../../src/data/types.ts";
 import { I18nContext, LANGS, createI18n } from "./i18n/i18n.ts";
 import Character from "./screens/Character.tsx";
+import HistoryPanel from "./screens/HistoryPanel.tsx";
 import Party from "./screens/Party.tsx";
 import Transfer from "./screens/Transfer.tsx";
 import type { Lang } from "./i18n/i18n.ts";
@@ -57,6 +58,7 @@ export default function App({ data, store, settingsBackend }: Props) {
   const [incoming, setIncoming] = useState<string | null>(null);
   const [renaming, setRenaming] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const i18n = useMemo(() => createI18n(settings.lang), [settings.lang]);
   const { t } = i18n;
 
@@ -75,6 +77,20 @@ export default function App({ data, store, settingsBackend }: Props) {
     else root.dataset["theme"] = settings.theme;
     document.title = t("app.title");
   }, [settings.lang, settings.theme, t]);
+
+  // Another tab saved, added or removed a run: read the store again and show its current version of the run.
+  useEffect(() => {
+    const changed = (event: StorageEvent) => {
+      if (event.key !== null && !event.key.startsWith("bg3p:run:")) return;
+      store.refresh();
+      const list = store.list();
+      const target = currentRunId(list, settings.currentRun);
+      setRun(target === null ? null : store.load(target));
+      setRuns(list);
+    };
+    window.addEventListener("storage", changed);
+    return () => window.removeEventListener("storage", changed);
+  }, [store, settings.currentRun]);
 
   useEffect(() => {
     const follow = () => {
@@ -108,12 +124,19 @@ export default function App({ data, store, settingsBackend }: Props) {
     setRuns(list);
     setRenaming(null);
     setDeleting(false);
+    setShowHistory(false);
     update({ currentRun: id });
   };
   /** Saves a new version of the current run through the store and shows it; throws (nothing changed) when the store refuses. */
   const saveRun = (next: Run) => {
     const saved = store.save(next);
     setRun(saved);
+    setRuns(store.list());
+  };
+  /** Restores a saved version of the current run as a new version (so the replaced one stays in the history) and shows it. */
+  const restoreVersion = (at: string) => {
+    if (currentId === null) return;
+    setRun(store.restore(currentId, at));
     setRuns(store.list());
   };
   const imported = (id: string) => {
@@ -171,6 +194,9 @@ export default function App({ data, store, settingsBackend }: Props) {
                     <button className="btn" onClick={() => setDeleting(true)}>
                       {t("run.delete")}
                     </button>
+                    <button className="btn" aria-expanded={showHistory} onClick={() => setShowHistory((open) => !open)}>
+                      {t("history.open")}
+                    </button>
                   </>
                 )}
               </>
@@ -221,6 +247,9 @@ export default function App({ data, store, settingsBackend }: Props) {
             </button>
           </div>
         )}
+        {showHistory && current !== null && currentId !== null && (
+          <HistoryPanel name={runLabel(current.name)} versions={store.history(currentId)} onRestore={restoreVersion} />
+        )}
       </header>
       {!store.available && (
         <div className="banner wrap" role="alert">
@@ -234,7 +263,7 @@ export default function App({ data, store, settingsBackend }: Props) {
       )}
       <main className="wrap">
         {route.screen === "transfer" ? (
-          <Transfer key={incoming ?? ""} data={data} store={store} runId={currentId} initialText={incoming ?? undefined} onImported={imported} />
+          <Transfer key={incoming ?? ""} data={data} store={store} run={run} initialText={incoming ?? undefined} onImported={imported} />
         ) : current === null || run === null ? (
           <p className="sub">{t("run.none")}</p>
         ) : route.screen === "party" ? (

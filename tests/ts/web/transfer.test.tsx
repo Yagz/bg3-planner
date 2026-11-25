@@ -34,8 +34,8 @@ function badRun(name: string): Run {
   return run;
 }
 
-function renderTransfer(store: RunStore, runId: string | null = null, onImported = vi.fn()) {
-  render(<Transfer data={stubData()} store={store} runId={runId} onImported={onImported} />);
+function renderTransfer(store: RunStore, run: Run | null = null, onImported = vi.fn()) {
+  render(<Transfer data={stubData()} store={store} run={run} onImported={onImported} />);
   return onImported;
 }
 
@@ -93,7 +93,7 @@ describe("Transfer", () => {
   it("imports a link handed over by the app, without a paste", async () => {
     const store = createStore(new MemoryBackend());
     const string = await encode(badRun("From link"));
-    render(<Transfer data={stubData()} store={store} runId={null} initialText={string} onImported={vi.fn()} />);
+    render(<Transfer data={stubData()} store={store} run={null} initialText={string} onImported={vi.fn()} />);
     expect(await screen.findByText("Unknown race: Race_X.")).toBeTruthy();
   });
 
@@ -102,7 +102,7 @@ describe("Transfer", () => {
     const saved = store.save(badRun("Mine"));
     const writeText = vi.fn(() => Promise.resolve());
     Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
-    renderTransfer(store, saved.id);
+    renderTransfer(store, store.load(saved.id));
     const string = await encode(store.load(saved.id)!);
     const linkBox = (await screen.findByRole("textbox", { name: "Link" })) as HTMLTextAreaElement;
     expect(linkBox.value).toBe(`${window.location.origin}/#${string}`);
@@ -152,8 +152,7 @@ describe("Transfer", () => {
 
   it("shows an export failure as an error, not as a missing run", async () => {
     const store = createStore(new MemoryBackend());
-    const broken = { ...store, load: () => ({ ...emptyRun("x"), version: 9 }) as unknown as Run } as RunStore;
-    renderTransfer(broken, "x");
+    renderTransfer(store, { ...emptyRun("x"), version: 9 } as unknown as Run);
     expect((await screen.findByRole("alert")).textContent).toMatch(/could not be exported/);
     expect(screen.queryByText("No run to export yet.")).toBeNull();
   });

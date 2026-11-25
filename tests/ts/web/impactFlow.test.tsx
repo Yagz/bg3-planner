@@ -91,6 +91,12 @@ function setup(run: Run, id: string) {
 const showTree = () => fireEvent.click(screen.getByRole("checkbox", { name: "Tree" }));
 const openAlternative = (subclass: string) =>
   fireEvent.click(within(screen.getByRole("group", { name: "Untaken branches" })).getByRole("button", { name: gameName(data, "en", "class", subclass) }));
+/** Restores the version before the current one through the history panel. */
+function restorePrevious() {
+  fireEvent.click(screen.getByRole("button", { name: "History" }));
+  fireEvent.click(screen.getAllByRole("button", { name: /^Restore the version of / })[0]!);
+  fireEvent.click(screen.getByRole("button", { name: "Restore this version" }));
+}
 const names = (region: HTMLElement) => within(region).getAllByRole("listitem").map((li) => li.textContent ?? "");
 
 describe("Tree view and impact preview", () => {
@@ -121,9 +127,12 @@ describe("Tree view and impact preview", () => {
     // Exactly the listed picks are removed; every other choice is stored as it was.
     expect(store.load(runId)!.characters[0]).toEqual(expectedAfter(before, removed.map(({ n, slot }) => [n, slot]), 2, "subclass:Wizard", "NecromancySchool"));
 
-    // No history screen exists yet: the store restores the previous version directly.
-    store.restore(runId, history[1]!.at);
+    // Restoring the previous version from the history panel brings back every removed pick, on screen too.
+    restorePrevious();
     expect(store.load(runId)!.characters[0]).toEqual(before);
+    expect(screen.getByRole("button", { name: /^subclass/ }).textContent).toBe(gameName(data, "en", "class", "EvocationSchool"));
+    const shown = screen.getByRole("main").textContent ?? "";
+    for (const { choice } of removed) for (const id of choice as string[]) expect(shown).toContain(gameName(data, "en", "spell", id));
   });
 
   it("keeps a later feat made impossible by an ability-bonus change, flagged in the preview and at its level", () => {
@@ -194,9 +203,11 @@ describe("Tree view and impact preview", () => {
 
     expect(store.load(runId)!.characters[0]).toEqual(expectedAfter(before, removed.map(([slot]) => [1, slot]), 1, "subclass:Cleric", "LightDomain"));
     expect(within(screen.getByRole("group", { name: "Level 4" })).getByText(new RegExp(gameName(data, "en", "feat", "HeavyArmorMaster")), { selector: ".pill.bad" })).toBeTruthy();
-    // No history screen exists yet: the store restores the previous version directly.
-    store.restore(runId, store.history(runId)[1]!.at);
+    restorePrevious();
     expect(store.load(runId)!.characters[0]).toEqual(before);
+    const shown = screen.getByRole("main").textContent ?? "";
+    expect(shown).toContain(gameName(data, "en", "skill", (removed[0]![1] as string[])[0]!));
+    expect(shown).toContain(gameName(data, "en", "spell", (removed[1]![1] as string[])[0]!));
   });
 
   it("names the picks of a removed last level that grants nothing; Apply removes them, Cancel changes nothing", async () => {

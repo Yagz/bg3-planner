@@ -5,13 +5,14 @@ import { useI18n } from "../i18n/i18n.ts";
 import { gameName } from "../names.ts";
 import { commitImport, importRun } from "../state/importRun.ts";
 import type { ImportResult } from "../state/importRun.ts";
+import type { Run } from "../../../src/plan/model.ts";
 import type { RunStore } from "../state/storage.ts";
 
 type Props = {
   data: GameData;
   store: RunStore;
-  /** The run to export; null when there is none. */
-  runId: string | null;
+  /** The run to export (the app's current run); null when there is none. */
+  run: Run | null;
   /** A run string or link to import as soon as the screen opens (a link opened in the browser). */
   initialText?: string;
   /** Called with the id of the run an import saved. */
@@ -47,7 +48,7 @@ function ExportBox({ label, value }: { label: string; value: string }) {
 }
 
 /** The Import / export screen: the current run as string, readable JSON and link; a paste box that reports before it saves. */
-export default function Transfer({ data, store, runId, initialText, onImported }: Props) {
+export default function Transfer({ data, store, run, initialText, onImported }: Props) {
   const { t, lang, issueMessage } = useI18n();
   const [exports, setExports] = useState<Exports | null>(null);
   const [text, setText] = useState(initialText ?? "");
@@ -58,7 +59,6 @@ export default function Transfer({ data, store, runId, initialText, onImported }
 
   useEffect(() => {
     let live = true;
-    const run = runId === null ? null : store.load(runId);
     setExportError(null);
     if (run === null) {
       setExports(null);
@@ -77,7 +77,7 @@ export default function Transfer({ data, store, runId, initialText, onImported }
     return () => {
       live = false;
     };
-  }, [runId, store, data, lang]);
+  }, [run, data, lang]);
 
   const check = async (input: string) => {
     setChecking(true);
