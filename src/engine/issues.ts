@@ -8,6 +8,7 @@ export const ISSUE_CODES = [
   "choiceMissing",
   "duplicateChoice",
   "featAlreadyTaken",
+  "multiclassDisabled",
   "notInList",
   "offData",
   "pointBuyOverBudget",

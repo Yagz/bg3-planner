@@ -3,6 +3,7 @@ import { isOffData } from "../plan/model.ts";
 import type { Ability, Character, Run } from "../plan/model.ts";
 import { abilityTotals } from "./abilities.ts";
 import { checkChoice, emptyKnown, heldPassives } from "./choices.ts";
+import { rulesetEffects } from "./difficulty.ts";
 import { resolve } from "./progression.ts";
 import { levelSlots } from "./validate.ts";
 import type { SelectorSlot } from "./validate.ts";
@@ -89,12 +90,16 @@ export function truncate(character: Character, level: number): Character {
   return { ...character, levels: character.levels.slice(0, Math.max(0, Math.min(level, character.levels.length))) };
 }
 
-/** The best skill value of the active party for every skill, each character cut to `min(level, its levels)`. */
+/**
+ * The best skill value of the active party for every skill, each character cut to `min(level, its levels)`; the run's
+ * ruleset adds its `PROFICIENCY_BONUS` to every proficiency bonus.
+ */
 export function coverage(run: Run, data: GameData, level: number): SkillCoverage[] {
+  const added = rulesetEffects(run.difficulty, data).proficiencyBonus;
   const members = activeParty(run).map((character) => {
     const cut = truncate(character, level);
     const reached = cut.levels.length;
-    return { id: character.id, totals: abilityTotals(cut, data, reached), bonus: proficiencyBonus(reached), ...skillProficiencies(cut, data) };
+    return { id: character.id, totals: abilityTotals(cut, data, reached), bonus: proficiencyBonus(reached) + added, ...skillProficiencies(cut, data) };
   });
   return Object.entries(data.skills).map(([skill, ability]) => {
     let best: SkillCoverage["best"] = null;

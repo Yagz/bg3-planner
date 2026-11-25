@@ -13,6 +13,12 @@ export function stubData(en: Texts = {}, fr: Texts = {}): GameData {
       passives: {},
       progressions: [],
       races: {},
+      rulesets: {},
+      rulesetModifiers: {
+        HONOUR_STATS: { type: "bool", default: false, custom: false },
+        MULTICLASSING: { type: "bool", default: true, custom: true },
+        PROFICIENCY_BONUS: { type: "int", default: 0, min: -1, max: 4, custom: true },
+      },
       spells: {},
     } as unknown as GameData["rules"],
     texts: { en, fr },

@@ -15,6 +15,7 @@ const ENGINE_PARAMS: Record<string, Record<string, string | number>> = {
   "issue.choiceMissing": { selector: "SelectSpells" },
   "issue.duplicateChoice": { item: "Item_X" },
   "issue.featAlreadyTaken": { feat: "Feat_X" },
+  "issue.multiclassDisabled": { class: "Class_X" },
   "issue.notInList": { item: "Item_X", list: "list-uuid" },
   "issue.offData": { selector: "SelectSpells" },
   "issue.pointBuyOverBudget": { spent: 30, budget: 27 },

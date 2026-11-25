@@ -36,6 +36,7 @@
   "issue.choiceMissing": "Choice still to make.",
   "issue.duplicateChoice": "{item} is picked more than once.",
   "issue.featAlreadyTaken": "{feat} is already taken and cannot be taken again.",
+  "issue.multiclassDisabled": "Multiclassing is disabled by the difficulty: {class} cannot be added.",
   "issue.notInList": "{item} is not among the options the game offers here.",
   "issue.offData": "Value outside the game data (a mod?), kept as written.",
   "issue.pointBuyOverBudget": "Point buy: {spent} points spent for a budget of {budget}.",

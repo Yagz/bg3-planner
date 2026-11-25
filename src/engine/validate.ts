@@ -2,6 +2,7 @@ import type { GameData, Requirement, Selector } from "../data/types.ts";
 import type { Character, Choice, Run } from "../plan/model.ts";
 import { abilityTotals, checkPointBuy } from "./abilities.ts";
 import { checkChoice, emptyKnown, heldPassives } from "./choices.ts";
+import { rulesetEffects } from "./difficulty.ts";
 import { reportFrom } from "./issues.ts";
 import type { Issue, IssueCode, Report } from "./issues.ts";
 import { resolve, subclassSlot } from "./progression.ts";
@@ -97,9 +98,24 @@ export function knownSpellsBefore(character: Character, data: GameData, level: n
   return [...(known.spells.get(scope) ?? [])];
 }
 
-/** Checks every character of a run: point buy, progression, then each choice slot. Never corrects anything. */
+/**
+ * Checks every character of a run: point buy, progression, each choice slot, then the multiclass levels the run's ruleset
+ * forbids. Never corrects anything.
+ */
 export function validate(run: Run, data: GameData): Report {
-  return reportFrom(run.characters.flatMap((character) => validateCharacter(character, data)));
+  const { multiclass } = rulesetEffects(run.difficulty, data);
+  return reportFrom(run.characters.flatMap((character) => [...validateCharacter(character, data), ...(multiclass ? [] : multiclassLevels(character))]));
+}
+
+/** Each level after the first whose class names a class (known or not) other than level 1's; an undecided or off-data class on either side is never flagged. */
+function multiclassLevels(character: Character): Issue[] {
+  const first = character.levels[0]?.class;
+  if (typeof first !== "string" || first === "") return [];
+  return character.levels.flatMap(({ class: cls }, i): Issue[] =>
+    i > 0 && typeof cls === "string" && cls !== "" && cls !== first
+      ? [{ severity: "invalid", code: "multiclassDisabled", character: character.id, level: i + 1, slot: null, params: { class: cls } }]
+      : [],
+  );
 }
 
 const PROFICIENCY = /^Proficiency\((\w+)\)$/;
