@@ -184,8 +184,8 @@ select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
 .bychar h3 { font-size: 1rem; margin: 8px 0 2px }
 
 /* One-column layout: every screen section is a frame of the same width */
-.stack, main.wrap > .frame:not(:last-child) { margin-bottom: 20px }
-.stack { display: grid; gap: 20px; margin-bottom: 0; align-items: start }
+.stack { display: flex; flex-direction: column; gap: 20px }
+.stack > * { margin-bottom: 0 }
 .frame { border: 1px solid var(--border); border-radius: 10px; padding: 16px; min-width: 0 }
 .pair { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; align-items: stretch }
 @media (min-width: 840px) { .pair { grid-template-columns: repeat(2, minmax(0, 1fr)) } }
@@ -197,3 +197,5 @@ select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
 .field.grow { flex: 1; display: flex; flex-direction: column; margin-bottom: 0 }
 .field.grow textarea { flex: 1; min-height: 9.5em }
 .btn.small { padding: 1px 10px }
+.frame > h2 { margin: 0 0 12px }
+.importframe .field.grow { margin-bottom: 16px }

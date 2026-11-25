@@ -142,6 +142,7 @@ export default function Party({ data, run, saveRun, onOpenCharacter }: Props) {
         </label>
       </div>
 
+      <div className="stack">
       {active.length === 0 ? (
         <p className="sub">{t("party.empty", { act })}</p>
       ) : (
@@ -197,6 +198,7 @@ export default function Party({ data, run, saveRun, onOpenCharacter }: Props) {
       )}
 
       <PartyEditor run={run} data={data} apply={apply} />
+      </div>
     </div>
   );
 }

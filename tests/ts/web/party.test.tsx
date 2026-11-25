@@ -59,6 +59,13 @@ function runWith(character: Character, level: number): Run {
 }
 
 describe("Party screen", () => {
+  it("lays its frames out inside one stack, whatever the screen nests", () => {
+    setup(runWith(ranger(4), 3));
+    const frames = [...document.querySelectorAll(".frame")];
+    expect(frames.length).toBeGreaterThan(0);
+    for (const frame of frames) expect(frame.parentElement?.classList.contains("stack")).toBe(true);
+  });
+
   it("tells a Ranger at level 3 what level 4 asks and how many choices are undecided by then", () => {
     setup(runWith(ranger(4), 3));
     const card = screen.getByRole("article");

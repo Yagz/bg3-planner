@@ -125,97 +125,97 @@ export default function Transfer({ data, store, run, initialText, onImported }: 
   return (
     <div className="pair">
       <section className="frame exportframe" aria-label={t("transfer.export")}>
-      <h2>{t("transfer.export")}</h2>
-      {exportError !== null ? (
-        <p role="alert" className="banner">
-          {t("transfer.exportError", { message: exportError })}
-        </p>
-      ) : exports === null ? (
-        <p className="sub">{t("transfer.noRun")}</p>
-      ) : (
-        <>
-          <ExportBox id="export-string" label={t("transfer.string")} value={exports.string} />
-          <ExportBox id="export-link" label={t("transfer.link")} value={exports.link} />
-          <ExportBox id="export-json" label={t("transfer.json")} value={exports.json} />
-        </>
-      )}
+        <h2>{t("transfer.export")}</h2>
+        {exportError !== null ? (
+          <p role="alert" className="banner">
+            {t("transfer.exportError", { message: exportError })}
+          </p>
+        ) : exports === null ? (
+          <p className="sub">{t("transfer.noRun")}</p>
+        ) : (
+          <>
+            <ExportBox id="export-string" label={t("transfer.string")} value={exports.string} />
+            <ExportBox id="export-link" label={t("transfer.link")} value={exports.link} />
+            <ExportBox id="export-json" label={t("transfer.json")} value={exports.json} />
+          </>
+        )}
       </section>
       <section className="frame importframe" aria-label={t("transfer.import")}>
-      <h2>{t("transfer.import")}</h2>
-      <div className="field grow">
-        <div className="lab">
-          <label htmlFor="import-text">{t("transfer.paste")}</label>
-          <button className="btn small primary" disabled={checking || text.trim() === ""} onClick={() => void check(text)}>
-            {t("transfer.check")}
-          </button>
-        </div>
-        <textarea id="import-text" value={text} onChange={(event) => setText(event.target.value)} />
-      </div>
-      {result?.kind === "error" && (
-        <p role="alert" className="banner">
-          {t("transfer.error", { message: result.message })}
-        </p>
-      )}
-      {result?.kind === "ready" && (
-        <div className="report">
-          <p>
-            <strong>{result.run.name === "" ? t("run.untitled") : result.run.name}</strong> — {t(`transfer.status.${result.report.status}`)}
-          </p>
-          {result.warnings.length > 0 && (
-            <ul aria-label={t("transfer.warnings")}>
-              {result.warnings.map((warning, index) => (
-                <li key={index}>{warning}</li>
-              ))}
-            </ul>
-          )}
-          {result.report.issues.length > 0 && (
-            <ul aria-label={t("transfer.issues")} className="bychar">
-              {issueGroups(result).map(({ id, label, issues }) => (
-                <li key={id}>
-                  <h3>{label}</h3>
-                  <ul aria-label={label}>
-                    {issues.map((issue, index) => (
-                      <li key={index} className={issue.severity}>
-                        {issue.level === null ? "" : `${t("transfer.level", { level: issue.level })} · `}
-                        {issueMessage(issue, names)}
-                      </li>
-                    ))}
-                  </ul>
-                </li>
-              ))}
-            </ul>
-          )}
-          {conflict !== null && <p role="alert">{t(`transfer.conflict.${conflict.newer}`, { name: conflict.stored?.name ?? "" })}</p>}
-          <div className="runbar">
-            {conflict?.newer === "unreadable" ? (
-              <button className="btn primary" onClick={() => commit("copy")}>
-                {t("transfer.saveNew")}
-              </button>
-            ) : conflict === null ? (
-              <button className="btn primary" onClick={() => commit("replace")}>
-                {t("transfer.import.confirm")}
-              </button>
-            ) : (
-              <>
-                <button className="btn primary" onClick={() => setResult(null)}>
-                  {t("transfer.keep")}
-                </button>
-                <button className="btn" onClick={() => commit("replace")}>
-                  {t("transfer.replace")}
-                </button>
-                <button className="btn" onClick={() => commit("copy")}>
-                  {t("transfer.copyRun")}
-                </button>
-              </>
-            )}
-            {(conflict === null || conflict.newer === "unreadable") && (
-              <button className="btn" onClick={() => setResult(null)}>
-                {t("run.cancel")}
-              </button>
-            )}
+        <h2>{t("transfer.import")}</h2>
+        <div className="field grow">
+          <div className="lab">
+            <label htmlFor="import-text">{t("transfer.paste")}</label>
+            <button className="btn small primary" disabled={checking || text.trim() === ""} onClick={() => void check(text)}>
+              {t("transfer.check")}
+            </button>
           </div>
+          <textarea id="import-text" value={text} onChange={(event) => setText(event.target.value)} />
         </div>
-      )}
+        {result?.kind === "error" && (
+          <p role="alert" className="banner">
+            {t("transfer.error", { message: result.message })}
+          </p>
+        )}
+        {result?.kind === "ready" && (
+          <div className="report">
+            <p>
+              <strong>{result.run.name === "" ? t("run.untitled") : result.run.name}</strong> — {t(`transfer.status.${result.report.status}`)}
+            </p>
+            {result.warnings.length > 0 && (
+              <ul aria-label={t("transfer.warnings")}>
+                {result.warnings.map((warning, index) => (
+                  <li key={index}>{warning}</li>
+                ))}
+              </ul>
+            )}
+            {result.report.issues.length > 0 && (
+              <ul aria-label={t("transfer.issues")} className="bychar">
+                {issueGroups(result).map(({ id, label, issues }) => (
+                  <li key={id}>
+                    <h3>{label}</h3>
+                    <ul aria-label={label}>
+                      {issues.map((issue, index) => (
+                        <li key={index} className={issue.severity}>
+                          {issue.level === null ? "" : `${t("transfer.level", { level: issue.level })} · `}
+                          {issueMessage(issue, names)}
+                        </li>
+                      ))}
+                    </ul>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {conflict !== null && <p role="alert">{t(`transfer.conflict.${conflict.newer}`, { name: conflict.stored?.name ?? "" })}</p>}
+            <div className="runbar">
+              {conflict?.newer === "unreadable" ? (
+                <button className="btn primary" onClick={() => commit("copy")}>
+                  {t("transfer.saveNew")}
+                </button>
+              ) : conflict === null ? (
+                <button className="btn primary" onClick={() => commit("replace")}>
+                  {t("transfer.import.confirm")}
+                </button>
+              ) : (
+                <>
+                  <button className="btn primary" onClick={() => setResult(null)}>
+                    {t("transfer.keep")}
+                  </button>
+                  <button className="btn" onClick={() => commit("replace")}>
+                    {t("transfer.replace")}
+                  </button>
+                  <button className="btn" onClick={() => commit("copy")}>
+                    {t("transfer.copyRun")}
+                  </button>
+                </>
+              )}
+              {(conflict === null || conflict.newer === "unreadable") && (
+                <button className="btn" onClick={() => setResult(null)}>
+                  {t("run.cancel")}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
       </section>
     </div>
   );
