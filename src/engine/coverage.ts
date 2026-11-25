@@ -90,27 +90,44 @@ export function truncate(character: Character, level: number): Character {
   return { ...character, levels: character.levels.slice(0, Math.max(0, Math.min(level, character.levels.length))) };
 }
 
+/** One active member's value in one skill. */
+export type MemberSkillValue = { character: string; value: number; proficient: boolean; expertise: boolean };
+
 /**
- * The best skill value of the active party for every skill, each character cut to `min(level, its levels)`; the run's
- * ruleset adds its `PROFICIENCY_BONUS` to every proficiency bonus.
+ * Every active member's value in every skill, in the game's skill order then party order, each character cut to
+ * `min(level, its levels)`: ability modifier, plus the proficiency bonus (doubled with expertise) when proficient; the
+ * run's ruleset adds its `PROFICIENCY_BONUS` to every proficiency bonus.
  */
-export function coverage(run: Run, data: GameData, level: number): SkillCoverage[] {
+export function partySkillValues(run: Run, data: GameData, level: number): { skill: string; ability: Ability; members: MemberSkillValue[] }[] {
   const added = rulesetEffects(run.difficulty, data).proficiencyBonus;
   const members = activeParty(run).map((character) => {
     const cut = truncate(character, level);
     const reached = cut.levels.length;
     return { id: character.id, totals: abilityTotals(cut, data, reached), bonus: proficiencyBonus(reached) + added, ...skillProficiencies(cut, data) };
   });
-  return Object.entries(data.skills).map(([skill, ability]) => {
-    let best: SkillCoverage["best"] = null;
-    const rank = (entry: { proficient: boolean; expertise: boolean }) => (entry.expertise ? 2 : entry.proficient ? 1 : 0);
-    for (const member of members) {
+  return Object.entries(data.skills).map(([skill, ability]) => ({
+    skill,
+    ability,
+    members: members.map((member) => {
       const proficient = member.proficient.has(skill);
       const expertise = member.expertise.has(skill);
       const value = Math.floor((member.totals[ability] - 10) / 2) + (proficient ? member.bonus * (expertise ? 2 : 1) : 0);
-      const entry = { character: member.id, value, proficient, expertise };
-      if (best === null || value > best.value || (value === best.value && rank(entry) > rank(best))) best = entry;
+      return { character: member.id, value, proficient, expertise };
+    }),
+  }));
+}
+
+/**
+ * The best skill value of the active party for every skill, each character cut to `min(level, its levels)`; the run's
+ * ruleset adds its `PROFICIENCY_BONUS` to every proficiency bonus.
+ */
+export function coverage(run: Run, data: GameData, level: number): SkillCoverage[] {
+  return partySkillValues(run, data, level).map(({ skill, ability, members }) => {
+    let best: SkillCoverage["best"] = null;
+    const rank = (entry: { proficient: boolean; expertise: boolean }) => (entry.expertise ? 2 : entry.proficient ? 1 : 0);
+    for (const entry of members) {
+      if (best === null || entry.value > best.value || (entry.value === best.value && rank(entry) > rank(best))) best = entry;
     }
-    return { skill, ability, proficient: members.filter((member) => member.proficient.has(skill)).map((member) => member.id), best };
+    return { skill, ability, proficient: members.filter((member) => member.proficient).map((member) => member.character), best };
   });
 }

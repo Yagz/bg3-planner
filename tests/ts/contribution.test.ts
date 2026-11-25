@@ -54,14 +54,10 @@ describe("contribution", () => {
     expect(result.get("g")!.only.sort()).toEqual(["Acrobatics", "Deception"]);
     // Both Haunted Ones: Intimidation and Medicine are shared, so in nobody's `only`.
 
-    const cov = coverage(run, data, 1);
-    for (const id of ["r", "g"]) {
-      const { only, best } = result.get(id)!;
-      const expected = cov.filter((s) => s.best?.character === id && !only.includes(s.skill)).map((s) => s.skill);
-      expect(best.sort()).toEqual(expected.sort());
-      for (const skill of best) expect(only).not.toContain(skill);
-    }
-    expect(result.get("g")!.best).toContain("Stealth");
+    // Shared proficiencies with a strictly higher value: the Ranger's Wisdom wins Medicine, the Rogue's expertise wins
+    // Stealth and Perception and its Charisma Intimidation. No pill for skills nobody is proficient in.
+    expect(result.get("r")!.best.sort()).toEqual(["Medicine"]);
+    expect(result.get("g")!.best.sort()).toEqual(["Intimidation", "Perception", "Stealth"]);
 
     const totals = { r: abilityTotals(r, data, 1), g: abilityTotals(g, data, 1) };
     for (const [id, other] of [["r", "g"], ["g", "r"]] as const) {
@@ -81,6 +77,31 @@ describe("contribution", () => {
     const result = contribution(runOf([r, g]), data, 1);
     expect(result.get("r")!.highest).not.toContain("Dexterity");
     expect(result.get("g")!.highest).not.toContain("Dexterity");
+  });
+
+  it("gives no pill for a skill no active member is proficient in, even to the member with the highest value", () => {
+    const r = ranger();
+    const g = rogue();
+    const run = runOf([r, g]);
+    const athletics = coverage(run, data, 1).find((s) => s.skill === "Athletics")!;
+    expect(athletics.proficient).toEqual([]);
+    expect(athletics.best?.character).toBe("r");
+    const result = contribution(run, data, 1);
+    expect(result.get("r")!.best).not.toContain("Athletics");
+    expect(result.get("g")!.best).not.toContain("Athletics");
+  });
+
+  it("gives a skill where two members tie on the best value to neither of them", () => {
+    const r = ranger();
+    const g = character("g", ["Rogue"], [{ SelectSkills: ["Stealth", "Acrobatics", "Deception", "Perception"], SelectSkillsExpertise: ["Stealth", "Perception"], SelectAbilityBonus: ["Dexterity", "Charisma"] }], { ...SCORES, Charisma: 10 });
+    const run = runOf([r, g]);
+    const intimidation = coverage(run, data, 1).find((s) => s.skill === "Intimidation")!;
+    expect(intimidation.proficient).toEqual(["r", "g"]);
+    // Charisma 10 and 11 give the same modifier: a tie, which `coverage().best` still breaks for the first member.
+    expect(intimidation.best?.character).toBe("r");
+    const result = contribution(run, data, 1);
+    expect(result.get("r")!.best).not.toContain("Intimidation");
+    expect(result.get("g")!.best).not.toContain("Intimidation");
   });
 
   it("covers only the active party, and compares a lone member with nobody", () => {

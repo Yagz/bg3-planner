@@ -92,7 +92,9 @@ describe("Party screen", () => {
 
   it("shows on a card the classes reached, the identity, the six abilities, what the member brings, the level-12 plan and what is left to decide", () => {
     let run = addCharacter(runWith(ranger(12), 3), data, "Gale");
-    const gale = run.characters[1]!;
+    // Gale shares the Ranger's background, so both are proficient in its skills: the Ranger's Wisdom makes it the best in Medicine.
+    const gale = { ...run.characters[1]!, background: run.characters[0]!.background };
+    run = { ...run, characters: [run.characters[0]!, gale] };
     run.party["1"].active = ["ranger", gale.id];
     setup(run, "fr");
     const group = screen.getByRole("region", { name: "Groupe actif" });
@@ -112,7 +114,7 @@ describe("Party screen", () => {
 
     const brings = contribution(run, data, 3).get("ranger")!;
     expect(brings.only.length).toBeGreaterThan(0);
-    expect(brings.best.length).toBeGreaterThan(0);
+    expect(brings.best).toContain("Medicine");
     expect(brings.highest.length).toBeGreaterThan(0);
     const pills = [...card.querySelectorAll(".brings .pill")].map((pill) => pill.textContent);
     for (const skill of brings.only) expect(pills).toContain(`${gameName(data, "fr", "skill", skill)} · seul`);
