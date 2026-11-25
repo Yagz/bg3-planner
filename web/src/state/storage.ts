@@ -94,14 +94,26 @@ export function createStore(backend: Storage | null): RunStore {
   };
   scan();
 
-  /** The versions of run `id` stored now (another tab may have saved some), or null when none can be read. */
-  const storedHistory = (id: string): HistoryEntry[] | null => {
-    if (!available || backend === null) return null;
+  /**
+   * The versions of run `id` stored now (another tab may have saved some); empty when none is stored or the storage
+   * refuses the read. A record that cannot be read (another tab, maybe a newer version of the site, wrote it) is marked
+   * unreadable and the call throws: it is never overwritten.
+   */
+  const storedHistory = (id: string): HistoryEntry[] => {
+    if (!available || backend === null) return [];
+    let text: string | null;
     try {
-      const text = backend.getItem(RUN_PREFIX + id);
-      return text === null ? null : readRecord(text).history;
+      text = backend.getItem(RUN_PREFIX + id);
     } catch {
-      return null;
+      return [];
+    }
+    if (text === null) return [];
+    try {
+      return readRecord(text).history;
+    } catch (error) {
+      entries.delete(id);
+      broken.set(id, error instanceof Error ? error.message : String(error));
+      throw new Error(`The stored run ${id} could not be read; it is kept and not overwritten`);
     }
   };
 
@@ -125,7 +137,7 @@ export function createStore(backend: Storage | null): RunStore {
     const held = entries.get(run.id);
     // Versions are merged by time with what another tab stored meanwhile: none is dropped.
     const merged = new Map<string, HistoryEntry>();
-    for (const entry of [...(storedHistory(run.id) ?? []), ...(held?.history ?? [])]) if (!merged.has(entry.at)) merged.set(entry.at, entry);
+    for (const entry of [...storedHistory(run.id), ...(held?.history ?? [])]) if (!merged.has(entry.at)) merged.set(entry.at, entry);
     const previous = [...merged.values()].sort((a, b) => Date.parse(b.at) - Date.parse(a.at));
     const newest = previous[0] === undefined ? Number.NEGATIVE_INFINITY : Date.parse(previous[0].at);
     const now = Date.now();

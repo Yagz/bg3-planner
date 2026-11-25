@@ -227,6 +227,17 @@ describe("run store: two tabs on the same storage", () => {
     expect(createStore(backend).history("run-1").map((entry) => decodeJson(entry.text).name)).toEqual(["Start", "Edited in the first tab", "Start"]);
   });
 
+  it("never writes over a record another tab left unreadable to this one", () => {
+    const backend = new MemoryBackend();
+    const first = createStore(backend);
+    first.save(named("Start"));
+    const second = createStore(backend);
+    backend.items.set("bg3p:run:run-1", "{nope");
+    expect(() => second.save(named("Stale"))).toThrow(/run-1/);
+    expect(backend.items.get("bg3p:run:run-1")).toBe("{nope");
+    expect(second.unreadable().map((entry) => entry.id)).toEqual(["run-1"]);
+  });
+
   it("refresh reads the runs another tab added, changed or removed", () => {
     const backend = new MemoryBackend();
     const first = createStore(backend);
