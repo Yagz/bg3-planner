@@ -1,3 +1,4 @@
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -181,6 +182,13 @@ class ReferencesTest(unittest.TestCase):
     def test_committed_file_reads(self):
         self.assertEqual(origins.read_references(origins.ORIGIN_REFERENCES),
                          {("Astarion", "subrace"): "Elf_HighElf", ("Hireling_Wizard", "subclass"): origins.DROP})
+
+    def test_committed_hireling_wizard_takes_the_wizard_preset(self):
+        rules = json.loads((Path(origins.__file__).parents[2] / "data" / "larian" / "rules.json").read_text(encoding="utf-8"))
+        wizard = rules["origins"]["Hireling_Wizard"]
+        self.assertEqual((wizard["class"], wizard["subclass"]), ("Wizard", None))
+        self.assertEqual(wizard["abilities"], {"Strength": 8, "Dexterity": 13, "Constitution": 14, "Intelligence": 15,
+                                               "Wisdom": 10, "Charisma": 12})
 
 
 class ReadExcludedTest(unittest.TestCase):

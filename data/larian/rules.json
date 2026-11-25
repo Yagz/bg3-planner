@@ -16877,10 +16877,10 @@
   },
   "Hireling_Wizard": {
    "abilities": {
-    "Charisma": 15,
+    "Charisma": 12,
     "Constitution": 14,
     "Dexterity": 13,
-    "Intelligence": 12,
+    "Intelligence": 15,
     "Strength": 8,
     "Wisdom": 10
    },
@@ -16888,7 +16888,7 @@
    "class": "Wizard",
    "lockRace": true,
    "race": "Gnome",
-   "subclass": "DraconicBloodline",
+   "subclass": null,
    "subrace": "Gnome_Rock"
   },
   "Jaheira": {
