@@ -14,5 +14,6 @@
     "resolveJsonModule": true,
     "skipLibCheck": true
   },
-  "include": ["src", "scripts/run.ts", "tests/ts", "vitest.config.ts"]
+  "include": ["src", "scripts/run.ts", "tests/ts", "vitest.config.ts", "web/vite.config.ts"],
+  "exclude": ["web/src", "tests/ts/web"]
 }

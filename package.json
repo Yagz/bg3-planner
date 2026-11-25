@@ -7,6 +7,11 @@
   "engines": {
     "node": ">=24 <26"
   },
+  "scripts": {
+    "dev": "vite web",
+    "build": "vite build web",
+    "preview": "vite preview web"
+  },
   "devDependencies": {
     "@testing-library/dom": "10.4.2",
     "@testing-library/react": "16.3.3",

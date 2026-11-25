@@ -1,0 +1,70 @@
+/* App shell styles. Tokens, pills, buttons and dialogs come from the approved mockup; system fonts only. */
+:root {
+  --bg: #ffffff; --bg-muted: #f6f8fa; --fg: #1f2328; --fg-muted: #59636e; --border: #d1d9e0;
+  --accent: #0969da; --accent-bg: #ddf4ff; --todo: #9a6700; --todo-bg: #fff8c5; --bad: #d1242f; --bad-bg: #ffebe9;
+  --good: #1a7f37; --good-bg: #dafbe1; --ghost: #8c959f; --played: #f6f8fa;
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0d1117; --bg-muted: #151b23; --fg: #f0f6fc; --fg-muted: #9198a1; --border: #3d444d;
+  --accent: #4493f8; --accent-bg: #121d2f; --todo: #d29922; --todo-bg: #2b2111; --bad: #f85149; --bad-bg: #2d1416;
+  --good: #3fb950; --good-bg: #12261e; --ghost: #656c76; --played: #10151c; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0d1117; --bg-muted: #151b23; --fg: #f0f6fc; --fg-muted: #9198a1; --border: #3d444d;
+  --accent: #4493f8; --accent-bg: #121d2f; --todo: #d29922; --todo-bg: #2b2111; --bad: #f85149; --bad-bg: #2d1416;
+  --good: #3fb950; --good-bg: #12261e; --ghost: #656c76; --played: #10151c; color-scheme: dark }
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--fg); font: 14px/1.5 var(--font) }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg-muted) }
+.wrap { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); max-width: 1180px; margin: 0 auto }
+header { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg-muted); border-bottom: 1px solid var(--border) }
+.bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding-block: 10px }
+.brand { font-weight: 600; font-size: 15px; display: flex; gap: 8px; align-items: baseline; min-width: 0 }
+.brand small { color: var(--fg-muted); font-weight: 400 }
+nav { display: flex; gap: 4px; margin-left: auto }
+nav button, .seg button { font: inherit; border: 1px solid transparent; background: none; color: var(--fg); padding: 5px 12px; border-radius: 6px; cursor: pointer }
+nav button[aria-current="page"] { background: var(--bg); border-color: var(--border); font-weight: 600 }
+main { padding-block: 20px 40px }
+h1 { font-size: 20px; margin: 0 0 4px; text-wrap: balance }
+h2 { font-size: 16px; margin: 0 }
+.sub { color: var(--fg-muted); margin: 0 0 16px }
+.pill { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 500; border-radius: 999px; padding: 0 8px; line-height: 20px; border: 1px solid transparent; white-space: nowrap }
+.pill.todo { color: var(--todo); background: var(--todo-bg) }
+.pill.bad { color: var(--bad); background: var(--bad-bg) }
+.pill.good { color: var(--good); background: var(--good-bg) }
+.pill.muted { color: var(--fg-muted); border-color: var(--border) }
+.pill.acc { color: var(--accent); background: var(--accent-bg) }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+
+/* Dialogs */
+.scrim { position: fixed; inset: 0; background: rgb(1 4 9 / .5); z-index: 20; display: grid; place-items: center; padding: 16px }
+.dlg { background: var(--bg); color: var(--fg); border: 1px solid var(--border); border-radius: 12px; width: min(720px, 100%); max-height: min(86vh, 100%); display: grid; grid-template-rows: auto 1fr auto; overflow: hidden }
+.dlg header { position: static; background: var(--bg-muted); padding: 12px 16px; display: grid; gap: 2px }
+.dlg .content { overflow: auto; padding: 12px 16px; min-height: 0 }
+.dlg footer { display: flex; gap: 8px; justify-content: flex-end; padding: 12px 16px; border-top: 1px solid var(--border); flex-wrap: wrap }
+.btn { font: inherit; border: 1px solid var(--border); background: var(--bg-muted); color: var(--fg); border-radius: 6px; padding: 5px 14px; cursor: pointer; font-weight: 500 }
+.btn.primary { background: var(--good); border-color: var(--good); color: #fff }
+.btn:disabled { opacity: .5; cursor: not-allowed }
+.search { width: 100%; font: inherit; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--fg); margin-bottom: 8px }
+.opt { display: grid; grid-template-columns: 20px 1fr; gap: 8px; padding: 8px 4px; border-top: 1px solid var(--border); cursor: pointer }
+.opt:first-of-type { border-top: 0 }
+.opt input { margin-top: 3px; accent-color: var(--accent) }
+.opt .d { color: var(--fg-muted); font-size: 12px; display: block }
+.opt.off { opacity: .45; cursor: not-allowed }
+.counter { font-variant-numeric: tabular-nums }
+@media (prefers-reduced-motion: no-preference) { .scrim { animation: fade .12s ease-out } @keyframes fade { from { opacity: 0 } } }
+
+/* Shell */
+body { margin: 0 }
+.runbar, .prefs { display: flex; flex-wrap: wrap; gap: 6px; align-items: center }
+.runbar select, .runbar input, .prefs select { font: inherit; color: var(--fg); background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; max-width: 100% }
+.runbar select { min-width: 0; max-width: 260px }
+.btn.danger { background: var(--bad); border-color: var(--bad); color: #fff }
+.confirm { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding-block: 8px; border-top: 1px solid var(--border) }
+.banner { padding-block: 8px; color: var(--todo); background: var(--todo-bg); border-bottom: 1px solid var(--border); max-width: none }
+select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+@media (max-width: 640px) {
+  nav { margin-left: 0; width: 100% }
+  nav button { flex: 1 }
+}
