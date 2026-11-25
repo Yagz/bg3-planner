@@ -19,6 +19,8 @@ type Props = {
 export default function DifficultyPicker({ data, run, saveRun }: Props) {
   const { t, lang } = useI18n();
   const [error, setError] = useState<string | null>(null);
+  // The proficiency bonus as typed, while it is being typed; null shows the saved value.
+  const [bonusDraft, setBonusDraft] = useState<string | null>(null);
   const { rulesets, rulesetModifiers } = data.rules;
   const { ruleset, overrides } = run.difficulty;
   const effects = rulesetEffects(run.difficulty, data);
@@ -77,13 +79,16 @@ export default function DifficultyPicker({ data, run, saveRun }: Props) {
             min={bonusRange.min}
             max={bonusRange.max}
             step={1}
-            value={bonus}
+            value={bonusDraft ?? bonus}
             onChange={(event) => {
+              // Every keystroke stays in the field; only a whole number within the game's range is saved.
+              setBonusDraft(event.target.value);
               const value = event.target.valueAsNumber;
               if (Number.isInteger(value) && (bonusRange.min === undefined || value >= bonusRange.min) && (bonusRange.max === undefined || value <= bonusRange.max)) {
                 setOverride("PROFICIENCY_BONUS", value);
               }
             }}
+            onBlur={() => setBonusDraft(null)}
           />
         </label>
       )}

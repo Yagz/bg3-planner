@@ -484,6 +484,29 @@ describe("difficulty picker", () => {
     expect(screen.getByText("+3 au bonus de maîtrise")).toBeTruthy();
   });
 
+  it("lets the proficiency bonus be typed through an empty or out-of-range value, saving only valid values and reverting on blur", () => {
+    const { store, id } = renderRun({ ...emptyRun("d8"), difficulty: { ruleset: "RULESET_LARIAN", overrides: { PROFICIENCY_BONUS: 2 } } });
+    const bonus = screen.getByRole("spinbutton", { name: "Bonus de maîtrise" }) as HTMLInputElement;
+    const max = data().rules.rulesetModifiers.PROFICIENCY_BONUS.max!;
+    expect(bonus.value).toBe("2");
+    const versions = store.history(id).length;
+    // Typing "3" over "2": the field goes through an empty value first.
+    fireEvent.change(bonus, { target: { value: "" } });
+    expect(bonus.value).toBe("");
+    expect(store.load(id)!.difficulty.overrides).toEqual({ PROFICIENCY_BONUS: 2 });
+    fireEvent.change(bonus, { target: { value: "3" } });
+    expect(bonus.value).toBe("3");
+    expect(store.load(id)!.difficulty.overrides).toEqual({ PROFICIENCY_BONUS: 3 });
+    expect(store.history(id).length).toBe(versions + 1);
+    // An out-of-range value stays in the field while typing, is never saved, and gives way to the saved value on blur.
+    fireEvent.change(bonus, { target: { value: String(max + 1) } });
+    expect(bonus.value).toBe(String(max + 1));
+    expect(store.load(id)!.difficulty.overrides).toEqual({ PROFICIENCY_BONUS: 3 });
+    fireEvent.blur(bonus);
+    expect(bonus.value).toBe("3");
+    expect(store.history(id).length).toBe(versions + 1);
+  });
+
   it("saves one history version per difficulty change", () => {
     const { store, id } = renderRun({ ...emptyRun("d6"), difficulty: { ruleset: "DIFFICULTY_MEDIUM", overrides: {} } });
     const before = store.history(id).length;
