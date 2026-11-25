@@ -233,6 +233,75 @@ describe("Character screen", () => {
     expect(store.load(runId)!.characters[0]!.levels[1]!.choices[slot]).toEqual([items[0], items[1]]);
   });
 
+  describe("player origin", () => {
+    const originBox = () => within(screen.getByRole("region", { name: "Creation" })).getByRole("combobox", { name: "Origin" }) as HTMLSelectElement;
+    const raceButton = () => within(screen.getByRole("region", { name: "Creation" })).getByRole("button", { name: /^Race/ }) as HTMLButtonElement;
+
+    it("offers the custom player and the origins with a class, minus those already in the run as companions", () => {
+      const run = addCharacter(addCharacter(emptyRun("r"), data, "player"), data, "Gale");
+      setup(run, run.characters[0]!.id);
+      const values = within(originBox()).getAllByRole("option").map((option) => option.getAttribute("value"));
+      expect(values[0]).toBe("");
+      expect(originBox().value).toBe("");
+      expect(values).toContain("DarkUrge");
+      expect(values).toContain("Astarion");
+      expect(values).not.toContain("Generic");
+      expect(values).not.toContain("Gale");
+      cleanup();
+      setup(run, run.characters[1]!.id);
+      expect(within(screen.getByRole("region", { name: "Creation" })).queryByRole("combobox", { name: "Origin" })).toBeNull();
+    });
+
+    it("fills and locks the origin's race, subrace and background on an undecided player, then frees them on custom", () => {
+      const run = addCharacter(emptyRun("r"), data, "player");
+      const { store, runId } = setup(run, run.characters[0]!.id);
+      const gale = data.rules.origins["Gale"]!;
+      fireEvent.change(originBox(), { target: { value: "Gale" } });
+      expect(screen.queryByRole("dialog")).toBeNull();
+      const saved = store.load(runId)!;
+      expect(saved.origin).toBe("Gale");
+      expect(saved.characters[0]).toMatchObject({ race: gale.race, subrace: gale.subrace, background: gale.background });
+      expect(saved.characters[0]!.levels).toEqual(run.characters[0]!.levels);
+      expect(saved.characters[0]!.abilities).toEqual(run.characters[0]!.abilities);
+      expect(raceButton().disabled).toBe(true);
+      expect(screen.getByText("race, subrace and background set by the character")).toBeTruthy();
+
+      fireEvent.change(originBox(), { target: { value: "" } });
+      expect(store.load(runId)!.origin).toBe("");
+      expect(store.load(runId)!.characters[0]).toMatchObject({ race: gale.race, subrace: gale.subrace, background: gale.background });
+      expect(raceButton().disabled).toBe(false);
+    });
+
+    it("goes through the impact preview when the origin replaces identity already chosen; Cancel changes nothing", () => {
+      const c = ranger(2);
+      const { store, runId } = setup(runWith([c]), c.id);
+      const versions = store.history(runId).length;
+      fireEvent.change(originBox(), { target: { value: "Astarion" } });
+      const dialog = screen.getByRole("dialog");
+      fireEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
+      expect(store.history(runId).length).toBe(versions);
+      expect(store.load(runId)!.origin).toBe("");
+      expect(originBox().value).toBe("");
+
+      fireEvent.change(originBox(), { target: { value: "Astarion" } });
+      fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Apply" }));
+      const astarion = data.rules.origins["Astarion"]!;
+      const saved = store.load(runId)!;
+      expect(saved.origin).toBe("Astarion");
+      expect(saved.characters[0]).toMatchObject({ race: astarion.race, subrace: astarion.subrace, background: astarion.background });
+      expect(store.history(runId).length).toBe(versions + 1);
+    });
+
+    it("takes an origin that locks nothing without touching the character", () => {
+      const c = ranger(2);
+      const { store, runId } = setup(runWith([c]), c.id);
+      fireEvent.change(originBox(), { target: { value: "DarkUrge" } });
+      expect(screen.queryByRole("dialog")).toBeNull();
+      expect(store.load(runId)!.origin).toBe("DarkUrge");
+      expect(store.load(runId)!.characters[0]).toEqual(c);
+    });
+  });
+
   it("offers a hidden background only to its origin: Haunted One to a Dark Urge player", () => {
     const hauntedOne = data.rules.origins["DarkUrge"]!.background!;
     expect(data.rules.backgrounds[hauntedOne]!.origin).toBe(true);

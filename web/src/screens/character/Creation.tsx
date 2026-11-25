@@ -19,13 +19,15 @@ type Props = {
   /** Whether the current race offers subraces in the game data. */
   hasSubraces: boolean;
   onPick: (field: IdentityField) => void;
+  /** For the player only: the run's origin (`""` for the custom player), the origins offered, and what choosing one does. */
+  origin?: { value: string; options: string[]; onChange: (origin: string) => void };
   onAbility: (ability: Ability, value: number) => void;
 };
 
 const BASE_VALUES = Array.from({ length: POINT_BUY.max - POINT_BUY.min + 1 }, (_, i) => POINT_BUY.min + i);
 
 /** The creation block: race, subrace, background, and the six base scores with the level-1 bonus and the point-buy counter. */
-export default function Creation({ data, character, issues, locked, hasSubraces, onPick, onAbility }: Props) {
+export default function Creation({ data, character, issues, locked, hasSubraces, onPick, origin, onAbility }: Props) {
   const { t, lang } = useI18n();
   const totals = abilityTotals(character, data, 1);
   const spent = pointsSpent(character.abilities);
@@ -56,7 +58,22 @@ export default function Creation({ data, character, issues, locked, hasSubraces,
         <h2>{t("character.creation")}</h2>
         {locked && <span className="pill muted">{t("character.locked")}</span>}
       </div>
-      <div className="row">{(["race", "subrace", "background"] as const).map(field)}</div>
+      <div className="row">
+        {origin !== undefined && (
+          <label className="choice">
+            <span className="k">{t("character.origin")}</span>
+            <select value={origin.value} onChange={(event) => origin.onChange(event.target.value)}>
+              <option value="">{t("character.origin.custom")}</option>
+              {origin.options.map((name) => (
+                <option key={name} value={name}>
+                  {gameName(data, lang, "origin", name)}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+        {(["race", "subrace", "background"] as const).map(field)}
+      </div>
       <div className="row">
         <span className="k">{t("character.abilities")}</span>
         <span className={`pill ${spent === POINT_BUY.budget ? "good" : spent > POINT_BUY.budget ? "bad" : "todo"}`} aria-label={t("character.pointBuy")}>

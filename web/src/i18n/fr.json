@@ -215,5 +215,7 @@
   "history.restoreConfirm": "Restaurer cette version",
   "history.error": "Cette version n’a pas pu être restaurée : {message}",
   "party.editor.size": "Taille du groupe",
-  "party.editor.overFull": "Acte {act} : {count} membres actifs, plus que la taille du groupe ({max})."
+  "party.editor.overFull": "Acte {act} : {count} membres actifs, plus que la taille du groupe ({max}).",
+  "character.origin": "Origine",
+  "character.origin.custom": "Personnage personnalisé"
 }

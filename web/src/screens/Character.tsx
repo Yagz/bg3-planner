@@ -18,7 +18,9 @@ import {
   setChoice,
   setIdentity,
   setLevelClass,
+  withOriginLock,
 } from "../state/characterOps.ts";
+import { isRecruitable } from "../state/partyOps.ts";
 import ChoicePicker, { kindOfList } from "./character/ChoicePicker.tsx";
 import type { PickerMode, PickerSpec } from "./character/ChoicePicker.tsx";
 import Creation from "./character/Creation.tsx";
@@ -73,8 +75,8 @@ export default function Character({ data, run, saveRun, characterId, onSelect, t
   const { t, lang } = useI18n();
   const [target, setTarget] = useState<Target | null>(null);
   const [error, setError] = useState<string | null>(null);
-  /** A change waiting in the impact preview, with the character it replaces. */
-  const [pending, setPending] = useState<{ before: CharacterModel; impact: Impact } | null>(null);
+  /** A change waiting in the impact preview, with the character it replaces and, for a change of origin, the run's new origin. */
+  const [pending, setPending] = useState<{ before: CharacterModel; impact: Impact; origin?: string } | null>(null);
   const character = characterId === null ? run.characters[0] : run.characters.find((c) => c.id === characterId);
   const issues = useMemo(() => (character === undefined ? [] : validate({ ...run, characters: [character] }, data).issues), [run, character, data]);
 
@@ -98,23 +100,29 @@ export default function Character({ data, run, saveRun, characterId, onSelect, t
       setError(cause instanceof Error ? cause.message : String(cause));
     }
   };
-  const save = (after: CharacterModel) => saveRun(replaceCharacter(run, after));
+  const save = (after: CharacterModel, origin?: string) => saveRun({ ...replaceCharacter(run, after), ...(origin === undefined ? {} : { origin }) });
   /**
    * Saves a change, or opens the impact preview when the engine reports a feature gained or lost, a pick removed, or a
    * later choice made impossible; applying the preview saves its result (the removed picks dropped, nothing else).
    */
-  const commit = (after: CharacterModel) =>
+  const commit = (after: CharacterModel, origin?: string) =>
     attempt(() => {
       const preview = previewNeeded(character, after, run, data);
-      if (preview === null) save(after);
-      else setPending({ before: character, impact: preview });
+      if (preview === null) save(after, origin);
+      else setPending({ before: character, impact: preview, ...(origin === undefined ? {} : { origin }) });
     });
   const apply = () => {
     if (pending === null) return;
-    const { result } = pending.impact;
+    const { impact: { result }, origin } = pending;
     setPending(null);
-    attempt(() => save(result));
+    attempt(() => save(result, origin));
   };
+  // The player's origin: the custom player, or an origin with a class that is not already a companion in the run.
+  const originOptions = sortByName(
+    Object.keys(data.rules.origins).filter((name) => name === run.origin || (isRecruitable(data, name) && !run.characters.some((c) => c.who === name))),
+    "origin",
+  );
+  const changeOrigin = (next: string) => commit(withOriginLock(character, data, next), next);
 
   const open = (current: Target): Opened | null => {
     if ("field" in current) {
@@ -217,6 +225,7 @@ export default function Character({ data, run, saveRun, characterId, onSelect, t
         locked={locked}
         hasSubraces={subraces.length > 0}
         onPick={(field) => setTarget({ field })}
+        origin={character.who === "player" ? { value: run.origin, options: originOptions, onChange: changeOrigin } : undefined}
         onAbility={(ability, value) => commit(setAbilities(character, { ...character.abilities, [ability]: value }))}
       />
       {tree ? (

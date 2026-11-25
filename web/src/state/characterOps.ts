@@ -36,6 +36,16 @@ export function setIdentity(character: Character, field: "race" | "subrace" | "b
   return { ...character, [field]: value };
 }
 
+/**
+ * The player under run origin `origin`: an origin that locks its race takes its race, subrace and background (nothing
+ * else: class, levels and scores stay as they are); the custom player (`""`) or an origin that locks nothing changes nothing.
+ */
+export function withOriginLock(character: Character, data: GameData, origin: string): Character {
+  const def = Object.hasOwn(data.rules.origins, origin) ? data.rules.origins[origin] : undefined;
+  if (def === undefined || !def.lockRace) return character;
+  return { ...character, race: def.race ?? "", subrace: def.subrace, background: def.background ?? "" };
+}
+
 export function setAbilities(character: Character, base: Record<Ability, number>): Character {
   return { ...character, abilities: { ...base } };
 }
