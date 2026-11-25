@@ -1,3 +1,5 @@
-# References of an origin that the game gives as a non-playable element, replaced by the playable rules key the planner uses.
-# One per line: `<origin> <class|subclass|race|subrace> <rules key>  # reason`. A listed reference that resolves by itself, whose rules key is missing, or whose origin is unknown or excluded is an error. The list is the maintainer's decision.
+# References of an origin that the game gives wrongly: a non-playable element, or a subclass that is not a subclass of the origin's class (an import error otherwise).
+# One per line: `<origin> <class|subclass|race|subrace> <rules key>  # reason` replaces the reference; `-` as the rules key drops it (the field becomes null, and the abilities then come from the class preset when the subclass is dropped).
+# A listed key must fit the origin: a base class, a subclass of its class, a base race, a subrace of its race. An entry whose reference has no such problem (it resolves by itself, or the origin has no such reference), whose key is missing or does not fit, or whose origin is unknown or excluded is an error. The list is the maintainer's decision.
 Astarion subrace Elf_HighElf  # Origins.lsx gives UndeadHighElfHidden, not a playable race; its parent is Elf_HighElf, its display name reads High Elf / Haut-elfe and it uses the High Elf progression table
+Hireling_Wizard subclass -  # Origins.lsx gives DraconicBloodline, a Sorcerer subclass, on a Wizard; bg3.wiki (Sir Fuzzalump): no subclass, starting INT 17 = the Wizard preset; the Sorcerer subclass seems shifted from the Hireling_Sorcerer row

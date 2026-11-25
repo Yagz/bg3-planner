@@ -7,8 +7,10 @@ from tests.data.test_importer import lsx as lsx_file
 
 RULES = {
     "classes": {"Cleric": {"uuid": "c-cleric", "parent": None}, "Trickery": {"uuid": "c-trick", "parent": "Cleric"},
-                "Fighter": {"uuid": "c-fighter", "parent": None}},
-    "races": {"HalfElf": {"uuid": "r-halfelf", "parent": None}, "HalfElf_High": {"uuid": "r-high", "parent": "HalfElf"}},
+                "Fighter": {"uuid": "c-fighter", "parent": None},
+                "BattleMaster": {"uuid": "c-bm", "parent": "Fighter"}},
+    "races": {"HalfElf": {"uuid": "r-halfelf", "parent": None}, "HalfElf_High": {"uuid": "r-high", "parent": "HalfElf"},
+              "Elf": {"uuid": "r-elf", "parent": None}, "Elf_High": {"uuid": "r-elfhigh", "parent": "Elf"}},
     "backgrounds": {"b-acolyte": {}},
 }
 SCORES = {"Strength": "12", "Dexterity": "13", "Constitution": "14", "Intelligence": "10", "Wisdom": "15",
@@ -121,11 +123,54 @@ class ReferencesTest(unittest.TestCase):
                 self.assertIn("origin_references.txt", errors[0])
                 self.assertIn(word, errors[0])
 
+    def test_reference_without_game_reference_is_reported_as_such(self):
+        _, errors = origins.build(merged([origin(SubRaceUUID="")]), PRESETS, RULES, {},
+                                  {("Shadowheart", "subrace"): "HalfElf_High"})
+        self.assertEqual(len(errors), 1, errors)
+        self.assertIn("has no subrace reference", errors[0])
+        self.assertNotIn("None", errors[0])
+
+    def test_listed_target_must_fit_the_origin(self):
+        cases = {"subclass of another class": ([origin(SubClassUUID="r-none")], ("Shadowheart", "subclass"),
+                                               "BattleMaster"),
+                 "base class as subclass": ([origin(SubClassUUID="r-none")], ("Shadowheart", "subclass"), "Cleric"),
+                 "subrace as race": ([origin(RaceUUID="r-none")], ("Shadowheart", "race"), "HalfElf_High"),
+                 "subrace of another race": (self.HIDDEN, ("Shadowheart", "subrace"), "Elf_High"),
+                 "subclass as class": ([origin(ClassUUID="r-none")], ("Shadowheart", "class"), "Trickery")}
+        for name, (layer, key, target) in cases.items():
+            with self.subTest(name):
+                _, errors = origins.build(merged(layer), PRESETS, RULES, {}, {key: target})
+                self.assertTrue(any("origin_references.txt" in e and target in e for e in errors), errors)
+
+    def test_subclass_of_another_class_is_an_error(self):
+        _, errors = origins.build(merged([origin(SubClassUUID="c-bm")]), PRESETS, RULES, {}, {})
+        self.assertEqual(len(errors), 1, errors)
+        self.assertIn("BattleMaster", errors[0])
+        self.assertIn("Fighter", errors[0])
+        self.assertIn("Cleric", errors[0])
+
+    def test_listed_drop_leaves_the_subclass_null_and_takes_the_class_preset(self):
+        result, errors = origins.build(merged([origin(SubClassUUID="c-bm")]), PRESETS, RULES, {},
+                                       {("Shadowheart", "subclass"): origins.DROP})
+        self.assertEqual(errors, [])
+        self.assertIsNone(result["Shadowheart"]["subclass"])
+        self.assertEqual(result["Shadowheart"]["abilities"]["Wisdom"], 14)
+
+    def test_stale_drop_is_an_error(self):
+        for layer, word in (([origin()], "resolves by itself to Trickery"), ([origin(SubClassUUID="")], "has no")):
+            with self.subTest(word):
+                _, errors = origins.build(merged(layer), PRESETS, RULES, {},
+                                          {("Shadowheart", "subclass"): origins.DROP})
+                self.assertEqual(len(errors), 1, errors)
+                self.assertIn(word, errors[0])
+
     def test_read_references(self):
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder) / "origin_references.txt"
             path.write_text("# header\nAstarion subrace Elf_HighElf  # hidden race\n", encoding="utf-8")
             self.assertEqual(origins.read_references(path), {("Astarion", "subrace"): "Elf_HighElf"})
+            path.write_text("Hero subclass -  # dropped\n", encoding="utf-8")
+            self.assertEqual(origins.read_references(path), {("Hero", "subclass"): origins.DROP})
             for bad in ("Astarion subrace Elf_HighElf\n", "Astarion subrace  # no key\n",
                         "Astarion hair Elf_HighElf  # bad field\n",
                         "A race B  # r\nA race C  # r\n"):
@@ -135,7 +180,7 @@ class ReferencesTest(unittest.TestCase):
 
     def test_committed_file_reads(self):
         self.assertEqual(origins.read_references(origins.ORIGIN_REFERENCES),
-                         {("Astarion", "subrace"): "Elf_HighElf"})
+                         {("Astarion", "subrace"): "Elf_HighElf", ("Hireling_Wizard", "subclass"): origins.DROP})
 
 
 class ReadExcludedTest(unittest.TestCase):

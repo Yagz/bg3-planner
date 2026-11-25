@@ -10,6 +10,8 @@ from scripts.data import model
 
 ORIGINS_EXCLUDED = Path(__file__).with_name("origins_excluded.txt")
 ORIGIN_REFERENCES = Path(__file__).with_name("origin_references.txt")
+# Rules key of an origin_references.txt entry that drops the reference (the field becomes null).
+DROP = "-"
 ABILITIES = tuple(a for a in model._ABILITIES.values() if a)
 # Origin attribute -> (output field, rules section).
 _REFERENCES = (("ClassUUID", "class", "classes"), ("SubClassUUID", "subclass", "classes"),
@@ -29,14 +31,14 @@ def read_excluded(path: Path) -> dict[str, str]:
 
 
 def read_references(path: Path) -> dict[tuple[str, str], str]:
-    """References the game gives as a non-playable element: `<origin> <field> <rules key>  # reason` per line,
-    field among class, subclass, race, subrace; (origin, field) -> rules key."""
+    """References the game gives wrongly: `<origin> <field> <rules key | ->  # reason` per line, field among class,
+    subclass, race, subrace; `-` (DROP) drops the reference. (origin, field) -> rules key or DROP."""
     fields = {field for _, field, _ in _REFERENCES}
     res = {}
     for number, content, _ in model._listed_lines(path):
         words = content.split()
         if len(words) != 3 or words[1] not in fields:
-            raise ValueError(f"{path}:{number}: expected '<origin> <{'|'.join(sorted(fields))}> <rules key>  # reason': "
+            raise ValueError(f"{path}:{number}: expected '<origin> <{'|'.join(sorted(fields))}> <rules key|->  # reason': "
                              f"{content!r}")
         if (words[0], words[1]) in res:
             raise ValueError(f"{path}:{number}: reference listed twice: {words[0]} {words[1]}")
@@ -68,12 +70,15 @@ def build(origins: dict[str, dict], presets: dict[str, dict], rules: dict,
           ) -> tuple[dict[str, dict], list[str]]:
     """(origins keyed by Name, each with its `text` handles; every error found). `origins` and `presets` are
     the merged LSX nodes by UUID; `rules` holds the classes, races and backgrounds to resolve against;
-    `references` (see `read_references`) gives the rules key of a reference that does not resolve: a listed
-    reference that resolves by itself, names a missing key or an unknown origin is an error."""
+    `references` (see `read_references`) replaces or drops a reference that does not resolve, or a subclass that is
+    not a subclass of the origin's class: a listed reference without such a problem, or whose rules key does not
+    fit the origin (a base class, a subclass of its class, a base race, a subrace of its race), is an error, as is
+    one of an unknown or excluded origin."""
     references = references or {}
     used: set[tuple[str, str]] = set()
     errors: list[str] = []
     scores = _presets(presets, errors)
+    classes = rules["classes"]
     keys = {section: {e["uuid"]: name for name, e in rules[section].items()} for section in ("classes", "races")}
     names: dict[str, list[str]] = {}
     for uuid, n in origins.items():
@@ -95,19 +100,36 @@ def build(origins: dict[str, dict], presets: dict[str, dict], rules: dict,
         origin = {}
         for attribute, field, section in _REFERENCES:
             target = model._uuid(a.get(attribute))
-            origin[field] = keys[section].get(target) if target else None
+            value = keys[section].get(target) if target else None
+            # The parent a key of this field must have: classes and races are bases, subclasses and subraces
+            # belong to the origin's class and race.
+            parent = {"class": None, "subclass": origin.get("class"), "race": None, "subrace": origin.get("race")}[field]
+            problem = None
+            if target and value is None:
+                problem = f"{attribute} {target} is not in rules {section}"
+            elif field == "subclass" and value is not None and classes[value].get("parent") != parent:
+                problem = (f"{attribute} {target} is {value}, a subclass of {classes[value].get('parent')}, "
+                           f"not of its class {parent}")
             listed = references.get((name, field))
             if listed is not None:
                 used.add((name, field))
-                if origin[field] is not None or not target:
-                    errors.append(f"origin_references.txt: {name} {field} resolves by itself to {origin[field]}; "
-                                  "remove it")
+                fits = rules[section].get(listed, {}).get("parent", False) == parent
+                if not target:
+                    errors.append(f"origin_references.txt: {name} has no {field} reference; remove it")
+                elif problem is None:
+                    errors.append(f"origin_references.txt: {name} {field} resolves by itself to {value}; remove it")
+                elif listed == DROP:
+                    value = None
                 elif listed not in rules[section]:
                     errors.append(f"origin_references.txt: {name} {field}: {listed} is not in rules {section}")
+                elif not fits:
+                    errors.append(f"origin_references.txt: {name} {field}: {listed} has parent "
+                                  f"{rules[section][listed].get('parent')}, expected {parent}")
                 else:
-                    origin[field] = listed
-            elif target and origin[field] is None:
-                errors.append(f"{where}: {attribute} {target} is not in rules {section}")
+                    value = listed
+            elif problem is not None:
+                errors.append(f"{where}: {problem}")
+            origin[field] = value
         background = model._uuid(a.get("BackgroundUUID"))
         if background and background not in rules["backgrounds"]:
             errors.append(f"{where}: BackgroundUUID {background} is not in rules backgrounds")
@@ -116,10 +138,12 @@ def build(origins: dict[str, dict], presets: dict[str, dict], rules: dict,
         if lock not in ("", "true", "false"):
             errors.append(f"{where}: invalid boolean LockRace={lock!r}")
         origin["lockRace"] = lock == "true"
-        class_uuid, subclass_uuid = model._uuid(a.get("ClassUUID")), model._uuid(a.get("SubClassUUID"))
+        # The preset of the resolved (possibly listed) subclass, else of the class.
+        class_uuid = classes[origin["class"]]["uuid"] if origin["class"] else None
+        subclass_uuid = classes[origin["subclass"]]["uuid"] if origin["subclass"] else None
         origin["abilities"] = scores.get(subclass_uuid) or scores.get(class_uuid)
         if class_uuid and origin["abilities"] is None:
-            errors.append(f"{where}: no ability preset for its class {class_uuid} or subclass {subclass_uuid}")
+            errors.append(f"{where}: no ability preset for its class {origin['class']} or subclass {origin['subclass']}")
         origin["text"] = model._text(a)
         res[name] = origin
     errors.extend(f"origin_references.txt: listed reference of an unknown or excluded origin: {o} {f}"
