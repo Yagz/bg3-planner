@@ -1,6 +1,8 @@
 // Types of the produced game data (`data/larian/*.json`). They mirror the JSON exactly; see
 // `scripts/data/model.py` and `scripts/data/selectors.py`. Everything is keyed by the game's internal identifier.
 
+import type { Ability } from "../plan/model.ts";
+
 export interface ClassDef {
   uuid: string;
   /** UUID of the progression table. */
@@ -159,6 +161,21 @@ export interface SpellDef {
 
 export interface PassiveDef {
   boosts: string[];
+  /** An engine helper the interface hides (listed in `scripts/data/technical_passives.txt`); absent otherwise. */
+  technical?: boolean;
+}
+
+/** A predefined character (`Origins.lsx`); references are rules keys, null when the origin sets none. */
+export interface OriginDef {
+  class: string | null;
+  subclass: string | null;
+  race: string | null;
+  subrace: string | null;
+  /** Background UUID. */
+  background: string | null;
+  lockRace: boolean;
+  /** Default base scores: the ability preset of the subclass if any, else of the class; null without a class. */
+  abilities: Record<Ability, number> | null;
 }
 
 export interface ItemDef {
@@ -185,6 +202,8 @@ export interface Rules {
   spells: Record<string, SpellDef>;
   passives: Record<string, PassiveDef>;
   items: Record<string, ItemDef>;
+  /** Keyed by origin `Name`. */
+  origins: Record<string, OriginDef>;
 }
 
 /** Translations keyed by `<kind>:<identifier>` (e.g. `background:<uuid>`). */
@@ -209,4 +228,6 @@ export interface GameData {
   meta: Meta;
   /** Keyed by subclass name; from the hand-written `data/rules/unlocked_subclasses.json` (sibling of `data/larian/`), which any loader must read too. */
   unlockedSubclasses: Record<string, UnlockedSubclass>;
+  /** Skill identifier -> ability; from the hand-written `data/rules/skills.json`, which any loader must read too. */
+  skills: Record<string, Ability>;
 }

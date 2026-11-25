@@ -28,9 +28,16 @@ describe("game data", () => {
     expect(Object.keys(data.texts.en).length).toBeGreaterThan(0);
     expect(Object.keys(data.texts.fr).length).toBeGreaterThan(0);
     for (const texts of [data.texts.en, data.texts.fr]) {
-      for (const key of Object.keys(texts)) expect(key, key).toMatch(/^(background|class|feat|item|passive|race|spell):./);
+      for (const key of Object.keys(texts)) expect(key, key).toMatch(/^(ability|background|class|feat|item|origin|passive|race|skill|spell):./);
     }
     expect(data.texts.en["class:Ranger"]?.name).toBeTruthy();
     expect(data.meta.game).toMatch(/^\d/);
+  });
+
+  it("loads the hand-written skill-to-ability map", async () => {
+    const data = await loadGameData("data/larian");
+    expect(data.skills.Athletics).toBe("Strength");
+    expect(data.skills.SleightOfHand).toBe("Dexterity");
+    expect(Object.keys(data.skills)).toHaveLength(18);
   });
 });

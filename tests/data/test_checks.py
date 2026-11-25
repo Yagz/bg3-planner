@@ -1,8 +1,10 @@
 import copy
+import io
 import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from scripts.data import checks
 
@@ -29,14 +31,24 @@ RULES = {
         {"table": "t-high", "subclasses": [], "passives_added": [], "passives_removed": [], "selectors": []},
     ],
     "lists": {"l-spells": {"type": "spells", "items": ["Fireball"]},
-              "l-pass": {"type": "passives", "items": ["Soldier"]}},
+              "l-pass": {"type": "passives", "items": ["Soldier"]},
+              "l-skills": {"type": "skills", "items": ["Athletics", "Stealth"]}},
     "spells": {"Fireball": {}},
     "passives": {"Soldier": {}},
     "items": {"MAG_Boots": {"kind": "equipment", "found_by": "stats", "stats_type": "Armor", "slot": "Boots", "rarity": "Rare",
                             "root_template": "t-boots"}},
+    "origins": {"Sh": {"class": "Wizard", "subclass": "Evocation", "race": "Elf", "subrace": "HighElf",
+                       "background": "bg-1", "lockRace": True,
+                       "abilities": {"Strength": 8, "Dexterity": 14, "Constitution": 14, "Intelligence": 15,
+                                     "Wisdom": 12, "Charisma": 10}},
+                "Generic": {"class": None, "subclass": None, "race": None, "subrace": None, "background": None,
+                            "lockRace": False, "abilities": None}},
 }
+ABILITIES = ["Strength", "Dexterity", "Constitution", "Intelligence", "Wisdom", "Charisma"]
+SKILLS = {"Athletics": "Strength", "Stealth": "Dexterity"}
 KEYS = ["class:Wizard", "class:Evocation", "race:Elf", "race:HighElf", "background:bg-1", "feat:Alert",
-        "spell:Fireball", "passive:Soldier", "item:MAG_Boots"]
+        "spell:Fireball", "passive:Soldier", "item:MAG_Boots", "origin:Sh", "origin:Generic", "skill:Athletics",
+        "skill:Stealth"] + [f"ability:{a}" for a in ABILITIES]
 WIKI = {"MAG_Boots": {"uuid": "t-boots", "kind": "equipment", "rarity": "rare", "legacy": None, "locations": []},
         "MAG_Gone": {"uuid": None, "kind": "equipment", "rarity": "rare", "legacy": "unobtainable",
                      "locations": []}}
@@ -45,7 +57,8 @@ WIKI = {"MAG_Boots": {"uuid": "t-boots", "kind": "equipment", "rarity": "rare", 
 def verify(folder: Path, counts=COUNTS, **kwargs):
     """checks.verify on synthetic wiki items, no exclusion and no known duplicate, unless given."""
     return checks.verify(folder, counts, **{"wiki": WIKI, "excluded": {}, "duplicates": [], "descriptionless": set(),
-                                            "unlocked": {}, **kwargs})
+                                            "unlocked": {}, "skills": SKILLS,
+                                            "technical": {}, **kwargs})
 META = {"game": "1.0", "modules": ["Shared"], "notice": {"en": "Notice.", "fr": "Mention."}}
 
 
@@ -159,7 +172,7 @@ class ChecksTest(unittest.TestCase):
 
     def test_new_counts(self):
         write(self.folder)
-        counts = {"progressions": 4, "lists": 2, "spells": 1, "passives": 1}
+        counts = {"progressions": 4, "lists": 3, "spells": 1, "passives": 1}
         self.assertEqual(verify(self.folder, counts, duplicates=[]), [])
         problems = verify(self.folder, {"progressions": 663, "lists": 342, "spells": 416, "passives": 475},
                                  duplicates=[])
@@ -293,6 +306,88 @@ class ChecksTest(unittest.TestCase):
                 self.assertEqual(len(problems), 1, problems)
                 self.assertIn("unlocked_subclasses", problems[0])
                 self.assertIn(word, problems[0])
+
+    def test_origin_references(self):
+        rules = copy.deepcopy(RULES)
+        rules["origins"]["Sh"].update({"class": "Bard", "subclass": "Lore", "race": "Orc", "subrace": "HalfOrc",
+                                       "background": "bg-9"})
+        rules["origins"]["Generic"]["abilities"] = {"Strength": 8}
+        problems = self.problems(rules=rules)
+        for needle in ("origin:Sh: unknown class Bard", "unknown subclass Lore", "unknown race Orc",
+                       "unknown subrace HalfOrc", "unknown background bg-9", "origin:Generic: abilities"):
+            self.assertTrue(any(needle in p for p in problems), (needle, problems))
+
+    def test_origin_needs_texts(self):
+        problems = self.problems(keys=[k for k in KEYS if k != "origin:Sh"])
+        self.assertEqual(len(problems), 2, problems)
+        self.assertTrue(all("origin:Sh" in p for p in problems))
+
+    def test_skill_and_ability_need_texts(self):
+        problems = self.problems(fr_keys=[k for k in KEYS if k not in ("skill:Stealth", "ability:Wisdom")])
+        self.assertEqual(len(problems), 2, problems)
+        self.assertTrue(any("skill:Stealth" in p and "French" in p for p in problems))
+        self.assertTrue(any("ability:Wisdom" in p and "French" in p for p in problems))
+
+    def test_skills_map_matches_the_skill_lists(self):
+        write(self.folder)
+        cases = {"missing": ({"Athletics": "Strength"}, "Stealth"),
+                 "extra": ({**SKILLS, "Juggling": "Dexterity"}, "Juggling"),
+                 "not an ability": ({**SKILLS, "Stealth": "Luck"}, "Luck")}
+        for name, (skills, word) in cases.items():
+            with self.subTest(name):
+                problems = verify(self.folder, skills=skills)
+                self.assertEqual(len(problems), 1, problems)
+                self.assertIn("skills.json", problems[0])
+                self.assertIn(word, problems[0])
+
+    def test_technical_flags_match_the_list(self):
+        rules = copy.deepcopy(RULES)
+        rules["passives"]["Soldier"]["technical"] = True
+        write(self.folder, rules=rules)
+        self.assertEqual(verify(self.folder, technical={"Soldier": "toggle"}), [])
+        problems = verify(self.folder)
+        self.assertEqual(len(problems), 1, problems)
+        self.assertIn("passive:Soldier", problems[0])
+        write(self.folder)
+        problems = verify(self.folder, technical={"Soldier": "toggle", "Ghost": "gone"})
+        self.assertEqual(len(problems), 2, problems)
+        self.assertTrue(any("Ghost" in p and "technical_passives" in p for p in problems))
+
+    def test_technical_candidates(self):
+        rules = copy.deepcopy(RULES)
+        rules["passives"].update({"Slot_1": {}, "Toggle_A": {}, "Toggle_B": {}, "Listed": {}, "Named": {}})
+        en = {"passive:Soldier": {"name": "Soldier"}, "passive:Slot_1": {"name": "First level slots"},
+              "passive:Named": {"name": "Named"}, "passive:Listed": {"name": ""}}
+        fr = {"passive:Soldier": {"name": "Soldat"}, "passive:Slot_1": {"name": "des emplacements"},
+              "passive:Named": {"name": "Nommé"}}
+        lines = checks.technical_candidates(rules, {"texts.en": en, "texts.fr": fr}, {"Listed": "reason"})
+        text = "\n".join(lines)
+        self.assertNotIn("Soldier", text)
+        self.assertNotIn("Named", text)
+        self.assertNotIn("Listed", text)
+        self.assertIn("Slot_1", text)
+        self.assertLess(text.index("Toggle_A"), text.index("Toggle_B"))
+        self.assertEqual(len([line for line in lines if line.startswith("  ")]), 3)
+
+    def test_technical_candidates_command(self):
+        write(self.folder)
+        with mock.patch("sys.stdout", new_callable=io.StringIO) as stdout, \
+                mock.patch.object(checks, "TECHNICAL_PASSIVES", self.folder / "none.txt"):
+            (self.folder / "none.txt").write_text("", encoding="utf-8")
+            code = checks.main(["checks", str(self.folder), "--technical-candidates"])
+        self.assertEqual(code, 0)
+        self.assertIn("0 candidate", stdout.getvalue())
+        with mock.patch("sys.stderr"):
+            self.assertEqual(checks.main(["checks", str(self.folder), "--other"]), 2)
+
+    def test_committed_skills_map(self):
+        skills = checks.read_skills(checks.SKILLS)
+        rules = json.loads((Path(checks.__file__).parents[2] / "data" / "larian" / "rules.json").read_text(encoding="utf-8"))
+        self.assertEqual(checks.check_skills(rules, skills), [])
+        self.assertEqual(len(skills), 18)
+        self.assertEqual(skills["Athletics"], "Strength")
+        self.assertEqual(sorted(k for k, v in skills.items() if v == "Wisdom"),
+                         ["AnimalHandling", "Insight", "Medicine", "Perception", "Survival"])
 
     def test_committed_unlocked_subclasses(self):
         unlocked = checks.read_unlocked(checks.UNLOCKED_SUBCLASSES)

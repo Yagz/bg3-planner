@@ -1,0 +1,2 @@
+# Origins (`Name` in Origins.lsx) left out of rules.json: test, debug or other entries that are not playable or recruitable characters.
+# One per line: `<Name>  # reason`. A listed Name that matches no origin is an error. The list is the maintainer's decision.

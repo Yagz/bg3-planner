@@ -8,6 +8,7 @@ from pathlib import Path
 from scripts.data import items as items_module, selectors
 
 NULL_UUID = "00000000-0000-0000-0000-000000000000"
+TECHNICAL_PASSIVES = Path(__file__).with_name("technical_passives.txt")
 
 _ABILITIES = {0: None, 1: "Strength", 2: "Dexterity", 3: "Constitution", 4: "Intelligence", 5: "Wisdom",
               6: "Charisma"}
@@ -88,6 +89,18 @@ def read_excluded(path: Path) -> dict[str, str]:
     return res
 
 
+def read_technical(path: Path) -> dict[str, str]:
+    """Technical passives, hidden by the interface: `<passive name>  # reason` per line; name -> reason."""
+    res = {}
+    for number, content, reason in _listed_lines(path):
+        if len(content.split()) != 1:
+            raise ValueError(f"{path}:{number}: expected a single passive name before '# reason': {content!r}")
+        if content in res:
+            raise ValueError(f"{path}:{number}: passive listed twice: {content!r}")
+        res[content] = reason
+    return res
+
+
 def read_duplicates(path: Path) -> list[frozenset[str]]:
     """Known duplicate progressions: one group per line, UUIDs separated by spaces, then `# reason`."""
     res: list[frozenset[str]] = []
@@ -126,7 +139,7 @@ def duplicate_problems(progressions: list[dict], known: list[frozenset[str]]) ->
 
 class _Builder:
     def __init__(self, lsx_by_file: dict, presets: dict, stats: dict, typos: dict[str, str],
-                 duplicates: list[frozenset[str]], item_sources: dict):
+                 duplicates: list[frozenset[str]], item_sources: dict, technical: dict[str, str]):
         self.lsx = lsx_by_file
         self.item_sources = item_sources
         self.presets = presets
@@ -134,6 +147,7 @@ class _Builder:
         self.typos = typos
         self.typos_used: set[str] = set()
         self.duplicates = duplicates
+        self.technical = technical
         self.errors: list[str] = []
 
     def error(self, message: str) -> None:
@@ -450,6 +464,11 @@ class _Builder:
             }
         passives = {name: {"boosts": _split(s.get("Boosts")), "text": _text(s)}
                     for name, s in self.stats_entries(list(passive_refs), "passive", passive_refs).items()}
+        for name in sorted(self.technical):
+            if name in passives:
+                passives[name]["technical"] = True
+            else:
+                self.error(f"technical_passives.txt: listed passive not in the rules: {name}")
 
         src = self.item_sources
         items, problems = items_module.build(src["wiki"], src["item_stats"], src["templates"], src["excluded"],
@@ -477,7 +496,8 @@ class _Builder:
 def build(lsx_by_file: dict[str, dict[str, dict]], presets: dict[str, dict], stats: dict[str, dict],
           typos: dict[str, str] | None = None, duplicates: list[frozenset[str]] | None = None, *,
           wiki: dict[str, dict] | None = None, item_stats: dict[str, dict] | None = None,
-          templates: dict[str, dict] | None = None, excluded: dict[str, str] | None = None) -> dict:
+          templates: dict[str, dict] | None = None, excluded: dict[str, str] | None = None,
+          technical: dict[str, str] | None = None) -> dict:
     """The rules (schema of `data/larian/rules.json`); raises ModelError with every defect found.
 
     `typos` maps an exact raw selector segment to its correction (see `read_typos`); a listed typo
@@ -488,7 +508,11 @@ def build(lsx_by_file: dict[str, dict[str, dict]], presets: dict[str, dict], sta
     Items (see the `items` module): `wiki` holds the wiki items by uid, `item_stats` the merged Armor and
     Weapon stats, `templates` the resolved RootTemplates, `excluded` the uids kept out of the scope (see
     `read_excluded`). The equipment lists' items must be in `item_stats`.
+
+    `technical` names the passives marked `technical: true` (see `read_technical`); a listed name that is not
+    a passive of the rules is an error.
     """
     item_sources = {"wiki": wiki or {}, "item_stats": item_stats or {}, "templates": templates or {},
                     "excluded": excluded or {}}
-    return _Builder(lsx_by_file, presets, stats, typos or {}, duplicates or [], item_sources).build()
+    return _Builder(lsx_by_file, presets, stats, typos or {}, duplicates or [], item_sources,
+                    technical or {}).build()

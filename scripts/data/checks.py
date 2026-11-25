@@ -6,12 +6,14 @@ import json
 import sys
 from pathlib import Path
 
-from scripts.data import items, model, texts
+from scripts.data import items, model, origins, texts
 
 UNNAMED = Path(__file__).with_name("unnamed.txt")
 KNOWN_DUPLICATES = Path(__file__).with_name("known_duplicates.txt")
 ITEMS_EXCLUDED = Path(__file__).with_name("items_excluded.txt")
 UNLOCKED_SUBCLASSES = Path(__file__).parents[2] / "data" / "rules" / "unlocked_subclasses.json"
+SKILLS = Path(__file__).parents[2] / "data" / "rules" / "skills.json"
+TECHNICAL_PASSIVES = model.TECHNICAL_PASSIVES
 
 COUNTS = {"base_classes": 12, "subclasses": 58, "races": 39, "base_races": 11, "backgrounds": 22,
           "origin_backgrounds": 11, "feats": 41, "progressions": 663, "lists": 342, "spells": 416, "passives": 475,
@@ -26,7 +28,7 @@ PREPARE_VALUES = {None, "AlwaysPrepared"}
 COOLDOWN_VALUES = {None, "UntilRest"}
 
 _CATEGORIES = {"classes": "class", "races": "race", "backgrounds": "background", "feats": "feat",
-               "spells": "spell", "passives": "passive", "items": "item"}
+               "spells": "spell", "passives": "passive", "items": "item", "origins": "origin"}
 _LANGUAGES = {"texts.en": "English", "texts.fr": "French"}
 
 
@@ -34,10 +36,16 @@ def _load(folder: Path, name: str) -> dict:
     return json.loads((folder / f"{name}.json").read_text(encoding="utf-8"))
 
 
+def skill_ids(rules: dict) -> set[str]:
+    """Every item of the rules' skill lists."""
+    return {item for lst in rules.get("lists", {}).values() if lst.get("type") == "skills" for item in lst.get("items", [])}
+
+
 def _check_texts(rules: dict, tables: dict, unnamed: set[str], descriptionless: set[str]) -> list[str]:
     problems = []
     expected = {f"{category}:{ident}" for section, category in _CATEGORIES.items()
                 for ident in rules.get(section, {})}
+    expected |= {f"skill:{ident}" for ident in skill_ids(rules)} | {f"ability:{a}" for a in origins.ABILITIES}
     idents = expected | {key.split(":", 1)[1] for key in expected}
     for listed in sorted(descriptionless - idents):
         problems.append(f"{listed}: listed with a missing description but not found")
@@ -118,6 +126,71 @@ def _check_references(rules: dict) -> list[str]:
             if item not in known:
                 problems.append(f"list:{ident}: unknown {lst['type'][:-1]} {item}")
     return problems
+
+
+def _check_origins(rules: dict) -> list[str]:
+    problems = []
+    sections = {"class": "classes", "subclass": "classes", "race": "races", "subrace": "races",
+                "background": "backgrounds"}
+    for ident, o in sorted(rules.get("origins", {}).items()):
+        where = f"origin:{ident}"
+        for field, section in sections.items():
+            if o.get(field) is not None and o[field] not in rules.get(section, {}):
+                problems.append(f"{where}: unknown {field} {o[field]}")
+        abilities = o.get("abilities")
+        if abilities is not None and (set(abilities) != set(origins.ABILITIES)
+                                      or not all(isinstance(v, int) for v in abilities.values())):
+            problems.append(f"{where}: abilities must give an integer score for each of the six abilities")
+        if o.get("class") is not None and abilities is None:
+            problems.append(f"{where}: a class without abilities")
+    return problems
+
+
+def read_skills(path: Path) -> dict[str, str]:
+    """Hand-written skill-to-ability map: `{skill: ability}`."""
+    return json.loads(Path(path).read_text(encoding="utf-8"))
+
+
+def check_skills(rules: dict, skills: dict[str, str]) -> list[str]:
+    """The map's keys are exactly the items of the rules' skill lists, each mapped to one of the six abilities."""
+    actual = skill_ids(rules)
+    return ([f"skills.json: skill missing from the map: {s}" for s in sorted(actual - set(skills))]
+            + [f"skills.json: not an item of any skill list: {s}" for s in sorted(set(skills) - actual)]
+            + [f"skills.json: {s} maps to {a!r}, not an ability" for s, a in sorted(skills.items())
+               if a not in origins.ABILITIES])
+
+
+def check_technical(rules: dict, technical: dict[str, str]) -> list[str]:
+    """Exactly the passives listed in technical_passives.txt are marked `technical: true`."""
+    passives = rules.get("passives", {})
+    marked = {name for name, p in passives.items() if p.get("technical") is True}
+    return ([f"technical_passives.txt: listed passive not in the rules: {name}" for name in sorted(set(technical) - set(passives))]
+            + [f"passive:{name}: listed in technical_passives.txt but not marked technical"
+               for name in sorted((set(technical) & set(passives)) - marked)]
+            + [f"passive:{name}: marked technical but not listed in technical_passives.txt"
+               for name in sorted(marked - set(technical))])
+
+
+def technical_candidates(rules: dict, tables: dict, technical: dict[str, str]) -> list[str]:
+    """Report lines of the passives not yet listed as technical whose name, in either language, is missing,
+    empty or starts with a lowercase letter, grouped by that reason."""
+    groups: dict[str, list[str]] = {"no name in either table": [], "name in one table only": [],
+                                    "name starting with a lowercase letter": []}
+    for name in sorted(set(rules.get("passives", {})) - set(technical)):
+        names = [((tables[file].get(f"passive:{name}") or {}).get("name") or "").strip() for file in _LANGUAGES]
+        if not any(names):
+            groups["no name in either table"].append(name)
+        elif not all(names):
+            groups["name in one table only"].append(name)
+        elif any(n[:1].islower() for n in names):
+            groups["name starting with a lowercase letter"].append(f"{name}  ({' / '.join(names)})")
+    count = sum(len(v) for v in groups.values())
+    lines = [f"{count} candidate technical passive(s), not yet in technical_passives.txt"]
+    for reason, entries in groups.items():
+        if entries:
+            lines.append(f"{reason} ({len(entries)}):")
+            lines.extend(f"  {entry}" for entry in entries)
+    return lines
 
 
 # Wiki kind -> stats type of the item.
@@ -207,10 +280,13 @@ def check_unlocked(rules: dict, unlocked: dict[str, dict]) -> list[str]:
 def verify(folder: Path, counts: dict[str, int] = COUNTS, unnamed: set[str] | None = None,
            duplicates: list[frozenset[str]] | None = None, wiki: dict[str, dict] | None = None,
            excluded: dict[str, str] | None = None, descriptionless: set[str] | None = None,
-           unlocked: dict[str, dict] | None = None) -> list[str]:
+           unlocked: dict[str, dict] | None = None, skills: dict[str, str] | None = None,
+           technical: dict[str, str] | None = None) -> list[str]:
     """Every problem found in the data folder, sorted; empty when everything is fine. `wiki` (default: the
     committed bg3.wiki items) and `excluded` (default: items_excluded.txt) set the expected items; `unlocked`
-    (default: data/rules/unlocked_subclasses.json) the subclasses unlocked in play."""
+    (default: data/rules/unlocked_subclasses.json) the subclasses unlocked in play; `skills` (default:
+    data/rules/skills.json) the skill-to-ability map; `technical` (default: technical_passives.txt) the passives
+    marked technical."""
     folder = Path(folder)
     if unnamed is None:
         unnamed = texts.read_unnamed(UNNAMED)
@@ -224,17 +300,28 @@ def verify(folder: Path, counts: dict[str, int] = COUNTS, unnamed: set[str] | No
         excluded = model.read_excluded(ITEMS_EXCLUDED)
     if unlocked is None:
         unlocked = read_unlocked(UNLOCKED_SUBCLASSES)
+    if skills is None:
+        skills = read_skills(SKILLS)
+    if technical is None:
+        technical = model.read_technical(TECHNICAL_PASSIVES)
     rules = _load(folder, "rules")
     tables = {name: _load(folder, name) for name in _LANGUAGES}
     problems = (_check_texts(rules, tables, unnamed, descriptionless) + _check_references(rules)
                 + _check_items(rules, wiki, excluded) + _check_counts(rules, counts) + _check_meta(_load(folder, "meta"))
-                + model.duplicate_problems(rules.get("progressions", []), duplicates) + check_unlocked(rules, unlocked))
+                + model.duplicate_problems(rules.get("progressions", []), duplicates) + check_unlocked(rules, unlocked)
+                + _check_origins(rules) + check_skills(rules, skills) + check_technical(rules, technical))
     return sorted(problems)
 
 
 def main(argv: list[str]) -> int:
+    if len(argv) == 3 and argv[2] == "--technical-candidates":
+        folder = Path(argv[1])
+        lines = technical_candidates(_load(folder, "rules"), {name: _load(folder, name) for name in _LANGUAGES},
+                                     model.read_technical(TECHNICAL_PASSIVES))
+        print("\n".join(lines))
+        return 0
     if len(argv) != 2:
-        print("usage: python -m scripts.data.checks <data folder>", file=sys.stderr)
+        print("usage: python -m scripts.data.checks <data folder> [--technical-candidates]", file=sys.stderr)
         return 2
     problems = verify(Path(argv[1]))
     for problem in problems:

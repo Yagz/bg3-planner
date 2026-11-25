@@ -1,9 +1,19 @@
 import type { Texts } from "./types.ts";
 
 /** Kinds that prefix the keys of the texts tables (`<kind>:<id>`). */
-export type TextKind = "background" | "class" | "feat" | "item" | "passive" | "race" | "spell";
+export type TextKind =
+  | "ability"
+  | "background"
+  | "class"
+  | "feat"
+  | "item"
+  | "origin"
+  | "passive"
+  | "race"
+  | "skill"
+  | "spell";
 
-const KINDS: TextKind[] = ["background", "class", "feat", "item", "passive", "race", "spell"];
+const KINDS: TextKind[] = ["ability", "background", "class", "feat", "item", "origin", "passive", "race", "skill", "spell"];
 
 /** Display name of `id` of a known kind, or null when the table has none. */
 export function nameOf(texts: Texts, kind: TextKind, id: string): string | null {

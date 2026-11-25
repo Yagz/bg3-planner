@@ -81,6 +81,14 @@ def rules_files() -> dict[str, dict[str, bytes]]:
                                 "Description": "hAlertDesc"}),
         "Public/Gustav/CharacterCreationPresets/CharacterCreationPresets.lsx": lsx(
             "CharacterCreationPreset", {"UUID": "pr-elf", "RaceUUID": "r-elf"}),
+        "Public/Gustav/CharacterCreationPresets/AbilityDistributionPresets.lsx": lsx(
+            "AbilityDistributionPreset", {"UUID": "a-fighter", "ClassUUID": "c-fighter", "Strength": "15",
+                                          "Dexterity": "13", "Constitution": "14", "Intelligence": "8",
+                                          "Wisdom": "12", "Charisma": "10"}),
+        # Gustav overrides the Shared origin of the same UUID.
+        "Public/Gustav/Origins/Origins.lsx": lsx(
+            "Origin", {"UUID": "o-hero", "Name": "Hero", "ClassUUID": "c-fighter", "RaceUUID": "r-elf",
+                       "BackgroundUUID": "b-acolyte", "LockRace": "true", "DisplayName": "hHero"}),
         # Gustav overrides the Shared Fire Bolt: one layer per module, the later one wins.
         "Public/Gustav/Stats/Generated/Data/Spell_Target.txt": (
             'new entry "Target_FireBolt"\ntype "SpellData"\ndata "SpellType" "Target"\ndata "Level" "0"\n'
@@ -94,12 +102,20 @@ def rules_files() -> dict[str, dict[str, bytes]]:
             # Found by its template name: its stats are WPN_Sword's.
             {"MapKey": "t-fancy", "Name": "WPN_Sword_Fancy", "Stats": "WPN_Sword", "DisplayName": "hFancy"}),
     }
+    shared["Public/Shared/Origins/Origins.lsx"] = lsx(
+        "Origin", {"UUID": "o-hero", "Name": "Hero", "LockRace": "false", "DisplayName": "hHeroOld"})
     gustavx = {"Public/GustavX/Other/Nothing.txt": b"x"}
     return {"Shared.pak": shared, "Gustav.pak": gustav, "GustavX.pak": gustavx}
 
 
 HANDLES = ["hFighter", "hFighterDesc", "hElf", "hElfDesc", "hAcolyte", "hAcolyteDesc", "hAlert", "hAlertDesc",
-           "hFighterPassive", "hAlertPassive", "hFireBolt2", "hBoots", "hBootsDesc", "hBase", "hFancy"]
+           "hFighterPassive", "hAlertPassive", "hFireBolt2", "hBoots", "hBootsDesc", "hBase", "hFancy", "hHero",
+           "hHeroOld"]
+# UI strings whose English text is the label derived from a skill or ability identifier.
+UI_TEXTS = {"hAthletics": ("Athletics", "Athlétisme"), "hHistory": ("History", "Histoire"),
+            "hStrength": ("Strength", "Force"), "hDexterity": ("Dexterity", "Dextérité"),
+            "hConstitution": ("Constitution", "Constitution"), "hIntelligence": ("Intelligence", "Intelligence"),
+            "hWisdom": ("Wisdom", "Sagesse"), "hCharisma": ("Charisma", "Charisme")}
 FRENCH = {"hFighter": "Guerrier", "hFireBolt2": "Trait de feu", "hBase": "Épée"}
 WIKI = {"source": "https://example.org", "license": "test", "items": {
     "MAG_Boots": {"uuid": "t-boots", "kind": "equipment", "rarity": "rare", "legacy": None, "locations": []},
@@ -116,8 +132,9 @@ def make_game(drop_french: str | None = None) -> tuple[Path, tempfile.TemporaryD
     (data / "Localization" / "French").mkdir(parents=True)
     for name, files in rules_files().items():
         (data / name).write_bytes(fixtures.pak(files))
-    en = [(h, 1, f"EN {h}") for h in HANDLES]
-    fr = [(h, 1, FRENCH.get(h, f"FR {h}")) for h in HANDLES if h != drop_french]
+    en = [(h, 1, f"EN {h}") for h in HANDLES] + [(h, 1, english) for h, (english, _) in UI_TEXTS.items()]
+    fr = ([(h, 1, FRENCH.get(h, f"FR {h}")) for h in HANDLES if h != drop_french]
+          + [(h, 1, french) for h, (_, french) in UI_TEXTS.items() if h != drop_french])
     (data / "Localization" / "English.pak").write_bytes(
         fixtures.pak({"Localization/English/english.loca": fixtures.loca(en)}))
     (data / "Localization" / "French" / "French.pak").write_bytes(
@@ -129,7 +146,8 @@ FILES = ["meta.json", "rules.json", "texts.en.json", "texts.fr.json"]
 
 
 # Committed lists that describe the real game; the synthetic game gets empty ones.
-LISTS = ("GAME_TYPOS", "KNOWN_DUPLICATES", "UNNAMED", "ITEMS_EXCLUDED")
+LISTS = ("GAME_TYPOS", "KNOWN_DUPLICATES", "UNNAMED", "ITEMS_EXCLUDED", "TECHNICAL_PASSIVES", "ORIGINS_EXCLUDED",
+         "UI_NAMES")
 
 
 class ImporterTest(unittest.TestCase):
@@ -185,6 +203,45 @@ class ImporterTest(unittest.TestCase):
         self.assertEqual(meta["modules"], ["Shared", "SharedDev", "Gustav", "GustavDev", "GustavX"])
         self.assertEqual(meta["notice"]["en"], "Non-commercial fan project; content owned by Larian Studios.")
         self.assertEqual(meta["notice"]["fr"], "Projet de fans non commercial ; contenu propriété de Larian Studios.")
+
+    def test_origins_and_ui_names_end_to_end(self):
+        importer.run(self.game, self.out, "1.2.3")
+        rules = json.loads((self.out / "rules.json").read_text(encoding="utf-8"))
+        self.assertEqual(rules["origins"], {"Hero": {
+            "class": "Fighter", "subclass": None, "race": "Elf", "subrace": None, "background": "b-acolyte",
+            "lockRace": True, "abilities": {"Strength": 15, "Dexterity": 13, "Constitution": 14, "Intelligence": 8,
+                                            "Wisdom": 12, "Charisma": 10}}})
+        en = json.loads((self.out / "texts.en.json").read_text(encoding="utf-8"))
+        fr = json.loads((self.out / "texts.fr.json").read_text(encoding="utf-8"))
+        self.assertEqual(en["origin:Hero"], {"name": "EN hHero", "description": None})
+        self.assertEqual(fr["skill:Athletics"], {"name": "Athlétisme", "description": None})
+        self.assertEqual(en["skill:History"], {"name": "History", "description": None})
+        self.assertEqual(fr["ability:Strength"], {"name": "Force", "description": None})
+        self.assertEqual(sorted(k for k in fr if k.startswith(("skill:", "ability:"))),
+                         sorted(["skill:Athletics", "skill:History"] + [f"ability:{h[1:]}" for h in UI_TEXTS
+                                                                       if h[1:] not in ("Athletics", "History")]))
+
+    def test_excluded_origin_and_technical_passive(self):
+        self.set_list("ORIGINS_EXCLUDED", "Hero  # test exclusion\n")
+        self.set_list("TECHNICAL_PASSIVES", "Alert_Passive  # test technical\n")
+        importer.run(self.game, self.out, "1.2.3")
+        rules = json.loads((self.out / "rules.json").read_text(encoding="utf-8"))
+        self.assertEqual(rules["origins"], {})
+        self.assertIs(rules["passives"]["Alert_Passive"]["technical"], True)
+        self.assertNotIn("origin:Hero", json.loads((self.out / "texts.en.json").read_text(encoding="utf-8")))
+
+    def test_ui_name_errors_listed(self):
+        game, folder = make_game(drop_french="hHistory")
+        self.addCleanup(folder.cleanup)
+        with mock.patch("sys.stderr") as stderr:
+            code = importer.main(["--game", str(game), "--game-version", "1.2.3", "--output", str(self.out)])
+        self.assertEqual(code, 1)
+        self.assertIn("skill:History", "".join(c.args[0] for c in stderr.write.call_args_list))
+        self.set_list("UI_NAMES", "skill:History hHistory  # test\n")
+        with mock.patch("sys.stderr") as stderr:
+            self.assertEqual(importer.main(["--game", str(game), "--game-version", "1.2.3", "--output",
+                                            str(self.out)]), 1)
+        self.assertIn("hHistory", "".join(c.args[0] for c in stderr.write.call_args_list))
 
     def test_items_end_to_end(self):
         importer.run(self.game, self.out, "1.2.3")

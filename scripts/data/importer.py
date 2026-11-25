@@ -13,7 +13,7 @@ import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-from scripts.data import items, loca, lsx, model, sources, stats, templates, texts
+from scripts.data import items, loca, lsx, model, origins, sources, stats, templates, texts, ui_names
 
 NOTICE = {"fr": "Projet de fans non commercial ; contenu propriété de Larian Studios.",
           "en": "Non-commercial fan project; content owned by Larian Studios."}
@@ -21,6 +21,9 @@ UNNAMED = Path(__file__).with_name("unnamed.txt")
 GAME_TYPOS = Path(__file__).with_name("game_typos.txt")
 KNOWN_DUPLICATES = Path(__file__).with_name("known_duplicates.txt")
 ITEMS_EXCLUDED = Path(__file__).with_name("items_excluded.txt")
+TECHNICAL_PASSIVES = model.TECHNICAL_PASSIVES
+ORIGINS_EXCLUDED = origins.ORIGINS_EXCLUDED
+UI_NAMES = ui_names.UI_NAMES
 WIKI = items.WIKI
 
 # Key expected by model.build -> (path relative to the module, node type).
@@ -38,6 +41,8 @@ LSX_FILES = {
     "FeatDescriptions": ("Feats/FeatDescriptions.lsx", "FeatDescription"),
 }
 PRESETS = ("CharacterCreationPresets/CharacterCreationPresets.lsx", "CharacterCreationPreset")
+ORIGINS = ("Origins/Origins.lsx", "Origin")
+ABILITY_PRESETS = ("CharacterCreationPresets/AbilityDistributionPresets.lsx", "AbilityDistributionPreset")
 # Spell_*.txt and Passive.txt only: the other Data/*.txt files hold other formats.
 STATS_PATTERN = re.compile(r"^Stats/Generated/Data/(?:Spell_[^/]+|Passive)\.txt$")
 # Item stats, loaded apart: their names never mix with spells and passives.
@@ -124,6 +129,8 @@ def build(game: Path, game_version: str, wiki: Path | None = None) -> dict[str, 
     errors: list[str] = []
     lsx_by_file = {key: _lsx(game, relative, node_type, errors) for key, (relative, node_type) in LSX_FILES.items()}
     presets = _lsx(game, *PRESETS, errors)
+    origin_nodes = _lsx(game, *ORIGINS, errors)
+    ability_presets = _lsx(game, *ABILITY_PRESETS, errors)
     stats_by_name = _stats(game, STATS_PATTERN, errors)
     item_stats = _stats(game, ITEM_STATS_PATTERN, errors)
     resolved_templates = _templates(game, errors)
@@ -132,11 +139,28 @@ def build(game: Path, game_version: str, wiki: Path | None = None) -> dict[str, 
     rules = model.build(lsx_by_file, presets, stats_by_name, typos=model.read_typos(GAME_TYPOS),
                         duplicates=model.read_duplicates(KNOWN_DUPLICATES),
                         wiki=items.read_wiki(wiki or WIKI), item_stats=item_stats,
-                        templates=resolved_templates, excluded=model.read_excluded(ITEMS_EXCLUDED))
+                        templates=resolved_templates, excluded=model.read_excluded(ITEMS_EXCLUDED),
+                        technical=model.read_technical(TECHNICAL_PASSIVES))
+    # Origins, texts and UI names fail together, so that one run lists every exception to decide.
+    rules["origins"], problems = origins.build(origin_nodes, ability_presets, rules,
+                                               origins.read_excluded(ORIGINS_EXCLUDED))
     en = loca.table(game / "Data" / ENGLISH_PAK, "English")
     fr = loca.table(game / "Data" / FRENCH_PAK, "French")
-    rules, texts_en, texts_fr = texts.resolve(rules, en, fr, texts.read_unnamed(UNNAMED),
-                                             texts.read_unnamed_descriptions(UNNAMED))
+    try:
+        rules, texts_en, texts_fr = texts.resolve(rules, en, fr, texts.read_unnamed(UNNAMED),
+                                                 texts.read_unnamed_descriptions(UNNAMED))
+    except texts.MissingText as e:
+        problems.extend(e.errors)
+    skills = sorted({item for l in rules["lists"].values() if l["type"] == "skills" for item in l["items"]})
+    try:
+        ui_en, ui_fr = ui_names.resolve({"skill": skills, "ability": list(origins.ABILITIES)}, en, fr,
+                                        ui_names.read_listed(UI_NAMES))
+    except texts.MissingText as e:
+        problems.extend(e.errors)
+    if problems:
+        raise SourceErrors(problems)
+    texts_en.update(ui_en)
+    texts_fr.update(ui_fr)
     return {
         "meta.json": {"game": game_version, "modules": list(sources.MODULES), "notice": NOTICE},
         "rules.json": rules,

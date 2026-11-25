@@ -413,6 +413,26 @@ class TestModel(unittest.TestCase):
             with self.assertRaises(ValueError, msg=bad):
                 model.read_duplicates(write_text(bad))
 
+    def test_listed_technical_passive_marked(self):
+        passives = build(technical={"Style_A": "toggle"})["passives"]
+        self.assertIs(passives["Style_A"]["technical"], True)
+        self.assertNotIn("technical", passives["Style_B"])
+
+    def test_technical_passive_absent_from_rules_is_an_error(self):
+        errors = errors_of(dataset(), technical={"Style_A": "toggle", "Ghost_Passive": "gone"})
+        self.assertEqual([e for e in errors if "Ghost_Passive" in e and "technical_passives" in e], errors)
+        self.assertEqual(len(errors), 1)
+
+    def test_read_technical(self):
+        path = write_text("# header\n\nStyle_A  # toggle\n")
+        self.assertEqual(model.read_technical(path), {"Style_A": "toggle"})
+        for bad in ("Style_A\n", "Style A  # two words\n", "Style_A  # r\nStyle_A  # r\n"):
+            with self.assertRaises(ValueError, msg=bad):
+                model.read_technical(write_text(bad))
+
+    def test_committed_technical_list_reads(self):
+        self.assertIsInstance(model.read_technical(model.TECHNICAL_PASSIVES), dict)
+
     def test_deterministic(self):
         self.assertEqual(build(), build())
 
