@@ -1,13 +1,70 @@
 import type { GameData, Requirement, Selector } from "../data/types.ts";
-import type { Character, Run } from "../plan/model.ts";
+import type { Character, Choice, Run } from "../plan/model.ts";
 import { abilityTotals, checkPointBuy } from "./abilities.ts";
 import { checkChoice, emptyKnown, heldPassives } from "./choices.ts";
 import { reportFrom } from "./issues.ts";
-import type { Issue, Report } from "./issues.ts";
+import type { Issue, IssueCode, Report } from "./issues.ts";
 import { resolve, subclassSlot } from "./progression.ts";
+import type { ResolvedLevel } from "./progression.ts";
 
 export function featSlot(level: number): string {
   return `feat:${level}`;
+}
+
+/** A slot where a pick is made: its id, the selector it answers and the spell scope of its picks. */
+export type SelectorSlot = { id: string; selector: Selector; scope: string };
+
+/** The slots a character level offers, in the order `validate` checks them. */
+export type LevelSlots = {
+  /** Whether the level's class is a known base class: only then is a choice key outside these slots reported. */
+  checked: boolean;
+  /** `subclass:<class>` when the level requires choosing a subclass. */
+  subclass: string | null;
+  /** Picking slots of the level's rows (`AddSpells` grants are no slot). */
+  selectors: SelectorSlot[];
+  /** The feat slot when the level grants a feat; `feat` is the picked feat when the choice names exactly one known feat. */
+  feat: { id: string; feat: string | null; selectors: SelectorSlot[] } | null;
+};
+
+/** Computes the slots of one resolved level; the feat's own slots open as soon as one known feat is picked. */
+export function levelSlots(level: ResolvedLevel, choices: Record<string, Choice>, data: GameData): LevelSlots {
+  const { classes, feats } = data.rules;
+  // Race and subrace selectors pick spells in their own table's scope, apart from every class.
+  const raceTables = new Map(level.rows.filter((row) => row.type === "race").map((row) => [row.uuid, row.table]));
+  const selectors = level.slots
+    .filter((slot) => slot.selector.function !== "AddSpells")
+    .map((slot) => {
+      const table = raceTables.get(slot.progression);
+      return { id: slot.id, selector: slot.selector, scope: table === undefined ? level.class : `race:${table}` };
+    });
+  let feat: LevelSlots["feat"] = null;
+  if (level.featChoice) {
+    const id = featSlot(level.level);
+    const choice = Object.hasOwn(choices, id) ? choices[id] : undefined;
+    const name = Array.isArray(choice) && choice.length === 1 ? (choice[0] ?? "") : "";
+    const picked = Object.hasOwn(feats, name) ? name : null;
+    const featSelectors = picked === null ? [] : (feats[picked]?.selectors ?? []);
+    const featSlots = featSelectors.flatMap((selector, i) => (selector.function === "AddSpells" ? [] : [{ id: `${id}/${i}`, selector, scope: id }]));
+    feat = { id, feat: picked, selectors: featSlots };
+  }
+  return {
+    checked: Object.hasOwn(classes, level.class) && classes[level.class]?.parent === null,
+    subclass: level.subclassChoice === null ? null : subclassSlot(level.class),
+    selectors,
+    feat,
+  };
+}
+
+/** Every slot id of a level where a choice may be stored. */
+export function slotIds(slots: LevelSlots): Set<string> {
+  const ids = new Set<string>();
+  if (slots.subclass !== null) ids.add(slots.subclass);
+  for (const slot of slots.selectors) ids.add(slot.id);
+  if (slots.feat !== null) {
+    ids.add(slots.feat.id);
+    for (const slot of slots.feat.selectors) ids.add(slot.id);
+  }
+  return ids;
 }
 
 /** Checks every character of a run: point buy, progression, then each choice slot. Never corrects anything. */
@@ -18,7 +75,7 @@ export function validate(run: Run, data: GameData): Report {
 const PROFICIENCY = /^Proficiency\((\w+)\)$/;
 
 function validateCharacter(character: Character, data: GameData): Issue[] {
-  const { classes, feats, passives } = data.rules;
+  const { feats, passives } = data.rules;
   const issues: Issue[] = [...checkPointBuy(character)];
   const resolved = resolve(character, data);
   issues.push(...resolved.issues);
@@ -47,23 +104,17 @@ function validateCharacter(character: Character, data: GameData): Issue[] {
   for (const level of resolved.levels) {
     const n = level.level;
     const choices = character.levels[n - 1]?.choices ?? {};
-    const issue = (severity: Issue["severity"], code: string, slot: string, params: Issue["params"] = {}) => {
+    const issue = (severity: Issue["severity"], code: IssueCode, slot: string, params: Issue["params"] = {}) => {
       issues.push({ severity, code, character: character.id, level: n, slot, params });
     };
-    const classResolved = Object.hasOwn(classes, level.class) && classes[level.class]?.parent === null;
+    const slots = levelSlots(level, choices, data);
 
     for (const row of level.rows) {
       grant(row.boosts, granted);
       grantPassives(row.passives_added, granted);
     }
 
-    /** Slot ids this level offers; any other key in its choices is stale or hand-edited. */
-    const open = new Set<string>();
-    if (level.subclassChoice !== null) open.add(subclassSlot(level.class));
-
-    const checkSlot = (slot: string, selector: Selector, scope: string) => {
-      if (selector.function === "AddSpells") return;
-      open.add(slot);
+    const checkSlot = ({ id: slot, selector, scope }: SelectorSlot) => {
       const choice = Object.hasOwn(choices, slot) ? choices[slot] : undefined;
       if (choice === undefined && (selector.function === "ReplacePassives" || ("count" in selector && selector.count === 0))) {
         // Nothing to pick, or an optional replacement: leaving the key out keeps what is held.
@@ -77,58 +128,44 @@ function validateCharacter(character: Character, data: GameData): Issue[] {
       }
     };
 
-    // Race and subrace selectors pick spells in their own table's scope, apart from every class.
-    const raceTables = new Map(level.rows.filter((row) => row.type === "race").map((row) => [row.uuid, row.table]));
-    for (const slot of level.slots) {
-      const table = raceTables.get(slot.progression);
-      checkSlot(slot.id, slot.selector, table === undefined ? level.class : `race:${table}`);
-    }
+    slots.selectors.forEach(checkSlot);
 
-    /** Checks the feat slot; returns the feat whose selectors open, or null. */
-    const checkFeat = (slot: string): string | null => {
+    /** Checks the feat slot; the feat's own slots open when it names exactly one known feat (`slots.feat.feat`). */
+    const checkFeat = (slot: string, name: string | null) => {
       const choice = Object.hasOwn(choices, slot) ? choices[slot] : undefined;
       if (choice === undefined || choice === "todo") {
         issue("incomplete", "choiceMissing", slot);
-        return null;
-      }
-      if (!Array.isArray(choice)) {
+      } else if (!Array.isArray(choice)) {
         issue("notice", "offData", slot);
-        return null;
-      }
-      if (choice.length !== 1) {
+      } else if (choice.length !== 1) {
         issue("invalid", "wrongCount", slot, { count: choice.length, expected: 1 });
-        return null;
+      } else if (name === null) {
+        issue("invalid", "unknownFeat", slot, { feat: choice[0] ?? "" });
+      } else {
+        const def = feats[name];
+        if (!def?.repeatable && featsTaken.has(name)) issue("invalid", "featAlreadyTaken", slot, { feat: name });
+        featsTaken.add(name);
+        const totals = abilityTotals(character, data, n - 1);
+        const held = proficiencies();
+        for (const requirement of def?.requirements ?? []) {
+          const unmet = unmetParams(requirement, totals, held);
+          if (unmet !== null) issue("invalid", "requirementNotMet", slot, { feat: name, ...unmet });
+        }
       }
-      const name = choice[0] ?? "";
-      const def = Object.hasOwn(feats, name) ? feats[name] : undefined;
-      if (def === undefined) {
-        issue("invalid", "unknownFeat", slot, { feat: name });
-        return null;
-      }
-      if (!def.repeatable && featsTaken.has(name)) issue("invalid", "featAlreadyTaken", slot, { feat: name });
-      featsTaken.add(name);
-      const totals = abilityTotals(character, data, n - 1);
-      const held = proficiencies();
-      for (const requirement of def.requirements) {
-        const unmet = unmetParams(requirement, totals, held);
-        if (unmet !== null) issue("invalid", "requirementNotMet", slot, { feat: name, ...unmet });
-      }
-      return name;
     };
 
-    if (level.featChoice) {
-      const slot = featSlot(n);
-      open.add(slot);
-      const feat = checkFeat(slot);
-      if (feat !== null) {
-        const selectors = feats[feat]?.selectors ?? [];
-        selectors.forEach((selector, i) => checkSlot(`${slot}/${i}`, selector, slot));
+    if (slots.feat !== null) {
+      checkFeat(slots.feat.id, slots.feat.feat);
+      if (slots.feat.feat !== null) {
+        slots.feat.selectors.forEach(checkSlot);
         // The feat's passives count for the feats of later levels only.
-        grantPassives(feats[feat]?.passives ?? [], granted);
+        grantPassives(feats[slots.feat.feat]?.passives ?? [], granted);
       }
     }
 
-    if (classResolved) {
+    // Any key outside the level's slots is stale or hand-edited.
+    if (slots.checked) {
+      const open = slotIds(slots);
       for (const key of Object.keys(choices)) if (!open.has(key)) issue("invalid", "unknownSlot", key);
     }
   }

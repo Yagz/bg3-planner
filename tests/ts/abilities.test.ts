@@ -106,7 +106,7 @@ describe("abilityTotals", () => {
 });
 
 describe("reportFrom", () => {
-  const mk = (severity: Issue["severity"]): Issue => ({ severity, code: "x", character: "c", level: null, slot: null, params: {} });
+  const mk = (severity: Issue["severity"]): Issue => ({ severity, code: "choiceMissing", character: "c", level: null, slot: null, params: {} });
   it("takes the worst severity and ignores notices", () => {
     expect(reportFrom([]).status).toBe("valid");
     expect(reportFrom([mk("notice")]).status).toBe("valid");

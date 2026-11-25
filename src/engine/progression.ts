@@ -1,7 +1,7 @@
 import type { GameData, Progression, Selector } from "../data/types.ts";
 import { MAX_LEVELS, isOffData } from "../plan/model.ts";
 import type { Character } from "../plan/model.ts";
-import type { Issue } from "./issues.ts";
+import type { Issue, IssueCode } from "./issues.ts";
 
 /** A choice offered by a progression row; its id is `<progression uuid>/<selector index>`. */
 export type Slot = {
@@ -66,7 +66,7 @@ export function resolve(character: Character, data: GameData): { levels: Resolve
   const { classes, races, backgrounds } = data.rules;
   const index = rowIndex(data);
   const issues: Issue[] = [];
-  const issue = (severity: Issue["severity"], code: string, level: number | null, slot: string | null, params: Issue["params"] = {}) => {
+  const issue = (severity: Issue["severity"], code: IssueCode, level: number | null, slot: string | null, params: Issue["params"] = {}) => {
     issues.push({ severity, code, character: character.id, level, slot, params });
   };
 

@@ -2,7 +2,7 @@ import type { GameData, Selector, SelectSpells } from "../data/types.ts";
 import { ABILITIES } from "../plan/model.ts";
 import type { Ability } from "../plan/model.ts";
 import { ABILITY_CAP } from "./abilities.ts";
-import type { Issue } from "./issues.ts";
+import type { Issue, IssueCode } from "./issues.ts";
 
 /** A replacement in a `SelectSpells` choice is written `"old>new"`. */
 export const SWAP_SEPARATOR = ">";
@@ -60,7 +60,7 @@ function duplicates(entries: string[]): string[] {
 /** Checks a list-of-identifiers choice against its selector; records what it grants in `ctx`. Returns invalid issues. */
 export function checkChoice(selector: Selector, choice: string[], ctx: SlotContext): Issue[] {
   const issues: Issue[] = [];
-  const invalid = (code: string, params: Issue["params"]) => {
+  const invalid = (code: IssueCode, params: Issue["params"]) => {
     issues.push({ severity: "invalid", code, character: ctx.character, level: ctx.level, slot: ctx.slot, params });
   };
   const items = new Set(listItems(ctx.data, selector.list));
@@ -160,7 +160,7 @@ function checkSpells(
   selector: SelectSpells,
   choice: string[],
   ctx: SlotContext,
-  invalid: (code: string, params: Issue["params"]) => void,
+  invalid: (code: IssueCode, params: Issue["params"]) => void,
   inList: (entries: string[]) => string[],
   noDuplicates: (entries: string[]) => void,
   exactly: (count: number, expected: number) => void,
