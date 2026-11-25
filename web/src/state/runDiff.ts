@@ -1,4 +1,4 @@
-import { isOffData } from "../../../src/plan/model.ts";
+import { ABILITIES, isOffData } from "../../../src/plan/model.ts";
 import type { Character, Choice, OffData, Run } from "../../../src/plan/model.ts";
 
 export type ChangeKind =
@@ -48,6 +48,17 @@ function picks(choice: Choice | undefined): string[] {
   return isOffData(choice) ? [choice.offData] : Array.isArray(choice) ? choice.map(String) : [];
 }
 
+/** The entries of `a` left once each entry of `b` has removed one equal entry (a multiset difference, in `a`'s order). */
+function without(a: string[], b: string[]): string[] {
+  const left = [...b];
+  return a.filter((entry) => {
+    const at = left.indexOf(entry);
+    if (at < 0) return true;
+    left.splice(at, 1);
+    return false;
+  });
+}
+
 function sameSet(a: string[], b: string[]): boolean {
   const set = new Set(a);
   return set.size === new Set(b).size && b.every((entry) => set.has(entry));
@@ -69,7 +80,7 @@ function characterChanges(before: Character, after: Character): Change[] {
     const b = valueText(after[field]);
     if (a !== b) changes.push({ kind: field, character: who, before: a, after: b });
   }
-  const scores = (character: Character) => Object.values(character.abilities).join("/");
+  const scores = (character: Character) => ABILITIES.map((ability) => character.abilities[ability]).join("/");
   if (scores(before) !== scores(after)) changes.push({ kind: "abilities", character: who, before: scores(before), after: scores(after) });
   if (before.notes !== after.notes) changes.push({ kind: "notes", character: who });
   const common = Math.min(before.levels.length, after.levels.length);
@@ -84,9 +95,14 @@ function characterChanges(before: Character, after: Character): Change[] {
     for (const slot of slots) {
       const a = picks(was.choices[slot]);
       const b = picks(now.choices[slot]);
-      if (sameSet(a, b)) continue;
-      const removed = a.filter((entry) => !b.includes(entry));
-      const added = b.filter((entry) => !a.includes(entry));
+      if (a.length === b.length && a.every((entry, i) => entry === b[i])) continue;
+      let removed = without(a, b);
+      let added = without(b, a);
+      if (removed.length === 0 && added.length === 0) {
+        // The same picks in another order: compared position by position.
+        removed = a.filter((entry, i) => b[i] !== entry);
+        added = b.filter((entry, i) => a[i] !== entry);
+      }
       changes.push(
         added.length <= 1 && removed.length <= 1
           ? swap("choice", removed[0] ?? "", added[0] ?? "", { character: who, level })

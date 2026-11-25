@@ -54,9 +54,35 @@ describe("runDiff", () => {
     after.characters[0]!.levels[0]!.choices = { "u/1": ["A", "B", "C"] };
     expect(runDiff(before, after)).toEqual([{ kind: "choice", character: "player", level: 1, added: ["A", "B", "C"], removed: [] }]);
     expect(runDiff(after, before)).toEqual([{ kind: "choice", character: "player", level: 1, added: [], removed: ["A", "B", "C"] }]);
-    const reordered = structuredClone(after);
-    reordered.characters[0]!.levels[0]!.choices = { "u/1": ["C", "B", "A"] };
-    expect(runDiff(after, reordered)).toEqual([]);
+  });
+
+  it("reports picks that keep their set but change order or repetition, compared position by position", () => {
+    const before = base();
+    before.characters[0]!.levels[0]!.choices = { "u/2": ["Strength", "Dexterity"] };
+    const swapped = structuredClone(before);
+    swapped.characters[0]!.levels[0]!.choices = { "u/2": ["Dexterity", "Strength"] };
+    expect(runDiff(before, swapped)).toEqual([{ kind: "choice", character: "player", level: 1, added: ["Dexterity", "Strength"], removed: ["Strength", "Dexterity"] }]);
+
+    const increments = structuredClone(before);
+    increments.characters[0]!.levels[0]!.choices = { "u/2": ["Strength", "Strength", "Dexterity"] };
+    const moved = structuredClone(before);
+    moved.characters[0]!.levels[0]!.choices = { "u/2": ["Strength", "Dexterity", "Dexterity"] };
+    expect(runDiff(increments, moved)).toEqual([{ kind: "choice", character: "player", level: 1, before: "Strength", after: "Dexterity" }]);
+    // A repeated pick replaced by another counts once on each side.
+    const twice = structuredClone(before);
+    twice.characters[0]!.levels[0]!.choices = { "u/2": ["Strength", "Strength"] };
+    expect(runDiff(twice, before)).toEqual([{ kind: "choice", character: "player", level: 1, before: "Strength", after: "Dexterity" }]);
+    expect(runDiff(before, structuredClone(before))).toEqual([]);
+  });
+
+  it("gives the ability scores in the game's ability order, whatever the order of the stored keys", () => {
+    const before = base();
+    const after = structuredClone(before);
+    after.characters[0]!.abilities = { Charisma: 8, Wisdom: 8, Intelligence: 8, Constitution: 8, Dexterity: 15, Strength: 10 };
+    expect(runDiff(before, after)).toEqual([{ kind: "abilities", character: "player", before: "8/8/8/8/8/8", after: "10/15/8/8/8/8" }]);
+    const reordered = structuredClone(before);
+    reordered.characters[0]!.abilities = { Charisma: 8, Wisdom: 8, Intelligence: 8, Constitution: 8, Dexterity: 8, Strength: 8 };
+    expect(runDiff(before, reordered)).toEqual([]);
   });
 
   it("reports the party of an act as one change", () => {
