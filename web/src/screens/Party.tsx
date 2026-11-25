@@ -82,7 +82,7 @@ export default function Party({ data, run, saveRun, onOpenCharacter }: Props) {
     return character === undefined ? id : label(character);
   };
 
-  const uncovered = skills.filter((s) => s.best === null || !s.best.proficient).map((s) => skillName(s.skill));
+  const uncovered = skills.filter((s) => s.proficient.length === 0).map((s) => skillName(s.skill));
   const best = skills
     .filter((s) => s.best !== null)
     .sort((a, b) => (b.best?.value ?? 0) - (a.best?.value ?? 0))

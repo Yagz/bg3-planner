@@ -10,7 +10,12 @@ import type { SelectorSlot } from "./validate.ts";
 export type SkillCoverage = {
   skill: string;
   ability: Ability;
-  /** The active member with the highest skill value (the first one on a tie); null when the party is empty. */
+  /** The active members proficient in the skill, in party order; empty when nobody is (the skill is uncovered). */
+  proficient: string[];
+  /**
+   * The active member with the highest skill value; on a tie, one with expertise, then one proficient, then the first one.
+   * Null when the party is empty. It may be unproficient while another member is: read `proficient` for the coverage.
+   */
   best: { character: string; value: number; proficient: boolean; expertise: boolean } | null;
 };
 
@@ -93,12 +98,14 @@ export function coverage(run: Run, data: GameData, level: number): SkillCoverage
   });
   return Object.entries(data.skills).map(([skill, ability]) => {
     let best: SkillCoverage["best"] = null;
+    const rank = (entry: { proficient: boolean; expertise: boolean }) => (entry.expertise ? 2 : entry.proficient ? 1 : 0);
     for (const member of members) {
       const proficient = member.proficient.has(skill);
       const expertise = member.expertise.has(skill);
       const value = Math.floor((member.totals[ability] - 10) / 2) + (proficient ? member.bonus * (expertise ? 2 : 1) : 0);
-      if (best === null || value > best.value) best = { character: member.id, value, proficient, expertise };
+      const entry = { character: member.id, value, proficient, expertise };
+      if (best === null || value > best.value || (value === best.value && rank(entry) > rank(best))) best = entry;
     }
-    return { skill, ability, best };
+    return { skill, ability, proficient: members.filter((member) => member.proficient.has(skill)).map((member) => member.id), best };
   });
 }

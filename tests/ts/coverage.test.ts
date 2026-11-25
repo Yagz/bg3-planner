@@ -48,7 +48,7 @@ describe("coverage", () => {
     expect(proficient.sort()).toEqual(["Intimidation", "Medicine", "Perception", "Stealth", "Survival"]);
 
     const stealth = result.find((s) => s.skill === "Stealth")!;
-    expect(stealth).toEqual({ skill: "Stealth", ability: "Dexterity", best: { character: "r", value: mod(ranger, "Dexterity", 1) + 2, proficient: true, expertise: false } });
+    expect(stealth).toEqual({ skill: "Stealth", ability: "Dexterity", proficient: ["r"], best: { character: "r", value: mod(ranger, "Dexterity", 1) + 2, proficient: true, expertise: false } });
     expect(mod(ranger, "Dexterity", 1)).toBe(3);
     const arcana = result.find((s) => s.skill === "Arcana")!;
     expect(arcana.best).toEqual({ character: "r", value: mod(ranger, "Intelligence", 1), proficient: false, expertise: false });
@@ -90,5 +90,33 @@ describe("coverage", () => {
     const result = coverage(runOf([ranger]), data, 1);
     expect(result.find((s) => s.skill === "Medicine")!.best?.proficient).toBe(false);
     expect(result.find((s) => s.skill === "Stealth")!.best?.proficient).toBe(true);
+  });
+
+  describe("who is proficient", () => {
+    const soldier = () => Object.keys(data.rules.backgrounds).find((k) => data.rules.backgrounds[k]!.passives.includes("Background_Soldier"))!;
+    /** A Soldier Fighter (no Medicine) with Wisdom `wisdom`, and a Haunted One Fighter (Medicine) with Wisdom 10. */
+    const pair = (wisdom: number) => {
+      const fighter = character("f", ["Fighter"], [{ SelectSkills: ["Athletics", "Perception"] }]);
+      fighter.background = soldier();
+      fighter.abilities = { ...fighter.abilities, Wisdom: wisdom };
+      const haunted = character("h", ["Fighter"], [{ SelectSkills: ["Athletics", "Perception"] }]);
+      haunted.abilities = { ...haunted.abilities, Wisdom: 10 };
+      return { fighter, haunted };
+    };
+
+    it("breaks a tie toward the proficient member, even listed after an unproficient one", () => {
+      const { fighter, haunted } = pair(15);
+      const medicine = coverage(runOf([fighter, haunted]), data, 1).find((s) => s.skill === "Medicine")!;
+      expect(medicine.proficient).toEqual(["h"]);
+      expect(medicine.best).toEqual({ character: "h", value: 0 + 2, proficient: true, expertise: false });
+    });
+
+    it("lists the proficient members even when an unproficient member's modifier is higher", () => {
+      const { fighter, haunted } = pair(17);
+      const medicine = coverage(runOf([fighter, haunted]), data, 1).find((s) => s.skill === "Medicine")!;
+      expect(medicine.proficient).toEqual(["h"]);
+      expect(medicine.best).toEqual({ character: "f", value: 3, proficient: false, expertise: false });
+      expect(coverage(runOf([fighter]), data, 1).find((s) => s.skill === "Medicine")!.proficient).toEqual([]);
+    });
   });
 });

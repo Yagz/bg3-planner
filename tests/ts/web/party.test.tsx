@@ -95,6 +95,19 @@ describe("Party screen", () => {
     expect(within(summary).getByText(/Best/).closest("p")!.textContent).toContain("Stealth");
   });
 
+  it("counts a skill as covered when a member listed later is proficient, even below an unproficient member's value", () => {
+    // Lae'zel (Soldier, no Medicine) with Wisdom 17 beats the Haunted One Ranger's Medicine total with Wisdom 10.
+    let run = addCharacter(runWith({ ...ranger(3), abilities: { ...ranger(3).abilities, Wisdom: 10 } }, 3), data, "Laezel");
+    const laezel = { ...run.characters[1]!, abilities: { ...run.characters[1]!.abilities, Wisdom: 17 } };
+    run = { ...run, characters: [run.characters[0]!, laezel] };
+    run.party["1"].active = [laezel.id, "ranger"];
+    setup(run);
+    const summary = screen.getByRole("region", { name: "Skill coverage" });
+    const uncovered = within(summary).getByText(/No proficiency in the party/).closest("p")!;
+    expect(uncovered.textContent).not.toContain("Medicine");
+    expect(uncovered.textContent).toContain("Arcana");
+  });
+
   it("shows the names in French and lists members outside the active party with their status", () => {
     let run = runWith(ranger(3), 3);
     run = addCharacter(run, data, "Gale");
