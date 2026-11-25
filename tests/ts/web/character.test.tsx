@@ -149,6 +149,12 @@ describe("Character screen", () => {
     const dexterity = within(creation).getByRole("group", { name: "Dexterity" });
     expect(within(dexterity).getByText("17")).toBeTruthy();
     expect(within(dexterity).getByText("+2")).toBeTruthy();
+    // Creation's ability block keeps its own style: its tiles sit in `.abil`, never in the summary tiles' `.ab6`.
+    expect(dexterity.closest(".abil")).not.toBeNull();
+    expect(dexterity.closest(".ab6")).toBeNull();
+    const summaryTile = within(screen.getByRole("region", { name: "Summary" })).getByRole("group", { name: "Dexterity" });
+    expect(summaryTile.closest(".ab6")).not.toBeNull();
+    expect(summaryTile.closest(".abil")).toBeNull();
     expect(level(1).className).toContain("played");
     expect(level(3).className).not.toContain("played");
     expect(screen.getByText(/Upcoming/)).toBeTruthy();

@@ -109,11 +109,11 @@ select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
 .member .brings h4 { margin-top: 0 }
 .member .pills .sub { margin: 0; font-size: 13px }
 .ab6 { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px }
-.ab { text-align: center; border: 1px solid var(--border); border-radius: 6px; padding: 3px 0; min-width: 0 }
-.ab span { font-size: 10px; color: var(--fg-muted); letter-spacing: .04em }
-.ab b { display: block; font-size: 15px; font-variant-numeric: tabular-nums }
-.ab small { display: block; font-size: 11px; color: var(--fg-muted); font-variant-numeric: tabular-nums }
-.ab.hi { border-color: var(--accent); background: var(--accent-bg) }
+.ab6 .ab { text-align: center; border: 1px solid var(--border); border-radius: 6px; padding: 3px 0; min-width: 0 }
+.ab6 .ab span { font-size: 10px; color: var(--fg-muted); letter-spacing: .04em }
+.ab6 .ab b { display: block; font-size: 15px; font-variant-numeric: tabular-nums }
+.ab6 .ab small { display: block; font-size: 11px; color: var(--fg-muted); font-variant-numeric: tabular-nums }
+.ab6 .ab.hi { border-color: var(--accent); background: var(--accent-bg) }
 .kv { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 12px; font-size: 13px; align-items: baseline }
 .kv .k { color: var(--fg-muted) }
 .cov { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); gap: 0 16px; margin-top: 12px }
@@ -135,12 +135,12 @@ select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
 .creation .k, .choice .k { font-size: 12px; color: var(--fg-muted); min-width: 92px }
 .creation .choice .k { min-width: 0 }
 .abil { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px }
-.ab { border: 1px solid var(--border); border-radius: 6px; padding: 6px 4px; text-align: center; background: var(--bg); display: grid; gap: 2px; justify-items: center }
-.ab .nm { font-size: 11px; color: var(--fg-muted); text-transform: uppercase; letter-spacing: .04em; display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
-.ab .tot { font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums }
-.ab .det { font-size: 11px; color: var(--fg-muted); font-variant-numeric: tabular-nums; display: flex; gap: 4px; align-items: center }
-.ab .det b { color: var(--good); font-weight: 600 }
-.ab select { font: inherit; color: var(--fg); background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 0 2px }
+.abil .ab { border: 1px solid var(--border); border-radius: 6px; padding: 6px 4px; text-align: center; background: var(--bg); display: grid; gap: 2px; justify-items: center }
+.abil .ab .nm { font-size: 11px; color: var(--fg-muted); text-transform: uppercase; letter-spacing: .04em; display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.abil .ab .tot { font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums }
+.abil .ab .det { font-size: 11px; color: var(--fg-muted); font-variant-numeric: tabular-nums; display: flex; gap: 4px; align-items: center }
+.abil .ab .det b { color: var(--good); font-weight: 600 }
+.abil .ab select { font: inherit; color: var(--fg); background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 0 2px }
 .levels { border: 1px solid var(--border); border-radius: 8px; overflow: hidden }
 .lv { display: grid; grid-template-columns: 44px minmax(120px, 170px) 1fr; gap: 0 12px; padding: 10px 14px; border-top: 1px solid var(--border); align-items: start }
 .lv:first-child { border-top: 0 }
@@ -232,7 +232,7 @@ select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
 .summary .cls { margin: 0; font-size: 14px }
 .summary > .sub { margin: 2px 0 0 }
 .summary h4 { font-size: 12px; margin: 14px 0 6px; color: var(--fg-muted); text-transform: uppercase; letter-spacing: .05em }
-.ab small.up { color: var(--good) }
+.ab6 .ab small.up { color: var(--good) }
 .levelsframe { padding: 0; overflow: hidden }
 .levelsframe .framehead { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; align-items: baseline; padding: 16px 16px 8px }
 .levelsframe .framehead h2 { margin: 0 }
