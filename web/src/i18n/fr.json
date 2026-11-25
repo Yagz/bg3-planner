@@ -213,5 +213,7 @@
   "history.restoreLabel": "Restaurer la version du {date}",
   "history.restoreQuestion": "Restaurer la version du {date} ? La version actuelle reste dans l’historique.",
   "history.restoreConfirm": "Restaurer cette version",
-  "history.error": "Cette version n’a pas pu être restaurée : {message}"
+  "history.error": "Cette version n’a pas pu être restaurée : {message}",
+  "party.editor.size": "Taille du groupe",
+  "party.editor.overFull": "Acte {act} : {count} membres actifs, plus que la taille du groupe ({max})."
 }

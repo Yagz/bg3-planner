@@ -42,9 +42,29 @@ export function addCharacter(run: Run, data: GameData, who: string): Run {
   return { ...run, characters: [...run.characters, character] };
 }
 
-/** Sets the active party of an act, in order. Throws on more than `partySize` members, an unknown character or a duplicate. */
+/**
+ * Bounds of the party size. The run format sets none; 1 to 8 covers the game's default of 4 and the larger parties
+ * players reach with mods.
+ */
+export const PARTY_SIZE = { min: 1, max: 8 };
+
+/** Changes the party size; an active party over the new size is kept as it is (see `overFullActs`), never trimmed. */
+export function setPartySize(run: Run, size: number): Run {
+  if (!Number.isInteger(size) || size < PARTY_SIZE.min || size > PARTY_SIZE.max) throw new Error(`The party size must be between ${PARTY_SIZE.min} and ${PARTY_SIZE.max}`);
+  return { ...run, partySize: size };
+}
+
+/** The acts whose active party has more members than the party size (after the size was lowered). */
+export function overFullActs(run: Run): Act[] {
+  return ACTS.filter((act) => run.party[key(act)].active.length > run.partySize);
+}
+
+/**
+ * Sets the active party of an act, in order. Throws on growing it past `partySize` (an act already over the size may
+ * still lose members), an unknown character or a duplicate.
+ */
 export function setActive(run: Run, act: Act, ids: string[]): Run {
-  if (ids.length > run.partySize) throw new Error(`An active party holds at most ${run.partySize} members`);
+  if (ids.length > run.partySize && ids.length >= run.party[key(act)].active.length) throw new Error(`An active party holds at most ${run.partySize} members`);
   if (new Set(ids).size !== ids.length) throw new Error("A character cannot be active twice");
   for (const id of ids) if (!run.characters.some((character) => character.id === id)) throw new Error(`Unknown character: ${id}`);
   const party = run.party[key(act)];

@@ -3,7 +3,7 @@ import type { GameData } from "../../../src/data/types.ts";
 import type { PartyStatus, Run } from "../../../src/plan/model.ts";
 import { useI18n } from "../i18n/i18n.ts";
 import { characterLabel, gameName } from "../names.ts";
-import { ACTS, STATUSES, addCharacter, copyPartyFromPreviousAct, isRecruitable, setActive, setStatus } from "../state/partyOps.ts";
+import { ACTS, PARTY_SIZE, STATUSES, addCharacter, copyPartyFromPreviousAct, isRecruitable, overFullActs, setActive, setPartySize, setStatus } from "../state/partyOps.ts";
 import type { Act } from "../state/partyOps.ts";
 
 type Props = { run: Run; data: GameData; apply: (operation: (run: Run) => Run) => void };
@@ -36,6 +36,24 @@ export default function PartyEditor({ run, data, apply }: Props) {
   return (
     <section className="editor" aria-label={t("party.editor")}>
       <h2>{t("party.editor")}</h2>
+      <label className="row">
+        {t("party.editor.size")}{" "}
+        <input
+          type="number"
+          min={PARTY_SIZE.min}
+          max={PARTY_SIZE.max}
+          step={1}
+          value={run.partySize}
+          onChange={(event) => {
+            if (event.target.value !== "") apply((current) => setPartySize(current, Number(event.target.value)));
+          }}
+        />
+      </label>
+      {overFullActs(run).map((over) => (
+        <p key={over}>
+          <span className="pill bad">{t("party.editor.overFull", { act: over, count: run.party[String(over) as "1" | "2" | "3"].active.length, max: run.partySize })}</span>
+        </p>
+      ))}
       <div role="tablist" aria-label={t("party.editor.acts")} className="seg">
         {ACTS.map((n) => (
           <button key={n} role="tab" aria-selected={act === n} className={act === n ? "on" : ""} onClick={() => setAct(n)}>

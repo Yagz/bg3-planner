@@ -3,7 +3,7 @@ import type { GameData } from "../../../src/data/types.ts";
 import { decodeJson } from "../../../src/plan/codec.ts";
 import { emptyRun } from "../../../src/plan/model.ts";
 import { realData } from "./realData.ts";
-import { addCharacter, copyPartyFromPreviousAct, setActive, setProgress, setStatus } from "../../../web/src/state/partyOps.ts";
+import { PARTY_SIZE, addCharacter, copyPartyFromPreviousAct, overFullActs, setActive, setPartySize, setProgress, setStatus } from "../../../web/src/state/partyOps.ts";
 
 let data: GameData;
 beforeAll(() => {
@@ -59,6 +59,25 @@ describe("party operations", () => {
     expect(setActive(run, 1, [a]).party["1"].active).toEqual([a]);
     expect(() => setActive({ ...run, partySize: 4 }, 1, [a, a])).toThrow();
     expect(() => setActive(run, 1, ["nope"])).toThrow();
+  });
+
+  it("setPartySize takes 1 to 8 and never trims an active party: a smaller size flags the acts over it", () => {
+    expect(PARTY_SIZE).toEqual({ min: 1, max: 8 });
+    const base = two();
+    const ids = base.characters.map((c) => c.id);
+    const run = setActive(base, 2, ids);
+    expect(() => setPartySize(run, 0)).toThrow();
+    expect(() => setPartySize(run, 9)).toThrow();
+    expect(() => setPartySize(run, 2.5)).toThrow();
+    expect(setPartySize(run, 8).partySize).toBe(8);
+    const smaller = setPartySize(run, 1);
+    expect(smaller.partySize).toBe(1);
+    expect(smaller.party["2"].active).toEqual(ids);
+    expect(overFullActs(smaller)).toEqual([2]);
+    expect(overFullActs(run)).toEqual([]);
+    // An over-full act can still lose members, never gain one.
+    expect(setActive(smaller, 2, [ids[1]!]).party["2"].active).toEqual([ids[1]]);
+    expect(() => setActive(setActive(smaller, 2, [ids[0]!]), 2, ids)).toThrow();
   });
 
   it("sets a status per act without touching the other acts", () => {

@@ -135,6 +135,29 @@ describe("Party screen", () => {
     expect(store.history(id).length).toBeGreaterThan(3);
   });
 
+  it("changes the party size; a smaller size keeps every active member and flags the over-full act", () => {
+    let run = addCharacter(runWith(ranger(3), 3), data, "Gale");
+    run = addCharacter(run, data, "Karlach");
+    run.party["1"].active = run.characters.map((c) => c.id);
+    const { store, id } = setup(run);
+    const size = screen.getByRole("spinbutton", { name: "Party size" }) as HTMLInputElement;
+    expect(size.value).toBe("4");
+    expect(size.min).toBe("1");
+    expect(size.max).toBe("8");
+    expect(screen.queryByText(/more than the party size/)).toBeNull();
+    fireEvent.change(size, { target: { value: "2" } });
+    expect(store.load(id)!.partySize).toBe(2);
+    expect(store.load(id)!.party["1"].active).toHaveLength(3);
+    expect(screen.getByText("Act 1: 3 active members, more than the party size (2).")).toBeTruthy();
+    // Unchecking a member of the over-full act works; checking one back in does not.
+    fireEvent.click(screen.getByRole("checkbox", { name: "Gale" }));
+    expect(store.load(id)!.party["1"].active).toHaveLength(2);
+    expect(screen.getByRole("checkbox", { name: "Gale" })).toHaveProperty("disabled", true);
+    expect(screen.queryByText(/more than the party size/)).toBeNull();
+    fireEvent.change(size, { target: { value: "9" } });
+    expect(store.load(id)!.partySize).toBe(2);
+  });
+
   it("adds a companion from the origins and never one already present", () => {
     const { store, id } = setup(runWith(ranger(3), 3));
     const select = screen.getByRole("combobox", { name: "Add a character" });
