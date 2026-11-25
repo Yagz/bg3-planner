@@ -9,7 +9,7 @@ import type { RunStore } from "../../../web/src/state/storage.ts";
 import { v1String } from "./v1Run.ts";
 import { MemoryBackend } from "./memoryBackend.ts";
 import { StreamingBlob } from "./streamingBlob.ts";
-import { stubData } from "./stubData.ts";
+import { stubData, text } from "./stubData.ts";
 
 beforeAll(() => {
   vi.stubGlobal("Blob", StreamingBlob);
@@ -54,6 +54,21 @@ describe("Transfer", () => {
     expect(store.list()).toEqual([]);
     fireEvent.click(screen.getByRole("button", { name: "Import" }));
     expect(store.list().map((s) => s.name)).toEqual(["Incoming"]);
+  });
+
+  it("groups the report by character, each under its label", async () => {
+    const store = createStore(new MemoryBackend());
+    render(<Transfer data={stubData({ "origin:Gale": text("Gale (placeholder)") })} store={store} run={null} onImported={vi.fn()} />);
+    const run = badRun("Two");
+    run.characters.push({ ...run.characters[0]!, id: "c2", who: "Gale", race: "Race_Y", background: "Bg_Y" });
+    await paste(await encode(run));
+    const player = await screen.findByRole("list", { name: "Player" });
+    expect(within(player).getByText("Unknown race: Race_X.")).toBeTruthy();
+    expect(within(player).queryByText("Unknown race: Race_Y.")).toBeNull();
+    const gale = screen.getByRole("list", { name: "Gale (placeholder)" });
+    expect(within(gale).getByText("Unknown race: Race_Y.")).toBeTruthy();
+    expect(within(gale).getByText("Unknown background: Bg_Y.")).toBeTruthy();
+    expect(within(gale).queryByText("Unknown race: Race_X.")).toBeNull();
   });
 
   it("shows an unreadable paste as an error", async () => {

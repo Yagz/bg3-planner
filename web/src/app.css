@@ -180,3 +180,5 @@ select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
   .diff { grid-template-columns: 1fr }
   .switch { margin-left: 0 }
 }
+.bychar { list-style: none; padding: 0 }
+.bychar h3 { font-size: 1rem; margin: 8px 0 2px }

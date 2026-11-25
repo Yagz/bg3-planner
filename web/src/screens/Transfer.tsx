@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { GameData } from "../../../src/data/types.ts";
 import { encode, toReadableJson } from "../../../src/plan/codec.ts";
 import { useI18n } from "../i18n/i18n.ts";
-import { gameName } from "../names.ts";
+import { characterLabel, gameName } from "../names.ts";
 import { commitImport, importRun } from "../state/importRun.ts";
 import type { ImportResult } from "../state/importRun.ts";
 import type { Run } from "../../../src/plan/model.ts";
@@ -110,6 +110,18 @@ export default function Transfer({ data, store, run, initialText, onImported }: 
 
   const conflict = result?.kind === "ready" ? result.conflict : null;
 
+  /** The report's issues by character, in the run's order, each under the character's label (its id when the run has no such character). */
+  const issueGroups = (ready: Extract<ImportResult, { kind: "ready" }>) => {
+    const order = [...ready.run.characters.map((character) => character.id), ...ready.report.issues.map((issue) => issue.character)];
+    return [...new Set(order)]
+      .map((id) => {
+        const character = ready.run.characters.find((c) => c.id === id);
+        const label = character === undefined ? id : characterLabel(data, lang, character.who, t("party.player"));
+        return { id, label, issues: ready.report.issues.filter((issue) => issue.character === id) };
+      })
+      .filter((group) => group.issues.length > 0);
+  };
+
   return (
     <div className="transfer">
       <h2>{t("transfer.export")}</h2>
@@ -152,11 +164,18 @@ export default function Transfer({ data, store, run, initialText, onImported }: 
             </ul>
           )}
           {result.report.issues.length > 0 && (
-            <ul aria-label={t("transfer.issues")}>
-              {result.report.issues.map((issue, index) => (
-                <li key={index} className={issue.severity}>
-                  {issue.level === null ? "" : `${t("transfer.level", { level: issue.level })} · `}
-                  {issueMessage(issue, names)}
+            <ul aria-label={t("transfer.issues")} className="bychar">
+              {issueGroups(result).map(({ id, label, issues }) => (
+                <li key={id}>
+                  <h3>{label}</h3>
+                  <ul aria-label={label}>
+                    {issues.map((issue, index) => (
+                      <li key={index} className={issue.severity}>
+                        {issue.level === null ? "" : `${t("transfer.level", { level: issue.level })} · `}
+                        {issueMessage(issue, names)}
+                      </li>
+                    ))}
+                  </ul>
                 </li>
               ))}
             </ul>
