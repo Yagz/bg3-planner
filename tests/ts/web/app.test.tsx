@@ -110,7 +110,7 @@ describe("app shell", () => {
     expect(document.documentElement.hasAttribute("data-theme")).toBe(false);
   });
 
-  it("routes by hash and hands a run link to the import flow", () => {
+  it("routes by hash and hands a run link to the import flow", async () => {
     window.history.replaceState(null, "", "/#/transfer");
     renderApp();
     expect(screen.getByRole("button", { name: "Import / export" }).getAttribute("aria-current")).toBe("page");
@@ -120,11 +120,12 @@ describe("app shell", () => {
       window.history.replaceState(null, "", "/#BG3P2:abc");
       window.dispatchEvent(new HashChangeEvent("hashchange"));
     });
-    expect(window.location.hash).toBe("#/party");
-    expect(within(screen.getByRole("main")).getByText(/BG3P2:abc/)).toBeTruthy();
+    expect(window.location.hash).toBe("#/transfer");
+    expect(within(screen.getByRole("main")).getByRole("textbox", { name: "Paste a run" })).toHaveProperty("value", "BG3P2:abc");
+    expect(await within(screen.getByRole("main")).findByRole("alert")).toBeTruthy();
   });
 
-  it("survives a malformed fragment", () => {
+  it("survives a malformed fragment", async () => {
     window.history.replaceState(null, "", "/#/character/%E0");
     renderApp();
     expect(screen.getByRole("button", { name: "Character" }).getAttribute("aria-current")).toBe("page");
@@ -132,7 +133,8 @@ describe("app shell", () => {
       window.history.replaceState(null, "", "/#BG3P%E0");
       window.dispatchEvent(new HashChangeEvent("hashchange"));
     });
-    expect(window.location.hash).toBe("#/party");
-    expect(within(screen.getByRole("main")).getByText(/BG3P%E0/)).toBeTruthy();
+    expect(window.location.hash).toBe("#/transfer");
+    expect(within(screen.getByRole("main")).getByRole("textbox", { name: "Paste a run" })).toHaveProperty("value", "BG3P%E0");
+    expect(await within(screen.getByRole("main")).findByRole("alert")).toBeTruthy();
   });
 });

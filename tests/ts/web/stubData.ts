@@ -11,7 +11,7 @@ export function stubData(en: Texts = {}, fr: Texts = {}): GameData {
       lists: {},
       origins: {},
       passives: {},
-      progressions: {},
+      progressions: [],
       races: {},
       spells: {},
     } as unknown as GameData["rules"],

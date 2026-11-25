@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import type { GameData } from "../../src/data/types.ts";
 import { I18nContext, LANGS, createI18n } from "./i18n/i18n.ts";
+import Transfer from "./screens/Transfer.tsx";
 import type { Lang } from "./i18n/i18n.ts";
 import { createRun, currentRunId, deleteRun, duplicateRun, renameRun } from "./state/runs.ts";
 import { loadSettings, saveSettings } from "./state/settings.ts";
@@ -46,7 +47,7 @@ type Props = {
 };
 
 /** The app shell: header (runs, screens, language, theme), storage warnings and hash routing; screens plug into the routes. */
-export default function App({ store, settingsBackend }: Props) {
+export default function App({ data, store, settingsBackend }: Props) {
   const [settings, setSettings] = useState<Settings>(() => loadSettings(settingsBackend));
   const [runs, setRuns] = useState(() => store.list());
   const [route, setRoute] = useState<Route>(() => parseRoute(window.location.hash));
@@ -74,9 +75,9 @@ export default function App({ store, settingsBackend }: Props) {
     const follow = () => {
       const link = runLinkIn(window.location.hash);
       if (link !== null) {
-        // Task 5's import flow takes the link; the address bar stops carrying it.
+        // The Import / export screen takes the link; the address bar stops carrying it.
         setIncoming(link);
-        window.history.replaceState(null, "", "#/party");
+        window.history.replaceState(null, "", "#/transfer");
       }
       setRoute(parseRoute(window.location.hash));
     };
@@ -90,6 +91,7 @@ export default function App({ store, settingsBackend }: Props) {
   }, []);
 
   const go = (next: Route) => {
+    if (next.screen !== "transfer") setIncoming(null);
     window.history.pushState(null, "", hashOf(next));
     setRoute(next);
   };
@@ -99,6 +101,10 @@ export default function App({ store, settingsBackend }: Props) {
     setRenaming(null);
     setDeleting(false);
     update({ currentRun: id });
+  };
+  const imported = (id: string) => {
+    select(id);
+    go({ screen: "party" });
   };
   const runLabel = (name: string) => (name === "" ? t("run.untitled") : name);
 
@@ -213,8 +219,9 @@ export default function App({ store, settingsBackend }: Props) {
         </div>
       )}
       <main className="wrap">
-        {incoming !== null && <p className="sub">{t("screen.incoming", { text: incoming })}</p>}
-        {current === null && route.screen !== "transfer" ? (
+        {route.screen === "transfer" ? (
+          <Transfer key={incoming ?? ""} data={data} store={store} runId={currentId} initialText={incoming ?? undefined} onImported={imported} />
+        ) : current === null ? (
           <p className="sub">{t("run.none")}</p>
         ) : (
           <p className="sub">{t(`screen.${route.screen}`)}</p>
