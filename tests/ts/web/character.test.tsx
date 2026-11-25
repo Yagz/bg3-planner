@@ -164,7 +164,7 @@ describe("Character screen", () => {
     expect(within(creation).getByRole("button", { name: /^Race/ }).textContent).toBe(gameName(data, "en", "race", "HalfElf"));
   });
 
-  it("lets the player pick a race from the game's races", () => {
+  it("lets the player pick a race from the game's races, through the preview of the features it grants", () => {
     const run = addCharacter(emptyRun("r"), data, "player");
     const player = run.characters[0]!;
     const { store, runId } = setup(run, player.id);
@@ -174,6 +174,8 @@ describe("Character screen", () => {
     const dialog = screen.getByRole("dialog");
     fireEvent.click(within(dialog).getByRole("radio", { name: gameName(data, "en", "race", "Halfling") }));
     fireEvent.click(within(dialog).getByRole("button", { name: "Validate" }));
+    expect(store.load(runId)!.characters[0]!.race).toBe("");
+    fireEvent.click(within(screen.getByRole("dialog", { name: "Preview of the change" })).getByRole("button", { name: "Apply" }));
     expect(store.load(runId)!.characters[0]!.race).toBe("Halfling");
   });
 

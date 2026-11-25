@@ -240,7 +240,15 @@ export default function App({ data, store, settingsBackend }: Props) {
         ) : route.screen === "party" ? (
           <Party data={data} run={run} saveRun={saveRun} onOpenCharacter={(id) => go({ screen: "character", id })} />
         ) : (
-          <Character data={data} run={run} saveRun={saveRun} characterId={route.id} onSelect={(id) => go({ screen: "character", id })} />
+          <Character
+            data={data}
+            run={run}
+            saveRun={saveRun}
+            characterId={route.id}
+            onSelect={(id) => go({ screen: "character", id })}
+            tree={settings.tree}
+            onTree={(tree) => update({ tree })}
+          />
         )}
       </main>
     </I18nContext.Provider>

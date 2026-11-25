@@ -63,11 +63,6 @@ export function replaceCharacter(run: Run, character: Character): Run {
   return { ...run, characters: run.characters.map((c) => (c.id === character.id ? character : c)) };
 }
 
-/** Slots whose change may alter what the game grants: the subclass and the feat of a level. */
-export function isPreviewedSlot(slot: string): boolean {
-  return slot.startsWith("subclass:") || /^feat:\d+$/.test(slot);
-}
-
 /**
  * The impact of replacing `before` with `after` when it must be shown before applying: a feature gained or lost, a pick
  * under a slot that no longer exists, or a choice made impossible. Null when the change can apply directly. `run` must

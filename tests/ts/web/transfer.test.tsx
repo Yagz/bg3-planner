@@ -8,25 +8,8 @@ import { createStore } from "../../../web/src/state/storage.ts";
 import type { RunStore } from "../../../web/src/state/storage.ts";
 import { v1String } from "./v1Run.ts";
 import { MemoryBackend } from "./memoryBackend.ts";
+import { StreamingBlob } from "./streamingBlob.ts";
 import { stubData } from "./stubData.ts";
-
-/** jsdom's Blob has no stream(), which the codec's compression needs: a Blob over byte parts that streams them. */
-class StreamingBlob extends Blob {
-  readonly chunks: Uint8Array<ArrayBuffer>[];
-  constructor(parts: Uint8Array<ArrayBuffer>[]) {
-    super(parts);
-    this.chunks = parts;
-  }
-  override stream(): ReadableStream<Uint8Array<ArrayBuffer>> {
-    const parts = this.chunks;
-    return new ReadableStream({
-      start(controller) {
-        for (const part of parts) controller.enqueue(part);
-        controller.close();
-      },
-    });
-  }
-}
 
 beforeAll(() => {
   vi.stubGlobal("Blob", StreamingBlob);

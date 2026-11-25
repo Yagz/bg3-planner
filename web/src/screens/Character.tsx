@@ -11,7 +11,6 @@ import { characterLabel, gameName } from "../names.ts";
 import {
   addLevel,
   clearChoice,
-  isPreviewedSlot,
   previewNeeded,
   removeLastLevel,
   replaceCharacter,
@@ -24,7 +23,9 @@ import ChoicePicker, { kindOfList } from "./character/ChoicePicker.tsx";
 import type { PickerMode, PickerSpec } from "./character/ChoicePicker.tsx";
 import Creation from "./character/Creation.tsx";
 import type { IdentityField } from "./character/Creation.tsx";
+import ImpactPreview from "./character/ImpactPreview.tsx";
 import LevelList, { CLASS_SLOT } from "./character/LevelList.tsx";
+import LevelTree from "./character/LevelTree.tsx";
 
 type Props = {
   data: GameData;
@@ -35,13 +36,16 @@ type Props = {
   /** The character shown; null for the run's first one. */
   characterId: string | null;
   onSelect: (id: string) => void;
+  /** Levels shown as a tree rather than a list (remembered in the settings). */
+  tree: boolean;
+  onTree: (tree: boolean) => void;
 };
 
 /** What the picker is open on: an identity field, or a slot of a level (`class` for the class taken). */
 type Target = { field: IdentityField } | { level: number; slot: string };
 
 /** A picker's spec with what saving and clearing do to the character. */
-type Opened = { spec: PickerSpec; save: (choice: Choice) => CharacterModel; clear: () => CharacterModel; previewed: boolean };
+type Opened = { spec: PickerSpec; save: (choice: Choice) => CharacterModel; clear: () => CharacterModel };
 
 function modeOf(selector: Selector): PickerMode {
   switch (selector.function) {
@@ -64,11 +68,13 @@ function single(choice: Choice): string | { offData: string } {
   return Array.isArray(choice) ? (choice[0] ?? "") : "";
 }
 
-/** The character editor: creation block, levels 1 to 12 as a list, and the game's list for each choice. */
-export default function Character({ data, run, saveRun, characterId, onSelect }: Props) {
+/** The character editor: creation block, levels 1 to 12 as a list or a tree, the game's list for each choice, and the impact preview of a change. */
+export default function Character({ data, run, saveRun, characterId, onSelect, tree, onTree }: Props) {
   const { t, lang } = useI18n();
   const [target, setTarget] = useState<Target | null>(null);
   const [error, setError] = useState<string | null>(null);
+  /** A change waiting in the impact preview, with the character it replaces. */
+  const [pending, setPending] = useState<{ before: CharacterModel; impact: Impact } | null>(null);
   const character = characterId === null ? run.characters[0] : run.characters.find((c) => c.id === characterId);
   const issues = useMemo(() => (character === undefined ? [] : validate({ ...run, characters: [character] }, data).issues), [run, character, data]);
 
@@ -84,22 +90,30 @@ export default function Character({ data, run, saveRun, characterId, onSelect }:
   const subraces = isOffData(race) ? [] : Object.keys(data.rules.races).filter((name) => data.rules.races[name]!.parent === race);
   const sortByName = (ids: string[], kind: TextKind) => [...ids].sort((a, b) => gameName(data, lang, kind, a).localeCompare(gameName(data, lang, kind, b), lang));
 
-  const save = (after: CharacterModel) => saveRun(replaceCharacter(run, after));
-  /**
-   * Hook point of the impact preview: Task 8 replaces it with the preview dialog, whose Apply saves `preview.result`.
-   * Until then the change applies as made: no pick is removed, and the engine flags those left under slots that no longer exist.
-   */
-  const applyAfterPreview = (_preview: Impact, after: CharacterModel) => save(after);
-  /** Saves a change; one that may alter what the game grants goes through the impact preview when it does. */
-  const commit = (after: CharacterModel, previewed: boolean) => {
+  const attempt = (change: () => void) => {
     try {
-      const preview = previewed ? previewNeeded(character, after, run, data) : null;
-      if (preview === null) save(after);
-      else applyAfterPreview(preview, after);
+      change();
       setError(null);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause));
     }
+  };
+  const save = (after: CharacterModel) => saveRun(replaceCharacter(run, after));
+  /**
+   * Saves a change, or opens the impact preview when the engine reports a feature gained or lost, a pick removed, or a
+   * later choice made impossible; applying the preview saves its result (the removed picks dropped, nothing else).
+   */
+  const commit = (after: CharacterModel) =>
+    attempt(() => {
+      const preview = previewNeeded(character, after, run, data);
+      if (preview === null) save(after);
+      else setPending({ before: character, impact: preview });
+    });
+  const apply = () => {
+    if (pending === null) return;
+    const { result } = pending.impact;
+    setPending(null);
+    attempt(() => save(result));
   };
 
   const open = (current: Target): Opened | null => {
@@ -118,7 +132,6 @@ export default function Character({ data, run, saveRun, characterId, onSelect }:
         spec: { title: t(`character.${field}`), items, kind: field === "background" ? "background" : "race", mode: { type: "single" }, initial },
         save: (choice) => setIdentity(character, field, single(choice)),
         clear: () => setIdentity(character, field, field === "subrace" ? null : ""),
-        previewed: true,
       };
     }
     const { level: n, slot } = current;
@@ -133,11 +146,10 @@ export default function Character({ data, run, saveRun, characterId, onSelect }:
         spec: { title: `${t("character.class")} · ${where}`, items, kind: "class", mode: { type: "single" }, initial: isOffData(entry.class) ? entry.class : entry.class === "" ? undefined : [entry.class] },
         save: (choice) => setLevelClass(character, n, single(choice)),
         clear: () => setLevelClass(character, n, ""),
-        previewed: true,
       };
     }
     const heading = (what: string) => `${what} · ${where} (${resolved.class === "" ? "?" : gameName(data, lang, "class", resolved.class)} ${resolved.classLevel})`;
-    const base = { save: (choice: Choice) => setChoice(character, n, slot, choice), clear: () => clearChoice(character, n, slot), previewed: isPreviewedSlot(slot) };
+    const base = { save: (choice: Choice) => setChoice(character, n, slot, choice), clear: () => clearChoice(character, n, slot) };
     if (slot.startsWith("subclass:")) {
       return { ...base, spec: { title: heading(t("choice.subclass")), items: resolved.subclassChoice ?? [], kind: "class", mode: { type: "single" }, initial } };
     }
@@ -189,6 +201,9 @@ export default function Character({ data, run, saveRun, characterId, onSelect }:
         <h1>{label(character)}</h1>
         {meta.length > 0 && <span className="meta">{meta.join(" · ")}</span>}
         <span className={`pill ${undecided === 0 ? "good" : "todo"}`}>{undecided === 0 ? t("character.complete") : t("character.undecided", { count: undecided })}</span>
+        <label className="switch">
+          <input type="checkbox" checked={tree} onChange={(event) => onTree(event.target.checked)} /> {t("character.tree")}
+        </label>
       </div>
       {error !== null && (
         <p className="banner" role="alert">
@@ -202,20 +217,31 @@ export default function Character({ data, run, saveRun, characterId, onSelect }:
         locked={locked}
         hasSubraces={subraces.length > 0}
         onPick={(field) => setTarget({ field })}
-        onAbility={(ability, value) => commit(setAbilities(character, { ...character.abilities, [ability]: value }), false)}
+        onAbility={(ability, value) => commit(setAbilities(character, { ...character.abilities, [ability]: value }))}
       />
-      <LevelList
-        data={data}
-        character={character}
-        issues={issues.filter((issue) => issue.level !== null)}
-        progressLevel={run.progress.level}
-        onPick={(level, slot) => setTarget({ level, slot })}
-      />
+      {tree ? (
+        <LevelTree
+          data={data}
+          character={character}
+          issues={issues.filter((issue) => issue.level !== null)}
+          progressLevel={run.progress.level}
+          onPick={(level, slot) => setTarget({ level, slot })}
+          onChoose={(level, slot, choice) => commit(setChoice(character, level, slot, choice))}
+        />
+      ) : (
+        <LevelList
+          data={data}
+          character={character}
+          issues={issues.filter((issue) => issue.level !== null)}
+          progressLevel={run.progress.level}
+          onPick={(level, slot) => setTarget({ level, slot })}
+        />
+      )}
       <div className="row levelactions">
-        <button className="btn" disabled={character.levels.length >= MAX_LEVELS} onClick={() => commit(addLevel(character), true)}>
+        <button className="btn" disabled={character.levels.length >= MAX_LEVELS} onClick={() => commit(addLevel(character))}>
           {t("character.addLevel")}
         </button>
-        <button className="btn" disabled={character.levels.length <= 1} onClick={() => commit(removeLastLevel(character), true)}>
+        <button className="btn" disabled={character.levels.length <= 1} onClick={() => commit(removeLastLevel(character))}>
           {t("character.removeLevel", { level: character.levels.length })}
         </button>
       </div>
@@ -225,16 +251,17 @@ export default function Character({ data, run, saveRun, characterId, onSelect }:
           data={data}
           spec={opened.spec}
           onSave={(choice) => {
-            commit(opened.save(choice), opened.previewed);
+            commit(opened.save(choice));
             close();
           }}
           onClear={() => {
-            commit(opened.clear(), opened.previewed);
+            commit(opened.clear());
             close();
           }}
           onClose={close}
         />
       )}
+      {pending !== null && <ImpactPreview data={data} before={pending.before} impact={pending.impact} onApply={apply} onCancel={() => setPending(null)} />}
     </div>
   );
 }

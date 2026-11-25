@@ -6,7 +6,6 @@ import type { Character, Choice, Run } from "../../../src/plan/model.ts";
 import {
   addLevel,
   clearChoice,
-  isPreviewedSlot,
   previewNeeded,
   removeLastLevel,
   replaceCharacter,
@@ -138,12 +137,5 @@ describe("previewNeeded", () => {
     const before = ranger();
     const preview = previewNeeded(before, setLevelClass(before, 2, "Wizard"), runOf(before), data);
     expect(preview?.slotsRemoved.map((pick) => pick.slot)).toContain(spellSlot(before));
-  });
-
-  it("knows which slots may change what the game grants", () => {
-    expect(isPreviewedSlot("subclass:Ranger")).toBe(true);
-    expect(isPreviewedSlot("feat:4")).toBe(true);
-    expect(isPreviewedSlot("feat:4/0")).toBe(false);
-    expect(isPreviewedSlot("b9c3b0e1-38e6-4383-90d5-cb7e65348474/0")).toBe(false);
   });
 });
