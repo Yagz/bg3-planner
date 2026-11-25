@@ -77,7 +77,9 @@ export default function Character({ data, run, saveRun, characterId, onSelect }:
   const label = (c: CharacterModel) => characterLabel(data, lang, c.who, t("party.player"));
   const originName = character.who === "player" ? run.origin : character.who;
   // The same origin `addCharacter` takes the fixed fields from.
-  const locked = Object.hasOwn(data.rules.origins, originName) && data.rules.origins[originName]!.lockRace;
+  const origin = Object.hasOwn(data.rules.origins, originName) ? data.rules.origins[originName] : undefined;
+  const locked = origin?.lockRace === true;
+  const originBackground = origin?.background ?? null;
   const { race } = character;
   const subraces = isOffData(race) ? [] : Object.keys(data.rules.races).filter((name) => data.rules.races[name]!.parent === race);
   const sortByName = (ids: string[], kind: TextKind) => [...ids].sort((a, b) => gameName(data, lang, kind, a).localeCompare(gameName(data, lang, kind, b), lang));
@@ -108,8 +110,8 @@ export default function Character({ data, run, saveRun, characterId, onSelect }:
           ? sortByName(Object.keys(data.rules.races).filter((name) => data.rules.races[name]!.parent === null), "race")
           : field === "subrace"
             ? sortByName(subraces, "race")
-            : // Backgrounds the game hides at character creation are offered only when already chosen.
-              sortByName(Object.keys(data.rules.backgrounds).filter((id) => !data.rules.backgrounds[id]!.origin), "background");
+            : // Backgrounds the game hides at character creation are offered only to their origin, or when already chosen.
+              sortByName(Object.keys(data.rules.backgrounds).filter((id) => !data.rules.backgrounds[id]!.origin || id === originBackground), "background");
       const value = character[field];
       const initial: Choice | undefined = isOffData(value) ? value : value === null || value === "" ? undefined : [value];
       return {
@@ -198,7 +200,7 @@ export default function Character({ data, run, saveRun, characterId, onSelect }:
         character={character}
         issues={issues.filter((issue) => issue.level === null)}
         locked={locked}
-        hasSubraces={subraces.length > 0 || isOffData(race)}
+        hasSubraces={subraces.length > 0}
         onPick={(field) => setTarget({ field })}
         onAbility={(ability, value) => commit(setAbilities(character, { ...character.abilities, [ability]: value }), false)}
       />

@@ -212,4 +212,18 @@ describe("Character screen", () => {
     fireEvent.click(validate);
     expect(store.load(runId)!.characters[0]!.levels[2]!.choices[level3.id]).toEqual([items[2], `${items[0]}>${items[3]}`]);
   });
+
+  it("offers a hidden background only to its origin: Haunted One to a Dark Urge player", () => {
+    const hauntedOne = data.rules.origins["DarkUrge"]!.background!;
+    expect(data.rules.backgrounds[hauntedOne]!.origin).toBe(true);
+    const openBackgrounds = (run: Run) => {
+      setup(run, run.characters[0]!.id);
+      fireEvent.click(within(screen.getByRole("region", { name: "Creation" })).getByRole("button", { name: /^Background/ }));
+      return within(screen.getByRole("dialog")).queryByRole("radio", { name: gameName(data, "en", "background", hauntedOne) });
+    };
+    const darkUrge = addCharacter({ ...emptyRun("r"), origin: "DarkUrge" }, data, "player");
+    expect(openBackgrounds(darkUrge)).not.toBeNull();
+    cleanup();
+    expect(openBackgrounds(addCharacter(emptyRun("r"), data, "player"))).toBeNull();
+  });
 });

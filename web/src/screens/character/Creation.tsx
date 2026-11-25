@@ -16,7 +16,7 @@ type Props = {
   issues: Issue[];
   /** Whether the origin imposes race, subrace and background. */
   locked: boolean;
-  /** Whether the current race offers subraces (or is outside the game data). */
+  /** Whether the current race offers subraces in the game data. */
   hasSubraces: boolean;
   onPick: (field: IdentityField) => void;
   onAbility: (ability: Ability, value: number) => void;
@@ -34,8 +34,10 @@ export default function Creation({ data, character, issues, locked, hasSubraces,
     const value = character[name];
     const kind = name === "background" ? "background" : "race";
     const shown = isOffData(value) ? value.offData : value === null ? t("character.nothingPicked") : value === "" ? t("character.todo") : gameName(data, lang, kind, value);
-    const todo = value === "" || (name === "subrace" && value === null && hasSubraces);
-    const disabled = locked || (name === "subrace" && !hasSubraces && value === null);
+    // "To decide" is the engine's verdict, never recomputed here.
+    const todo = issues.some((issue) => issue.code === "choiceMissing" && issue.slot === name);
+    // A subrace outside the game data can still be typed in for a race outside it.
+    const disabled = locked || (name === "subrace" && !hasSubraces && value === null && !isOffData(character.race));
     const label = t(`character.${name}`);
     return (
       <span key={name} className="choice">
