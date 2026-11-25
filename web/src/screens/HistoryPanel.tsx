@@ -6,7 +6,7 @@ import type { Run } from "../../../src/plan/model.ts";
 import { useI18n } from "../i18n/i18n.ts";
 import type { Lang } from "../i18n/i18n.ts";
 import { characterLabel, gameName } from "../names.ts";
-import { runDiff } from "../state/runDiff.ts";
+import { differsAtAll, runDiff } from "../state/runDiff.ts";
 import type { Change } from "../state/runDiff.ts";
 import { HISTORY_LIMIT } from "../state/storage.ts";
 import type { HistoryEntry } from "../state/storage.ts";
@@ -41,64 +41,49 @@ function readRun(entry: HistoryEntry | undefined): Run | null {
   }
 }
 
+type Described = {
+  changes: Change[];
+  /** The version differs from the previous one only outside the reported kinds. */ other: boolean;
+  /** The previous version could not be read. */ unreadable: boolean;
+};
+
 /** The changes of every version against the one saved before it, decoding each version once. The oldest has none. */
-function changesOf(versions: HistoryEntry[]): Change[][] {
+function changesOf(versions: HistoryEntry[]): Described[] {
   const runs = versions.map(readRun);
   return versions.map((_, i) => {
     const after = runs[i];
     const before = runs[i + 1];
-    if (
-      after === null ||
-      after === undefined ||
-      before === null ||
-      before === undefined
-    )
-      return [];
+    if (i === versions.length - 1) return { changes: [], other: false, unreadable: false };
+    if (after === null || after === undefined || before === null || before === undefined) return { changes: [], other: false, unreadable: true };
     try {
-      return runDiff(before, after);
+      const changes = runDiff(before, after);
+      return { changes, other: changes.length === 0 && differsAtAll(before, after), unreadable: false };
     } catch {
-      return [];
+      return { changes: [], other: false, unreadable: true };
     }
   });
 }
 
 /** The recent history of the current run: its saved versions, newest first, each restorable after a confirmation. */
-export default function HistoryPanel({
-  data,
-  name,
-  versions,
-  onRestore,
-}: Props) {
+export default function HistoryPanel({ data, name, versions, onRestore }: Props) {
   const { t, lang } = useI18n();
-  const changes = useMemo(() => changesOf(versions), [versions]);
-  const named = (kind: TextKind | null, id: string) =>
-    id === "" ? t("history.none") : gameName(data, lang, kind, id);
-  const list = (kind: TextKind | null, ids: string[]) =>
-    ids.map((id) => named(kind, id)).join(", ");
-  const members = (ids: string[]) =>
-    ids
-      .map((id) => characterLabel(data, lang, id, t("party.player")))
-      .join(", ");
+  // `store.history()` returns a fresh array on every call: the memo is keyed on the versions' times, so each is decoded once.
+  const key = versions.map((version) => version.at).join("|");
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const described = useMemo(() => changesOf(versions), [key]);
+  const named = (kind: TextKind | null, id: string) => (id === "" ? t("history.none") : gameName(data, lang, kind, id));
+  const list = (kind: TextKind | null, ids: string[]) => ids.map((id) => named(kind, id)).join(", ");
+  const members = (ids: string[]) => ids.map((id) => characterLabel(data, lang, id, t("party.player"))).join(", ");
   const ruleset = (id: string) =>
-    id === ""
-      ? t("history.none")
-      : id === "RULESET_LARIAN"
-        ? gameName(data, lang, "label", "customMode")
-        : gameName(data, lang, "ruleset", id);
+    id === "" ? t("history.none") : id === "RULESET_LARIAN" ? gameName(data, lang, "label", "customMode") : gameName(data, lang, "ruleset", id);
 
   /** The text of one change: its subject, what happened, and the replaced value. */
   const lineOf = (change: Change): Line => {
-    const who =
-      change.character === undefined
-        ? t("history.run")
-        : characterLabel(data, lang, change.character, t("party.player"));
+    const who = change.character === undefined ? t("history.run") : characterLabel(data, lang, change.character, t("party.player"));
     const level = change.level ?? 0;
     const swap = (what: string, kind: TextKind | null): Line => ({
       who,
-      what:
-        change.after === undefined
-          ? t("history.none")
-          : `${what}${named(kind, change.after)}`.trim(),
+      what: change.after === undefined ? `${what}${t("history.none")}`.trim() : `${what}${named(kind, change.after)}`.trim(),
       was: change.before === undefined ? undefined : named(kind, change.before),
     });
     switch (change.kind) {
@@ -133,10 +118,14 @@ export default function HistoryPanel({
         const removed = change.removed ?? [];
         return {
           who: t("diff.party", { act: change.act ?? "" }),
-          what: added.length === 0 ? "" : `+ ${members(added)}`,
+          what: added.length === 0 ? t("history.noOneJoins") : `+ ${members(added)}`,
           was: removed.length === 0 ? undefined : `− ${members(removed)}`,
         };
       }
+      case "origin":
+        return swap(`${t("diff.origin")} `, "origin");
+      case "partySize":
+        return { who, what: `${t("diff.partySize")} ${change.after}`, was: change.before };
       case "characterAdded":
         return { who, what: t("diff.characterAdded") };
       case "characterRemoved":
@@ -197,10 +186,7 @@ export default function HistoryPanel({
 
   return (
     <div className="stack">
-      <section
-        className="frame history"
-        aria-label={t("history.title", { name })}
-      >
+      <section className="frame history" aria-label={t("history.title", { name })}>
         <h2>{t("history.title", { name })}</h2>
         <p className="sub">{t("history.hint", { count: HISTORY_LIMIT })}</p>
         {error !== null && (
@@ -226,16 +212,15 @@ export default function HistoryPanel({
         <ol aria-label={t("history.versions")}>
           {versions.map((version, index) => {
             const date = versionDate(version.at, lang);
-            const lines = (changes[index] ?? []).map(lineOf);
+            const info = described[index];
+            const lines = (info?.changes ?? []).map(lineOf);
             const rest = lines.slice(2);
             const note = version.note;
             return (
               <li key={version.at}>
                 <time dateTime={version.at}>{date}</time>
                 <div className="what">
-                  {note?.kind === "import" && (
-                    <span className="note">{t("history.import")}</span>
-                  )}
+                  {note?.kind === "import" && <span className="note">{t("history.import")}</span>}
                   {note?.kind === "restore" && (
                     <span className="note">
                       {t("history.restored", {
@@ -243,21 +228,15 @@ export default function HistoryPanel({
                       })}
                     </span>
                   )}
-                  {lines.length === 0 && note === undefined && (
-                    <span className="note">
-                      {index === versions.length - 1
-                        ? t("history.first")
-                        : t("history.nothing")}
-                    </span>
+                  {lines.length === 0 && info?.unreadable === true && <span className="note">{t("history.unreadable")}</span>}
+                  {lines.length === 0 && info?.unreadable !== true && info?.other === true && <span className="note">{t("history.other")}</span>}
+                  {lines.length === 0 && info?.unreadable !== true && info?.other !== true && note === undefined && (
+                    <span className="note">{index === versions.length - 1 ? t("history.first") : t("history.nothing")}</span>
                   )}
                   {lines.slice(0, 2).map(renderLine)}
                   {rest.length > 0 && (
                     <details>
-                      <summary>
-                        {rest.length === 1
-                          ? t("history.moreOne")
-                          : t("history.more", { count: rest.length })}
-                      </summary>
+                      <summary>{rest.length === 1 ? t("history.moreOne") : t("history.more", { count: rest.length })}</summary>
                       {rest.map(renderLine)}
                     </details>
                   )}
@@ -265,11 +244,7 @@ export default function HistoryPanel({
                 {index === 0 ? (
                   <span className="pill good">{t("history.current")}</span>
                 ) : (
-                  <button
-                    className="btn"
-                    aria-label={t("history.restoreLabel", { date })}
-                    onClick={() => setAsking(version.at)}
-                  >
+                  <button className="btn" aria-label={t("history.restoreLabel", { date })} onClick={() => setAsking(version.at)}>
                     {t("history.restore")}
                   </button>
                 )}

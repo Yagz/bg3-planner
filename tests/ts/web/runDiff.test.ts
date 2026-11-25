@@ -28,6 +28,13 @@ describe("runDiff", () => {
     expect(runDiff(base(), base())).toEqual([]);
   });
 
+  it("reports an origin and a party size change", () => {
+    expect(runDiff(base(), { ...base(), origin: "Gale", partySize: 5 })).toEqual([
+      { kind: "origin", before: "", after: "Gale" },
+      { kind: "partySize", before: "4", after: "5" },
+    ]);
+  });
+
   it("reports a rename", () => {
     expect(runDiff(base(), { ...base(), name: "X" })).toEqual([{ kind: "name", before: "Main", after: "X" }]);
   });

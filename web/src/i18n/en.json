@@ -241,5 +241,10 @@
   "diff.choice": "Level {level}",
   "diff.choiceChanged": "Level {level}: choice changed",
   "diff.notes": "Notes changed",
-  "diff.actValue": "act {act}"
+  "diff.actValue": "act {act}",
+  "history.other": "Other changes",
+  "history.unreadable": "The previous version could not be read",
+  "history.noOneJoins": "no one joins",
+  "diff.origin": "Origin",
+  "diff.partySize": "Party size"
 }

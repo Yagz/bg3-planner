@@ -3,6 +3,8 @@ import type { Character, Choice, OffData, Run } from "../../../src/plan/model.ts
 
 export type ChangeKind =
   | "name"
+  | "origin"
+  | "partySize"
   | "difficulty"
   | "progress"
   | "party"
@@ -105,6 +107,8 @@ export function runDiff(before: Run | null, after: Run): Change[] {
   if (before === null) return [];
   const changes: Change[] = [];
   if (before.name !== after.name) changes.push({ kind: "name", before: before.name, after: after.name });
+  if (before.origin !== after.origin) changes.push({ kind: "origin", before: before.origin, after: after.origin });
+  if (before.partySize !== after.partySize) changes.push({ kind: "partySize", before: String(before.partySize), after: String(after.partySize) });
   if (before.difficulty.ruleset !== after.difficulty.ruleset) {
     changes.push({ kind: "difficulty", before: before.difficulty.ruleset, after: after.difficulty.ruleset });
   } else if (JSON.stringify(before.difficulty.overrides) !== JSON.stringify(after.difficulty.overrides)) {
@@ -132,4 +136,9 @@ export function runDiff(before: Run | null, after: Run): Change[] {
   }
   for (const character of before.characters) if (!later.has(character.id)) changes.push({ kind: "characterRemoved", character: character.who });
   return changes;
+}
+
+/** True when the two runs differ in anything but their edit date, whether or not `runDiff` reports it (items, decisions, bonuses, party status…). */
+export function differsAtAll(before: Run, after: Run): boolean {
+  return JSON.stringify({ ...before, updatedAt: null }) !== JSON.stringify({ ...after, updatedAt: null });
 }

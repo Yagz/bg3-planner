@@ -318,6 +318,36 @@ describe("history panel: what each version changed", () => {
     expect(newest.textContent).toContain("Astarion (fr)");
   });
 
+  it("keeps the prefix of a swap with no new value, labels a removed-only party change, and says so for other or unreadable differences", () => {
+    const store = createStore(new MemoryBackend());
+    const first = withSubclass("Champion");
+    first.party["2"].active = ["Gale"];
+    store.save(first);
+    const second = withSubclass("Champion");
+    second.party["2"].active = [];
+    second.characters[0]!.levels[2]!.choices = {};
+    store.save(second);
+    const third = { ...second, bonuses: ["SomeBonus"] };
+    store.save(third);
+    frenchApp(store);
+    const items = within(screen.getByRole("list", { name: "Versions enregistrées" })).getAllByRole("listitem");
+    expect(items[0]!.textContent).toContain("Autres changements");
+    expect(items[1]!.textContent).toContain("Groupe · acte 2");
+    expect(items[1]!.textContent).toContain("personne n’arrive");
+    expect(items[1]!.querySelector("s.was")?.textContent).toContain("Gale (fr)");
+    expect(items[1]!.textContent).toContain("Niveau 3 : aucun");
+  });
+
+  it("says the previous version could not be read instead of claiming no change", () => {
+    const backend = new MemoryBackend();
+    const run = { ...withSubclass("Champion"), updatedAt: "2026-11-24T11:00:00.000Z" };
+    backend.items.set("bg3p:run:h", JSON.stringify({ history: [{ at: "2026-11-24T11:00:00.000Z", text: JSON.stringify(run) }, { at: "2026-11-24T10:00:00.000Z", text: "not json" }] }));
+    frenchApp(createStore(backend));
+    const newest = within(screen.getByRole("list", { name: "Versions enregistrées" })).getAllByRole("listitem")[0]!;
+    expect(newest.textContent).toContain("La version précédente n’a pas pu être lue");
+    expect(newest.textContent).not.toContain("Aucun changement");
+  });
+
   it("describes versions saved by the previous site: version-2 JSON without a note", () => {
     const backend = new MemoryBackend();
     const strip = (run: Run, at: string) => {
