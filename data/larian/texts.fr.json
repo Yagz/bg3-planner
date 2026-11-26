@@ -1367,6 +1367,26 @@
   "description": "Cette armure en cuir, douce au toucher mais aussi dure qu'une carapace de zaratan, est constituée de pièces étroites cousues les unes aux autres, assurant confort et liberté de mouvement à son porteur.",
   "name": "Armure de peau +2"
  },
+ "item:ARM_Instrument_Drum": {
+  "description": "Que ce soit pour battre la cadence en temps de guerre, pour annoncer une occasion festive, ou juste pour donner le rythme, le tambour est l'un des instruments de base de tout artiste digne de ce nom.",
+  "name": "Tambour à main"
+ },
+ "item:ARM_Instrument_Flute": {
+  "description": "On raconte que Diores le Charmant aurait autrefois utilisé une flûte pour mener toutes les harpies d'un nid à leur perte.",
+  "name": "Flûte"
+ },
+ "item:ARM_Instrument_Lute": {
+  "description": "Premier instrument de nombreux bardes, le son du luth résonne dans toutes les tavernes de Faerûn.",
+  "name": "Luth"
+ },
+ "item:ARM_Instrument_Lyre": {
+  "description": "Les fidèles de la déesse Sune affirment que les sept cordes de la lyre représentent les sept différentes formes d'amour.",
+  "name": "Lyre"
+ },
+ "item:ARM_Instrument_Violin": {
+  "description": "Ce violon est en cèdre et en noyer. Ses cordes et ses chevilles sont quelque peu usées, mais il est toujours parfaitement accordé.",
+  "name": "Violon"
+ },
  "item:ARM_Jester_Hat": {
   "description": "Ce chapeau tinte à chaque mouvement, mais pour ce qui est de créer une ambiance festive, c'est raté.",
   "name": "Chapeau à clochettes"
@@ -4579,6 +4599,10 @@
   "description": "Trique conçue pour faire extrêmement mal à chaque coup.",
   "name": "Trique de châtiment"
  },
+ "item:WPN_Dagger": {
+  "description": "Le jouet préféré des roublards.",
+  "name": "Dague"
+ },
  "item:WPN_Dagger_Shar_NOT_APPROVED": {
   "description": "Le jouet préféré des roublards.",
   "name": "Dague"
@@ -5227,6 +5251,10 @@
   "description": "Bien que la crosse de cette arbalète soit creuse, son lourd mécanisme de tir lui permet d'être bien équilibrée.",
   "name": "Arbalète légère +1"
  },
+ "item:WPN_Longsword": {
+  "description": "Épée ordinaire utilisée aussi bien par des débutants que par des vétérans.",
+  "name": "Épée longue"
+ },
  "item:WPN_Longsword_Gith": {
   "description": "Les pointes et le tranchant de cette épée très élaborée ont été affûtés avec une perfection digne d'éloges.",
   "name": "Épée longue githyanki"
@@ -5243,6 +5271,10 @@
   "description": "Le métal sombre de la hallebarde s'orne de dents aiguisées particulièrement redoutables. Mais est-ce vraiment du métal ?",
   "name": "Hallebarde de merrégon"
  },
+ "item:WPN_Rapier": {
+  "description": "Fine lame mortelle appréciée par la noblesse d'Eauprofonde.",
+  "name": "Rapière"
+ },
  "item:WPN_SAHUAGIN_Longbow_A": {
   "description": "Des enchantements sont gravés sur toute la longueur de cet arc souple.",
   "name": "Arc long de sahuagin"
@@ -5251,9 +5283,21 @@
   "description": "Forgée par des nains, c'est l'arme de prédilection des guerriers qui préfèrent garder l'ennemi à distance.",
   "name": "Lance de sahuagin"
  },
+ "item:WPN_Scimitar": {
+  "description": "Ce cimeterre humain est loin d'avoir la même qualité que le style drow qu'il tente d'imiter.",
+  "name": "Cimeterre"
+ },
  "item:WPN_Scimitar_2": {
   "description": "Chaque coup porté à l'aide de cette lame s'accompagne d'une traînée bleutée.",
   "name": "Cimeterre +2"
+ },
+ "item:WPN_Shortsword": {
+  "description": "Épée courante et efficace utilisée par les aventuriers, les voleurs et les sentinelles.",
+  "name": "Épée courte"
+ },
+ "item:WPN_Sickle": {
+  "description": "Outil agricole avec une extrémité pointue, aussi utile pour verser le sang que pour les travaux des champs.",
+  "name": "Faucille"
  },
  "item:WPN_Tower_AutomatonHalberd": {
   "description": "De petits aimants ont été logés le long de la hampe de cette hallebarde. Ils sont parcourus d'un étrange courant bleu.",

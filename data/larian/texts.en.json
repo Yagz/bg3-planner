@@ -1367,6 +1367,26 @@
   "description": "This hide armour, soft to the touch but hard as a zaratan's hide, is stitched together of narrow panels allowing for the wearer's ease of movement and comfort.",
   "name": "Hide Armour +2"
  },
+ "item:ARM_Instrument_Drum": {
+  "description": "Whether sounding war, celebration, or simple rhythm, the drum is a main-stay of any entertainer's arsenal.",
+  "name": "Hand Drum"
+ },
+ "item:ARM_Instrument_Flute": {
+  "description": "It is said Diores the Charming once lured a nest of harpies to their deaths, using only a flute.",
+  "name": "Flute"
+ },
+ "item:ARM_Instrument_Lute": {
+  "description": "Many a bard's first instrument, the lute is heard in taverns all across Faerûn.",
+  "name": "Lute"
+ },
+ "item:ARM_Instrument_Lyre": {
+  "description": "Devotees of the goddess Sune hold that the lyre's seven strings represent the seven different forms of love. ",
+  "name": "Lyre"
+ },
+ "item:ARM_Instrument_Violin": {
+  "description": "A violin of cedar and burled walnut. The pegs are a little scuffed, the strings thin and worn, but the song from this instrument would still ring clear and true.",
+  "name": "Violin"
+ },
  "item:ARM_Jester_Hat": {
   "description": "Tinkling, ringing, jangling, and about as festive as a terminal diagnosis.",
   "name": "Cap and Bells"
@@ -4579,6 +4599,10 @@
   "description": "A cane designed to inflict a sharp and agonising pain with every blow.",
   "name": "Whipping Cane"
  },
+ "item:WPN_Dagger": {
+  "description": "A rogue's favourite toy.",
+  "name": "Dagger"
+ },
  "item:WPN_Dagger_Shar_NOT_APPROVED": {
   "description": "A rogue's favourite toy.",
   "name": "Dagger"
@@ -5227,6 +5251,10 @@
   "description": "Though this crossbow's stock is hollowed out, its heavy trigger mechanism keeps it well-balanced.",
   "name": "Light Crossbow +1"
  },
+ "item:WPN_Longsword": {
+  "description": "A common sword, passed between hands both fresh and battle-scarred.",
+  "name": "Longsword"
+ },
  "item:WPN_Longsword_Gith": {
   "description": "Every tip and edge on this elaborate sword is sharpened to a deadly perfection.",
   "name": "Githyanki Longsword"
@@ -5243,6 +5271,10 @@
   "description": "Sharp teeth grow out of the halberd's dark metal - if it is indeed metal at all.",
   "name": "Merregon Halberd"
  },
+ "item:WPN_Rapier": {
+  "description": "A slender but deadly sword, favoured by Waterdhavian nobility.",
+  "name": "Rapier"
+ },
  "item:WPN_SAHUAGIN_Longbow_A": {
   "description": "Carved enchantments span the length of this supple bow.",
   "name": "Sahuagin Longbow"
@@ -5251,9 +5283,21 @@
   "description": "Forged by dwarven hands, and prized by all warriors who wish to keep their foe at a distance.",
   "name": "Sahuagin Spear"
  },
+ "item:WPN_Scimitar": {
+  "description": "This human-made scimitar falls far short of replicating the quality of the drow style it clearly imitates.",
+  "name": "Scimitar"
+ },
  "item:WPN_Scimitar_2": {
   "description": "An arched electric-blue afterimage follows this blade's every move.",
   "name": "Scimitar +2"
+ },
+ "item:WPN_Shortsword": {
+  "description": "A common and effective sword, carried by adventurers, thieves, and watchmen alike.",
+  "name": "Shortsword"
+ },
+ "item:WPN_Sickle": {
+  "description": "A farming tool with a wicked edge, spilling blood and grain with equal ease.",
+  "name": "Sickle"
  },
  "item:WPN_Tower_AutomatonHalberd": {
   "description": "Small lodestones have been inserted along the halberd's shaft, a strange blue current running through them.",

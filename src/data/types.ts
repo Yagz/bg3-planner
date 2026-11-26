@@ -201,7 +201,10 @@ export interface RulesetModifierDef {
 
 export interface ItemDef {
   kind: "weapon" | "equipment";
-  found_by: "stats" | "template";
+  /** How the item was found: by its wiki uid among the item stats or the RootTemplates, or as an item an equipment list offers outside the wiki scope. */
+  found_by: "stats" | "template" | "list";
+  /** The stats entry's `Weapon Properties` in file order (`Finesse`, `Light`…); empty for armour. */
+  properties: string[];
   rarity: string | null;
   root_template: string;
   slot: string;

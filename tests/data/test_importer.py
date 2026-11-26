@@ -97,7 +97,7 @@ def rules_files() -> dict[str, dict[str, bytes]]:
             'data "SpellSchool" "Evocation"\ndata "DisplayName" "hFireBolt2;1"\n').encode(),
         "Public/Gustav/Stats/Generated/Data/Weapon.txt": (
             'new entry "WPN_Sword"\ntype "Weapon"\ndata "RootTemplate" "t-sword"\n'
-            'data "Slot" "Melee Main Weapon"\n').encode(),
+            'data "Slot" "Melee Main Weapon"\ndata "Weapon Properties" "Versatile;Melee;Dippable"\n').encode(),
         # Gustav's template inherits its name from Shared's base template.
         "Public/Gustav/RootTemplates/_merged.lsf": templates_lsf(
             {"MapKey": "t-sword", "Name": "WPN_Sword", "Stats": "WPN_Sword", "ParentTemplateId": "t-base"},
@@ -329,11 +329,13 @@ class ImporterTest(unittest.TestCase):
         rules = json.loads((self.out / "rules.json").read_text(encoding="utf-8"))
         self.assertEqual(rules["items"], {
             "MAG_Boots": {"kind": "equipment", "found_by": "stats", "stats_type": "Armor", "slot": "Boots",
-                          "rarity": "Rare", "root_template": "t-boots"},
+                          "rarity": "Rare", "root_template": "t-boots", "properties": []},
             "WPN_Sword": {"kind": "weapon", "found_by": "stats", "stats_type": "Weapon", "slot": "Melee Main Weapon",
-                          "rarity": None, "root_template": "t-sword"},
+                          "rarity": None, "root_template": "t-sword", "properties": ["Versatile", "Melee", "Dippable"]},
+            # Found by template: the properties are those of the template's stats entry.
             "WPN_Sword_Fancy": {"kind": "weapon", "found_by": "template", "stats_type": "Weapon",
-                                "slot": "Melee Main Weapon", "rarity": None, "root_template": "t-fancy"}})
+                                "slot": "Melee Main Weapon", "rarity": None, "root_template": "t-fancy",
+                                "properties": ["Versatile", "Melee", "Dippable"]}})
         en = json.loads((self.out / "texts.en.json").read_text(encoding="utf-8"))
         fr = json.loads((self.out / "texts.fr.json").read_text(encoding="utf-8"))
         self.assertEqual(en["item:MAG_Boots"], {"name": "EN hBoots", "description": "EN hBootsDesc"})

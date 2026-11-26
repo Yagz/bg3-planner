@@ -19,7 +19,8 @@ def item_data() -> dict:
     }
     item_stats = {
         "MAG_Boots": {"type": "Armor", "Slot": "Boots", "Rarity": "Rare", "RootTemplate": "t-boots"},
-        "WPN_Sword": {"type": "Weapon", "Slot": "Melee Main Weapon", "RootTemplate": "t-sword"},
+        "WPN_Sword": {"type": "Weapon", "Slot": "Melee Main Weapon", "RootTemplate": "t-sword",
+                      "Weapon Properties": "Versatile;Melee"},
         "ARM_Lute": {"type": "Armor", "Slot": "MusicalInstrument", "RootTemplate": "t-lute"},
         # Shared generic stats, whose own RootTemplate is another template.
         "ARM_Boots_Generic": {"type": "Armor", "Slot": "Boots", "RootTemplate": "t-generic"},
@@ -64,15 +65,16 @@ class ItemsTest(unittest.TestCase):
         self.assertEqual(sorted(rules["items"]), ["ARM_Boots_Fancy", "MAG_Boots", "WPN_Sword"])
         self.assertEqual(rules["items"]["MAG_Boots"], {
             "kind": "equipment", "found_by": "stats", "stats_type": "Armor", "slot": "Boots", "rarity": "Rare",
-            "root_template": "t-boots", "text": {"name": "hBoots", "description": "hBootsDesc"}})
+            "root_template": "t-boots", "properties": [], "text": {"name": "hBoots", "description": "hBootsDesc"}})
         self.assertEqual(rules["items"]["WPN_Sword"], {
             "kind": "weapon", "found_by": "stats", "stats_type": "Weapon", "slot": "Melee Main Weapon", "rarity": None,
-            "root_template": "t-sword", "text": {"name": "hSword", "description": None}})
+            "root_template": "t-sword", "properties": ["Versatile", "Melee"],
+            "text": {"name": "hSword", "description": None}})
 
     def test_item_found_by_template(self):
         self.assertEqual(build()["items"]["ARM_Boots_Fancy"], {
             "kind": "equipment", "found_by": "template", "stats_type": "Armor", "slot": "Boots", "rarity": None,
-            "root_template": "t-fancy", "text": {"name": "hFancy", "description": "hFancyDesc"}})
+            "root_template": "t-fancy", "properties": [], "text": {"name": "hFancy", "description": "hFancyDesc"}})
 
     def test_stats_name_takes_precedence_over_template(self):
         data = item_data()
@@ -210,6 +212,78 @@ class ItemsTest(unittest.TestCase):
     def test_without_items_arguments(self):
         rules = model.build(*dataset())
         self.assertEqual(rules["items"], {})
+
+    def list_items(self, **changes):
+        data = item_data()
+        lists = {"l-equip": {"type": "equipment", "items": ["ARM_Lute", "MAG_Boots"]},
+                 "l-spells": {"type": "spells", "items": ["ARM_Lute"]}}
+        for key, value in changes.items():
+            data[key] = value(data[key])
+        present = {"MAG_Boots": {}}
+        return items.list_items(lists, present, data["item_stats"], data["templates"], lambda h: h)
+
+    def test_list_items_added_with_template_name(self):
+        added, errors = self.list_items()
+        self.assertEqual(errors, [])
+        self.assertEqual(added, {"ARM_Lute": {
+            "kind": "equipment", "found_by": "list", "stats_type": "Armor", "slot": "MusicalInstrument", "rarity": None,
+            "root_template": "t-lute", "properties": [], "text": {"name": "hLute", "description": None}}})
+
+    def test_list_items_in_the_rules(self):
+        data = dataset()
+        data[0]["EquipmentLists"]["l-equip"] = node("EquipmentList", UUID="l-equip", Name="Instruments",
+                                                    Items="ARM_Lute;WPN_Sword")
+        data[0]["Feats"]["f-alert"]["attributes"]["Selectors"] = "SelectEquipment(l-equip,1,)"
+        rules = build(data)
+        self.assertEqual(rules["items"]["ARM_Lute"]["found_by"], "list")
+        # A wiki-scoped item keeps its wiki join.
+        self.assertEqual(rules["items"]["WPN_Sword"]["found_by"], "stats")
+
+    def test_list_weapon_kind(self):
+        def sword_only(stats):
+            stats["ARM_Lute"] = {"type": "Weapon", "Slot": "Melee Main Weapon", "RootTemplate": "t-lute",
+                                 "Weapon Properties": "Finesse;Light;Thrown;Melee;Dippable"}
+            return stats
+        added, errors = self.list_items(item_stats=sword_only)
+        self.assertEqual(errors, [])
+        self.assertEqual((added["ARM_Lute"]["kind"], added["ARM_Lute"]["properties"]),
+                         ("weapon", ["Finesse", "Light", "Thrown", "Melee", "Dippable"]))
+
+    def test_list_item_already_present_skipped(self):
+        added, errors = self.list_items()
+        self.assertNotIn("MAG_Boots", added)
+        self.assertEqual(errors, [])
+
+    def test_list_item_errors(self):
+        def no_root(stats):
+            del stats["ARM_Lute"]["RootTemplate"]
+            return stats
+
+        def ghost_root(stats):
+            stats["ARM_Lute"]["RootTemplate"] = "t-ghost"
+            return stats
+
+        def no_name(templates):
+            templates["t-lute"]["display_name"] = None
+            return templates
+        for change, needle in (({"item_stats": no_root}, "RootTemplate"), ({"item_stats": ghost_root}, "t-ghost"),
+                               ({"templates": no_name}, "DisplayName")):
+            added, errors = self.list_items(**change)
+            self.assertEqual(added, {}, needle)
+            self.assertEqual(len(errors), 1, errors)
+            self.assertIn("item ARM_Lute", errors[0])
+            self.assertIn(needle, errors[0])
+
+    def test_weapon_properties(self):
+        data = item_data()
+        data["item_stats"]["WPN_Sword"]["Weapon Properties"] = " Finesse;Light;;Thrown ;Melee;Dippable;"
+        self.assertEqual(build(**data)["items"]["WPN_Sword"]["properties"],
+                         ["Finesse", "Light", "Thrown", "Melee", "Dippable"])
+        self.assertEqual(build(**data)["items"]["MAG_Boots"]["properties"], [])
+        for value in ("", " ; ", None):
+            data["item_stats"]["WPN_Sword"]["Weapon Properties"] = value
+            errors = errors_of(**data)
+            self.assertEqual(errors, ["item WPN_Sword: weapon without Weapon Properties"])
 
     def test_scope(self):
         wiki = item_data()["wiki"]

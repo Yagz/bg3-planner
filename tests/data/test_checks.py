@@ -36,7 +36,7 @@ RULES = {
     "spells": {"Fireball": {}},
     "passives": {"Soldier": {}},
     "items": {"MAG_Boots": {"kind": "equipment", "found_by": "stats", "stats_type": "Armor", "slot": "Boots", "rarity": "Rare",
-                            "root_template": "t-boots"}},
+                            "root_template": "t-boots", "properties": []}},
     "origins": {"Sh": {"class": "Wizard", "subclass": "Evocation", "race": "Elf", "subrace": "HighElf",
                        "background": "bg-1", "lockRace": True, "playable": True,
                        "abilities": {"Strength": 8, "Dexterity": 14, "Constitution": 14, "Intelligence": 15,
@@ -270,12 +270,55 @@ class ChecksTest(unittest.TestCase):
             self.assertEqual(self.with_item(found_by=found_by), [])
 
     def test_item_kind_must_match_stats_type(self):
-        problems = self.with_item(stats_type="Weapon")
+        problems = self.with_item(stats_type="Weapon", properties=["Melee"])
         self.assertEqual(len(problems), 1)
         self.assertIn("does not match the stats type", problems[0])
-        problems = self.with_item(kind="weapon", stats_type="Weapon")
+        problems = self.with_item(kind="weapon", stats_type="Weapon", properties=["Melee"])
         self.assertEqual(len(problems), 1)
         self.assertIn("wiki kind", problems[0])
+
+    def test_weapon_needs_properties(self):
+        self.assertEqual(self.with_item(properties=["Melee"]), [])
+        for item in ({"stats_type": "Weapon", "kind": "weapon", "properties": []}, {"properties": None}, {"properties": [""]}):
+            rules = copy.deepcopy(RULES)
+            rules["items"]["MAG_Boots"].update(item)
+            del_kind = {**WIKI, "MAG_Boots": {**WIKI["MAG_Boots"], "kind": rules["items"]["MAG_Boots"]["kind"]}}
+            write(self.folder, rules=rules)
+            problems = verify(self.folder, wiki=del_kind)
+            self.assertEqual(len(problems), 1, (item, problems))
+            self.assertIn("item:MAG_Boots", problems[0])
+            self.assertIn("properties", problems[0])
+        rules = copy.deepcopy(RULES)
+        del rules["items"]["MAG_Boots"]["properties"]
+        write(self.folder, rules=rules)
+        problems = verify(self.folder)
+        self.assertEqual(len(problems), 1, problems)
+        self.assertIn("properties", problems[0])
+
+    def test_list_items(self):
+        rules = copy.deepcopy(RULES)
+        rules["lists"]["l-equip"] = {"type": "equipment", "items": ["ARM_Lute", "MAG_Boots"]}
+        lute = {"kind": "equipment", "found_by": "list", "stats_type": "Armor", "slot": "MusicalInstrument",
+                "rarity": None, "root_template": "t-lute", "properties": []}
+        rules["items"]["ARM_Lute"] = lute
+        keys = KEYS + ["item:ARM_Lute"]
+        write(self.folder, rules=rules, keys=keys)
+        self.assertEqual(verify(self.folder, {"items": 2}), [])
+        # Not in any equipment list.
+        rules["lists"]["l-equip"]["items"] = ["MAG_Boots"]
+        write(self.folder, rules=rules, keys=keys)
+        problems = verify(self.folder, {"items": 2})
+        self.assertEqual(len(problems), 1, problems)
+        self.assertIn("item:ARM_Lute", problems[0])
+        self.assertIn("equipment list", problems[0])
+        # A wiki-scoped item cannot be a list item.
+        rules["lists"]["l-equip"]["items"] = ["ARM_Lute", "MAG_Boots"]
+        rules["items"]["MAG_Boots"]["found_by"] = "list"
+        write(self.folder, rules=rules, keys=keys)
+        problems = verify(self.folder, {"items": 2})
+        self.assertEqual(len(problems), 1, problems)
+        self.assertIn("item:MAG_Boots", problems[0])
+        self.assertIn("found_by", problems[0])
 
     def test_items_count(self):
         write(self.folder)
@@ -283,7 +326,7 @@ class ChecksTest(unittest.TestCase):
         problems = verify(self.folder, {"items": 2})
         self.assertEqual(len(problems), 1)
         self.assertIn("items", problems[0])
-        self.assertEqual(checks.COUNTS["items"], 1167)
+        self.assertEqual(checks.COUNTS["items"], 1178)
 
     def test_origins_count(self):
         write(self.folder)

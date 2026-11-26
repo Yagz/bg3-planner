@@ -70,6 +70,20 @@ describe("game data", () => {
     expect(data.texts.fr["ruleset:DIFFICULTY_EASY"]?.name).toBe("Explorateur");
     expect(data.texts.fr["label:customMode"]?.name).toBe("Mode Personnalisé");
   });
+  it("loads every item the equipment lists offer, with its game name, and every weapon's properties", async () => {
+    const data = await loadGameData("data/larian");
+    const names = { Drum: "Tambour à main", Flute: "Flûte", Lute: "Luth", Lyre: "Lyre", Violin: "Violon" };
+    for (const [id, name] of Object.entries(names)) expect(data.texts.fr[`item:ARM_Instrument_${id}`]?.name).toBe(name);
+    expect(data.texts.en["item:ARM_Instrument_Flute"]?.name).toBe("Flute");
+    const offered = Object.values(data.rules.lists).filter((l) => l.type === "equipment").flatMap((l) => l.items);
+    expect(offered.length).toBeGreaterThan(0);
+    for (const id of offered) expect(data.rules.items[id], id).toBeDefined();
+    expect(data.rules.items.WPN_Dagger?.properties).toContain("Light");
+    expect(data.rules.items.ARM_Instrument_Flute?.found_by).toBe("list");
+    for (const [id, item] of Object.entries(data.rules.items)) {
+      if (item.stats_type === "Weapon") expect(item.properties.length, id).toBeGreaterThan(0);
+    }
+  });
   it("loads the skill descriptions, equipment slot names and damage type names of the interface files", async () => {
     const data = await loadGameData("data/larian");
     expect(data.texts.fr["skill:Persuasion"]?.description).toBe("Usez de vos charmes pour manipuler et amadouer vos interlocuteurs.");

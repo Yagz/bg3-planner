@@ -474,6 +474,9 @@ class _Builder:
         items, problems = items_module.build(src["wiki"], src["item_stats"], src["templates"], src["excluded"],
                                              handle)
         self.errors.extend(problems)
+        offered, problems = items_module.list_items(lists, items, src["item_stats"], src["templates"], handle)
+        self.errors.extend(problems)
+        items = dict(sorted({**items, **offered}.items()))
         self.errors.extend(items_module.equipment_problems(lists, src["item_stats"]))
 
         for typo in sorted(set(self.typos) - self.typos_used):
@@ -507,7 +510,8 @@ def build(lsx_by_file: dict[str, dict[str, dict]], presets: dict[str, dict], sta
 
     Items (see the `items` module): `wiki` holds the wiki items by uid, `item_stats` the merged Armor and
     Weapon stats, `templates` the resolved RootTemplates, `excluded` the uids kept out of the scope (see
-    `read_excluded`). The equipment lists' items must be in `item_stats`.
+    `read_excluded`). The equipment lists' items must be in `item_stats`; those outside the wiki scope are added
+    (`found_by: "list"`).
 
     `technical` names the passives marked `technical: true` (see `read_technical`); a listed name that is not
     a passive of the rules is an error.

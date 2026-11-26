@@ -17,7 +17,7 @@ TECHNICAL_PASSIVES = model.TECHNICAL_PASSIVES
 
 COUNTS = {"base_classes": 12, "subclasses": 58, "races": 39, "base_races": 11, "backgrounds": 22,
           "origin_backgrounds": 11, "feats": 41, "progressions": 663, "lists": 342, "spells": 416, "passives": 475,
-          "items": 1167, "origins": 25, "rulesets": 5}
+          "items": 1178, "origins": 25, "rulesets": 5}
 # Type of the list each selector function picks from.
 SELECTOR_LIST_TYPES = {"AddSpells": "spells", "SelectSpells": "spells", "SelectPassives": "passives",
                        "ReplacePassives": "passives", "SelectSkills": "skills", "SelectSkillsExpertise": "skills",
@@ -246,15 +246,32 @@ _KIND_STATS_TYPES = {"equipment": "Armor", "weapon": "Weapon"}
 
 
 def _check_items(rules: dict, wiki: dict[str, dict], excluded: dict[str, str]) -> list[str]:
-    """The items are exactly the obtainable wiki items that are not excluded, each joined to its wiki entry;
-    every exclusion is an obtainable wiki item."""
+    """The items are the obtainable wiki items that are not excluded, each joined to its wiki entry, plus the
+    items of the equipment lists outside that scope (`found_by: "list"`); every exclusion is an obtainable wiki
+    item; every item carries its weapon properties, at least one for a weapon."""
     expected = set(items.scope(wiki, excluded))
     actual = rules.get("items", {})
+    offered = {item for lst in rules.get("lists", {}).values() if lst.get("type") == "equipment"
+               for item in lst.get("items", [])}
+    listed = {uid for uid, item in actual.items() if item.get("found_by") == "list"}
     problems = ([f"item:{uid}: obtainable wiki item missing from the items" for uid in sorted(expected - set(actual))]
-                + [f"item:{uid}: not an obtainable, non-excluded wiki item" for uid in sorted(set(actual) - expected)]
+                + [f"item:{uid}: not an obtainable, non-excluded wiki item" for uid in sorted(set(actual) - expected - listed)]
                 + [f"items_excluded.txt: {uid} is not an obtainable wiki item" for uid in sorted(excluded)
                    if uid not in wiki or wiki[uid].get("legacy") is not None])
     for uid, item in sorted(actual.items()):
+        if _KIND_STATS_TYPES.get(item.get("kind")) != item.get("stats_type"):
+            problems.append(f"item:{uid}: kind {item.get('kind')!r} does not match the stats type {item.get('stats_type')!r}")
+        properties = item.get("properties")
+        if not isinstance(properties, list) or not all(isinstance(p, str) and p.strip() for p in properties):
+            problems.append(f"item:{uid}: properties {properties!r} is not a list of names")
+        elif item.get("stats_type") == "Weapon" and not properties:
+            problems.append(f"item:{uid}: weapon without properties")
+        if uid in listed:
+            if uid in expected:
+                problems.append(f"item:{uid}: found_by 'list' for a wiki-scoped item")
+            if uid not in offered:
+                problems.append(f"item:{uid}: found_by 'list' but in no equipment list")
+            continue
         w = wiki.get(uid)
         if w is None:
             continue
@@ -262,8 +279,6 @@ def _check_items(rules: dict, wiki: dict[str, dict], excluded: dict[str, str]) -
             problems.append(f"item:{uid}: root_template {item.get('root_template')} differs from the wiki uuid {w.get('uuid')}")
         if item.get("found_by") not in ("stats", "template"):
             problems.append(f"item:{uid}: unexpected found_by {item.get('found_by')!r}")
-        if _KIND_STATS_TYPES.get(item.get("kind")) != item.get("stats_type"):
-            problems.append(f"item:{uid}: kind {item.get('kind')!r} does not match the stats type {item.get('stats_type')!r}")
         if item.get("kind") != w.get("kind"):
             problems.append(f"item:{uid}: kind {item.get('kind')!r} differs from the wiki kind {w.get('kind')!r}")
     return problems
