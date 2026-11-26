@@ -65,5 +65,42 @@ class TestSources(unittest.TestCase):
         self.assertEqual(len(c), 3)
 
 
+
+TOOLTIPS = "Public/Game/GUI/Library/Tooltips.xaml"
+SHEET = "Public/Game/GUI/Library/CharacterSheetTemplates.xaml"
+
+
+class TestGameFiles(unittest.TestCase):
+    def _game(self, paks: dict[str, dict[str, bytes]]) -> Path:
+        return TestSources._game(self, paks)
+
+    def _paks(self, **extra: dict[str, bytes]) -> dict[str, dict[str, bytes]]:
+        return {"Game.pak": {TOOLTIPS: b"tooltips", SHEET: b"sheet", "Mods/MainUI/GUI/Library/Tooltips.xaml": b"main"},
+                "BetterTooltips.pak": {TOOLTIPS: b"mod"},
+                "Patch8_HotFix9.pak": {"Public/Game/GUI/Override/Clairmont/Library/Tooltips.xaml": b"console"},
+                **extra}
+
+    def test_reads_the_named_files(self):
+        self.assertEqual(sources.game_files(self._game(self._paks()), (TOOLTIPS, SHEET)),
+                         {TOOLTIPS: b"tooltips", SHEET: b"sheet"})
+
+    def test_hotfix_holding_a_named_file(self):
+        game = self._game(self._paks(**{"Patch9_Foo.pak": {TOOLTIPS: b"patch"}}))
+        with self.assertRaises(sources.UnexpectedSource) as ctx:
+            sources.game_files(game, (TOOLTIPS, SHEET))
+        self.assertIn("Patch9_Foo.pak", str(ctx.exception))
+
+    def test_missing_pak(self):
+        paks = self._paks()
+        del paks["Game.pak"]
+        with self.assertRaises(sources.UnexpectedSource):
+            sources.game_files(self._game(paks), (TOOLTIPS,))
+
+    def test_absent_name(self):
+        with self.assertRaises(sources.UnexpectedSource) as ctx:
+            sources.game_files(self._game(self._paks()), (TOOLTIPS, "Public/Game/GUI/Library/Nope.xaml"))
+        self.assertIn("Nope.xaml", str(ctx.exception))
+
+
 if __name__ == "__main__":
     unittest.main()

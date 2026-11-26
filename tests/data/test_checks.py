@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from scripts.data import checks, ui_names
+from scripts.data import checks, gui, ui_names
 
 COUNTS = {"base_classes": 1, "subclasses": 1, "races": 2, "base_races": 1, "backgrounds": 1,
           "origin_backgrounds": 1, "feats": 1}
@@ -54,7 +54,8 @@ SKILLS = {"Athletics": "Strength", "Stealth": "Dexterity"}
 KEYS = (["class:Wizard", "class:Evocation", "race:Elf", "race:HighElf", "background:bg-1", "feat:Alert",
          "spell:Fireball", "passive:Soldier", "item:MAG_Boots", "origin:Sh", "origin:Generic", "ruleset:EASY",
          "ruleset:HONOUR", "modifier:MULTICLASSING", "modifier:PROFICIENCY_BONUS", "label:customMode"]
-        + [f"skill:{s}" for s in ui_names.SKILLS] + [f"ability:{a}" for a in ABILITIES])
+        + [f"skill:{s}" for s in ui_names.SKILLS] + [f"ability:{a}" for a in ABILITIES]
+        + [f"slot:{s}" for s in gui.PLANNED_SLOTS] + [f"damage:{d}" for d in gui.DAMAGE_TYPES])
 WIKI = {"MAG_Boots": {"uuid": "t-boots", "kind": "equipment", "rarity": "rare", "legacy": None, "locations": []},
         "MAG_Gone": {"uuid": None, "kind": "equipment", "rarity": "rare", "legacy": "unobtainable",
                      "locations": []}}
@@ -69,7 +70,8 @@ META = {"game": "1.0", "modules": ["Shared"], "notice": {"en": "Notice.", "fr": 
 
 
 def write(folder: Path, rules=RULES, keys=KEYS, meta=META, fr_keys=None):
-    texts = {k: {"name": "N", "description": None} for k in keys}
+    # The skills carry the description read from the interface files.
+    texts = {k: {"name": "N", "description": "D" if k.startswith("skill:") else None} for k in keys}
     fr = {k: texts[k] for k in (keys if fr_keys is None else fr_keys)}
     for name, data in (("rules", rules), ("meta", meta), ("texts.en", texts), ("texts.fr", fr)):
         (folder / f"{name}.json").write_text(json.dumps(data), encoding="utf-8")
@@ -384,6 +386,26 @@ class ChecksTest(unittest.TestCase):
         self.assertEqual(len(problems), 2, problems)
         self.assertTrue(any("skill:Stealth" in p and "French" in p for p in problems))
         self.assertTrue(any("ability:Wisdom" in p and "French" in p for p in problems))
+
+    def test_interface_texts_needed(self):
+        problems = self.problems(keys=[k for k in KEYS if k != "slot:Helmet"])
+        self.assertEqual(len(problems), 2, problems)
+        self.assertTrue(all("slot:Helmet" in p for p in problems), problems)
+        problems = self.problems(fr_keys=[k for k in KEYS if k != "damage:Fire"])
+        self.assertEqual(len(problems), 1, problems)
+        self.assertIn("damage:Fire", problems[0])
+
+    def test_skill_needs_a_description(self):
+        write(self.folder)
+        path = self.folder / "texts.fr.json"
+        table = json.loads(path.read_text(encoding="utf-8"))
+        table["skill:Persuasion"]["description"] = None
+        path.write_text(json.dumps(table), encoding="utf-8")
+        problems = verify(self.folder)
+        self.assertEqual(len(problems), 1, problems)
+        self.assertIn("skill:Persuasion", problems[0])
+        self.assertIn("description", problems[0])
+        self.assertIn("French", problems[0])
 
     def test_skills_map_matches_the_skill_lists(self):
         write(self.folder)

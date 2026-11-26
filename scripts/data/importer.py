@@ -13,7 +13,7 @@ import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-from scripts.data import items, loca, lsx, model, origins, rulesets, sources, stats, templates, texts, ui_names
+from scripts.data import gui, items, loca, lsx, model, origins, rulesets, sources, stats, templates, texts, ui_names
 
 NOTICE = {"fr": "Projet de fans non commercial ; contenu propriété de Larian Studios.",
           "en": "Non-commercial fan project; content owned by Larian Studios."}
@@ -138,6 +138,8 @@ def build(game: Path, game_version: str, wiki: Path | None = None) -> dict[str, 
     stats_by_name = _stats(game, STATS_PATTERN, errors)
     item_stats = _stats(game, ITEM_STATS_PATTERN, errors)
     resolved_templates = _templates(game, errors)
+    interface = sources.game_files(game, gui.GUI_FILES)
+    tooltips, sheet = (interface[name].decode("utf-8-sig") for name in gui.GUI_FILES)
     if errors:
         raise SourceErrors(errors)
     rules = model.build(lsx_by_file, presets, stats_by_name, typos=model.read_typos(GAME_TYPOS),
@@ -145,7 +147,7 @@ def build(game: Path, game_version: str, wiki: Path | None = None) -> dict[str, 
                         wiki=items.read_wiki(wiki or WIKI), item_stats=item_stats,
                         templates=resolved_templates, excluded=model.read_excluded(ITEMS_EXCLUDED),
                         technical=model.read_technical(TECHNICAL_PASSIVES))
-    # Origins, texts and UI names fail together, so that one run lists every exception to decide.
+    # Origins, texts, UI names and interface texts fail together, so that one run lists every exception to decide.
     rules["origins"], problems = origins.build(origin_nodes, ability_presets, rules,
                                                origins.read_excluded(ORIGINS_EXCLUDED),
                                                origins.read_references(ORIGIN_REFERENCES))
@@ -164,10 +166,17 @@ def build(game: Path, game_version: str, wiki: Path | None = None) -> dict[str, 
         ui_en, ui_fr = ui_names.resolve(en, fr)
     except texts.MissingText as e:
         problems.extend(e.errors)
+    try:
+        gui_en, gui_fr = gui.resolve(tooltips, sheet, en, fr)
+    except texts.MissingText as e:
+        problems.extend(e.errors)
     if problems:
         raise SourceErrors(problems)
-    texts_en.update(ui_en)
-    texts_fr.update(ui_fr)
+    for table, ui, interface_texts in ((texts_en, ui_en, gui_en), (texts_fr, ui_fr, gui_fr)):
+        table.update(ui)
+        # A skill entry from the interface files carries the description of the skill named by ui_names.
+        for key, entry in interface_texts.items():
+            table[key] = {**table[key], **entry} if key.startswith("skill:") else entry
     return {
         "meta.json": {"game": game_version, "modules": list(sources.MODULES), "notice": NOTICE},
         "rules.json": rules,

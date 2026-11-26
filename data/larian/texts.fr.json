@@ -391,6 +391,58 @@
   "description": "Maîtres des arcanes férus de recherches et d'expérimentation, les magiciens se spécialisent dans diverses écoles et s'appuient sur les techniques modernes pour tirer la quintessence de la magie ancestrale.",
   "name": "Magicien"
  },
+ "damage:Acid": {
+  "description": null,
+  "name": "Acide"
+ },
+ "damage:Bludgeoning": {
+  "description": null,
+  "name": "Contondants"
+ },
+ "damage:Cold": {
+  "description": null,
+  "name": "Froid"
+ },
+ "damage:Fire": {
+  "description": null,
+  "name": "Feu"
+ },
+ "damage:Force": {
+  "description": null,
+  "name": "Force"
+ },
+ "damage:Lightning": {
+  "description": null,
+  "name": "Foudre"
+ },
+ "damage:Necrotic": {
+  "description": null,
+  "name": "Nécrotiques"
+ },
+ "damage:Piercing": {
+  "description": null,
+  "name": "Perforants"
+ },
+ "damage:Poison": {
+  "description": null,
+  "name": "Poison"
+ },
+ "damage:Psychic": {
+  "description": null,
+  "name": "Psychiques"
+ },
+ "damage:Radiant": {
+  "description": null,
+  "name": "Radiants"
+ },
+ "damage:Slashing": {
+  "description": null,
+  "name": "Tranchants"
+ },
+ "damage:Thunder": {
+  "description": null,
+  "name": "Tonnerre"
+ },
  "feat:AbilityScoreIncrease": {
   "description": "Vous pouvez augmenter une de vos valeurs de caractéristique de 2 ou deux valeurs de caractéristique de 1 chacune, jusqu'à un maximum de 20.",
   "name": "Amélioration de caractéristiques"
@@ -7292,76 +7344,140 @@
   "name": "Règles classiques"
  },
  "skill:Acrobatics": {
-  "description": null,
+  "description": "Vous avez un excellent équilibre et vous retombez toujours sur vos pieds.\n\nVous aide à empêcher l'ennemi de vous repousser.",
   "name": "Acrobaties"
  },
  "skill:AnimalHandling": {
-  "description": null,
+  "description": "Vous commandez aux animaux et caressez tous les chiens que vous croisez.",
   "name": "Dressage"
  },
  "skill:Arcana": {
-  "description": null,
+  "description": "Vous savez identifier la magie et employer des objets enchantés.",
   "name": "Arcanes"
  },
  "skill:Athletics": {
-  "description": null,
+  "description": "Vous avez une excellente forme physique et un don pour les acrobaties.\n\nAméliore votre capacité à repousser l'ennemi et à l'empêcher d'en faire autant avec vous.",
   "name": "Athlétisme"
  },
  "skill:Deception": {
-  "description": null,
+  "description": "Vous savez mentir, tricher et déformer la vérité à votre guise.",
   "name": "Supercherie"
  },
  "skill:History": {
-  "description": null,
+  "description": "Vous gardez en mémoire l'histoire du monde et de ses habitants.",
   "name": "Histoire"
  },
  "skill:Insight": {
-  "description": null,
+  "description": "Vous devinez les motivations d'autrui et vous ne vous laissez pas berner.",
   "name": "Perspicacité"
  },
  "skill:Intimidation": {
-  "description": null,
+  "description": "Devenez une brute menaçante prompte à inspirer la peur.",
   "name": "Intimidation"
  },
  "skill:Investigation": {
-  "description": null,
+  "description": "Vous avez un don pour examiner des indices et résoudre des mystères.",
   "name": "Investigation"
  },
  "skill:Medicine": {
-  "description": null,
+  "description": "Vous êtes capable d'identifier des symptômes et de diagnostiquer des maladies.",
   "name": "Médecine"
  },
  "skill:Nature": {
-  "description": null,
+  "description": "Vous savez identifier les plantes et les animaux, et vous aimez les arbres plus que tout.",
   "name": "Nature"
  },
  "skill:Perception": {
-  "description": null,
+  "description": "Vous avez un bon sens de l'observation et décelez des détails cachés.",
   "name": "Perception"
  },
  "skill:Performance": {
-  "description": null,
+  "description": "Vous savez divertir les foules à la ville comme à la scène.",
   "name": "Représentation"
  },
  "skill:Persuasion": {
-  "description": null,
+  "description": "Usez de vos charmes pour manipuler et amadouer vos interlocuteurs.",
   "name": "Persuasion"
  },
  "skill:Religion": {
-  "description": null,
+  "description": "Vous connaissez bien le panthéon des divinités et comprenez les rituels sacrés.",
   "name": "Religion"
  },
  "skill:SleightOfHand": {
-  "description": null,
+  "description": "Vos doigts de fée vous permettent de chaparder toutes sortes d'objets.\r\n\r\nVous crochetez les serrures, faites les poches et désamorcez les pièges plus facilement.",
   "name": "Escamotage"
  },
  "skill:Stealth": {
-  "description": null,
+  "description": "Vous savez rester hors de vue et vous fondre dans l'ombre.\r\n\r\nTrès utile pour se cacher.",
   "name": "Discrétion"
  },
  "skill:Survival": {
-  "description": null,
+  "description": "Vous êtes capable de survivre en pleine nature et de traquer vos proies.",
   "name": "Survie"
+ },
+ "slot:Amulet": {
+  "description": null,
+  "name": "Amulette"
+ },
+ "slot:Boots": {
+  "description": null,
+  "name": "Bottes"
+ },
+ "slot:Breast": {
+  "description": null,
+  "name": "Tenue"
+ },
+ "slot:Cloak": {
+  "description": null,
+  "name": "Cape"
+ },
+ "slot:Gloves": {
+  "description": null,
+  "name": "Gants"
+ },
+ "slot:Helmet": {
+  "description": null,
+  "name": "Casque"
+ },
+ "slot:MeleeMainHand": {
+  "description": null,
+  "name": "Corps à corps : main principale"
+ },
+ "slot:MeleeOffHand": {
+  "description": null,
+  "name": "Corps à corps, main secondaire"
+ },
+ "slot:MusicalInstrument": {
+  "description": null,
+  "name": "Instrument de musique"
+ },
+ "slot:RangedMainHand": {
+  "description": null,
+  "name": "À distance - main principale"
+ },
+ "slot:RangedOffHand": {
+  "description": null,
+  "name": "À distance - main secondaire."
+ },
+ "slot:Ring": {
+  "description": null,
+  "name": "Premier anneau"
+ },
+ "slot:Ring2": {
+  "description": null,
+  "name": "Deuxième anneau"
+ },
+ "slot:Underwear": {
+  "description": null,
+  "name": "Ceinture"
+ },
+ "slot:VanityBody": {
+  "description": null,
+  "name": "Vêtements"
+ },
+ "slot:VanityBoots": {
+  "description": null,
+  "name": "Bottes"
  },
  "spell:Projectile_AcidArrow": {
   "description": "Tire une flèche verte qui recouvre d'acide la cible et le sol. Inflige [1] immédiatement, et [2] à la fin du tour de la cible.",

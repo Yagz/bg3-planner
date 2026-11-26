@@ -28,7 +28,7 @@ describe("game data", () => {
     expect(Object.keys(data.texts.en).length).toBeGreaterThan(0);
     expect(Object.keys(data.texts.fr).length).toBeGreaterThan(0);
     for (const texts of [data.texts.en, data.texts.fr]) {
-      for (const key of Object.keys(texts)) expect(key, key).toMatch(/^(ability|background|class|feat|item|label|modifier|origin|passive|race|ruleset|skill|spell):./);
+      for (const key of Object.keys(texts)) expect(key, key).toMatch(/^(ability|background|class|feat|item|label|modifier|origin|passive|race|ruleset|skill|slot|damage|spell):./);
     }
     expect(data.texts.en["class:Ranger"]?.name).toBeTruthy();
     expect(data.meta.game).toMatch(/^\d/);
@@ -69,5 +69,18 @@ describe("game data", () => {
     expect(data.rules.rulesetModifiers.PROFICIENCY_BONUS).toEqual({ type: "int", default: 0, min: -1, max: 4, custom: true });
     expect(data.texts.fr["ruleset:DIFFICULTY_EASY"]?.name).toBe("Explorateur");
     expect(data.texts.fr["label:customMode"]?.name).toBe("Mode Personnalisé");
+  });
+  it("loads the skill descriptions, equipment slot names and damage type names of the interface files", async () => {
+    const data = await loadGameData("data/larian");
+    expect(data.texts.fr["skill:Persuasion"]?.description).toBe("Usez de vos charmes pour manipuler et amadouer vos interlocuteurs.");
+    expect(data.texts.en["slot:Breast"]?.name).toBe("Body Attire");
+    expect(data.texts.fr["slot:Underwear"]?.name).toBe("Ceinture");
+    expect(data.texts.fr["damage:Fire"]?.name).toBe("Feu");
+    const slots = ["Helmet", "Cloak", "Breast", "Gloves", "Boots", "Amulet", "Ring", "Ring2", "MeleeMainHand", "MeleeOffHand", "RangedMainHand", "RangedOffHand", "MusicalInstrument", "VanityBody", "VanityBoots", "Underwear"];
+    const damageTypes = ["Slashing", "Piercing", "Bludgeoning", "Acid", "Thunder", "Necrotic", "Fire", "Lightning", "Cold", "Psychic", "Poison", "Radiant", "Force"];
+    for (const texts of [data.texts.en, data.texts.fr]) {
+      expect(Object.keys(texts).filter((k) => k.startsWith("slot:")).sort()).toEqual(slots.map((id) => `slot:${id}`).sort());
+      expect(Object.keys(texts).filter((k) => k.startsWith("damage:")).sort()).toEqual(damageTypes.map((id) => `damage:${id}`).sort());
+    }
   });
 });

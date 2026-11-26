@@ -391,6 +391,58 @@
   "description": "Wizards master the arcane by specialising in individual schools of magic, combining ancient spells with modern research.",
   "name": "Wizard"
  },
+ "damage:Acid": {
+  "description": null,
+  "name": "Acid"
+ },
+ "damage:Bludgeoning": {
+  "description": null,
+  "name": "Bludgeoning"
+ },
+ "damage:Cold": {
+  "description": null,
+  "name": "Cold"
+ },
+ "damage:Fire": {
+  "description": null,
+  "name": "Fire"
+ },
+ "damage:Force": {
+  "description": null,
+  "name": "Force"
+ },
+ "damage:Lightning": {
+  "description": null,
+  "name": "Lightning"
+ },
+ "damage:Necrotic": {
+  "description": null,
+  "name": "Necrotic"
+ },
+ "damage:Piercing": {
+  "description": null,
+  "name": "Piercing"
+ },
+ "damage:Poison": {
+  "description": null,
+  "name": "Poison"
+ },
+ "damage:Psychic": {
+  "description": null,
+  "name": "Psychic"
+ },
+ "damage:Radiant": {
+  "description": null,
+  "name": "Radiant"
+ },
+ "damage:Slashing": {
+  "description": null,
+  "name": "Slashing"
+ },
+ "damage:Thunder": {
+  "description": null,
+  "name": "Thunder"
+ },
  "feat:AbilityScoreIncrease": {
   "description": "You increase one Ability by 2, or two Abilities by 1, to a maximum of 20.",
   "name": "Ability Improvement"
@@ -7292,76 +7344,140 @@
   "name": "Standard Ruleset"
  },
  "skill:Acrobatics": {
-  "description": null,
+  "description": "Keep your balance. Land on your feet.\n\nHelps you resist being shoved.",
   "name": "Acrobatics"
  },
  "skill:AnimalHandling": {
-  "description": null,
+  "description": "Influence animals. Pet all of the dogs.",
   "name": "Animal Handling"
  },
  "skill:Arcana": {
-  "description": null,
+  "description": "Recognise magic. Interact with enchanted items.",
   "name": "Arcana"
  },
  "skill:Athletics": {
-  "description": null,
+  "description": "Stay fit. Perform physical stunts.\n\nHelps you shove and resist being shoved.",
   "name": "Athletics"
  },
  "skill:Deception": {
-  "description": null,
+  "description": "Lie and cheat. Manipulate the truth.",
   "name": "Deception"
  },
  "skill:History": {
-  "description": null,
+  "description": "Remember the past - of the world and its people.",
   "name": "History"
  },
  "skill:Insight": {
-  "description": null,
+  "description": "Read people and situations. Detect lies.",
   "name": "Insight"
  },
  "skill:Intimidation": {
-  "description": null,
+  "description": "Be a bully. Threaten and induce fear.",
   "name": "Intimidation"
  },
  "skill:Investigation": {
-  "description": null,
+  "description": "Analyse clues. Solve mysteries.",
   "name": "Investigation"
  },
  "skill:Medicine": {
-  "description": null,
+  "description": "Recognise symptoms. Diagnose disease.",
   "name": "Medicine"
  },
  "skill:Nature": {
-  "description": null,
+  "description": "Recognise plants and animals. Hug trees.",
   "name": "Nature"
  },
  "skill:Perception": {
-  "description": null,
+  "description": "Observe your environment. Spot hidden details.",
   "name": "Perception"
  },
  "skill:Performance": {
-  "description": null,
+  "description": "Entertain audiences. Command the stage.",
   "name": "Performance"
  },
  "skill:Persuasion": {
-  "description": null,
+  "description": "Turn on the charm. Coax and cajole.",
   "name": "Persuasion"
  },
  "skill:Religion": {
-  "description": null,
+  "description": "Recognise deities. Understand holy rites.",
   "name": "Religion"
  },
  "skill:SleightOfHand": {
-  "description": null,
+  "description": "Wield nimble fingers. Steal stuff.\n\nHelps you pick locks and pockets, and disarm traps.",
   "name": "Sleight Of Hand"
  },
  "skill:Stealth": {
-  "description": null,
+  "description": "Stay out of sight. Melt into the shadows.\n\nHelps you with hiding.",
   "name": "Stealth"
  },
  "skill:Survival": {
-  "description": null,
+  "description": "Stay alive in the wilds. Track prey.",
   "name": "Survival"
+ },
+ "slot:Amulet": {
+  "description": null,
+  "name": "Amulet"
+ },
+ "slot:Boots": {
+  "description": null,
+  "name": "Boots"
+ },
+ "slot:Breast": {
+  "description": null,
+  "name": "Body Attire"
+ },
+ "slot:Cloak": {
+  "description": null,
+  "name": "Cloak"
+ },
+ "slot:Gloves": {
+  "description": null,
+  "name": "Gloves"
+ },
+ "slot:Helmet": {
+  "description": null,
+  "name": "Helmet"
+ },
+ "slot:MeleeMainHand": {
+  "description": null,
+  "name": "Melee Main Hand"
+ },
+ "slot:MeleeOffHand": {
+  "description": null,
+  "name": "Melee Off-Hand"
+ },
+ "slot:MusicalInstrument": {
+  "description": null,
+  "name": "Musical Instrument"
+ },
+ "slot:RangedMainHand": {
+  "description": null,
+  "name": "Ranged Main Hand"
+ },
+ "slot:RangedOffHand": {
+  "description": null,
+  "name": "Ranged Off-Hand"
+ },
+ "slot:Ring": {
+  "description": null,
+  "name": "First Ring"
+ },
+ "slot:Ring2": {
+  "description": null,
+  "name": "Second Ring"
+ },
+ "slot:Underwear": {
+  "description": null,
+  "name": "Belt"
+ },
+ "slot:VanityBody": {
+  "description": null,
+  "name": "Clothes"
+ },
+ "slot:VanityBoots": {
+  "description": null,
+  "name": "Boots"
  },
  "spell:Projectile_AcidArrow": {
   "description": "Shoot a green arrow that covers the target and the ground with acid. Deals [1] immediately and [2] at the end of the target's turn.",

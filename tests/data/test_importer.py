@@ -6,8 +6,9 @@ from pathlib import Path
 from unittest import mock
 from xml.sax.saxutils import quoteattr
 
-from scripts.data import importer, ui_names
+from scripts.data import gui, importer, ui_names
 from tests.data import fixtures
+from tests.data.test_gui import complete
 
 
 def lsx(node_type: str, *nodes: dict) -> bytes:
@@ -136,6 +137,8 @@ HANDLES = ["hFighter", "hFighterDesc", "hElf", "hElfDesc", "hAcolyte", "hAcolyte
 UI_TEXTS = ({f"{ui_names.SKILL_HANDLE}_{i}": (ui_names.label(s), f"FR {s}") for i, s in enumerate(ui_names.SKILLS)}
             | {f"{ui_names.ABILITY_HANDLE}_{i}": (a, f"FR {a}") for i, a in enumerate(ui_names.ABILITIES, 1)})
 ATHLETICS = f"{ui_names.SKILL_HANDLE}_12"
+# The interface files and their texts: every skill description, planned slot and damage type.
+TOOLTIPS, SHEET, GUI_EN, GUI_FR = complete()
 FRENCH = {"hEasy": "Explorateur", CUSTOM_MODE: "Mode Personnalisé", "hFighter": "Guerrier", "hFireBolt2": "Trait de feu", "hBase": "Épée"}
 WIKI = {"source": "https://example.org", "license": "test", "items": {
     "MAG_Boots": {"uuid": "t-boots", "kind": "equipment", "rarity": "rare", "legacy": None, "locations": []},
@@ -152,9 +155,13 @@ def make_game(drop_french: str | None = None) -> tuple[Path, tempfile.TemporaryD
     (data / "Localization" / "French").mkdir(parents=True)
     for name, files in rules_files().items():
         (data / name).write_bytes(fixtures.pak(files))
-    en = [(h, 1, f"EN {h}") for h in HANDLES] + [(h, 1, english) for h, (english, _) in UI_TEXTS.items()]
+    (data / "Game.pak").write_bytes(fixtures.pak({gui.GUI_FILES[0]: TOOLTIPS.encode(),
+                                                   gui.GUI_FILES[1]: SHEET.encode()}))
+    en = ([(h, 1, f"EN {h}") for h in HANDLES] + [(h, 1, english) for h, (english, _) in UI_TEXTS.items()]
+          + [(h, 1, text) for h, text in GUI_EN.items()])
     fr = ([(h, 1, FRENCH.get(h, f"FR {h}")) for h in HANDLES if h != drop_french]
-          + [(h, 1, french) for h, (_, french) in UI_TEXTS.items() if h != drop_french])
+          + [(h, 1, french) for h, (_, french) in UI_TEXTS.items() if h != drop_french]
+          + [(h, 1, text) for h, text in GUI_FR.items() if h != drop_french])
     (data / "Localization" / "English.pak").write_bytes(
         fixtures.pak({"Localization/English/english.loca": fixtures.loca(en)}))
     (data / "Localization" / "French" / "French.pak").write_bytes(
@@ -234,8 +241,11 @@ class ImporterTest(unittest.TestCase):
         en = json.loads((self.out / "texts.en.json").read_text(encoding="utf-8"))
         fr = json.loads((self.out / "texts.fr.json").read_text(encoding="utf-8"))
         self.assertEqual(en["origin:Hero"], {"name": "EN hHero", "description": None})
-        self.assertEqual(fr["skill:Athletics"], {"name": "FR Athletics", "description": None})
-        self.assertEqual(en["skill:SleightOfHand"], {"name": "Sleight of Hand", "description": None})
+        self.assertEqual(fr["skill:Athletics"], {"name": "FR Athletics", "description": "FR hskillAthletics"})
+        self.assertEqual(en["skill:SleightOfHand"], {"name": "Sleight of Hand", "description": "EN hskillSleightOfHand"})
+        self.assertEqual(fr["slot:Ring2"], {"name": "FR hslotRing2", "description": None})
+        self.assertEqual(en["damage:Acid"], {"name": "EN hdamageAcid", "description": None})
+        self.assertEqual(len([k for k in fr if k.startswith(("slot:", "damage:"))]), 16 + 13)
         self.assertEqual(fr["ability:Strength"], {"name": "FR Strength", "description": None})
         self.assertEqual(len([k for k in fr if k.startswith(("skill:", "ability:"))]), 24)
 
@@ -279,6 +289,25 @@ class ImporterTest(unittest.TestCase):
         self.assertIn("skill:Athletics", printed)
         self.assertIn(ATHLETICS, printed)
         self.assertFalse(self.out.exists())
+
+    def test_interface_text_errors_join_the_other_import_errors(self):
+        game, folder = make_game(drop_french="hslotHelmet")
+        self.addCleanup(folder.cleanup)
+        files = rules_files()
+        path = "Public/Shared/Ruleset/RulesetValues.lsx"
+        files["Shared.pak"][path] = files["Shared.pak"][path].replace(b'value="2"', b'value="9"')
+        (game / "Data" / "Shared.pak").write_bytes(fixtures.pak(files["Shared.pak"]))
+        with self.assertRaises(importer.SourceErrors) as ctx:
+            importer.run(game, self.out, "1.2.3")
+        errors = ctx.exception.errors
+        self.assertTrue(any("slot:Helmet" in e and "French" in e for e in errors), errors)
+        self.assertTrue(any("PROFICIENCY_BONUS" in e for e in errors), errors)
+        self.assertFalse(self.out.exists())
+
+    def test_missing_interface_pak(self):
+        (self.game / "Data" / "Game.pak").unlink()
+        with self.assertRaises(importer.sources.UnexpectedSource):
+            importer.build(self.game, "1.2.3")
 
     def test_listed_origin_reference(self):
         files = rules_files()

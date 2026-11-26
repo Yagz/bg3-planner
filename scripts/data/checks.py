@@ -6,7 +6,7 @@ import json
 import sys
 from pathlib import Path
 
-from scripts.data import items, model, origins, rulesets, texts, ui_names
+from scripts.data import gui, items, model, origins, rulesets, texts, ui_names
 
 UNNAMED = Path(__file__).with_name("unnamed.txt")
 KNOWN_DUPLICATES = Path(__file__).with_name("known_duplicates.txt")
@@ -48,7 +48,10 @@ def _check_texts(rules: dict, tables: dict, unnamed: set[str], descriptionless: 
                 for ident, element in rules.get(section, {}).items()
                 if category != "modifier" or element.get("custom") is True}
     expected |= ({f"skill:{ident}" for ident in skill_ids(rules) | set(ui_names.SKILLS)}
-                 | {f"ability:{a}" for a in ui_names.ABILITIES} | {key for key, _ in ui_names.LABELS})
+                 | {f"ability:{a}" for a in ui_names.ABILITIES} | {key for key, _ in ui_names.LABELS}
+                 | {f"slot:{s}" for s in gui.PLANNED_SLOTS} | {f"damage:{d}" for d in gui.DAMAGE_TYPES})
+    # The interface files give every skill a description.
+    described = {f"skill:{s}" for s in ui_names.SKILLS}
     idents = expected | {key.split(":", 1)[1] for key in expected}
     for listed in sorted(descriptionless - idents):
         problems.append(f"{listed}: listed with a missing description but not found")
@@ -65,6 +68,8 @@ def _check_texts(rules: dict, tables: dict, unnamed: set[str], descriptionless: 
                 problems.append(f"{key}: empty name in the {language} table")
             elif key in no_description and entry.get("description") is not None:
                 problems.append(f"{key}: listed with a missing description but has one in the {language} table")
+            elif key in described and not (entry.get("description") or "").strip():
+                problems.append(f"{key}: no description in the {language} table")
         # A build modifier the game names without showing it in custom mode may keep its text.
         optional = {f"modifier:{ident}" for ident in rules.get("rulesetModifiers", {})}
         for key in sorted(set(table) - expected - optional):
