@@ -39,8 +39,8 @@ describe("display names", () => {
 
 describe("renderParams", () => {
   const damageName = (type: string) => (type === "Acid" ? "Acide" : null);
-  const fr: ParamFormat = { lang: "fr", damageName, variable: "(selon le niveau)" };
-  const en: ParamFormat = { lang: "en", damageName, variable: "(varies with level)" };
+  const fr: ParamFormat = { lang: "fr", damageName, variable: "(selon le personnage)" };
+  const en: ParamFormat = { lang: "en", damageName, variable: "(varies with the character)" };
 
   it("renders distances with the language's decimal separator", () => {
     expect(renderParams("up to [1].", ["Distance(1.5)"], fr)).toBe("up to 1,5 m.");
@@ -52,13 +52,13 @@ describe("renderParams", () => {
     expect(renderParams("[1]", ["DealDamage(2d6,Unknown)"], fr)).toBe("2d6");
     expect(renderParams("[1] [2]", ["1d4+2", "RegainHitPoints(5)"], fr)).toBe("1d4+2 5");
     expect(renderParams("[1]", ["GainTemporaryHitPoints(5)"], fr)).toBe("5");
-    expect(renderParams("[1]", ["RegainHitPoints(Level)"], fr)).toBe("(selon le niveau)");
+    expect(renderParams("[1]", ["RegainHitPoints(Level)"], fr)).toBe("(selon le personnage)");
   });
   it("renders a level-dependent, empty, unknown or missing parameter as the marker", () => {
-    expect(renderParams("[1]", ["LevelMapValue(EldritchBlast)"], en)).toBe("(varies with level)");
-    expect(renderParams("[1]", [""], en)).toBe("(varies with level)");
-    expect(renderParams("[2]", ["1"], en)).toBe("(varies with level)");
-    expect(renderParams("[1]", ["Whatever(3)"], en)).toBe("(varies with level)");
+    expect(renderParams("[1]", ["LevelMapValue(EldritchBlast)"], en)).toBe("(varies with the character)");
+    expect(renderParams("[1]", [""], en)).toBe("(varies with the character)");
+    expect(renderParams("[2]", ["1"], en)).toBe("(varies with the character)");
+    expect(renderParams("[1]", ["Whatever(3)"], en)).toBe("(varies with the character)");
   });
   it("leaves a text without placeholders unchanged", () => {
     expect(renderParams("no placeholder", ["1"], en)).toBe("no placeholder");

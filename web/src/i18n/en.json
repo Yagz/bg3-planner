@@ -1,5 +1,5 @@
 {
-  "description.variable": "(varies with level)",
+  "description.variable": "(varies with the character)",
   "app.title": "BG3 Planner",
   "app.loading": "Loading the game data…",
   "app.loadError": "The game data could not be loaded ({message}). Reload the page.",
