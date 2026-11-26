@@ -3,7 +3,7 @@ import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import type { GameData } from "../../../src/data/types.ts";
 import { skillProficiencies } from "../../../src/engine/coverage.ts";
 import { resolve, subclassSlot } from "../../../src/engine/progression.ts";
-import { validate } from "../../../src/engine/validate.ts";
+import { featSlot, validate } from "../../../src/engine/validate.ts";
 import { emptyRun } from "../../../src/plan/model.ts";
 import type { Character, Choice, Run } from "../../../src/plan/model.ts";
 import App from "../../../web/src/App.tsx";
@@ -55,12 +55,12 @@ function runWith(characters: Character[], level = 1): Run {
   return run;
 }
 
-/** The whole app over a store holding `run`, on the Character screen of `id`. */
-function setup(run: Run, id: string) {
+/** The whole app over a store holding `run`, on the Character screen of `id` (over `game`, the real data by default). */
+function setup(run: Run, id: string, game: GameData = data) {
   const store = createStore(new MemoryBackend());
   const saved = store.save(run);
   window.history.replaceState(null, "", `#/character/${id}`);
-  render(<App data={data} store={store} settingsBackend={new MemoryBackend()} />);
+  render(<App data={game} store={store} settingsBackend={new MemoryBackend()} />);
   return { store, runId: saved.id };
 }
 
@@ -77,7 +77,8 @@ describe("Character screen", () => {
     const names = within(within(dialog).getByRole("group", { name: "The game's list" }))
       .getAllByRole("checkbox")
       .map((box) => box.getAttribute("aria-label"));
-    expect(names).toEqual(items.map((id) => gameName(data, "en", "spell", id)));
+    // One level in this list: a single group, in name order.
+    expect(names).toEqual(items.map((id) => gameName(data, "en", "spell", id)).sort((a, b) => a.localeCompare(b, "en")));
     const validate = within(dialog).getByRole("button", { name: "Validate" });
     expect(validate).toHaveProperty("disabled", true);
     fireEvent.click(within(dialog).getByRole("checkbox", { name: gameName(data, "en", "spell", items[0]!) }));
@@ -241,6 +242,89 @@ describe("Character screen", () => {
     expect(validate).toHaveProperty("disabled", false);
     fireEvent.click(validate);
     expect(store.load(runId)!.characters[0]!.levels[1]!.choices[slot]).toEqual([items[0], items[1]]);
+  });
+
+  describe("spells", () => {
+    /** A High Elf Bard of `levels` levels, nothing picked. */
+    function bard(levels: number): Character {
+      return { ...ranger(1), id: "bard", race: "Elf", subrace: "Elf_HighElf", levels: Array.from({ length: levels }, () => ({ class: "Bard", choices: {} as Record<string, Choice> })) };
+    }
+    const slotOf = (c: Character, n: number, id: string) => resolve(c, data).levels[n - 1]!.slots.find((s) => s.selector.id === id)!;
+    const toFrench = () => fireEvent.change(screen.getByRole("combobox", { name: "Language" }), { target: { value: "fr" } });
+    const frLevel = (n: number) => screen.getByRole("group", { name: `Niveau ${n}` });
+    const headings = (dialog: HTMLElement) => within(within(dialog).getByRole("group", { name: "La liste du jeu" })).getAllByRole("heading").map((h) => h.textContent);
+
+    it("groups a spell picker by level, cantrips first and unknown levels last, names in alphabetical order; a filtered-out group disappears", () => {
+      const c = bard(1);
+      const spells = slotOf(c, 1, "BardSpells");
+      const list = data.rules.lists[spells.selector.list]!;
+      // A copy of the data whose Bard spell list also holds a cantrip and a spell the data does not know.
+      const game: GameData = { ...data, rules: { ...data.rules, lists: { ...data.rules.lists, [spells.selector.list]: { ...list, items: [...list.items, "Target_ViciousMockery", "Target_NotInData"] } } } };
+      setup(runWith([c]), c.id, game);
+      toFrench();
+      fireEvent.click(within(frLevel(1)).getByRole("button", { name: /^sorts \(4\)/ }));
+      const dialog = screen.getByRole("dialog");
+      expect(headings(dialog)).toEqual(["Sorts mineurs", "Niveau 1", "Autres"]);
+      const inGroup = (name: string) => within(within(dialog).getByRole("group", { name })).getAllByRole("checkbox").map((box) => box.getAttribute("aria-label"));
+      expect(inGroup("Sorts mineurs")).toEqual([gameName(data, "fr", "spell", "Target_ViciousMockery")]);
+      expect(inGroup("Niveau 1")).toEqual(list.items.map((id) => gameName(data, "fr", "spell", id)).sort((a, b) => a.localeCompare(b, "fr")));
+      expect(inGroup("Autres")).toEqual(["Target_NotInData"]);
+      fireEvent.change(within(dialog).getByRole("searchbox", { name: "Filtrer la liste du jeu…" }), { target: { value: gameName(data, "fr", "spell", "Target_Sleep") } });
+      expect(headings(dialog)).toEqual(["Niveau 1"]);
+    });
+
+    it("puts a real list's spell without a level (Booming Blade on the High Elf cantrip list) in the last group", () => {
+      const c = bard(1);
+      setup(runWith([c]), c.id);
+      toFrench();
+      const cantrips = slotOf(c, 1, "HighElfCantrip");
+      expect(data.rules.spells["Target_BoomingBlade_ClassSpell"]?.level ?? null).toBeNull();
+      fireEvent.click(within(frLevel(1)).getByRole("button", { name: /^sorts \(1\)/ }));
+      const dialog = screen.getByRole("dialog");
+      expect(headings(dialog)).toEqual(["Sorts mineurs", "Autres"]);
+      expect(within(within(dialog).getByRole("group", { name: "Autres" })).getByRole("checkbox", { name: gameName(data, "fr", "spell", "Target_BoomingBlade_ClassSpell") })).toBeTruthy();
+      expect(within(dialog).getAllByTitle("Lancé avec Intelligence").length).toBe(data.rules.lists[cantrips.selector.list]!.items.length);
+    });
+
+    for (const view of ["list", "tree"] as const) {
+      it(`shows picked spells as chips with their level and the ability they are cast with (${view})`, () => {
+        const c = bard(4);
+        c.levels[0]!.choices[slotOf(c, 1, "BardSpells").id] = ["Target_HealingWord", "Target_Sleep"];
+        c.levels[0]!.choices[slotOf(c, 1, "HighElfCantrip").id] = ["Projectile_FireBolt"];
+        c.levels[0]!.choices[slotOf(c, 1, "BardInstrument").id] = ["ARM_Instrument_Flute"];
+        c.levels[3]!.choices[featSlot(4)] = ["RitualCaster"];
+        c.levels[3]!.choices[`${featSlot(4)}/0`] = ["Target_FindFamiliar", "Target_Longstrider"];
+        setup(runWith([c]), c.id);
+        if (view === "tree") fireEvent.click(screen.getByRole("checkbox", { name: "Tree" }));
+        toFrench();
+        const chipsOf = (button: HTMLElement) => [...button.querySelectorAll(".sp")] as HTMLElement[];
+        const bardSpells = chipsOf(within(frLevel(1)).getByRole("button", { name: /^sorts \(4\)/ }));
+        expect(bardSpells.map((chip) => chip.querySelector(".lvl")!.textContent)).toEqual(["niv. 1", "niv. 1"]);
+        expect(bardSpells[0]!.textContent).toContain(gameName(data, "fr", "spell", "Target_HealingWord"));
+        const badge = bardSpells[0]!.querySelector(".cast")!;
+        expect(badge.textContent).toBe(gameName(data, "fr", "ability", "Charisma"));
+        expect(badge.getAttribute("title")).toBe("Lancé avec Charisme");
+        const [cantrip] = chipsOf(within(frLevel(1)).getByRole("button", { name: /^sorts \(1\)/ }));
+        expect(cantrip!.querySelector(".lvl")!.textContent).toBe("mineur");
+        expect(cantrip!.querySelector(".cast")!.getAttribute("title")).toBe("Lancé avec Intelligence");
+        // Ritual Caster's selector names no ability: chips without a badge.
+        const feat = chipsOf(within(frLevel(4)).getByRole("button", { name: /^sorts \(2\)/ }));
+        expect(feat).toHaveLength(2);
+        expect(feat.every((chip) => chip.querySelector(".cast") === null)).toBe(true);
+        expect(within(frLevel(1)).getByRole("button", { name: /^équipement/ }).textContent).toBe("Flûte");
+      });
+    }
+
+    it("keeps a replacement as old → new inside one chip, and shows an unnamed item by its identifier", () => {
+      const c = bard(1);
+      c.levels[0]!.choices[slotOf(c, 1, "BardSpells").id] = ["Target_Sleep", "Target_Bane>Target_Heroism"];
+      c.levels[0]!.choices[slotOf(c, 1, "BardInstrument").id] = ["ARM_Instrument_NotInData"];
+      setup(runWith([c]), c.id);
+      const chips = [...within(level(1)).getByRole("button", { name: /^spells \(4\)/ }).querySelectorAll(".sp")];
+      expect(chips).toHaveLength(2);
+      expect(chips[1]!.textContent).toContain(`${gameName(data, "en", "spell", "Target_Bane")} → ${gameName(data, "en", "spell", "Target_Heroism")}`);
+      expect(within(level(1)).getByRole("button", { name: /^equipment/ }).textContent).toBe("ARM_Instrument_NotInData");
+    });
   });
 
   describe("player origin", () => {

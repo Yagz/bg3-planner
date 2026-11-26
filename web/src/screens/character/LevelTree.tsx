@@ -1,4 +1,5 @@
 import type { GameData } from "../../../../src/data/types.ts";
+import { castingAbilities } from "../../../../src/engine/casting.ts";
 import { grantedFeatures } from "../../../../src/engine/features.ts";
 import type { Issue } from "../../../../src/engine/issues.ts";
 import { resolve } from "../../../../src/engine/progression.ts";
@@ -30,6 +31,7 @@ type Props = {
 export default function LevelTree({ data, character, issues, progressLevel, multiclass, onPick, onChoose }: Props) {
   const { t, lang } = useI18n();
   const resolved = resolve(character, data).levels;
+  const abilities = castingAbilities(character, data);
 
   return (
     <div className="tree">
@@ -67,7 +69,7 @@ export default function LevelTree({ data, character, issues, progressLevel, mult
               {rows.map((row) => (
                 <div key={row.slot} className="choice">
                   <span className="k">{row.label}</span>
-                  <SlotPick data={data} row={row} choice={stored(row.slot)} onPick={() => onPick(n, row.slot)} />
+                  <SlotPick data={data} row={row} choice={stored(row.slot)} ability={abilities[n - 1]?.[row.slot] ?? null} onPick={() => onPick(n, row.slot)} />
                   <IssueList data={data} issues={at(row.slot)} />
                   {row.slot === slots.subclass && untaken.length > 0 && (
                     <div className="alts" role="group" aria-label={t("tree.untaken")}>

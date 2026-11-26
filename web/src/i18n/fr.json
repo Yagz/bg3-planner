@@ -277,5 +277,11 @@
   "difficulty.noMulticlass": "Multiclassage désactivé",
   "difficulty.bonusUp": "+{n} au bonus de maîtrise",
   "difficulty.bonusDown": "{n} au bonus de maîtrise",
-  "difficulty.honourStats": "Statistiques du mode Honneur : certains sorts et objets changent"
+  "difficulty.honourStats": "Statistiques du mode Honneur : certains sorts et objets changent",
+  "spell.cantrip": "Sorts mineurs",
+  "spell.level": "Niveau {level}",
+  "spell.unknownLevel": "Autres",
+  "spell.cantripShort": "mineur",
+  "spell.levelShort": "niv. {level}",
+  "spell.castWith": "Lancé avec {ability}"
 }

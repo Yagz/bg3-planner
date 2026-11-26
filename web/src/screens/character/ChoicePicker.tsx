@@ -4,8 +4,9 @@ import type { TextKind } from "../../../../src/data/names.ts";
 import type { ChoiceList, GameData } from "../../../../src/data/types.ts";
 import { SWAP_SEPARATOR } from "../../../../src/engine/choices.ts";
 import { isOffData } from "../../../../src/plan/model.ts";
-import type { Choice } from "../../../../src/plan/model.ts";
+import type { Ability, Choice } from "../../../../src/plan/model.ts";
 import { useI18n } from "../../i18n/i18n.ts";
+import type { Lang, Translate } from "../../i18n/i18n.ts";
 import { gameDescription, gameName } from "../../names.ts";
 
 /**
@@ -27,6 +28,8 @@ export type PickerSpec = {
   mode: PickerMode;
   /** For a `SelectSpells` slot that allows replacements: how many, and the spells known before (what may be replaced). */
   swaps?: { max: number; known: string[] };
+  /** For a `SelectSpells` slot: entries grouped by spell level, each with the ability the slot's spells are cast with (null for none). */
+  spells?: { ability: Ability | null };
   /** The stored choice; absent when nothing is stored. */
   initial: Choice | undefined;
 };
@@ -36,6 +39,21 @@ const LIST_KINDS: Record<ChoiceList["type"], TextKind> = { spells: "spell", pass
 /** Kind of the names of a choice list's entries; null for a list the data does not hold. */
 export function kindOfList(data: GameData, list: string): TextKind | null {
   return Object.hasOwn(data.rules.lists, list) ? LIST_KINDS[data.rules.lists[list]!.type] : null;
+}
+
+/** A spell's level from the data: 0 for a cantrip, null when the data does not know it. */
+export function spellLevel(data: GameData, id: string): number | null {
+  return Object.hasOwn(data.rules.spells, id) ? (data.rules.spells[id]?.level ?? null) : null;
+}
+
+/** The ability a spell is cast with: its game name, shortened only by the style, the full name in the title. */
+export function AbilityBadge({ data, lang, t, ability }: { data: GameData; lang: Lang; t: Translate; ability: Ability }) {
+  const name = gameName(data, lang, "ability", ability);
+  return (
+    <span className="cast" title={t("spell.castWith", { ability: name })}>
+      {name}
+    </span>
+  );
 }
 
 type Props = {
@@ -164,11 +182,18 @@ export default function ChoicePicker({ data, spec, onSave, onClear, onClose }: P
   const editSwap = (index: number, patch: Partial<Swap>) => setSwaps((previous) => previous.map((swap, i) => (i === index ? { ...swap, ...patch } : swap)));
 
   const full = mode.type === "set" && picks.length >= mode.max;
+  const castWith = spec.spells?.ability ?? null;
   const label = (entry: string) => {
     const text = description(entry);
     return (
       <span>
         <b>{name(entry)}</b>
+        {castWith !== null && (
+          <>
+            {" "}
+            <AbilityBadge data={data} lang={lang} t={t} ability={castWith} />
+          </>
+        )}
         {text !== null && (
           <span className="d" id={`${id}-${entry}`}>
             {text}
@@ -178,6 +203,26 @@ export default function ChoicePicker({ data, spec, onSave, onClear, onClose }: P
     );
   };
   const describedBy = (entry: string) => (description(entry) === null ? undefined : `${id}-${entry}`);
+
+  /** One entry of the game's list: a checkbox (a radio for a single pick) with its name and description. */
+  const option = (entry: string) => {
+    const on = picks.includes(entry);
+    const off = !on && full;
+    return (
+      <label key={entry} className={`opt${off ? " off" : ""}`}>
+        <input
+          type={mode.type === "single" ? "radio" : "checkbox"}
+          name={mode.type === "single" ? id : undefined}
+          aria-label={name(entry)}
+          aria-describedby={describedBy(entry)}
+          checked={on}
+          disabled={off}
+          onChange={(event) => toggle(entry, event.target.checked)}
+        />
+        {label(entry)}
+      </label>
+    );
+  };
 
   const list = () => {
     if (mode.type === "bonus") {
@@ -226,22 +271,23 @@ export default function ChoicePicker({ data, spec, onSave, onClear, onClose }: P
       });
     }
     if (shown.length === 0) return <p className="sub">{t("picker.noResult")}</p>;
-    return shown.map((entry) => {
-      const on = picks.includes(entry);
-      const off = !on && full;
+    if (spec.spells === undefined) return shown.map(option);
+    // Spell levels ascending, cantrips first, spells of unknown level last; names in order within a level.
+    const groups = new Map<number | null, string[]>();
+    for (const entry of shown) {
+      const level = spellLevel(data, entry);
+      groups.set(level, [...(groups.get(level) ?? []), entry]);
+    }
+    const levels = [...groups.keys()].sort((a, b) => (a === null ? 1 : b === null ? -1 : a - b));
+    return levels.map((level) => {
+      const heading = level === null ? t("spell.unknownLevel") : level === 0 ? t("spell.cantrip") : t("spell.level", { level });
+      const headingId = `${id}-level-${level ?? "unknown"}`;
+      const entries = [...groups.get(level)!].sort((a, b) => name(a).localeCompare(name(b), lang));
       return (
-        <label key={entry} className={`opt${off ? " off" : ""}`}>
-          <input
-            type={mode.type === "single" ? "radio" : "checkbox"}
-            name={mode.type === "single" ? id : undefined}
-            aria-label={name(entry)}
-            aria-describedby={describedBy(entry)}
-            checked={on}
-            disabled={off}
-            onChange={(event) => toggle(entry, event.target.checked)}
-          />
-          {label(entry)}
-        </label>
+        <div key={headingId} className="spgroup" role="group" aria-labelledby={headingId}>
+          <h3 id={headingId}>{heading}</h3>
+          {entries.map(option)}
+        </div>
       );
     });
   };

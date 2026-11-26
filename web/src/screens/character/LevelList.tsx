@@ -1,6 +1,7 @@
 import { Fragment } from "react";
 import type { TextKind } from "../../../../src/data/names.ts";
 import type { GameData } from "../../../../src/data/types.ts";
+import { castingAbilities } from "../../../../src/engine/casting.ts";
 import { SWAP_SEPARATOR } from "../../../../src/engine/choices.ts";
 import { grantedFeatures } from "../../../../src/engine/features.ts";
 import type { Issue } from "../../../../src/engine/issues.ts";
@@ -8,32 +9,33 @@ import { resolve } from "../../../../src/engine/progression.ts";
 import { isOptionalSelector, levelSlots } from "../../../../src/engine/validate.ts";
 import type { LevelSlots, SelectorSlot } from "../../../../src/engine/validate.ts";
 import { isOffData } from "../../../../src/plan/model.ts";
-import type { Character, Choice, OffData } from "../../../../src/plan/model.ts";
+import type { Ability, Character, Choice, OffData } from "../../../../src/plan/model.ts";
 import { useI18n } from "../../i18n/i18n.ts";
 import type { Lang, Translate } from "../../i18n/i18n.ts";
 import { gameName } from "../../names.ts";
-import { kindOfList } from "./ChoicePicker.tsx";
+import { AbilityBadge, kindOfList, spellLevel } from "./ChoicePicker.tsx";
 import IssueList from "./IssueList.tsx";
 
 /** The slot `class` stands for the class taken at the level, as in the engine's issues. */
 export const CLASS_SLOT = "class";
 
-/** One choice row of a level: its slot, label, kind of names, and whether it may stay unset. */
-export type SlotRow = { slot: string; label: string; kind: TextKind | null; optional: boolean };
+/** One choice row of a level: its slot, label, kind of names, whether it may stay unset, and whether it picks spells (`SelectSpells`). */
+export type SlotRow = { slot: string; label: string; kind: TextKind | null; optional: boolean; spells: boolean };
 
 /** The choice rows of a level's slots, in the engine's order: subclass, row selectors, then the feat and its selectors. */
 export function slotRows(slots: LevelSlots, data: GameData, t: Translate): SlotRow[] {
   const rows: SlotRow[] = [];
-  if (slots.subclass !== null) rows.push({ slot: slots.subclass, label: t("choice.subclass"), kind: "class", optional: false });
+  if (slots.subclass !== null) rows.push({ slot: slots.subclass, label: t("choice.subclass"), kind: "class", optional: false, spells: false });
   const selectorRow = ({ id, selector }: SelectorSlot): SlotRow => ({
     slot: id,
     label: "count" in selector && selector.count > 0 ? `${t(`choice.${selector.function}`)} (${selector.count})` : t(`choice.${selector.function}`),
     kind: kindOfList(data, selector.list),
     optional: isOptionalSelector(selector),
+    spells: selector.function === "SelectSpells",
   });
   rows.push(...slots.selectors.map(selectorRow));
   if (slots.feat !== null) {
-    rows.push({ slot: slots.feat.id, label: t("choice.feat"), kind: "feat", optional: false });
+    rows.push({ slot: slots.feat.id, label: t("choice.feat"), kind: "feat", optional: false, spells: false });
     rows.push(...slots.feat.selectors.map(selectorRow));
   }
   return rows;
@@ -52,8 +54,12 @@ export function choiceText(data: GameData, lang: Lang, kind: TextKind | null, ch
     .join(", ");
 }
 
-/** The button of one slot: its picks by name, a dashed "to decide", or "optional" for a slot that may stay unset. */
-export function SlotPick({ data, row, choice, onPick }: { data: GameData; row: SlotRow; choice: Choice | undefined; onPick: () => void }) {
+/**
+ * The button of one slot: its picks by name, a dashed "to decide", or "optional" for a slot that may stay unset. A
+ * spell slot shows one chip per pick: the spell's level (none when the data does not know it), its name (a replacement
+ * as `old → new`, tagged with the new spell's level), and the ability it is cast with (`ability`, null for none).
+ */
+export function SlotPick({ data, row, choice, ability = null, onPick }: { data: GameData; row: SlotRow; choice: Choice | undefined; ability?: Ability | null; onPick: () => void }) {
   const { t, lang } = useI18n();
   const todo = t("character.todo");
   let shown: string;
@@ -64,9 +70,21 @@ export function SlotPick({ data, row, choice, onPick }: { data: GameData; row: S
   } else {
     shown = choiceText(data, lang, row.kind, choice, t("character.nothingPicked"));
   }
+  const chips = row.spells && Array.isArray(choice) && choice.length > 0;
+  const chip = (entry: string, i: number) => {
+    const cut = entry.indexOf(SWAP_SEPARATOR);
+    const level = spellLevel(data, cut < 0 ? entry : entry.slice(cut + SWAP_SEPARATOR.length));
+    return (
+      <span key={i} className="sp">
+        {level !== null && <span className="lvl">{level === 0 ? t("spell.cantripShort") : t("spell.levelShort", { level })}</span>}
+        {choiceText(data, lang, row.kind, [entry], "")}
+        {ability !== null && <AbilityBadge data={data} lang={lang} t={t} ability={ability} />}
+      </span>
+    );
+  };
   return (
-    <button className={className} aria-label={`${row.label}: ${shown}`} onClick={onPick}>
-      {shown}
+    <button className={chips ? `${className} spells` : className} aria-label={`${row.label}: ${shown}`} onClick={onPick}>
+      {chips ? choice.map(chip) : shown}
     </button>
   );
 }
@@ -141,6 +159,7 @@ type Props = {
 export default function LevelList({ data, character, issues, progressLevel, multiclass, onPick }: Props) {
   const { t, lang } = useI18n();
   const resolved = resolve(character, data).levels;
+  const abilities = castingAbilities(character, data);
 
   const firstUpcoming = resolved.find((level) => level.level > progressLevel)?.level ?? null;
 
@@ -172,7 +191,7 @@ export default function LevelList({ data, character, issues, progressLevel, mult
                 {rows.map((row) => (
                   <div key={row.slot} className="choice">
                     <span className="k">{row.label}</span>
-                    <SlotPick data={data} row={row} choice={Object.hasOwn(choices, row.slot) ? choices[row.slot] : undefined} onPick={() => onPick(n, row.slot)} />
+                    <SlotPick data={data} row={row} choice={Object.hasOwn(choices, row.slot) ? choices[row.slot] : undefined} ability={abilities[n - 1]?.[row.slot] ?? null} onPick={() => onPick(n, row.slot)} />
                     <IssueList data={data} issues={at(row.slot)} />
                   </div>
                 ))}

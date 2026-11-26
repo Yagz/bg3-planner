@@ -277,5 +277,11 @@
   "difficulty.noMulticlass": "Multiclassing disabled",
   "difficulty.bonusUp": "+{n} to the proficiency bonus",
   "difficulty.bonusDown": "{n} to the proficiency bonus",
-  "difficulty.honourStats": "Honour mode stats: some spells and items change"
+  "difficulty.honourStats": "Honour mode stats: some spells and items change",
+  "spell.cantrip": "Cantrips",
+  "spell.level": "Level {level}",
+  "spell.unknownLevel": "Other",
+  "spell.cantripShort": "cantrip",
+  "spell.levelShort": "lvl {level}",
+  "spell.castWith": "Cast with {ability}"
 }

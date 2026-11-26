@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import type { TextKind } from "../../../src/data/names.ts";
 import type { GameData, Selector } from "../../../src/data/types.ts";
 import type { Impact } from "../../../src/engine/impact.ts";
+import { castingAbility } from "../../../src/engine/casting.ts";
 import { rulesetEffects } from "../../../src/engine/difficulty.ts";
 import { resolve } from "../../../src/engine/progression.ts";
 import { isOptionalSelector, knownSpellsBefore, levelSlots, validate } from "../../../src/engine/validate.ts";
@@ -179,7 +180,10 @@ export default function Character({ data, run, saveRun, characterId, onSelect, t
       mode: modeOf(selector),
       initial,
     };
-    if (selector.function === "SelectSpells" && selector.swaps > 0) spec.swaps = { max: selector.swaps, known: knownSpellsBefore(character, data, n, scope) };
+    if (selector.function === "SelectSpells") {
+      spec.spells = { ability: castingAbility(resolved, found, data) };
+      if (selector.swaps > 0) spec.swaps = { max: selector.swaps, known: knownSpellsBefore(character, data, n, scope) };
+    }
     return {
       ...base,
       spec,
