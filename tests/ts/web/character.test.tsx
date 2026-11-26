@@ -11,6 +11,8 @@ import { emptyRun } from "../../../src/plan/model.ts";
 import type { Character, Choice, Run } from "../../../src/plan/model.ts";
 import App from "../../../web/src/App.tsx";
 import { I18nContext, createI18n } from "../../../web/src/i18n/i18n.ts";
+import ChoicePicker from "../../../web/src/screens/character/ChoicePicker.tsx";
+import type { PickerSpec } from "../../../web/src/screens/character/ChoicePicker.tsx";
 import Abilities from "../../../web/src/screens/character/Abilities.tsx";
 import NotesTab from "../../../web/src/screens/character/NotesTab.tsx";
 import IssueList from "../../../web/src/screens/character/IssueList.tsx";
@@ -472,16 +474,28 @@ describe("Character screen", () => {
         expect(said(entry(dialog, "Target_HealingWord"))).toContain("Évocation");
       });
 
-      it("shows the school name in English too, and none for a spell whose school is null", () => {
-        const c = bard(2);
-        const none = Object.entries(data.rules.spells).find(([id, def]) => def.school === null && data.rules.lists[slotOf(c, 2, "BardSpells").selector.list]!.items.includes(id));
-        setup(runWith([c]), c.id);
-        fireEvent.click(within(level(2)).getByRole("button", { name: /^spells \(1\)/ }));
-        const dialog = screen.getByRole("dialog");
-        const healing = within(dialog).getByRole("checkbox", { name: gameName(data, "en", "spell", "Target_HealingWord") }).closest("label")!;
-        expect(within(healing).getByText("Evocation")).toBeTruthy();
-        if (none !== undefined) expect(within(within(dialog).getByRole("checkbox", { name: gameName(data, "en", "spell", none[0]) }).closest("label")!).queryByText(/Evocation|Illusion|Necromancy|Abjuration/)).toBeNull();
-        else expect(Object.values(data.rules.spells).some((def) => def.school === null)).toBe(true);
+      it("shows the school name in English, and none for a spell whose school is null (picker rendered directly)", () => {
+        const noSchool = Object.keys(data.rules.spells).find((id) => data.rules.spells[id]!.school === null)!;
+        expect(noSchool).toBeDefined();
+        const spec: PickerSpec = {
+          title: "Spells",
+          items: [noSchool, "Target_HealingWord"],
+          kind: "spell",
+          mode: { type: "set", min: 0, max: 2 },
+          spells: { ability: null, same: [], others: { Target_HealingWord: [{ source: "Ritual Caster", ability: null }] } },
+          initial: undefined,
+        };
+        render(
+          <I18nContext.Provider value={createI18n("en")}>
+            <ChoicePicker data={data} spec={spec} onSave={() => {}} onClear={() => {}} onClose={() => {}} />
+          </I18nContext.Provider>,
+        );
+        const healing = screen.getByRole("checkbox", { name: gameName(data, "en", "spell", "Target_HealingWord") }).closest("label")!;
+        expect(healing.querySelector(".school")!.textContent).toBe("Evocation");
+        const bare = screen.getByRole("checkbox", { name: gameName(data, "en", "spell", noSchool) }).closest("label")!;
+        expect(bare.querySelector(".school")).toBeNull();
+        // The other source casts with no ability and this slot has none: only who knows it, no "here with".
+        expect(within(healing).getByText("Already known by Ritual Caster")).toBeTruthy();
       });
 
       it("says only which source knows a spell when that source casts it with no ability (Ritual Caster), and adds this slot's ability", () => {
