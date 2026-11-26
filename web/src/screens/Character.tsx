@@ -20,6 +20,7 @@ import {
   setChoice,
   setIdentity,
   setLevelClass,
+  setNotes,
   withOriginLock,
 } from "../state/characterOps.ts";
 import ChoicePicker, { kindOfList } from "./character/ChoicePicker.tsx";
@@ -29,7 +30,11 @@ import type { IdentityField } from "./character/Creation.tsx";
 import ImpactPreview from "./character/ImpactPreview.tsx";
 import LevelList, { CLASS_SLOT } from "./character/LevelList.tsx";
 import LevelTree from "./character/LevelTree.tsx";
+import NotesTab from "./character/NotesTab.tsx";
 import Summary from "./character/Summary.tsx";
+import { classLineText } from "./party/MemberCard.tsx";
+import { loadTab, saveTab } from "../state/sessionTab.ts";
+import type { CharacterTab } from "../state/sessionTab.ts";
 
 type Props = {
   data: GameData;
@@ -43,6 +48,8 @@ type Props = {
   /** Levels shown as a tree rather than a list (remembered in the settings). */
   tree: boolean;
   onTree: (tree: boolean) => void;
+  /** Where the open tab of each character is remembered for the session; null when unavailable. */
+  sessionBackend: Storage | null;
 };
 
 /** What the picker is open on: an identity field, or a slot of a level (`class` for the class taken). */
@@ -73,9 +80,11 @@ function single(choice: Choice): string | { offData: string } {
 }
 
 /** The character editor: summary of what the character brings, creation block, levels 1 to 12 as a list or a tree, the game's list for each choice, and the impact preview of a change. */
-export default function Character({ data, run, saveRun, characterId, onSelect, tree, onTree }: Props) {
+export default function Character({ data, run, saveRun, characterId, onSelect, tree, onTree, sessionBackend }: Props) {
   const { t, lang } = useI18n();
   const [target, setTarget] = useState<Target | null>(null);
+  /** Tabs chosen on this screen; a character not in it opens on the tab remembered for the session. */
+  const [chosenTabs, setChosenTabs] = useState<Record<string, CharacterTab>>({});
   const [error, setError] = useState<string | null>(null);
   /** A change waiting in the impact preview, with the character it replaces and, for a change of origin, the run's new origin. */
   const [pending, setPending] = useState<{ before: CharacterModel; impact: Impact; origin?: string } | null>(null);
@@ -84,6 +93,11 @@ export default function Character({ data, run, saveRun, characterId, onSelect, t
 
   if (character === undefined) return <p className="sub">{t(run.characters.length === 0 ? "character.none" : "character.unknown")}</p>;
 
+  const tab = chosenTabs[character.id] ?? loadTab(sessionBackend, character.id);
+  const chooseTab = (next: CharacterTab) => {
+    saveTab(sessionBackend, character.id, next);
+    setChosenTabs((tabs) => ({ ...tabs, [character.id]: next }));
+  };
   const label = (c: CharacterModel) => characterLabel(data, lang, c.who, t("party.player"));
   const originName = character.who === "player" ? run.origin : character.who;
   // The same origin `addCharacter` takes the fixed fields from.
@@ -195,6 +209,8 @@ export default function Character({ data, run, saveRun, characterId, onSelect, t
   const opened = target === null ? null : open(target);
   const close = () => setTarget(null);
   const { multiclass } = rulesetEffects(run.difficulty, data);
+  const raceName = (value: string | { offData: string } | null) => (value === null || value === "" ? "" : isOffData(value) ? value.offData : gameName(data, lang, "race", value));
+  const identity = raceName(character.subrace === null || character.subrace === "" ? character.race : character.subrace);
   const levelIssues = issues.filter((issue) => issue.level !== null);
 
   return (
@@ -213,50 +229,70 @@ export default function Character({ data, run, saveRun, characterId, onSelect, t
           {t("character.error", { message: error })}
         </p>
       )}
-      <div className="stack">
-        <Summary character={character} run={run} data={data} lang={lang} />
-        <Creation
-          data={data}
-          character={character}
-          issues={issues.filter((issue) => issue.level === null)}
-          locked={locked}
-          hasSubraces={subraces.length > 0}
-          onPick={(field) => setTarget({ field })}
-          origin={character.who === "player" ? { value: run.origin, options: originOptions, onChange: changeOrigin } : undefined}
-          onAbility={(ability, value) => commit(setAbilities(character, { ...character.abilities, [ability]: value }))}
-        />
-        <section className="frame levelsframe" aria-labelledby="levels-title">
-          <div className="framehead">
-            <div>
-              <h2 id="levels-title">{t("character.levels")}</h2>
-              <p className="sub">{t("character.levels.help")}</p>
-            </div>
-            <label className="switch">
-              <input type="checkbox" checked={tree} onChange={(event) => onTree(event.target.checked)} /> {t("character.tree")}
-            </label>
+      <header className="charhead">
+        <h1>{label(character)}</h1>
+        <p className="sub">{[identity, classLineText(character, run.progress.level, data, lang)].filter((part) => part !== "").join(" · ")}</p>
+      </header>
+      <div className="charlayout">
+        <aside className="charside" aria-label={t("character.summary")}>
+          <Summary character={character} run={run} data={data} lang={lang} />
+        </aside>
+        <div className="charmain">
+          <div className="tabs" role="tablist" aria-label={t("character.tabs")}>
+            {(["sheet", "notes"] as const).map((name) => (
+              <button key={name} type="button" role="tab" id={`chartab-${name}`} aria-selected={tab === name} aria-controls={`charpanel-${name}`} tabIndex={tab === name ? 0 : -1} onClick={() => chooseTab(name)}>
+                {t(`character.tab.${name}`)}
+              </button>
+            ))}
           </div>
-          {tree ? (
-            <LevelTree
+          <div className="stack" role="tabpanel" id="charpanel-sheet" aria-labelledby="chartab-sheet" hidden={tab !== "sheet"}>
+            <Creation
               data={data}
               character={character}
-              issues={levelIssues}
-              progressLevel={run.progress.level}
-              multiclass={multiclass}
-              onPick={(level, slot) => setTarget({ level, slot })}
-              onChoose={(level, slot, choice) => commit(setChoice(character, level, slot, choice))}
+              issues={issues.filter((issue) => issue.level === null)}
+              locked={locked}
+              hasSubraces={subraces.length > 0}
+              onPick={(field) => setTarget({ field })}
+              origin={character.who === "player" ? { value: run.origin, options: originOptions, onChange: changeOrigin } : undefined}
+              onAbility={(ability, value) => commit(setAbilities(character, { ...character.abilities, [ability]: value }))}
             />
-          ) : (
-            <LevelList data={data} character={character} issues={levelIssues} progressLevel={run.progress.level} multiclass={multiclass} onPick={(level, slot) => setTarget({ level, slot })} />
-          )}
-          <div className="row levelactions">
-            <button className="btn" disabled={character.levels.length >= MAX_LEVELS} onClick={() => commit(addLevel(character))}>
-              {t("character.addLevel")}
-            </button>
-            <button className="btn" disabled={character.levels.length <= 1} onClick={() => commit(removeLastLevel(character))}>
-              {t("character.removeLevel", { level: character.levels.length })}
-            </button>
+            <section className="frame levelsframe" aria-labelledby="levels-title">
+              <div className="framehead">
+                <div>
+                  <h2 id="levels-title">{t("character.levels")}</h2>
+                  <p className="sub">{t("character.levels.help")}</p>
+                </div>
+                <label className="switch">
+                  <input type="checkbox" checked={tree} onChange={(event) => onTree(event.target.checked)} /> {t("character.tree")}
+                </label>
+              </div>
+              {tree ? (
+                <LevelTree
+                  data={data}
+                  character={character}
+                  issues={levelIssues}
+                  progressLevel={run.progress.level}
+                  multiclass={multiclass}
+                  onPick={(level, slot) => setTarget({ level, slot })}
+                  onChoose={(level, slot, choice) => commit(setChoice(character, level, slot, choice))}
+                />
+              ) : (
+                <LevelList data={data} character={character} issues={levelIssues} progressLevel={run.progress.level} multiclass={multiclass} onPick={(level, slot) => setTarget({ level, slot })} />
+              )}
+              <div className="row levelactions">
+                <button className="btn" disabled={character.levels.length >= MAX_LEVELS} onClick={() => commit(addLevel(character))}>
+                  {t("character.addLevel")}
+                </button>
+                <button className="btn" disabled={character.levels.length <= 1} onClick={() => commit(removeLastLevel(character))}>
+                  {t("character.removeLevel", { level: character.levels.length })}
+                </button>
+              </div>
+            </section>
           </div>
-        </section>
+          <div role="tabpanel" id="charpanel-notes" aria-labelledby="chartab-notes" hidden={tab !== "notes"}>
+            {tab === "notes" && <NotesTab key={character.id} notes={character.notes} onSave={(notes) => attempt(() => save(setNotes(character, notes)))} />}
+          </div>
+        </div>
       </div>
       {opened !== null && (
         <ChoicePicker

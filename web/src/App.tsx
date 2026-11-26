@@ -50,10 +50,12 @@ type Props = {
   store: RunStore;
   /** Where the settings live (normally `localStorage`); null when the browser keeps nothing. */
   settingsBackend: Storage | null;
+  /** Where the open character tab is remembered for the session (normally `sessionStorage`); null when unavailable. */
+  sessionBackend: Storage | null;
 };
 
 /** The app shell: header (runs, screens, language, theme), storage warnings and hash routing; screens plug into the routes. */
-export default function App({ data, store, settingsBackend }: Props) {
+export default function App({ data, store, settingsBackend, sessionBackend }: Props) {
   const [settings, setSettings] = useState<Settings>(() => loadSettings(settingsBackend));
   const [runs, setRuns] = useState(() => store.list());
   const [route, setRoute] = useState<Route>(() => parseRoute(window.location.hash));
@@ -272,6 +274,7 @@ export default function App({ data, store, settingsBackend }: Props) {
             run={run}
             saveRun={saveRun}
             characterId={route.id}
+            sessionBackend={sessionBackend}
             onSelect={(id) => go({ screen: "character", id })}
             tree={settings.tree}
             onTree={(tree) => update({ tree })}

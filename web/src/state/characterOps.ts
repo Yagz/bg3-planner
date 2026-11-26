@@ -50,6 +50,11 @@ export function setAbilities(character: Character, base: Record<Ability, number>
   return { ...character, abilities: { ...base } };
 }
 
+/** The character's free notes. */
+export function setNotes(character: Character, notes: string): Character {
+  return { ...character, notes };
+}
+
 /** Changes the class taken at a level; its picks stay where they are (those of slots that no longer exist are the preview's to list). */
 export function setLevelClass(character: Character, level: number, cls: string | OffData): Character {
   return withLevel(character, level, (entry) => ({ ...entry, class: cls }));

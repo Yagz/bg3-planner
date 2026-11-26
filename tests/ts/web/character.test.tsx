@@ -1,5 +1,6 @@
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
-import { afterEach, beforeAll, describe, expect, it } from "vitest";
+import { act } from "@testing-library/react";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import type { GameData } from "../../../src/data/types.ts";
 import { skillProficiencies } from "../../../src/engine/coverage.ts";
 import { resolve, subclassSlot } from "../../../src/engine/progression.ts";
@@ -11,6 +12,7 @@ import { I18nContext, createI18n } from "../../../web/src/i18n/i18n.ts";
 import IssueList from "../../../web/src/screens/character/IssueList.tsx";
 import { gameName } from "../../../web/src/names.ts";
 import { addCharacter } from "../../../web/src/state/partyOps.ts";
+import { loadTab, saveTab } from "../../../web/src/state/sessionTab.ts";
 import { createStore } from "../../../web/src/state/storage.ts";
 import { MemoryBackend } from "./memoryBackend.ts";
 import { realData } from "./realData.ts";
@@ -21,6 +23,7 @@ beforeAll(() => {
 });
 afterEach(() => {
   cleanup();
+  vi.useRealTimers();
 });
 
 /** A Lightfoot Halfling Ranger of `levels` levels with its level-1 skills picked and nothing else. */
@@ -60,7 +63,7 @@ function setup(run: Run, id: string, game: GameData = data) {
   const store = createStore(new MemoryBackend());
   const saved = store.save(run);
   window.history.replaceState(null, "", `#/character/${id}`);
-  render(<App data={game} store={store} settingsBackend={new MemoryBackend()} />);
+  render(<App data={game} store={store} settingsBackend={new MemoryBackend()} sessionBackend={new MemoryBackend()} />);
   return { store, runId: saved.id };
 }
 
@@ -602,5 +605,129 @@ describe("IssueList", () => {
       </I18nContext.Provider>,
     );
     expect(screen.getByText("La maîtrise de Discrétion est déjà accordée par la sous-race : ce choix ne rapporte rien.")).toBeTruthy();
+  });
+});
+
+describe("tabs and notes", () => {
+  function other(): Character {
+    return { ...ranger(1), id: "other", who: "Gale" };
+  }
+  /** The French app on the Character screen of `id`, with a session backend that outlives a re-render. */
+  function setupFr(characters: Character[], id: string, session = new MemoryBackend()) {
+    const store = createStore(new MemoryBackend());
+    const saved = store.save(runWith(characters));
+    const settings = new MemoryBackend();
+    settings.setItem("bg3p:settings", JSON.stringify({ lang: "fr" }));
+    window.history.replaceState(null, "", `#/character/${id}`);
+    const mount = () => render(<App data={data} store={store} settingsBackend={settings} sessionBackend={session} />);
+    mount();
+    return { store, runId: saved.id, session, mount };
+  }
+  const notesOf = (store: ReturnType<typeof createStore>, runId: string, id: string) => store.load(runId)!.characters.find((c) => c.id === id)!.notes;
+  const openNotes = () => fireEvent.click(screen.getByRole("tab", { name: "Notes" }));
+  const field = () => screen.getByRole("textbox", { name: "Notes" }) as HTMLTextAreaElement;
+  const type = (text: string) => fireEvent.change(field(), { target: { value: text } });
+
+  it("offers Fiche and Notes, Fiche selected first, and Notes shows the stored notes", () => {
+    const c = { ...ranger(1), notes: "Prendre Guérison" };
+    setupFr([c], c.id);
+    const tabs = within(screen.getByRole("tablist")).getAllByRole("tab");
+    expect(tabs.map((tab) => tab.textContent)).toEqual(["Fiche", "Notes"]);
+    expect(screen.getByRole("tab", { name: "Fiche" }).getAttribute("aria-selected")).toBe("true");
+    openNotes();
+    expect(screen.getByRole("tab", { name: "Notes" }).getAttribute("aria-selected")).toBe("true");
+    expect(field().value).toBe("Prendre Guérison");
+  });
+
+  it("saves one version on blur holding the typed text", () => {
+    const c = ranger(1);
+    const { store, runId } = setupFr([c], c.id);
+    const before = store.history(runId).length;
+    openNotes();
+    type("Ligne 1\nLigne 2");
+    expect(store.history(runId).length).toBe(before);
+    fireEvent.blur(field());
+    expect(store.history(runId).length).toBe(before + 1);
+    expect(notesOf(store, runId, c.id)).toBe("Ligne 1\nLigne 2");
+  });
+
+  it("makes no version on a typing pause, and exactly one on blur", () => {
+    vi.useFakeTimers();
+    const c = ranger(1);
+    const { store, runId } = setupFr([c], c.id);
+    const before = store.history(runId).length;
+    openNotes();
+    type("a");
+    act(() => {
+      vi.advanceTimersByTime(3000);
+    });
+    type("ab");
+    act(() => {
+      vi.advanceTimersByTime(3000);
+    });
+    expect(store.history(runId).length).toBe(before);
+    fireEvent.blur(field());
+    expect(store.history(runId).length).toBe(before + 1);
+    expect(notesOf(store, runId, c.id)).toBe("ab");
+  });
+
+  it("saves to the first character when switching character without a blur", () => {
+    const a = ranger(1);
+    const b = other();
+    const { store, runId } = setupFr([a, b], a.id);
+    const before = store.history(runId).length;
+    openNotes();
+    type("pour le premier");
+    fireEvent.click(screen.getByRole("button", { name: gameName(data, "fr", "origin", "Gale") }));
+    expect(notesOf(store, runId, a.id)).toBe("pour le premier");
+    expect(notesOf(store, runId, b.id)).toBe("");
+    expect(store.history(runId).length).toBe(before + 1);
+  });
+
+  it("saves the draft on pagehide, once", () => {
+    const c = ranger(1);
+    const { store, runId } = setupFr([c], c.id);
+    const before = store.history(runId).length;
+    openNotes();
+    type("avant la fermeture");
+    window.dispatchEvent(new Event("pagehide"));
+    expect(notesOf(store, runId, c.id)).toBe("avant la fermeture");
+    fireEvent.blur(field());
+    expect(store.history(runId).length).toBe(before + 1);
+  });
+
+  it("remembers the tab per character for the session", () => {
+    const a = ranger(1);
+    const b = other();
+    const { session, mount } = setupFr([a, b], a.id);
+    openNotes();
+    cleanup();
+    mount();
+    expect(screen.getByRole("tab", { name: "Notes" }).getAttribute("aria-selected")).toBe("true");
+    fireEvent.click(screen.getByRole("button", { name: gameName(data, "fr", "origin", "Gale") }));
+    expect(screen.getByRole("tab", { name: "Fiche" }).getAttribute("aria-selected")).toBe("true");
+    expect(loadTab(session, a.id)).toBe("notes");
+    expect(loadTab(session, b.id)).toBe("sheet");
+  });
+});
+
+describe("session tab storage", () => {
+  it("defaults to the sheet, round-trips and ignores unknown values", () => {
+    const backend = new MemoryBackend();
+    expect(loadTab(backend, "x")).toBe("sheet");
+    saveTab(backend, "x", "notes");
+    expect(loadTab(backend, "x")).toBe("notes");
+    expect(loadTab(backend, "y")).toBe("sheet");
+    backend.setItem("bg3p:tab:x", "equipment");
+    expect(loadTab(backend, "x")).toBe("sheet");
+    expect(loadTab(null, "x")).toBe("sheet");
+  });
+
+  it("never throws on an unreadable or full storage", () => {
+    const backend = new MemoryBackend();
+    backend.failReads = "SecurityError";
+    backend.failWrites = "QuotaExceededError";
+    expect(loadTab(backend, "x")).toBe("sheet");
+    expect(() => saveTab(backend, "x", "notes")).not.toThrow();
   });
 });

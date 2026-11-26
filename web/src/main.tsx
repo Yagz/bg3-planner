@@ -17,7 +17,17 @@ function browserStorage(): Storage | null {
   }
 }
 
+/** `sessionStorage`, or null where the browser refuses it. */
+function sessionStorageOrNull(): Storage | null {
+  try {
+    return window.sessionStorage;
+  } catch {
+    return null;
+  }
+}
+
 const backend = browserStorage();
+const session = sessionStorageOrNull();
 const store = createStore(backend);
 
 function Root() {
@@ -29,7 +39,7 @@ function Root() {
     loadGameDataFromUrl(import.meta.env.BASE_URL).then(setData, (reason: unknown) => setError(reason instanceof Error ? reason.message : String(reason)));
   }, []);
 
-  if (data !== null) return <App data={data} store={store} settingsBackend={backend} />;
+  if (data !== null) return <App data={data} store={store} settingsBackend={backend} sessionBackend={session} />;
   return <p className="wrap sub">{error === null ? t("app.loading") : t("app.loadError", { message: error })}</p>;
 }
 

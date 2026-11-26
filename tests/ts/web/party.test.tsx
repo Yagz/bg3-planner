@@ -50,7 +50,7 @@ function ranger(levels: number): Character {
 function setup(run: Run, lang: Lang = "en", store = createStore(new MemoryBackend())) {
   const saved = store.save(run);
   window.history.replaceState(null, "", "#/party");
-  render(<App data={data} store={store} settingsBackend={new MemoryBackend()} />);
+  render(<App data={data} store={store} settingsBackend={new MemoryBackend()} sessionBackend={new MemoryBackend()} />);
   if (lang === "fr") fireEvent.change(screen.getByRole("combobox", { name: "Language" }), { target: { value: "fr" } });
   return { store, id: saved.id };
 }

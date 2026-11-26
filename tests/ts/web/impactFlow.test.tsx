@@ -84,7 +84,7 @@ function setup(run: Run, id: string) {
   const settings = new MemoryBackend();
   const saved = store.save(run);
   window.history.replaceState(null, "", `#/character/${id}`);
-  render(<App data={data} store={store} settingsBackend={settings} />);
+  render(<App data={data} store={store} settingsBackend={settings} sessionBackend={new MemoryBackend()} />);
   return { store, runId: saved.id, settings };
 }
 

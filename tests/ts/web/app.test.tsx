@@ -17,7 +17,7 @@ beforeAll(() => {
 });
 
 function renderApp(store: RunStore = createStore(new MemoryBackend()), settings = new MemoryBackend()) {
-  render(<App data={stubData()} store={store} settingsBackend={settings} />);
+  render(<App data={stubData()} store={store} settingsBackend={settings} sessionBackend={new MemoryBackend()} />);
   return { store, settings };
 }
 
@@ -274,7 +274,7 @@ describe("history panel: what each version changed", () => {
     settings.items.set("bg3p:settings", JSON.stringify({ lang: "fr", currentRun: "h" }));
     window.history.replaceState(null, "", "/#/history");
     const data = stubData({}, { "class:Champion": text("Champion (fr)"), "class:BattleMaster": text("Maître de guerre (fr)"), "origin:Gale": text("Gale (fr)"), "origin:Astarion": text("Astarion (fr)") });
-    render(<App data={data} store={store} settingsBackend={settings} />);
+    render(<App data={data} store={store} settingsBackend={settings} sessionBackend={new MemoryBackend()} />);
   };
 
   it("names the changed choice by its French name with the old one struck, and notes imports and restores", () => {
@@ -370,7 +370,7 @@ describe("history panel: new values, separators and the kept window (English, ga
   const SCORES = { Strength: 8, Dexterity: 15, Constitution: 14, Intelligence: 8, Wisdom: 15, Charisma: 10 };
   const englishApp = (store: RunStore) => {
     window.history.replaceState(null, "", "/#/history");
-    render(<App data={realData()} store={store} settingsBackend={new MemoryBackend()} />);
+    render(<App data={realData()} store={store} settingsBackend={new MemoryBackend()} sessionBackend={new MemoryBackend()} />);
     return within(screen.getByRole("list", { name: "Saved versions" })).getAllByRole("listitem");
   };
 
@@ -433,7 +433,7 @@ describe("difficulty picker", () => {
     const saved = store.save(run);
     const settings = new MemoryBackend();
     settings.items.set("bg3p:settings", JSON.stringify({ lang }));
-    render(<App data={data()} store={store} settingsBackend={settings} />);
+    render(<App data={data()} store={store} settingsBackend={settings} sessionBackend={new MemoryBackend()} />);
     return { store, id: saved.id };
   };
   const picker = () => screen.getByRole("combobox", { name: /^Difficult/ }) as HTMLSelectElement;

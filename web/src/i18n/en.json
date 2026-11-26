@@ -284,5 +284,10 @@
   "spell.cantripShort": "cantrip",
   "spell.levelShort": "lvl {level}",
   "spell.castWith": "Cast with {ability}",
-  "spell.castWithInline": "cast with {ability}"
+  "spell.castWithInline": "cast with {ability}",
+  "character.tabs": "Character sections",
+  "character.tab.sheet": "Sheet",
+  "character.tab.notes": "Notes",
+  "character.notes": "Notes",
+  "character.notes.help": "Plain text, saved when you leave the field or this tab."
 }

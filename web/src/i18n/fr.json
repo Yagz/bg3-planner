@@ -284,5 +284,10 @@
   "spell.cantripShort": "mineur",
   "spell.levelShort": "niv. {level}",
   "spell.castWith": "Lancé avec {ability}",
-  "spell.castWithInline": "lancé avec {ability}"
+  "spell.castWithInline": "lancé avec {ability}",
+  "character.tabs": "Sections du personnage",
+  "character.tab.sheet": "Fiche",
+  "character.tab.notes": "Notes",
+  "character.notes": "Notes",
+  "character.notes.help": "Texte brut, enregistré quand vous quittez le champ ou cet onglet."
 }
