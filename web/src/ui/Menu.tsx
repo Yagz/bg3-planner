@@ -13,7 +13,7 @@ type Props = {
 
 const FOCUSABLE = "button:not([disabled]), select:not([disabled]), input:not([disabled])";
 
-/** A button that opens a list of actions (and, for a `custom` entry, any controls). Opens on click; arrow keys move between the entries; Escape, a click outside and a choice close it, Escape and a choice give the focus back to the button. */
+/** A button that opens a list of actions (and, for a `custom` entry, any controls). Opens on click; arrow keys move between the entries; Escape, a click outside and a choice (an item, or a change in a custom control) close it, Escape and a choice give the focus back to the button. */
 export default function Menu({ label, icon, items }: Props) {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
@@ -35,14 +35,19 @@ export default function Menu({ label, icon, items }: Props) {
     setOpen(false);
     if (refocus) button.current?.focus();
   };
+  // Where the focus goes once the panel is mounted; set by the key or click that opens the menu.
+  const [focusAt, setFocusAt] = useState<"first" | "last">("first");
   const openAt = (where: "first" | "last") => {
+    setFocusAt(where);
     setOpen(true);
-    // The panel is mounted by the render this state change causes.
-    queueMicrotask(() => {
-      const list = entries();
-      (where === "first" ? list[0] : list[list.length - 1])?.focus();
-    });
   };
+  useEffect(() => {
+    if (!open) return;
+    const list = entries();
+    (focusAt === "first" ? list[0] : list[list.length - 1])?.focus();
+    // Only when the menu opens.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   const onKeyDown = (event: KeyboardEvent) => {
     if (event.key === "Escape" && open) {
@@ -99,7 +104,7 @@ export default function Menu({ label, icon, items }: Props) {
         <div className="menupanel" id={panelId} role="menu" aria-label={label} ref={panel}>
           {items.map((item, index) =>
             "custom" in item ? (
-              <div key={index} className="menucustom" role="none">
+              <div key={index} className="menucustom" role="none" onChange={() => close(true)}>
                 {item.custom}
               </div>
             ) : (

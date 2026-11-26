@@ -29,6 +29,13 @@ describe("app.css", () => {
     expect(rules.map((match) => match[2]!).join(";")).toMatch(/order:\s*-1/);
   });
 
+  it("scopes the header control colours to the run bar's own controls, never to the controls inside a menu panel", () => {
+    const rules = selectors(readFileSync("web/src/app.css", "utf8")).filter((selector) => selector.startsWith(".appbar .runbar"));
+    expect(rules.length).toBeGreaterThan(0);
+    // A descendant select or input would reach the Language and Theme selects of the settings menu, which sit on a light panel.
+    expect(rules.filter((selector) => /^\.appbar \.runbar (select|input)(?![\w-])/.test(selector) && !selector.includes("option"))).toEqual([]);
+  });
+
   it("keeps [hidden] stronger than display rules, which jsdom cannot show", () => {
     const css = readFileSync("web/src/app.css", "utf8");
     expect(css).toMatch(/\[hidden\]\s*\{\s*display:\s*none\s*!important\s*\}/);

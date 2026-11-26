@@ -79,6 +79,21 @@ describe("app shell", () => {
     expect(store.list()).toHaveLength(0);
   });
 
+  it("a run action gives the focus back to the run menu button, and a language or theme choice closes the settings menu on its button", () => {
+    renderApp();
+    fireEvent.click(screen.getByRole("button", { name: "New run" }));
+    runAction("Duplicate");
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Run actions" }));
+    expect(screen.queryByRole("menu")).toBeNull();
+    setTheme("dark");
+    expect(document.documentElement.dataset["theme"]).toBe("dark");
+    expect(screen.queryByRole("menu")).toBeNull();
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Settings" }));
+    setLanguage("fr");
+    expect(screen.queryByRole("menu")).toBeNull();
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Réglages" }));
+  });
+
   it("the difficulty is not in the header", () => {
     renderApp();
     fireEvent.click(screen.getByRole("button", { name: "New run" }));
