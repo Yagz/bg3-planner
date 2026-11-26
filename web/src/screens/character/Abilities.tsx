@@ -1,6 +1,6 @@
 import { useId, useState } from "react";
 import type { GameData } from "../../../../src/data/types.ts";
-import { POINT_BUY, abilityTotals, pointsSpent } from "../../../../src/engine/abilities.ts";
+import { ABILITY_CAP, POINT_BUY, abilityTotals, pointsSpent } from "../../../../src/engine/abilities.ts";
 import type { Issue } from "../../../../src/engine/issues.ts";
 import { resolve } from "../../../../src/engine/progression.ts";
 import { ABILITIES } from "../../../../src/plan/model.ts";
@@ -50,7 +50,10 @@ export default function Abilities({ data, character, issues, onBase, onBonus }: 
   const stored = slot === null ? undefined : character.levels[0]?.choices[slot.id];
   const storedPair: (Ability | null)[] = Array.isArray(stored) && stored.length === 2 && stored.every(isAbility) ? stored : [null, null];
   /** A bonus chosen on its own stays here until the other is chosen too. */
-  const [half, setHalf] = useState<(Ability | null)[] | null>(null);
+  const [pending, setHalf] = useState<{ slot: string; stored: string; pair: (Ability | null)[] } | null>(null);
+  // Dropped as soon as the slot or the stored choice is no longer the one it was made against (history restore, import, a new level-1 class).
+  const storedKey = JSON.stringify(stored ?? null);
+  const half = pending !== null && slot !== null && pending.slot === slot.id && pending.stored === storedKey ? pending.pair : null;
   const picked = half ?? storedPair;
   const complete = picked[0] !== null && picked[1] !== null;
   const bonuses = slot?.bonuses ?? [2, 1];
@@ -60,7 +63,7 @@ export default function Abilities({ data, character, issues, onBase, onBonus }: 
   const without = slot === null ? character : clearChoice(character, 1, slot.id);
   const totals = abilityTotals(without, data, 1);
   picked.forEach((ability, i) => {
-    if (ability !== null) totals[ability] = Math.min(totals[ability] + (bonuses[i] ?? 0), 20);
+    if (ability !== null) totals[ability] = Math.min(totals[ability] + (bonuses[i] ?? 0), ABILITY_CAP);
   });
 
   const choose = (index: number, ability: Ability) => {
@@ -72,7 +75,7 @@ export default function Abilities({ data, character, issues, onBase, onBonus }: 
       setHalf(null);
       onBonus(slot.id, [first, second]);
     } else {
-      setHalf(next);
+      setHalf({ slot: slot.id, stored: storedKey, pair: next });
     }
   };
   const step = (ability: Ability, direction: 1 | -1) => {

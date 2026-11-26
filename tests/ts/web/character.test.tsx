@@ -10,6 +10,7 @@ import { emptyRun } from "../../../src/plan/model.ts";
 import type { Character, Choice, Run } from "../../../src/plan/model.ts";
 import App from "../../../web/src/App.tsx";
 import { I18nContext, createI18n } from "../../../web/src/i18n/i18n.ts";
+import Abilities from "../../../web/src/screens/character/Abilities.tsx";
 import NotesTab from "../../../web/src/screens/character/NotesTab.tsx";
 import IssueList from "../../../web/src/screens/character/IssueList.tsx";
 import { gameDescription, gameName } from "../../../web/src/names.ts";
@@ -250,6 +251,33 @@ describe("Character screen", () => {
       fireEvent.click(screen.getByRole("checkbox", { name: "Tree" }));
       expect(within(level(1)).getByText("Settled in the Abilities frame")).toBeTruthy();
       expect(within(level(1)).queryByRole("button", { name: /^ability scores/ })).toBeNull();
+    });
+
+    it("drops a half-made bonus when the stored choice or the level-1 class changes under the same character", () => {
+      const c = ranger(1);
+      const bonus = resolve(c, data).levels[0]!.slots.find((s) => s.selector.function === "SelectAbilityBonus")!;
+      const view = (character: Character) => (
+        <I18nContext.Provider value={createI18n("en")}>
+          <Abilities data={data} character={character} issues={[]} onBase={() => {}} onBonus={() => {}} />
+        </I18nContext.Provider>
+      );
+      const { rerender } = render(view(c));
+      const total = (ability: string) => rowOf(abilitiesFrame(), ability).querySelector("td.tot")!.textContent;
+      fireEvent.click(within(rowOf(abilitiesFrame(), "Charisma")).getByRole("radio", { name: "+2 Charisma" }));
+      expect(total("Charisma")).toBe("12");
+      const restored = { ...c, levels: [{ ...c.levels[0]!, choices: { ...c.levels[0]!.choices, [bonus.id]: ["Dexterity", "Wisdom"] } }] };
+      rerender(view(restored));
+      expect(within(rowOf(abilitiesFrame(), "Charisma")).getByRole("radio", { name: "+2 Charisma" })).toHaveProperty("checked", false);
+      expect(within(rowOf(abilitiesFrame(), "Dexterity")).getByRole("radio", { name: "+2 Dexterity" })).toHaveProperty("checked", true);
+      expect(total("Charisma")).toBe("10");
+      expect(total("Dexterity")).toBe("17");
+      // A half-made bonus, then the level-1 class cleared.
+      const empty = { ...c, levels: [{ class: "", choices: {} as Record<string, Choice> }] };
+      rerender(view({ ...c, levels: [{ ...c.levels[0]!, choices: {} }] }));
+      fireEvent.click(within(rowOf(abilitiesFrame(), "Charisma")).getByRole("radio", { name: "+2 Charisma" }));
+      expect(total("Charisma")).toBe("12");
+      rerender(view(empty));
+      expect(total("Charisma")).toBe("10");
     });
 
     it("asks for the level-1 class first when there is none: radios disabled, no throw", () => {
