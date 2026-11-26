@@ -75,7 +75,7 @@ describe("app.css", () => {
 
     it("text tokens reach WCAG AA on their surfaces", () => {
       const pairs: [string, string][] = [
-        ["fg", "bg"], ["fg", "surface"], ["muted", "bg"], ["muted", "surface"], ["accent", "surface"], ["on-accent", "accent"],
+        ["fg", "bg"], ["fg", "surface"], ["muted", "bg"], ["muted", "surface"], ["accent", "surface"], ["accent", "accent-bg"], ["on-accent", "accent"], ["muted", "surface2"], ["surface", "bad"],
         ["good", "good-bg"], ["todo", "todo-bg"], ["bad", "bad-bg"], ["head-fg", "head-bg"], ["head-accent", "head-bg"],
       ];
       for (const [name, theme] of [["light", light()], ["dark media", darkMedia()], ["dark attribute", darkAttr()]] as const) {
