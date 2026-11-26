@@ -1,7 +1,8 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { useI18n } from "../../i18n/i18n.ts";
 
-type Props = { notes: string; onSave: (notes: string) => void };
+/** `onSave` returns false (or throws) when the save was refused: the draft then counts as unsaved and is offered again. */
+type Props = { notes: string; onSave: (notes: string) => boolean | void };
 
 /**
  * Free notes on a character: a plain-text field with a local draft. The draft is saved when the field loses focus, when
@@ -20,8 +21,8 @@ export default function NotesTab({ notes, onSave }: Props) {
   const flush = () => {
     const { draft: text, saved, onSave: save } = latest.current;
     if (text === saved) return;
-    latest.current.saved = text;
-    save(text);
+    // Marked saved only once the save went through: a refused one is tried again on the next blur or unmount.
+    if (save(text) !== false) latest.current.saved = text;
   };
 
   useEffect(() => {

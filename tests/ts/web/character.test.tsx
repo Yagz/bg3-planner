@@ -9,6 +9,7 @@ import { emptyRun } from "../../../src/plan/model.ts";
 import type { Character, Choice, Run } from "../../../src/plan/model.ts";
 import App from "../../../web/src/App.tsx";
 import { I18nContext, createI18n } from "../../../web/src/i18n/i18n.ts";
+import NotesTab from "../../../web/src/screens/character/NotesTab.tsx";
 import IssueList from "../../../web/src/screens/character/IssueList.tsx";
 import { gameName } from "../../../web/src/names.ts";
 import { addCharacter } from "../../../web/src/state/partyOps.ts";
@@ -634,9 +635,46 @@ describe("tabs and notes", () => {
     const tabs = within(screen.getByRole("tablist")).getAllByRole("tab");
     expect(tabs.map((tab) => tab.textContent)).toEqual(["Fiche", "Notes"]);
     expect(screen.getByRole("tab", { name: "Fiche" }).getAttribute("aria-selected")).toBe("true");
+    expect(document.getElementById("charpanel-notes")!.hasAttribute("hidden")).toBe(true);
     openNotes();
+    expect(document.getElementById("charpanel-sheet")!.hasAttribute("hidden")).toBe(true);
     expect(screen.getByRole("tab", { name: "Notes" }).getAttribute("aria-selected")).toBe("true");
     expect(field().value).toBe("Prendre Guérison");
+  });
+
+  it("moves between tabs with the arrow keys, Home and End, wrapping, and focuses the target", () => {
+    const c = ranger(1);
+    setupFr([c], c.id);
+    const sheet = screen.getByRole("tab", { name: "Fiche" });
+    sheet.focus();
+    fireEvent.keyDown(sheet, { key: "ArrowRight" });
+    const notes = screen.getByRole("tab", { name: "Notes" });
+    expect(notes.getAttribute("aria-selected")).toBe("true");
+    expect(document.activeElement).toBe(notes);
+    fireEvent.keyDown(notes, { key: "ArrowRight" });
+    expect(document.activeElement).toBe(sheet);
+    fireEvent.keyDown(sheet, { key: "ArrowLeft" });
+    expect(document.activeElement).toBe(notes);
+    fireEvent.keyDown(notes, { key: "Home" });
+    expect(document.activeElement).toBe(sheet);
+    fireEvent.keyDown(sheet, { key: "End" });
+    expect(document.activeElement).toBe(notes);
+    expect(notes.getAttribute("aria-selected")).toBe("true");
+  });
+
+  it("tries a refused notes save again on the next blur", () => {
+    const onSave = vi.fn().mockReturnValueOnce(false);
+    render(
+      <I18nContext.Provider value={createI18n("fr")}>
+        <NotesTab notes="" onSave={onSave} />
+      </I18nContext.Provider>,
+    );
+    const box = screen.getByRole("textbox", { name: "Notes" });
+    fireEvent.change(box, { target: { value: "texte" } });
+    fireEvent.blur(box);
+    fireEvent.blur(box);
+    expect(onSave).toHaveBeenCalledTimes(2);
+    expect(onSave).toHaveBeenLastCalledWith("texte");
   });
 
   it("saves one version on blur holding the typed text", () => {

@@ -15,6 +15,8 @@
   --accent: #4493f8; --accent-bg: #121d2f; --todo: #d29922; --todo-bg: #2b2111; --bad: #f85149; --bad-bg: #2d1416;
   --good: #3fb950; --good-bg: #12261e; --ghost: #656c76; --played: #10151c; color-scheme: dark }
 * { box-sizing: border-box }
+/* Display rules such as .stack { display: flex } would otherwise beat the user agent's [hidden] */
+[hidden] { display: none !important }
 body { background: var(--bg); color: var(--fg); font: 14px/1.5 var(--font) }
 body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg-muted) }
 .wrap { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); max-width: 1680px; margin: 0 auto }

@@ -16,4 +16,9 @@ describe("app.css", () => {
     expect(tileRules.some((selector) => selector.startsWith(".ab6 "))).toBe(true);
     expect(tileRules.some((selector) => selector.startsWith(".abil "))).toBe(true);
   });
+
+  it("keeps [hidden] stronger than display rules, which jsdom cannot show", () => {
+    const css = readFileSync("web/src/app.css", "utf8");
+    expect(css).toMatch(/\[hidden\]\s*\{\s*display:\s*none\s*!important\s*\}/);
+  });
 });

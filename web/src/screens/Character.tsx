@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import type { KeyboardEvent } from "react";
 import type { TextKind } from "../../../src/data/names.ts";
 import type { GameData, Selector } from "../../../src/data/types.ts";
 import type { Impact } from "../../../src/engine/impact.ts";
@@ -98,6 +99,15 @@ export default function Character({ data, run, saveRun, characterId, onSelect, t
     saveTab(sessionBackend, character.id, next);
     setChosenTabs((tabs) => ({ ...tabs, [character.id]: next }));
   };
+  const onTabKey = (event: KeyboardEvent<HTMLDivElement>) => {
+    const names = ["sheet", "notes"] as const;
+    const at = names.indexOf(tab);
+    const target = { ArrowRight: (at + 1) % names.length, ArrowLeft: (at + names.length - 1) % names.length, Home: 0, End: names.length - 1 }[event.key];
+    if (target === undefined) return;
+    event.preventDefault();
+    chooseTab(names[target]!);
+    document.getElementById(`chartab-${names[target]}`)?.focus();
+  };
   const label = (c: CharacterModel) => characterLabel(data, lang, c.who, t("party.player"));
   const originName = character.who === "player" ? run.origin : character.who;
   // The same origin `addCharacter` takes the fixed fields from.
@@ -108,12 +118,15 @@ export default function Character({ data, run, saveRun, characterId, onSelect, t
   const subraces = isOffData(race) ? [] : Object.keys(data.rules.races).filter((name) => data.rules.races[name]!.parent === race);
   const sortByName = (ids: string[], kind: TextKind) => [...ids].sort((a, b) => gameName(data, lang, kind, a).localeCompare(gameName(data, lang, kind, b), lang));
 
-  const attempt = (change: () => void) => {
+  /** Runs a change, showing its failure in the banner; says whether it went through. */
+  const attempt = (change: () => void): boolean => {
     try {
       change();
       setError(null);
+      return true;
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause));
+      return false;
     }
   };
   const save = (after: CharacterModel, origin?: string) => saveRun({ ...replaceCharacter(run, after), ...(origin === undefined ? {} : { origin }) });
@@ -238,7 +251,7 @@ export default function Character({ data, run, saveRun, characterId, onSelect, t
           <Summary character={character} run={run} data={data} lang={lang} />
         </aside>
         <div className="charmain">
-          <div className="tabs" role="tablist" aria-label={t("character.tabs")}>
+          <div className="tabs" role="tablist" aria-label={t("character.tabs")} onKeyDown={onTabKey}>
             {(["sheet", "notes"] as const).map((name) => (
               <button key={name} type="button" role="tab" id={`chartab-${name}`} aria-selected={tab === name} aria-controls={`charpanel-${name}`} tabIndex={tab === name ? 0 : -1} onClick={() => chooseTab(name)}>
                 {t(`character.tab.${name}`)}
