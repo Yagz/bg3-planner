@@ -14,7 +14,11 @@ export function gameName(data: GameData, lang: Lang, kind: TextKind | null, id: 
 /** Description of a game identifier in `lang` as plain text, or null when the translation table has none. */
 export function gameDescription(data: GameData, lang: Lang, kind: TextKind, id: string): string | null {
   const texts = data.texts[lang];
-  const params = kind === "spell" ? data.rules.spells[id]?.params : kind === "passive" ? data.rules.passives[id]?.params : undefined;
+  const params = kind === "spell" && Object.hasOwn(data.rules.spells, id)
+      ? data.rules.spells[id]?.params
+      : kind === "passive" && Object.hasOwn(data.rules.passives, id)
+        ? data.rules.passives[id]?.params
+        : undefined;
   const format: ParamFormat = {
     lang,
     damageName: (type) => nameOf(texts, "damage", type),

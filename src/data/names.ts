@@ -61,6 +61,9 @@ function renderParam(param: string | undefined, format: ParamFormat): string {
       const name = type === undefined ? null : format.damageName(type);
       return name === null || name === "" ? dice : `${dice} ${name}`;
     }
+    // A level- or ability-dependent amount: keep the damage type beside the marker.
+    const name = type === undefined ? null : format.damageName(type);
+    return name === null || name === "" ? format.variable : `${format.variable} ${name}`;
   }
   return format.variable;
 }

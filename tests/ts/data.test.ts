@@ -122,7 +122,7 @@ describe("description parameters (real data)", () => {
     const forms = new Set<string>();
     for (const def of [...Object.values(data.rules.spells), ...Object.values(data.rules.passives)]) {
       for (const param of def.params) {
-        if (renderParams("[1]", [param], format) === marker) forms.add(form(param));
+        if (renderParams("[1]", [param], format).startsWith(marker)) forms.add(form(param));
       }
     }
     expect([...forms].toSorted()).toEqual([

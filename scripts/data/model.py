@@ -52,8 +52,10 @@ def _split(value: str | None, separator: str = ";") -> list[str]:
 
 
 def _spell_level(level: int | None, s: dict) -> int | None:
-    """A spell's level: its `Level`, else 0 for an entry the game flags `IsSpell` in `SpellFlags` (cantrips such as
-    Thaumaturgy and Booming Blade carry no `Level`), else None (class actions such as Arcane Shots or Shadow Arts)."""
+    """A spell's level: its `Level`; when that is absent or empty, 0 if the entry's `SpellFlags` contain `IsSpell` (the
+    game treats it as level 0), else None (class actions such as Arcane Shots or Shadow Arts). Two racial spells granted
+    by AddSpells, `Shout_Enlarge_Duergar` and `Shout_Invisibility_Duergar`, also get 0 under this rule although they are
+    once-per-rest casts of level-2 spells; their treatment is a maintainer decision, pending."""
     if level is not None:
         return level
     return 0 if "IsSpell" in _split(s.get("SpellFlags")) else None

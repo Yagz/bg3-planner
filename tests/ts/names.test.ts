@@ -54,6 +54,11 @@ describe("renderParams", () => {
     expect(renderParams("[1]", ["GainTemporaryHitPoints(5)"], fr)).toBe("5");
     expect(renderParams("[1]", ["RegainHitPoints(Level)"], fr)).toBe("(selon le personnage)");
   });
+  it("keeps the damage type name beside the marker for an unrendered damage amount", () => {
+    expect(renderParams("[1]", ["DealDamage(LevelMapValue(D8Cantrip),Acid)"], fr)).toBe("(selon le personnage) Acide");
+    expect(renderParams("[1]", ["DealDamage(1d8+SpellCastingAbilityModifier, Acid)"], en)).toBe("(varies with the character) Acide");
+    expect(renderParams("[1]", ["DealDamage(LevelMapValue(D8Cantrip),Unknown)"], fr)).toBe("(selon le personnage)");
+  });
   it("renders a level-dependent, empty, unknown or missing parameter as the marker", () => {
     expect(renderParams("[1]", ["LevelMapValue(EldritchBlast)"], en)).toBe("(varies with the character)");
     expect(renderParams("[1]", [""], en)).toBe("(varies with the character)");
