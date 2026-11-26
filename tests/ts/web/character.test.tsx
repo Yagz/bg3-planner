@@ -7,6 +7,8 @@ import { validate } from "../../../src/engine/validate.ts";
 import { emptyRun } from "../../../src/plan/model.ts";
 import type { Character, Choice, Run } from "../../../src/plan/model.ts";
 import App from "../../../web/src/App.tsx";
+import { I18nContext, createI18n } from "../../../web/src/i18n/i18n.ts";
+import IssueList from "../../../web/src/screens/character/IssueList.tsx";
 import { gameName } from "../../../web/src/names.ts";
 import { addCharacter } from "../../../web/src/state/partyOps.ts";
 import { createStore } from "../../../web/src/state/storage.ts";
@@ -486,5 +488,17 @@ describe("Character screen", () => {
         expect(classButton(3)!.textContent).toBe(rogue);
       });
     }
+  });
+});
+
+describe("IssueList", () => {
+  it("names a skill already granted by its game name and words its source", () => {
+    const issue = { severity: "notice", code: "skillAlreadyGranted", character: "c1", level: 1, slot: "s", params: { item: "Stealth", source: "subrace" } } as const;
+    render(
+      <I18nContext.Provider value={createI18n("fr")}>
+        <IssueList data={data} issues={[issue]} />
+      </I18nContext.Provider>,
+    );
+    expect(screen.getByText("Discrétion est déjà maîtrisée grâce à la sous-race : ce choix ne rapporte rien.")).toBeTruthy();
   });
 });

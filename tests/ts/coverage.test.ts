@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { loadGameData } from "../../src/data/load.ts";
 import type { GameData, Selector } from "../../src/data/types.ts";
 import { abilityTotals } from "../../src/engine/abilities.ts";
-import { coverage } from "../../src/engine/coverage.ts";
+import { coverage, skillProficiencies } from "../../src/engine/coverage.ts";
 import { resolve } from "../../src/engine/progression.ts";
 import { emptyRun } from "../../src/plan/model.ts";
 import type { Character, Choice, Run } from "../../src/plan/model.ts";
@@ -90,6 +90,11 @@ describe("coverage", () => {
     const result = coverage(runOf([ranger]), data, 1);
     expect(result.find((s) => s.skill === "Medicine")!.best?.proficient).toBe(false);
     expect(result.find((s) => s.skill === "Stealth")!.best?.proficient).toBe(true);
+  });
+
+  it("counts a skill a race row grants by its own boosts (Elf Perception) with no pick", () => {
+    const elf: Character = { ...character("e", ["Fighter"], []), race: "Elf", subrace: "Elf_HighElf" };
+    expect(skillProficiencies(elf, data).proficient).toContain("Perception");
   });
 
   describe("who is proficient", () => {

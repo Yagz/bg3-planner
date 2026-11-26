@@ -11,17 +11,20 @@ import { stubData, text } from "./stubData.ts";
 const ENGINE_PARAMS: Record<string, Record<string, string | number>> = {
   "issue.abilityAboveMax": { ability: "Strength", value: 21 },
   "issue.abilityOutOfRange": { ability: "Strength", value: 18 },
+  "issue.alreadyExpert": { item: "Skill_X" },
   "issue.alreadyKnown": { item: "Item_X" },
   "issue.choiceMissing": { selector: "SelectSpells" },
   "issue.duplicateChoice": { item: "Item_X" },
   "issue.featAlreadyTaken": { feat: "Feat_X" },
   "issue.multiclassDisabled": { class: "Class_X" },
   "issue.notInList": { item: "Item_X", list: "list-uuid" },
+  "issue.notProficient": { item: "Skill_X" },
   "issue.offData": { selector: "SelectSpells" },
   "issue.pointBuyOverBudget": { spent: 30, budget: 27 },
   "issue.pointBuyUnderBudget": { spent: 25, budget: 27 },
   "issue.requirementNotMet": { feat: "Feat_X", requirement: "ability_min", ability: "Strength", value: 13, actual: 12 },
   "issue.requirementNotMet.proficiency": { feat: "Feat_X", requirement: "proficiency", proficiency: "Prof_X" },
+  "issue.skillAlreadyGranted": { item: "Skill_X", source: "background" },
   "issue.subclassNotOffered": { class: "Class_X", subclass: "Sub_X" },
   "issue.subclassUnlockedInPlay": { subclass: "Sub_X", parent: "Class_X" },
   "issue.subraceMismatch": { race: "Race_X", subrace: "Subrace_X" },
@@ -68,7 +71,8 @@ describe("issue messages", () => {
   it("use only the parameters the engine sends for each code, and render them all", () => {
     for (const lang of ["en", "fr"] as const) {
       const table: Record<string, string> = lang === "en" ? en : fr;
-      const issueKeys = Object.keys(table).filter((key) => key.startsWith("issue."));
+      // `issue.source.*` words fill the `{source}` of another message; they are no message of their own.
+      const issueKeys = Object.keys(table).filter((key) => key.startsWith("issue.") && !key.startsWith("issue.source."));
       expect(issueKeys.sort()).toEqual(Object.keys(ENGINE_PARAMS).sort());
       const { issueMessage } = createI18n(lang);
       for (const [key, sent] of Object.entries(ENGINE_PARAMS)) {
@@ -78,8 +82,9 @@ describe("issue messages", () => {
         const params = variant === "proficiency" ? { ...sent, requirement: "proficiency" } : sent;
         const message = issueMessage(issue(code as Issue["code"], params), (_kind, id) => `<${id}>`);
         // Identifiers go through the names function (shown here as <id>); numbers are shown as they are.
-        const shown = (value: string | number | undefined) => (typeof value === "number" ? String(value) : `<${value}>`);
-        const expected = placeholders.reduce<string>((text, name) => text.replace(`{${name}}`, shown(params[name!])), table[key]!);
+        const shown = (name: string, value: string | number | undefined) =>
+          typeof value === "number" ? String(value) : name === "source" ? table[`issue.source.${value}`]! : `<${value}>`;
+        const expected = placeholders.reduce<string>((text, name) => text.replace(`{${name}}`, shown(name!, params[name!])), table[key]!);
         expect(message, `${lang} ${key}`).toBe(expected);
       }
     }
@@ -107,6 +112,18 @@ describe("issue messages", () => {
     expect(issueMessage(issue("subraceMismatch", { race: "Race_X", subrace: "Subrace_X" }), names)).toContain("«Subrace_X»");
     expect(issueMessage(issue("subclassNotOffered", { class: "Class_X", subclass: "A, B" }), names)).toContain("«A», «B»");
     expect(seen).toEqual(expect.arrayContaining(["null:Item_X", "race:Race_X", "race:Subrace_X", "class:Class_X", "class:A", "class:B"]));
+  });
+
+  it("name a skill issue's item as a skill and word where a granted skill comes from", () => {
+    const names = (kind: string | null, id: string) => `${kind}:${id}`;
+    expect(createI18n("en").issueMessage(issue("skillAlreadyGranted", { item: "Persuasion", source: "background" }), names)).toBe(
+      "skill:Persuasion is already granted by the background: this pick adds nothing.",
+    );
+    expect(createI18n("fr").issueMessage(issue("skillAlreadyGranted", { item: "Stealth", source: "subrace" }), names)).toBe(
+      "skill:Stealth est déjà maîtrisée grâce à la sous-race : ce choix ne rapporte rien.",
+    );
+    expect(createI18n("en").issueMessage(issue("notProficient", { item: "Arcana" }), names)).toBe("Expertise needs proficiency in skill:Arcana.");
+    expect(createI18n("en").issueMessage(issue("alreadyExpert", { item: "Arcana" }), names)).toBe("skill:Arcana already has expertise.");
   });
 });
 

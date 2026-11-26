@@ -387,7 +387,7 @@ describe("validate, duplicate progression rows of the game", () => {
   const FIGHTER1 = "dfb2fd83-9849-4c2d-be84-adedb81a867a";
   const DEATH1 = "bcdcfb06-09b9-4299-81b4-aa83e1ffd034";
   const fighter1 = (): Record<string, Choice> => ({
-    [`${FIGHTER1}/0`]: ["Athletics", "Perception"],
+    [`${FIGHTER1}/0`]: ["Acrobatics", "Perception"],
     [`${FIGHTER1}/2`]: ["FightingStyle_Defense"],
     [`${FIGHTER1}/3`]: ["Strength", "Constitution"],
   });
@@ -451,7 +451,7 @@ describe("validate, duplicate progression rows of the game", () => {
 describe("validate, subclasses unlocked in play", () => {
   const PALADIN1 = "b60618d1-c262-42b5-9fdd-2c0f7aa5e5af";
   const paladin = (choices: Record<string, Choice>) =>
-    character(["Paladin"], [{ [`${PALADIN1}/0`]: ["Athletics", "Insight"], [`${PALADIN1}/2`]: ["Strength", "Charisma"], ...choices }], FIGHTER_SCORES);
+    character(["Paladin"], [{ [`${PALADIN1}/0`]: ["Medicine", "Insight"], [`${PALADIN1}/2`]: ["Strength", "Charisma"], ...choices }], FIGHTER_SCORES);
 
   it("accepts Oathbreaker for a Paladin 1, with a notice that it is unlocked in play", () => {
     const report = validate(runOf(paladin({ "subclass:Paladin": ["Oathbreaker"] })), data);
@@ -523,5 +523,102 @@ describe("knownSpellsBefore", () => {
     expect(knownSpellsBefore(c, data, 5, "Ranger")).toEqual(["Target_HuntersMark", "Target_CureWounds", "Target_Goodberry"]);
     expect(knownSpellsBefore(c, data, 6, "Ranger")).toEqual(["Target_CureWounds", "Target_Goodberry", "Shout_PassWithoutTrace"]);
     expect(knownSpellsBefore(c, data, 6, "Wizard")).toEqual([]);
+  });
+});
+
+describe("validate, skills already granted and expertise", () => {
+  const GUILD_ARTISAN = "e9aeac40-6c4e-4d81-9a24-e9eeb6208e85";
+  const LORE = { "subclass:Bard": ["LoreCollege"] };
+
+  /** A High Elf Guild Artisan (Perception from the race, Insight and Persuasion from the background). */
+  function elf(classes: string[], choices: Record<string, Choice>[]): Character {
+    return { ...character(classes, choices, RANGER_SCORES, "Elf", "Elf_HighElf"), background: GUILD_ARTISAN };
+  }
+
+  /** Slot id of the n-th selector with this function at a level of an Elf Bard of College of Lore. */
+  function bardSlot(levels: number, lvl: number, fn: Selector["function"], nth = 0): string {
+    const probe = elf(Array.from({ length: levels }, () => "Bard"), [{}, {}, LORE]);
+    const slot = resolve(probe, data).levels[lvl - 1]?.slots.filter((s) => s.selector.function === fn)[nth];
+    if (slot === undefined) throw new Error(`no ${fn} #${nth} at level ${lvl}`);
+    return slot.id;
+  }
+
+  /** An Elf Lore Bard: Performance, Deception, Acrobatics at Bard 1; Intimidation, Stealth, History at Lore 3, with expertise in Intimidation and Performance. */
+  function bard(levels: number, edit: (choices: Record<string, Choice>[]) => void = () => {}): Character {
+    const choices: Record<string, Choice>[] = Array.from({ length: levels }, () => ({}));
+    choices[0] = { [bardSlot(levels, 1, "SelectSkills")]: ["Performance", "Deception", "Acrobatics"] };
+    choices[2] = {
+      ...LORE,
+      [bardSlot(levels, 3, "SelectSkills")]: ["Intimidation", "Stealth", "History"],
+      [bardSlot(levels, 3, "SelectSkillsExpertise")]: ["Intimidation", "Performance"],
+    };
+    edit(choices);
+    return elf(Array.from({ length: levels }, () => "Bard"), choices);
+  }
+
+  const skillIssues = (c: Character) =>
+    validate(runOf(c), data).issues.filter((i) => ["alreadyExpert", "notProficient", "skillAlreadyGranted", "alreadyKnown"].includes(i.code));
+
+  it("notes a Cleric skill pick the background already grants, without refusing it", () => {
+    const probe = elf(["Cleric"], [{ "subclass:Cleric": ["LifeDomain"] }]);
+    const slots = resolve(probe, data).levels[0]!.slots;
+    const of = (fn: Selector["function"], nth = 0) => slots.filter((s) => s.selector.function === fn)[nth]!.id;
+    const skills = of("SelectSkills");
+    const cleric = elf(["Cleric"], [
+      {
+        "subclass:Cleric": ["LifeDomain"],
+        [skills]: ["Persuasion", "Religion"],
+        [of("SelectSpells", 0)]: ["Target_Guidance", "Target_SacredFlame", "Target_Light"],
+        [of("SelectSpells", 1)]: ["Projectile_FireBolt"],
+        [of("SelectAbilityBonus")]: ["Wisdom", "Constitution"],
+      },
+    ]);
+    expect(validate(runOf(cleric), data)).toEqual({
+      status: "valid",
+      issues: [{ severity: "notice", code: "skillAlreadyGranted", character: "c1", level: 1, slot: skills, params: { item: "Persuasion", source: "background" } }],
+    });
+  });
+
+  it("accepts expertise in a skill gained from the Lore bonus proficiencies of the same level", () => {
+    expect(skillIssues(bard(3))).toEqual([]);
+  });
+
+  it("refuses expertise picked again in a skill that already has it", () => {
+    const slot10 = bardSlot(10, 10, "SelectSkillsExpertise");
+    const issues = skillIssues(bard(10, (choices) => { choices[9] = { [slot10]: ["Intimidation", "Performance"] }; }));
+    expect(issues).toEqual([
+      { severity: "invalid", code: "alreadyExpert", character: "c1", level: 10, slot: slot10, params: { item: "Intimidation" } },
+      { severity: "invalid", code: "alreadyExpert", character: "c1", level: 10, slot: slot10, params: { item: "Performance" } },
+    ]);
+  });
+
+  it("refuses expertise in a skill the character is not proficient in", () => {
+    const slot3 = bardSlot(3, 3, "SelectSkillsExpertise");
+    const issues = skillIssues(bard(3, (choices) => { choices[2]![slot3] = ["Arcana", "Performance"]; }));
+    expect(issues).toEqual([{ severity: "invalid", code: "notProficient", character: "c1", level: 3, slot: slot3, params: { item: "Arcana" } }]);
+  });
+
+  it("counts race and background skills as proficiency for expertise", () => {
+    const slot3 = bardSlot(3, 3, "SelectSkillsExpertise");
+    expect(skillIssues(bard(3, (choices) => { choices[2]![slot3] = ["Perception", "Insight"]; }))).toEqual([]);
+  });
+
+  it("refuses expertise in a skill gained only at a later level", () => {
+    const slot3 = bardSlot(10, 3, "SelectSkillsExpertise");
+    const issues = skillIssues(
+      bard(10, (choices) => {
+        choices[2]![slot3] = ["Arcana", "Performance"];
+        choices[3] = { "feat:4": ["Skilled"], "feat:4/0": ["Arcana", "Nature", "Religion"] };
+      }),
+    );
+    expect(issues).toEqual([{ severity: "invalid", code: "notProficient", character: "c1", level: 3, slot: slot3, params: { item: "Arcana" } }]);
+  });
+
+  it("adds no granted-skill notice and never throws for an off-data background or race", () => {
+    const offBackground = { ...bard(3, (choices) => { choices[0]![bardSlot(3, 1, "SelectSkills")] = ["Persuasion", "Deception", "Performance"]; }), background: { offData: "Mod background" } };
+    expect(skillIssues(offBackground)).toEqual([]);
+    const offRace = { ...offBackground, race: { offData: "Mod race" }, subrace: null };
+    expect(() => validate(runOf(offRace), data)).not.toThrow();
+    expect(validate(runOf(offRace), data).issues.filter((i) => i.code === "skillAlreadyGranted")).toEqual([]);
   });
 });

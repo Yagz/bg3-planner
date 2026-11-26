@@ -34,6 +34,9 @@ const NAMED_PARAMS: Record<string, TextKind | null> = {
   subrace: "race",
 };
 
+/** Codes whose `item` parameter is a skill. */
+const SKILL_ITEM_CODES: ReadonlySet<string> = new Set(["alreadyExpert", "notProficient", "skillAlreadyGranted"]);
+
 function interpolate(template: string, params: Record<string, string | number>): string {
   return template.replace(/\{(\w+)\}/g, (whole, name: string) => (Object.hasOwn(params, name) ? String(params[name]) : whole));
 }
@@ -54,7 +57,12 @@ export function createI18n(lang: Lang): I18n {
   const issueMessage = (issue: Issue, names: NameOf) => {
     const shown: Record<string, string | number> = {};
     for (const [name, value] of Object.entries(issue.params)) {
-      const kind = NAMED_PARAMS[name];
+      if (name === "source" && typeof value === "string") {
+        // Where a granted skill comes from (race, subrace, background), worded by the interface.
+        shown[name] = t(`issue.source.${value}`);
+        continue;
+      }
+      const kind = name === "item" && SKILL_ITEM_CODES.has(issue.code) ? "skill" : NAMED_PARAMS[name];
       shown[name] =
         kind === undefined || typeof value !== "string"
           ? value

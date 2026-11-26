@@ -3,6 +3,7 @@ import { ABILITIES } from "../plan/model.ts";
 import type { Ability } from "../plan/model.ts";
 import { ABILITY_CAP } from "./abilities.ts";
 import type { Issue, IssueCode } from "./issues.ts";
+import type { SkillSource } from "./skills.ts";
 
 /** A replacement in a `SelectSpells` choice is written `"old>new"`. */
 export const SWAP_SEPARATOR = ">";
@@ -19,10 +20,12 @@ export type Known = {
   passives: Map<string, string[]>;
   /** Skills picked by `SelectSkills`. */
   skills: Set<string>;
+  /** Skills picked by `SelectSkillsExpertise`. */
+  expertise: Set<string>;
 };
 
 export function emptyKnown(): Known {
-  return { spells: new Map(), passives: new Map(), skills: new Set() };
+  return { spells: new Map(), passives: new Map(), skills: new Set(), expertise: new Set() };
 }
 
 /** Every passive currently held from a picking selector. */
@@ -41,6 +44,10 @@ export type SlotContext = {
   /** Running ability scores, uncapped; ability choices add to them. */
   scores: Record<Ability, number>;
   known: Known;
+  /** Skills granted without a pick by the race, subrace or background so far; a `SelectSkills` pick among them is a notice. Absent: no notice. */
+  grantedSkills?: ReadonlyMap<string, SkillSource>;
+  /** Skills the character is proficient in, for `SelectSkillsExpertise`. Absent: expertise is not checked against proficiency. */
+  proficientSkills?: ReadonlySet<string>;
 };
 
 function listItems(data: GameData, list: string): string[] {
@@ -57,7 +64,10 @@ function duplicates(entries: string[]): string[] {
   return [...repeated];
 }
 
-/** Checks a list-of-identifiers choice against its selector; records what it grants in `ctx`. Returns invalid issues. */
+/**
+ * Checks a list-of-identifiers choice against its selector; records what it grants in `ctx`. Returns invalid issues, and
+ * a `skillAlreadyGranted` notice for a skill pick the race, subrace or background already grants.
+ */
 export function checkChoice(selector: Selector, choice: string[], ctx: SlotContext): Issue[] {
   const issues: Issue[] = [];
   const invalid = (code: IssueCode, params: Issue["params"]) => {
@@ -140,10 +150,26 @@ export function checkChoice(selector: Selector, choice: string[], ctx: SlotConte
       noDuplicates(choice);
       exactly(choice.length, selector.count);
       for (const entry of new Set(valid)) if (ctx.known.skills.has(entry)) invalid("alreadyKnown", { item: entry });
+      for (const entry of new Set(valid)) {
+        const source = ctx.grantedSkills?.get(entry);
+        if (source !== undefined) {
+          issues.push({ severity: "notice", code: "skillAlreadyGranted", character: ctx.character, level: ctx.level, slot: ctx.slot, params: { item: entry, source } });
+        }
+      }
       for (const entry of valid) ctx.known.skills.add(entry);
       break;
     }
-    case "SelectSkillsExpertise":
+    case "SelectSkillsExpertise": {
+      const valid = inList(choice);
+      noDuplicates(choice);
+      exactly(choice.length, selector.count);
+      for (const entry of new Set(valid)) {
+        if (ctx.known.expertise.has(entry)) invalid("alreadyExpert", { item: entry });
+        else if (ctx.proficientSkills !== undefined && !ctx.proficientSkills.has(entry)) invalid("notProficient", { item: entry });
+        else ctx.known.expertise.add(entry);
+      }
+      break;
+    }
     case "SelectEquipment":
       inList(choice);
       noDuplicates(choice);
