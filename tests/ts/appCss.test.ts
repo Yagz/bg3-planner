@@ -36,6 +36,13 @@ describe("app.css", () => {
     expect(rules.filter((selector) => /^\.appbar \.runbar (select|input)(?![\w-])/.test(selector) && !selector.includes("option"))).toEqual([]);
   });
 
+  it("never clips the level list: its rows hold menus whose panels open past the last row", () => {
+    const bare = readFileSync("web/src/app.css", "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+    const rules = [...bare.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter((match) => match[1]!.split(",").some((selector) => /(^|\s)\.(levels|levelsframe|lv)(?![\w-])/.test(selector.trim()) && !selector.includes(".tree")));
+    expect(rules.length).toBeGreaterThan(0);
+    expect(rules.filter((match) => /overflow(-[xy])?:\s*(hidden|auto|scroll|clip)/.test(match[2]!)).map((match) => match[1]!.trim())).toEqual([]);
+  });
+
   it("keeps [hidden] stronger than display rules, which jsdom cannot show", () => {
     const css = readFileSync("web/src/app.css", "utf8");
     expect(css).toMatch(/\[hidden\]\s*\{\s*display:\s*none\s*!important\s*\}/);

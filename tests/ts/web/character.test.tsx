@@ -1376,11 +1376,13 @@ describe("camp-style character screen", () => {
     expect(store.load(runId)!.characters[0]!.levels).toHaveLength(2);
   });
 
-  it("offers no multiclass entry where the difficulty forbids multiclassing, and a single level has no menu", () => {
-    const c = ranger(1);
-    const run = runWith([c]);
-    setup({ ...run, difficulty: { ruleset: "DIFFICULTY_EASY", overrides: {} } }, c.id);
+  it("offers no multiclass entry where the difficulty forbids multiclassing: only the last row has a menu, with the removal", () => {
+    const c = ranger(3);
+    setup({ ...runWith([c]), difficulty: { ruleset: "DIFFICULTY_EASY", overrides: {} } }, c.id);
     expect(levelMenu(1)).toBeNull();
+    expect(levelMenu(2)).toBeNull();
+    fireEvent.click(levelMenu(3)!);
+    expect(screen.getAllByRole("menuitem").map((item) => item.textContent)).toEqual(["Remove level 3"]);
   });
 
   it("Accordé folds beyond six names and unfolds on click", () => {
