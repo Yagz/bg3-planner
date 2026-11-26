@@ -253,6 +253,13 @@ export interface UnlockedSubclass {
   source: string;
 }
 
+/** An item as bg3.wiki describes it (`data/wiki/items.json`, CC BY-NC-SA 4.0); the file holds more fields than these. */
+export interface WikiItem {
+  rarity: string | null;
+  /** Where the item is found; `act` is `prologue`, `one`, `two`, `three` or null. */
+  locations: { act: string | null; location: string }[];
+}
+
 export interface GameData {
   rules: Rules;
   texts: { en: Texts; fr: Texts };
@@ -261,4 +268,6 @@ export interface GameData {
   unlockedSubclasses: Record<string, UnlockedSubclass>;
   /** Skill identifier -> ability; from the hand-written `data/rules/skills.json`, which any loader must read too. */
   skills: Record<string, Ability>;
+  /** Keyed by item identifier; the `items` of `data/wiki/items.json` (sibling of `data/larian/`), which any loader must read too. */
+  wiki: Record<string, WikiItem>;
 }

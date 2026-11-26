@@ -2,6 +2,7 @@ import type { GameData, Requirement, Selector } from "../data/types.ts";
 import type { Ability, Character, Choice, Run } from "../plan/model.ts";
 import { abilityTotals, checkPointBuy } from "./abilities.ts";
 import { checkChoice, emptyKnown, heldPassives } from "./choices.ts";
+import { equipmentIssues } from "./equipment.ts";
 import type { Known } from "./choices.ts";
 import { rulesetEffects } from "./difficulty.ts";
 import { reportFrom } from "./issues.ts";
@@ -175,11 +176,12 @@ export function skillRefusal(selector: Selector, skill: string, snapshot: SlotSn
 
 /**
  * Checks every character of a run: point buy, progression, each choice slot, then the multiclass levels the run's ruleset
- * forbids. Never corrects anything.
+ * forbids, then the equipment. Never corrects anything.
  */
 export function validate(run: Run, data: GameData): Report {
   const { multiclass } = rulesetEffects(run.difficulty, data);
-  return reportFrom(run.characters.flatMap((character) => [...validateCharacter(character, data), ...(multiclass ? [] : multiclassLevels(character))]));
+  const characters = run.characters.flatMap((character) => [...validateCharacter(character, data), ...(multiclass ? [] : multiclassLevels(character))]);
+  return reportFrom([...characters, ...equipmentIssues(run, data)]);
 }
 
 /** Each level after the first whose class names a class (known or not) other than level 1's; an undecided or off-data class on either side is never flagged. */

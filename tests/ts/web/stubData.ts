@@ -25,6 +25,7 @@ export function stubData(en: Texts = {}, fr: Texts = {}): GameData {
     meta: { game: "0.0.0.0", modules: [], notice: { en: "", fr: "" } },
     unlockedSubclasses: {},
     skills: {},
+    wiki: {},
   };
 }
 

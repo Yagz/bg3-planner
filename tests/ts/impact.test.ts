@@ -195,7 +195,7 @@ describe("ISSUE_CODES", () => {
   it("lists exactly the issue codes the engine emits", () => {
     const dir = "src/engine";
     const source = readdirSync(dir).filter((f) => f.endsWith(".ts")).map((f) => readFileSync(join(dir, f), "utf-8")).join("\n");
-    const patterns = [/code: "(\w+)"/g, /issue\("(?:incomplete|invalid|notice)", "(\w+)"/g, /invalid\("(\w+)"/g];
+    const patterns = [/code: "(\w+)"/g, /issue\("(?:incomplete|invalid|notice)", "(\w+)"/g, /invalid\("(\w+)"/g, /notice\("(\w+)"/g];
     const found = new Set(patterns.flatMap((p) => [...source.matchAll(p)].map((m) => m[1] ?? "")));
     expect([...found].filter((code) => !(ISSUE_CODES as readonly string[]).includes(code))).toEqual([]);
     expect(ISSUE_CODES.filter((code) => !found.has(code))).toEqual([]);

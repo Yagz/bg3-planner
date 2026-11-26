@@ -30,6 +30,7 @@ const NAMED_PARAMS: Record<string, TextKind | null> = {
   parent: "class",
   proficiency: null,
   race: "race",
+  slot: "slot",
   subclass: "class",
   subrace: "race",
 };
@@ -60,6 +61,14 @@ export function createI18n(lang: Lang): I18n {
       if (name === "source" && typeof value === "string") {
         // Where a granted skill comes from (race, subrace, background), worded by the interface.
         shown[name] = t(`issue.source.${value}`);
+        continue;
+      }
+      if (name === "other" && typeof value === "string") {
+        // Other characters, by their `who`: the player or an origin.
+        shown[name] = value
+          .split(", ")
+          .map((who) => (who === "player" ? t("party.player") : names("origin", who)))
+          .join(", ");
         continue;
       }
       const kind = name === "item" && SKILL_ITEM_CODES.has(issue.code) ? "skill" : NAMED_PARAMS[name];

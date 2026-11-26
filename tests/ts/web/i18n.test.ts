@@ -16,10 +16,14 @@ const ENGINE_PARAMS: Record<string, Record<string, string | number>> = {
   "issue.choiceMissing": { selector: "SelectSpells" },
   "issue.duplicateChoice": { item: "Item_X" },
   "issue.featAlreadyTaken": { feat: "Feat_X" },
+  "issue.itemFoundLater": { item: "Item_X", act: 1, foundAct: 2 },
+  "issue.itemSharedInAct": { item: "Item_X", act: 1, other: "Origin_X" },
+  "issue.itemWrongSlot": { item: "Item_X", slot: "Slot_X", act: 1 },
   "issue.multiclassDisabled": { class: "Class_X" },
   "issue.notInList": { item: "Item_X", list: "list-uuid" },
   "issue.notProficient": { item: "Skill_X" },
   "issue.offData": { selector: "SelectSpells" },
+  "issue.offHandWithTwoHanded": { item: "Item_X", act: 1 },
   "issue.pointBuyOverBudget": { spent: 30, budget: 27 },
   "issue.pointBuyUnderBudget": { spent: 25, budget: 27 },
   "issue.requirementNotMet": { feat: "Feat_X", requirement: "ability_min", ability: "Strength", value: 13, actual: 12 },
@@ -33,7 +37,9 @@ const ENGINE_PARAMS: Record<string, Record<string, string | number>> = {
   "issue.tooManySwaps": { count: 2, max: 1 },
   "issue.unknownBackground": { background: "Bg_X" },
   "issue.unknownClass": { class: "Class_X" },
+  "issue.unknownEquipmentSlot": { slot: "Slot_X" },
   "issue.unknownFeat": { feat: "Feat_X" },
+  "issue.unknownItem": { item: "Item_X" },
   "issue.unknownRace": { race: "Race_X" },
   "issue.unknownSlot": {},
   "issue.unknownSubrace": { subrace: "Subrace_X" },
@@ -124,6 +130,14 @@ describe("issue messages", () => {
     );
     expect(createI18n("en").issueMessage(issue("notProficient", { item: "Arcana" }), names)).toBe("Expertise needs proficiency in skill:Arcana.");
     expect(createI18n("en").issueMessage(issue("alreadyExpert", { item: "Arcana" }), names)).toBe("skill:Arcana already has expertise.");
+  });
+
+  it("name an equipment slot by its slot text and the other characters by origin, the player by the interface", () => {
+    const names = (kind: string | null, id: string) => `${kind}:${id}`;
+    expect(createI18n("en").issueMessage(issue("itemWrongSlot", { item: "WPN_X", slot: "Helmet", act: 1 }), names)).toBe("null:WPN_X cannot go in the slot:Helmet slot.");
+    expect(createI18n("fr").issueMessage(issue("itemSharedInAct", { item: "WPN_X", other: "player, Shadowheart", act: 2 }), names)).toBe(
+      "null:WPN_X est aussi équipé par Joueur, origin:Shadowheart à l’acte 2.",
+    );
   });
 });
 

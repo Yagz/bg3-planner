@@ -45,7 +45,7 @@ describe("importRun", () => {
 
   it("migration warnings are shown on import", async () => {
     const withItems = stubData();
-    (withItems.rules as { items: unknown }).items = { Item_A: { slot: "Ring" } };
+    (withItems.rules as { items: unknown }).items = { Item_A: { slot: "Ring", properties: [] } };
     const placed = await importRun(await v1String(), createStore(new MemoryBackend()), withItems);
     if (placed.kind !== "ready") throw new Error("expected ready");
     expect(placed.run.characters[0]!.equipment["1"]).toEqual({ Ring: "Item_A" });
