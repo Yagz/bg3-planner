@@ -1,5 +1,5 @@
 import type { GameData } from "../../../src/data/types.ts";
-import { MAX_LEVELS } from "../../../src/plan/model.ts";
+import { MAX_LEVELS, emptyEquipment } from "../../../src/plan/model.ts";
 import type { Character, Run } from "../../../src/plan/model.ts";
 
 export type Act = 1 | 2 | 3;
@@ -11,7 +11,7 @@ const key = (act: Act): "1" | "2" | "3" => String(act) as "1" | "2" | "3";
 const DEFAULT_SCORES = { Strength: 8, Dexterity: 8, Constitution: 8, Intelligence: 8, Wisdom: 8, Charisma: 8 };
 
 function blank(): Character {
-  return { id: crypto.randomUUID(), who: "player", race: "", subrace: null, background: "", abilities: { ...DEFAULT_SCORES }, levels: [{ class: "", choices: {} }], equipment: { "1": {}, "2": {}, "3": {} }, notes: "" };
+  return { id: crypto.randomUUID(), who: "player", race: "", subrace: null, background: "", abilities: { ...DEFAULT_SCORES }, levels: [{ class: "", choices: {} }], equipment: emptyEquipment(), notes: "" };
 }
 
 /** Whether a companion origin can be added: it names a class (`Generic` does not). */
