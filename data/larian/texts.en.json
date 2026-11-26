@@ -7387,6 +7387,38 @@
   "description": "The classic Baldur's Gate 3 experience - an adaptation of Dungeons and Dragons 5th Edition rules to best suit a videogame.",
   "name": "Standard Ruleset"
  },
+ "school:Abjuration": {
+  "description": null,
+  "name": "Abjuration"
+ },
+ "school:Conjuration": {
+  "description": null,
+  "name": "Conjuration"
+ },
+ "school:Divination": {
+  "description": null,
+  "name": "Divination"
+ },
+ "school:Enchantment": {
+  "description": null,
+  "name": "Enchantment"
+ },
+ "school:Evocation": {
+  "description": null,
+  "name": "Evocation"
+ },
+ "school:Illusion": {
+  "description": null,
+  "name": "Illusion"
+ },
+ "school:Necromancy": {
+  "description": null,
+  "name": "Necromancy"
+ },
+ "school:Transmutation": {
+  "description": null,
+  "name": "Transmutation"
+ },
  "skill:Acrobatics": {
   "description": "Keep your balance. Land on your feet.\n\nHelps you resist being shoved.",
   "name": "Acrobatics"

@@ -7387,6 +7387,38 @@
   "description": "L'expérience classique de Baldur's Gate 3, une adaptation des règles de Dungeons and Dragons 5e Édition en jeu vidéo.",
   "name": "Règles classiques"
  },
+ "school:Abjuration": {
+  "description": null,
+  "name": "Abjuration"
+ },
+ "school:Conjuration": {
+  "description": null,
+  "name": "Invocation"
+ },
+ "school:Divination": {
+  "description": null,
+  "name": "Divination"
+ },
+ "school:Enchantment": {
+  "description": null,
+  "name": "Enchantement"
+ },
+ "school:Evocation": {
+  "description": null,
+  "name": "Évocation"
+ },
+ "school:Illusion": {
+  "description": null,
+  "name": "Illusion"
+ },
+ "school:Necromancy": {
+  "description": null,
+  "name": "Nécromancie"
+ },
+ "school:Transmutation": {
+  "description": null,
+  "name": "Transmutation"
+ },
  "skill:Acrobatics": {
   "description": "Vous avez un excellent équilibre et vous retombez toujours sur vos pieds.\n\nVous aide à empêcher l'ennemi de vous repousser.",
   "name": "Acrobaties"

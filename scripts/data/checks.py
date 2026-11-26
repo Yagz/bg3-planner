@@ -49,7 +49,8 @@ def _check_texts(rules: dict, tables: dict, unnamed: set[str], descriptionless: 
                 if category != "modifier" or element.get("custom") is True}
     expected |= ({f"skill:{ident}" for ident in skill_ids(rules) | set(ui_names.SKILLS)}
                  | {f"ability:{a}" for a in ui_names.ABILITIES} | {key for key, _ in ui_names.LABELS}
-                 | {f"slot:{s}" for s in gui.PLANNED_SLOTS} | {f"damage:{d}" for d in gui.DAMAGE_TYPES})
+                 | {f"slot:{s}" for s in gui.PLANNED_SLOTS} | {f"damage:{d}" for d in gui.DAMAGE_TYPES}
+                 | {f"school:{s}" for s in gui.SPELL_SCHOOLS})
     # The interface files give every skill a description.
     described = {f"skill:{s}" for s in ui_names.SKILLS}
     idents = expected | {key.split(":", 1)[1] for key in expected}

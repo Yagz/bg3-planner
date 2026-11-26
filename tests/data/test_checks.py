@@ -55,7 +55,8 @@ KEYS = (["class:Wizard", "class:Evocation", "race:Elf", "race:HighElf", "backgro
          "spell:Fireball", "passive:Soldier", "item:MAG_Boots", "origin:Sh", "origin:Generic", "ruleset:EASY",
          "ruleset:HONOUR", "modifier:MULTICLASSING", "modifier:PROFICIENCY_BONUS", "label:customMode"]
         + [f"skill:{s}" for s in ui_names.SKILLS] + [f"ability:{a}" for a in ABILITIES]
-        + [f"slot:{s}" for s in gui.PLANNED_SLOTS] + [f"damage:{d}" for d in gui.DAMAGE_TYPES])
+        + [f"slot:{s}" for s in gui.PLANNED_SLOTS] + [f"damage:{d}" for d in gui.DAMAGE_TYPES]
+        + [f"school:{s}" for s in gui.SPELL_SCHOOLS])
 WIKI = {"MAG_Boots": {"uuid": "t-boots", "kind": "equipment", "rarity": "rare", "legacy": None, "locations": []},
         "MAG_Gone": {"uuid": None, "kind": "equipment", "rarity": "rare", "legacy": "unobtainable",
                      "locations": []}}

@@ -1,17 +1,23 @@
-"""Skill descriptions, equipment slot names and damage type names, which only the game's interface files link to
-translation handles.
+"""Skill descriptions, equipment slot names, damage type names and spell school names, which only the game's interface
+files link to translation handles.
 
 The interface (XAML) styles hold `<DataTrigger Binding="{Binding <binding>}" Value="<id>">` triggers whose first
 setter shows a translated string: `Value="{Binding Source='<handle>', Converter=...}"`. Only the triggers whose first
 setter starts with the expected attributes are read (the damage type triggers that set colours are ignored); any
 other shape leaves the id without a handle, which is an error, never a guess.
+
+The spell school names come from the character sheet's spell filter instead: `<ls:EnumFilterItem
+EnumId="ESpellSchool" Label="<label>" ... StartIndex="<a>" EndIndex="<b>"/>`, whose names are the texts of the
+handles `<label>_<n>` for n from a to b. The English text of `<label>_<n>` must be the school id it is filed under
+(the spells' `school` values), which is the proof of the mapping.
 """
 import re
 
 from scripts.data import texts, ui_names
 
 # Paths inside Game.pak (the PC interface). Other platforms' overrides and Mods/MainUI are not read.
-GUI_FILES = ("Public/Game/GUI/Library/Tooltips.xaml", "Public/Game/GUI/Library/CharacterSheetTemplates.xaml")
+GUI_FILES = ("Public/Game/GUI/Library/Tooltips.xaml", "Public/Game/GUI/Library/CharacterSheetTemplates.xaml",
+             "Public/Game/GUI/Library/CharacterSheetTemplates_k.xaml")
 # Equipment slots of the character sheet the planner uses, in display order (Wings, Horns, Overhead and the light
 # source slot are left out).
 PLANNED_SLOTS = ("Helmet", "Cloak", "Breast", "Gloves", "Boots", "Amulet", "Ring", "Ring2", "MeleeMainHand",
@@ -19,12 +25,16 @@ PLANNED_SLOTS = ("Helmet", "Cloak", "Breast", "Gloves", "Boots", "Amulet", "Ring
                  "Underwear")
 DAMAGE_TYPES = ("Slashing", "Piercing", "Bludgeoning", "Acid", "Thunder", "Necrotic", "Fire", "Lightning", "Cold",
                 "Psychic", "Poison", "Radiant", "Force")
+# The values of the spells' `school` field.
+SPELL_SCHOOLS = ("Abjuration", "Conjuration", "Divination", "Enchantment", "Evocation", "Illusion", "Necromancy",
+                 "Transmutation")
 # Placeholder for a trigger whose first setter matches but whose value names no translation handle.
 UNREADABLE = "<setter without a translation handle>"
 
 _TRIGGER = re.compile(r'<DataTrigger\s+Binding="\{Binding (\w+)\}"\s+Value="([^"]*)"\s*>(.*?)</DataTrigger>', re.S)
 _SETTER = re.compile(r"<Setter\s+([^>]*)")
 _HANDLE = re.compile(r"""Value="\{Binding Source='(h\w+)'""")
+_SCHOOL_FILTER = re.compile(r'<ls:EnumFilterItem EnumId="ESpellSchool" Label="(h\w+)"[^>]*StartIndex="(\d+)"[^>]*EndIndex="(\d+)"')
 
 # (key prefix, file index in GUI_FILES, binding, first setter's leading attributes, expected ids).
 _FAMILIES = (("skill", 0, "Skill", 'TargetName="Description"', ui_names.SKILLS),
@@ -51,11 +61,47 @@ def triggers(xaml: str, binding: str, setter: str) -> dict[str, list[str]]:
     return found
 
 
-def resolve(tooltips: str, sheet: str, en: dict[str, str], fr: dict[str, str]) -> tuple[dict[str, dict], dict[str, dict]]:
+def schools(sheet_k: str, en: dict[str, str], fr: dict[str, str]) -> tuple[dict[str, dict], dict[str, dict], list[str]]:
+    """English and French `school:<Id>` -> `{"name", "description": None}` entries of the ESpellSchool filter, and
+    the problems: no such filter or more than one, an index whose handle is missing or empty in a table, an English
+    text that is not one of SPELL_SCHOOLS, a school found under no index or under several."""
+    filters = _SCHOOL_FILTER.findall(sheet_k)
+    if len(filters) != 1:
+        return {}, {}, [f"expected one EnumFilterItem with EnumId=\"ESpellSchool\" (Label, StartIndex, EndIndex) in "
+                        f"{GUI_FILES[2]}, found {len(filters)}"]
+    label, start, end = filters[0][0], int(filters[0][1]), int(filters[0][2])
+    problems: list[str] = []
+    found: dict[str, list[str]] = {}
+    for n in range(start, end + 1):
+        h = f"{label}_{n}"
+        missing = [language for language, table in (("English", en), ("French", fr)) if not texts._present(table, h)]
+        if missing:
+            problems.append(f"{h}: index {n} of the ESpellSchool filter missing or empty in the "
+                            f"{' and '.join(missing)} table")
+        elif en[h] not in SPELL_SCHOOLS:
+            problems.append(f"{h}: English text {en[h]!r} of the ESpellSchool filter is not a spell school id")
+        else:
+            found.setdefault(en[h], []).append(h)
+    tables: tuple[dict, dict] = ({}, {})
+    for school in SPELL_SCHOOLS:
+        handles = found.get(school, [])
+        if not handles:
+            problems.append(f"school:{school}: found under no index of the ESpellSchool filter ({label}_{start} to "
+                            f"_{end}) in {GUI_FILES[2]}")
+        elif len(handles) > 1:
+            problems.append(f"school:{school}: found under several indexes of the ESpellSchool filter: {handles}")
+        else:
+            for out, table in zip(tables, (en, fr)):
+                out[f"school:{school}"] = {"name": table[handles[0]], "description": None}
+    return *tables, problems
+
+
+def resolve(tooltips: str, sheet: str, sheet_k: str, en: dict[str, str],
+            fr: dict[str, str]) -> tuple[dict[str, dict], dict[str, dict]]:
     """English and French entries: `skill:<Id>` -> `{"description"}` (to merge into the skill names),
-    `slot:<Id>` and `damage:<Type>` -> `{"name", "description": None}`. Texts are kept as the tables write them.
-    Raises texts.MissingText listing every expected id without exactly one handle and every handle missing or
-    empty in a table."""
+    `slot:<Id>`, `damage:<Type>` and `school:<Id>` -> `{"name", "description": None}`. Texts are kept as the tables
+    write them. Raises texts.MissingText listing every expected id without exactly one handle, every handle missing
+    or empty in a table and every problem of the spell school filter (see `schools`)."""
     files = (tooltips, sheet)
     tables: tuple[dict, dict] = ({}, {})
     errors: list[str] = []
@@ -75,6 +121,10 @@ def resolve(tooltips: str, sheet: str, en: dict[str, str], fr: dict[str, str]) -
                 continue
             for out, table in zip(tables, (en, fr)):
                 out[key] = {"description": table[h]} if prefix == "skill" else {"name": table[h], "description": None}
+    school_en, school_fr, school_problems = schools(sheet_k, en, fr)
+    errors.extend(school_problems)
+    tables[0].update(school_en)
+    tables[1].update(school_fr)
     if errors:
         raise texts.MissingText(errors)
     return tables

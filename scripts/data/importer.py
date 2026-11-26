@@ -139,7 +139,7 @@ def build(game: Path, game_version: str, wiki: Path | None = None) -> dict[str, 
     item_stats = _stats(game, ITEM_STATS_PATTERN, errors)
     resolved_templates = _templates(game, errors)
     interface = sources.game_files(game, gui.GUI_FILES)
-    tooltips, sheet = (interface[name].decode("utf-8-sig") for name in gui.GUI_FILES)
+    tooltips, sheet, sheet_k = (interface[name].decode("utf-8-sig") for name in gui.GUI_FILES)
     if errors:
         raise SourceErrors(errors)
     rules = model.build(lsx_by_file, presets, stats_by_name, typos=model.read_typos(GAME_TYPOS),
@@ -167,7 +167,7 @@ def build(game: Path, game_version: str, wiki: Path | None = None) -> dict[str, 
     except texts.MissingText as e:
         problems.extend(e.errors)
     try:
-        gui_en, gui_fr = gui.resolve(tooltips, sheet, en, fr)
+        gui_en, gui_fr = gui.resolve(tooltips, sheet, sheet_k, en, fr)
     except texts.MissingText as e:
         problems.extend(e.errors)
     if problems:

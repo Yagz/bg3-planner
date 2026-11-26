@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { loadGameData } from "../../src/data/load.ts";
-import { descriptionOf, renderParams } from "../../src/data/names.ts";
+import { descriptionOf, nameOf, renderParams } from "../../src/data/names.ts";
 
 describe("game data", () => {
   it("loads the committed data", async () => {
@@ -29,7 +29,7 @@ describe("game data", () => {
     expect(Object.keys(data.texts.en).length).toBeGreaterThan(0);
     expect(Object.keys(data.texts.fr).length).toBeGreaterThan(0);
     for (const texts of [data.texts.en, data.texts.fr]) {
-      for (const key of Object.keys(texts)) expect(key, key).toMatch(/^(ability|background|class|feat|item|label|modifier|origin|passive|race|ruleset|skill|slot|damage|spell):./);
+      for (const key of Object.keys(texts)) expect(key, key).toMatch(/^(ability|background|class|feat|item|label|modifier|origin|passive|race|ruleset|skill|slot|damage|school|spell):./);
     }
     expect(data.texts.en["class:Ranger"]?.name).toBeTruthy();
     expect(data.meta.game).toMatch(/^\d/);
@@ -97,6 +97,16 @@ describe("game data", () => {
       expect(Object.keys(texts).filter((k) => k.startsWith("slot:")).sort()).toEqual(slots.map((id) => `slot:${id}`).sort());
       expect(Object.keys(texts).filter((k) => k.startsWith("damage:")).sort()).toEqual(damageTypes.map((id) => `damage:${id}`).sort());
     }
+  });
+  it("names every spell school of the spells in both tables", async () => {
+    const data = await loadGameData("data/larian");
+    const schools = new Set(Object.values(data.rules.spells).flatMap((spell) => (spell.school === null ? [] : [spell.school])));
+    expect(schools.size).toBe(8);
+    for (const school of schools) {
+      expect(data.texts.en[`school:${school}`]?.name, school).toBeTruthy();
+      expect(data.texts.fr[`school:${school}`]?.name, school).toBeTruthy();
+    }
+    expect(nameOf(data.texts.fr, "school", "Evocation")).toBe("Évocation");
   });
 });
 

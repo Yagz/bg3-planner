@@ -31,14 +31,33 @@ def slot(value: str, handle: str) -> str:
                    f'TranslatedStringConverter}}, ConverterParameter=\'ToUpper\'}}"/>')
 
 
-def complete() -> tuple[str, str, dict[str, str], dict[str, str]]:
-    """Tooltips and sheet XAML naming every required id, with English and French tables."""
+SCHOOL_LABEL = "hschool"
+FRENCH_SCHOOLS = ("Abjuration", "Invocation", "Divination", "Enchantement", "Évocation", "Illusion", "Nécromancie",
+                  "Transmutation")
+
+
+def school_filter(label: str = SCHOOL_LABEL, start: int = 1, end: int = 8) -> str:
+    return (f'<ls:EnumFilterItem EnumId="EDamageType" Label="hdamagefilter" AlwaysVisible="False" StartIndex="1" '
+            f'EndIndex="13"/>\n<ls:EnumFilterItem EnumId="ESpellSchool" Label="{label}" AlwaysVisible="False" '
+            f'StartIndex="{start}" EndIndex="{end}"/>\n')
+
+
+def school_texts() -> tuple[dict[str, str], dict[str, str]]:
+    """English and French texts of the school filter's indexes 1 to 8."""
+    return ({f"{SCHOOL_LABEL}_{n}": s for n, s in enumerate(gui.SPELL_SCHOOLS, 1)},
+            {f"{SCHOOL_LABEL}_{n}": s for n, s in enumerate(FRENCH_SCHOOLS, 1)})
+
+
+def complete() -> tuple[str, str, str, dict[str, str], dict[str, str]]:
+    """Tooltips, sheet and keyboard sheet XAML naming every required id, with English and French tables."""
     tooltips = "".join(skill(s, f"hskill{s}") for s in ui_names.SKILLS)
     tooltips += "".join(colour(d) + damage(d, f"hdamage{d}") for d in gui.DAMAGE_TYPES)
     sheet = "".join(slot(s, f"hslot{s}") for s in gui.PLANNED_SLOTS) + slot("Wings", "hslotWings")
     handles = ([f"hskill{s}" for s in ui_names.SKILLS] + [f"hdamage{d}" for d in gui.DAMAGE_TYPES]
                + [f"hslot{s}" for s in gui.PLANNED_SLOTS])
-    return tooltips, sheet, {h: f"EN {h}" for h in handles}, {h: f"FR {h}" for h in handles}
+    school_en, school_fr = school_texts()
+    return (tooltips, sheet, school_filter(), {h: f"EN {h}" for h in handles} | school_en,
+            {h: f"FR {h}" for h in handles} | school_fr)
 
 
 class TriggersTest(unittest.TestCase):
@@ -73,22 +92,22 @@ class TriggersTest(unittest.TestCase):
 
 class ResolveTest(unittest.TestCase):
     def test_entries(self):
-        tooltips, sheet, en, fr = complete()
-        out_en, out_fr = gui.resolve(tooltips, sheet, en, fr)
+        tooltips, sheet, sheet_k, en, fr = complete()
+        out_en, out_fr = gui.resolve(tooltips, sheet, sheet_k, en, fr)
         self.assertEqual(out_fr["skill:Persuasion"], {"description": "FR hskillPersuasion"})
         self.assertEqual(out_en["slot:Ring2"], {"name": "EN hslotRing2", "description": None})
         self.assertEqual(out_fr["damage:Fire"], {"name": "FR hdamageFire", "description": None})
         self.assertNotIn("slot:Wings", out_en)
-        self.assertEqual(len(out_en), 18 + 16 + 13)
+        self.assertEqual(len(out_en), 18 + 16 + 13 + 8)
         self.assertEqual(set(out_en), set(out_fr))
 
     def test_missing_and_duplicate_listed(self):
-        tooltips, sheet, en, fr = complete()
+        tooltips, sheet, sheet_k, en, fr = complete()
         tooltips = tooltips.replace(skill("Stealth", "hskillStealth"), "")
         sheet += slot("Helmet", "hOtherHelmet")
         del fr["hdamageCold"]
         with self.assertRaises(texts.MissingText) as ctx:
-            gui.resolve(tooltips, sheet, en, fr)
+            gui.resolve(tooltips, sheet, sheet_k, en, fr)
         errors = ctx.exception.errors
         self.assertEqual(len(errors), 3, errors)
         self.assertTrue(any("skill:Stealth" in e for e in errors), errors)
@@ -96,19 +115,72 @@ class ResolveTest(unittest.TestCase):
         self.assertTrue(any("damage:Cold" in e and "hdamageCold" in e and "French" in e for e in errors), errors)
 
     def test_unreadable_setter_listed(self):
-        tooltips, sheet, en, fr = complete()
+        tooltips, sheet, sheet_k, en, fr = complete()
         sheet = sheet.replace(slot("Boots", "hslotBoots"),
                               trigger("SelectedSlotType", "Boots", '<Setter Property="Text" Value="BOOTS"/>'))
         with self.assertRaises(texts.MissingText) as ctx:
-            gui.resolve(tooltips, sheet, en, fr)
+            gui.resolve(tooltips, sheet, sheet_k, en, fr)
         self.assertEqual(len(ctx.exception.errors), 1, ctx.exception.errors)
         self.assertIn("slot:Boots", ctx.exception.errors[0])
 
     def test_text_kept_as_the_game_writes_it(self):
-        tooltips, sheet, en, fr = complete()
+        tooltips, sheet, sheet_k, en, fr = complete()
         fr["hslotRangedOffHand"] = "À distance - main secondaire."
-        self.assertEqual(gui.resolve(tooltips, sheet, en, fr)[1]["slot:RangedOffHand"]["name"],
+        self.assertEqual(gui.resolve(tooltips, sheet, sheet_k, en, fr)[1]["slot:RangedOffHand"]["name"],
                          "À distance - main secondaire.")
+
+
+    def test_school_names(self):
+        tooltips, sheet, sheet_k, en, fr = complete()
+        out_en, out_fr = gui.resolve(tooltips, sheet, sheet_k, en, fr)
+        self.assertEqual(sorted(k for k in out_en if k.startswith("school:")),
+                         sorted(f"school:{s}" for s in gui.SPELL_SCHOOLS))
+        self.assertEqual(out_fr["school:Conjuration"], {"name": "Invocation", "description": None})
+        self.assertEqual(out_en["school:Evocation"], {"name": "Evocation", "description": None})
+
+    def test_school_index_mismatch_listed(self):
+        tooltips, sheet, sheet_k, en, fr = complete()
+        en[f"{SCHOOL_LABEL}_2"] = "Abjuration"
+        with self.assertRaises(texts.MissingText) as ctx:
+            gui.resolve(tooltips, sheet, sheet_k, en, fr)
+        errors = ctx.exception.errors
+        self.assertTrue(any(f"{SCHOOL_LABEL}_2" in e and "Abjuration" in e for e in errors), errors)
+        self.assertTrue(any("school:Conjuration" in e for e in errors), errors)
+
+    def test_school_text_not_a_school_listed(self):
+        tooltips, sheet, sheet_k, en, fr = complete()
+        en[f"{SCHOOL_LABEL}_5"] = "Evokation"
+        with self.assertRaises(texts.MissingText) as ctx:
+            gui.resolve(tooltips, sheet, sheet_k, en, fr)
+        errors = ctx.exception.errors
+        self.assertTrue(any(f"{SCHOOL_LABEL}_5" in e and "Evokation" in e for e in errors), errors)
+        self.assertTrue(any("school:Evocation" in e for e in errors), errors)
+
+    def test_school_index_without_a_handle_listed(self):
+        tooltips, sheet, sheet_k, en, fr = complete()
+        del fr[f"{SCHOOL_LABEL}_7"]
+        with self.assertRaises(texts.MissingText) as ctx:
+            gui.resolve(tooltips, sheet, sheet_k, en, fr)
+        errors = ctx.exception.errors
+        self.assertTrue(any(f"{SCHOOL_LABEL}_7" in e and "French" in e for e in errors), errors)
+        self.assertTrue(any("school:Necromancy" in e for e in errors), errors)
+
+    def test_school_range_too_short_listed(self):
+        tooltips, sheet, _, en, fr = complete()
+        with self.assertRaises(texts.MissingText) as ctx:
+            gui.resolve(tooltips, sheet, school_filter(end=7), en, fr)
+        self.assertEqual(ctx.exception.errors, [f"school:Transmutation: found under no index of the ESpellSchool "
+                                                f"filter ({SCHOOL_LABEL}_1 to _7) in {gui.GUI_FILES[2]}"])
+
+    def test_school_filter_missing_listed(self):
+        tooltips, sheet, _, en, fr = complete()
+        for sheet_k in ("", school_filter() + school_filter("hother")):
+            with self.subTest(count=sheet_k.count("ESpellSchool")):
+                with self.assertRaises(texts.MissingText) as ctx:
+                    gui.resolve(tooltips, sheet, sheet_k, en, fr)
+                self.assertEqual(len(ctx.exception.errors), 1, ctx.exception.errors)
+                self.assertIn("ESpellSchool", ctx.exception.errors[0])
+                self.assertIn(gui.GUI_FILES[2], ctx.exception.errors[0])
 
 
 if __name__ == "__main__":

@@ -16,9 +16,10 @@ export type TextKind =
   | "skill"
   | "slot"
   | "damage"
+  | "school"
   | "spell";
 
-const KINDS: TextKind[] = ["ability", "background", "class", "feat", "item", "label", "modifier", "origin", "passive", "race", "ruleset", "skill", "slot", "damage", "spell"];
+const KINDS: TextKind[] = ["ability", "background", "class", "feat", "item", "label", "modifier", "origin", "passive", "race", "ruleset", "skill", "slot", "damage", "school", "spell"];
 
 /** Display name of `id` of a known kind, or null when the table has none. */
 export function nameOf(texts: Texts, kind: TextKind, id: string): string | null {
