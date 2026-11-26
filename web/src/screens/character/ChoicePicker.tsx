@@ -5,6 +5,8 @@ import type { ChoiceList, GameData } from "../../../../src/data/types.ts";
 import { SWAP_SEPARATOR } from "../../../../src/engine/choices.ts";
 import { isOffData } from "../../../../src/plan/model.ts";
 import type { Ability, Choice } from "../../../../src/plan/model.ts";
+import type { SkillSource } from "../../../../src/engine/skills.ts";
+import { signed } from "../Coverage.tsx";
 import { useI18n } from "../../i18n/i18n.ts";
 import type { Lang, Translate } from "../../i18n/i18n.ts";
 import { gameDescription, gameName } from "../../names.ts";
@@ -30,10 +32,25 @@ export type PickerSpec = {
   swaps?: { max: number; known: string[] };
   /** For a `SelectSpells` slot: entries grouped by spell level, each with the ability the slot's spells are cast with (null for none). */
   spells?: { ability: Ability | null };
+  /**
+   * For a `SelectSkills` or `SelectSkillsExpertise` slot, per skill: its ability, its value at the slot's level (and
+   * whether it is proficient or expert there), why the engine would refuse it at this slot, and what already grants it.
+   */
+  skills?: Record<string, SkillEntry>;
   /** Lines shown under an entry's name (muted), also part of its description for screen readers. */
   details?: Record<string, string[]>;
   /** The stored choice; absent when nothing is stored. */
   initial: Choice | undefined;
+};
+
+/** One skill of a skill picker (see `PickerSpec.skills`). */
+export type SkillEntry = {
+  ability: Ability;
+  value: number;
+  proficient: boolean;
+  expertise: boolean;
+  refused: "alreadyExpert" | "notProficient" | "alreadyKnown" | null;
+  grantedBy: SkillSource | null;
 };
 
 const LIST_KINDS: Record<ChoiceList["type"], TextKind> = { spells: "spell", passives: "passive", skills: "skill", abilities: "ability", equipment: "item" };
@@ -198,18 +215,51 @@ export default function ChoicePicker({ data, spec, onSave, onClear, onClose }: P
   const full = mode.type === "set" && picks.length >= mode.max;
   const castWith = spec.spells?.ability ?? null;
   const facts = (entry: string) => (spec.spells === undefined ? [] : spellFacts(data, lang, t, entry, castWith));
-  const detailLines = (entry: string) => (spec.details !== undefined && Object.hasOwn(spec.details, entry) ? (spec.details[entry] ?? []) : []);
+  const skillOf = (entry: string): SkillEntry | null => (spec.skills !== undefined && Object.hasOwn(spec.skills, entry) ? (spec.skills[entry] ?? null) : null);
+  /** Why the engine refuses the skill here, then what already grants it: muted lines under its name, read with it. */
+  const skillLines = (entry: string): string[] => {
+    const skill = skillOf(entry);
+    if (skill === null) return [];
+    return [
+      ...(skill.refused === null ? [] : [t(`picker.refused.${skill.refused}`)]),
+      ...(skill.grantedBy === null ? [] : [t("picker.granted", { source: t(`issue.source.${skill.grantedBy}`) })]),
+    ];
+  };
+  /** What a skill entry shows besides its name, as text for screen readers: its ability, its value and whether it is proficient or expert. */
+  const skillFacts = (skill: SkillEntry): string[] => [
+    gameName(data, lang, "ability", skill.ability),
+    signed(skill.value),
+    ...(skill.proficient ? [skill.expertise ? t("character.summary.expert") : t("character.summary.proficient")] : []),
+  ];
+  const detailLines = (entry: string) => [...skillLines(entry), ...(spec.details !== undefined && Object.hasOwn(spec.details, entry) ? (spec.details[entry] ?? []) : [])];
   const label = (entry: string) => {
     const text = description(entry);
     const said = facts(entry);
+    const skill = skillOf(entry);
     return (
       <span>
+        {skill !== null && (
+          <span className={`skv${skill.expertise ? " exp" : skill.proficient ? " prof" : ""}`} aria-hidden="true">
+            {signed(skill.value)}
+          </span>
+        )}
+        {skill !== null && (
+          <span className="sr" id={`${id}-${entry}-skill`}>
+            {skillFacts(skill).join(", ")}
+          </span>
+        )}
         {said.length > 0 && (
           <span className="sr" id={`${id}-${entry}-spell`}>
             {said.join(", ")}
           </span>
         )}
         <b>{name(entry)}</b>
+        {skill !== null && (
+          <span aria-hidden="true">
+            {" "}
+            {t("picker.skillAbility", { ability: gameName(data, lang, "ability", skill.ability) })}
+          </span>
+        )}
         {castWith !== null && (
           <>
             {" "}
@@ -230,14 +280,15 @@ export default function ChoicePicker({ data, spec, onSave, onClear, onClose }: P
     );
   };
   const describedBy = (entry: string) => {
-    const ids = [...(facts(entry).length > 0 ? [`${id}-${entry}-spell`] : []), ...(description(entry) === null ? [] : [`${id}-${entry}`]), ...detailLines(entry).map((_, i) => `${id}-${entry}-d${i}`)];
+    const ids = [...(skillOf(entry) === null ? [] : [`${id}-${entry}-skill`]), ...(facts(entry).length > 0 ? [`${id}-${entry}-spell`] : []), ...(description(entry) === null ? [] : [`${id}-${entry}`]), ...detailLines(entry).map((_, i) => `${id}-${entry}-d${i}`)];
     return ids.length === 0 ? undefined : ids.join(" ");
   };
 
   /** One entry of the game's list: a checkbox (a radio for a single pick) with its name and description. */
   const option = (entry: string) => {
     const on = picks.includes(entry);
-    const off = !on && full;
+    // A refused skill can still be unchecked when stored, so validating never keeps it silently.
+    const off = !on && (full || (skillOf(entry)?.refused ?? null) !== null);
     return (
       <label key={entry} className={`opt${off ? " off" : ""}`}>
         <input

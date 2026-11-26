@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { loadGameData } from "../../src/data/load.ts";
 import type { GameData, Selector } from "../../src/data/types.ts";
 import { resolve } from "../../src/engine/progression.ts";
-import { knownSpellsBefore, validate } from "../../src/engine/validate.ts";
+import { knownSpellsBefore, skillRefusal, slotSnapshot, validate } from "../../src/engine/validate.ts";
 import { emptyRun } from "../../src/plan/model.ts";
 import type { Ability, Character, Choice, Level } from "../../src/plan/model.ts";
 
@@ -638,6 +638,84 @@ describe("validate, skills already granted and expertise", () => {
       subrace: "Gnome_Rock",
     };
     expect(skillIssues(gnome)).toEqual([{ severity: "invalid", code: "alreadyExpert", character: "c1", level: 3, slot: slot3, params: { item: "History" } }]);
+  });
+
+  describe("slotSnapshot", () => {
+    it("sees at the expertise slot the Lore bonus proficiencies picked at the same level, and not the slot's own picks", () => {
+      const slot3 = bardSlot(3, 3, "SelectSkillsExpertise");
+      const snapshot = slotSnapshot(bard(3), data, 3, slot3)!;
+      expect(snapshot.scope).toBe("Bard");
+      for (const skill of ["Intimidation", "Stealth", "History", "Performance", "Deception", "Acrobatics", "Perception", "Insight", "Persuasion"]) {
+        expect(snapshot.proficientSkills.has(skill)).toBe(true);
+      }
+      expect(snapshot.proficientSkills.has("Arcana")).toBe(false);
+      expect([...snapshot.known.expertise]).toEqual([]);
+      expect(snapshot.grantedSkills.get("Perception")).toBe("race");
+      expect(snapshot.grantedSkills.get("Insight")).toBe("background");
+    });
+
+    it("holds the Rock Gnome's History expertise as granted", () => {
+      const slot3 = bardSlot(3, 3, "SelectSkillsExpertise");
+      const gnome = { ...bard(3), race: "Gnome", subrace: "Gnome_Rock" };
+      expect(slotSnapshot(gnome, data, 3, slot3)!.grantedExpertise.has("History")).toBe(true);
+    });
+
+    it("copies what it knows: a later change of the walk does not reach it", () => {
+      const slot3 = bardSlot(10, 3, "SelectSkillsExpertise");
+      const snapshot = slotSnapshot(bard(10), data, 3, slot3)!;
+      expect(snapshot.known.expertise.size).toBe(0);
+      snapshot.known.skills.add("Arcana");
+      expect(slotSnapshot(bard(10), data, 3, slot3)!.known.skills.has("Arcana")).toBe(false);
+    });
+
+    it("lists the spells picked before the slot with the ability they are cast with (High Elf Cleric 1 / Bard 2)", () => {
+      const classes = ["Cleric", "Bard"];
+      const probe = elf(classes, [{ "subclass:Cleric": ["LifeDomain"] }, {}]);
+      const levels = resolve(probe, data).levels;
+      const one = levels[0]!.slots.filter((s) => s.selector.function === "SelectSpells");
+      const race = one.find((s) => s.selector.function === "SelectSpells" && s.selector.ability === "Intelligence")!;
+      const clericCantrips = one.find((s) => s !== race)!;
+      const bardSpells = levels[1]!.slots.find((s) => s.selector.function === "SelectSpells")!;
+      const cantrip = data.rules.lists[race.selector.list]!.items[0]!;
+      const cleric = elf(classes, [{ "subclass:Cleric": ["LifeDomain"], [race.id]: [cantrip], [clericCantrips.id]: ["Target_Guidance", "Target_SacredFlame", "Target_Light"] }, {}]);
+      const picks = slotSnapshot(cleric, data, 2, bardSpells.id)!.spellPicks;
+      expect(picks).toContainEqual({ spell: cantrip, scope: `race:${data.rules.races.Elf_HighElf!.table}`, ability: "Intelligence" });
+      expect(picks).toContainEqual({ spell: "Target_Guidance", scope: "Cleric", ability: "Wisdom" });
+      expect(slotSnapshot(cleric, data, 1, race.id)!.spellPicks.some((p) => p.spell === cantrip)).toBe(false);
+    });
+
+    it("drops a spell swapped out before the slot", () => {
+      const c = ranger((choices) => {
+        choices[3]![slot(4, "SelectSpells")] = ["Target_HuntersMark>Target_Longstrider"];
+      });
+      const spells = (lvl: number) => slotSnapshot(c, data, lvl, slot(lvl, "SelectSpells"))!.spellPicks.map((p) => p.spell);
+      expect(spells(4)).toEqual(["Target_HuntersMark", "Target_CureWounds", "Target_Goodberry"]);
+      expect(spells(5)).toEqual(["Target_CureWounds", "Target_Goodberry", "Target_Longstrider"]);
+    });
+
+    it("is null for a level or a slot that does not exist", () => {
+      expect(slotSnapshot(bard(3), data, 3, "no-such-slot")).toBeNull();
+      expect(slotSnapshot(bard(3), data, 4, bardSlot(3, 3, "SelectSkillsExpertise"))).toBeNull();
+    });
+
+    it("refuses at an expertise slot exactly the skills validate would refuse there", () => {
+      for (const c of [bard(10), { ...bard(10), race: "Gnome", subrace: "Gnome_Rock" }]) {
+        for (const lvl of [3, 10]) {
+          const id = bardSlot(10, lvl, "SelectSkillsExpertise");
+          const selector = resolve(c, data).levels[lvl - 1]!.slots.find((s) => s.id === id)!.selector;
+          const snapshot = slotSnapshot(c, data, lvl, id)!;
+          for (const skill of Object.keys(data.skills)) {
+            const refused = skillRefusal(selector, skill, snapshot);
+            const tried = structuredClone(c);
+            tried.levels[lvl - 1]!.choices[id] = [skill];
+            const codes = validate(runOf(tried), data)
+              .issues.filter((i) => i.level === lvl && i.slot === id && i.params.item === skill && ["alreadyExpert", "notProficient"].includes(i.code))
+              .map((i) => i.code);
+            expect(codes, `${skill} at ${lvl}`).toEqual(refused === null ? [] : [refused]);
+          }
+        }
+      }
+    });
   });
 
   describe("Knowledge Domain expertise, which grants proficiency (requires_proficiency false)", () => {

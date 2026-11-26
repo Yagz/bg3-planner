@@ -7,7 +7,8 @@ import { identityTraits } from "../../../src/engine/traits.ts";
 import { castingAbility } from "../../../src/engine/casting.ts";
 import { rulesetEffects } from "../../../src/engine/difficulty.ts";
 import { resolve } from "../../../src/engine/progression.ts";
-import { isOptionalSelector, knownSpellsBefore, levelSlots, validate } from "../../../src/engine/validate.ts";
+import { characterSkillValues } from "../../../src/engine/coverage.ts";
+import { isOptionalSelector, knownSpellsBefore, levelSlots, skillRefusal, slotSnapshot, validate } from "../../../src/engine/validate.ts";
 import { MAX_LEVELS, isOffData } from "../../../src/plan/model.ts";
 import type { Character as CharacterModel, Choice, Run } from "../../../src/plan/model.ts";
 import { useI18n } from "../i18n/i18n.ts";
@@ -26,7 +27,7 @@ import {
   withOriginLock,
 } from "../state/characterOps.ts";
 import ChoicePicker, { kindOfList } from "./character/ChoicePicker.tsx";
-import type { PickerMode, PickerSpec } from "./character/ChoicePicker.tsx";
+import type { PickerMode, PickerSpec, SkillEntry } from "./character/ChoicePicker.tsx";
 import Abilities from "./character/Abilities.tsx";
 import Creation from "./character/Creation.tsx";
 import type { IdentityField } from "./character/Creation.tsx";
@@ -224,6 +225,22 @@ export default function Character({ data, run, saveRun, characterId, onSelect, t
     if (selector.function === "SelectSpells") {
       spec.spells = { ability: castingAbility(resolved, found, data) };
       if (selector.swaps > 0) spec.swaps = { max: selector.swaps, known: knownSpellsBefore(character, data, n, scope) };
+    }
+    if (selector.function === "SelectSkills" || selector.function === "SelectSkillsExpertise") {
+      const snapshot = slotSnapshot(character, data, n, slot);
+      const values = characterSkillValues(character, data, n, rulesetEffects(run.difficulty, data).proficiencyBonus);
+      const skills: Record<string, SkillEntry> = {};
+      for (const { skill, ability, value, proficient, expertise } of values) {
+        skills[skill] = {
+          ability,
+          value,
+          proficient,
+          expertise,
+          refused: snapshot === null ? null : skillRefusal(selector, skill, snapshot),
+          grantedBy: selector.function === "SelectSkills" ? (snapshot?.grantedSkills.get(skill) ?? null) : null,
+        };
+      }
+      spec.skills = skills;
     }
     return {
       ...base,

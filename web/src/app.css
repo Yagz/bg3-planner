@@ -54,6 +54,9 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
 .opt input { margin-top: 3px; accent-color: var(--accent) }
 .opt .d { color: var(--fg-muted); font-size: 12px; display: block }
 .opt.off { opacity: .45; cursor: not-allowed }
+.opt .skv { float: right; margin-left: 8px; font-family: var(--mono); font-variant-numeric: tabular-nums; color: var(--fg-muted) }
+.opt .skv.prof { font-weight: 600; color: var(--fg) }
+.opt .skv.exp { font-weight: 700; color: var(--accent) }
 .counter { font-variant-numeric: tabular-nums }
 @media (prefers-reduced-motion: no-preference) { .scrim { animation: fade .12s ease-out } @keyframes fade { from { opacity: 0 } } }
 

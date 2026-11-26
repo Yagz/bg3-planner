@@ -1,13 +1,16 @@
 import type { GameData, Requirement, Selector } from "../data/types.ts";
-import type { Character, Choice, Run } from "../plan/model.ts";
+import type { Ability, Character, Choice, Run } from "../plan/model.ts";
 import { abilityTotals, checkPointBuy } from "./abilities.ts";
 import { checkChoice, emptyKnown, heldPassives } from "./choices.ts";
+import type { Known } from "./choices.ts";
 import { rulesetEffects } from "./difficulty.ts";
 import { reportFrom } from "./issues.ts";
 import type { Issue, IssueCode, Report } from "./issues.ts";
 import { resolve, subclassSlot } from "./progression.ts";
 import type { ResolvedLevel } from "./progression.ts";
 import { SkillTracker, grantedSkills } from "./skills.ts";
+import type { SkillSource } from "./skills.ts";
+import { castingAbility } from "./slotAbility.ts";
 
 export function featSlot(level: number): string {
   return `feat:${level}`;
@@ -99,6 +102,77 @@ export function knownSpellsBefore(character: Character, data: GameData, level: n
   return [...(known.spells.get(scope) ?? [])];
 }
 
+/** What `validateCharacter` knows just before checking one picking slot (copies, safe to keep). */
+export type SlotSnapshot = {
+  /** Spell scope of the slot (see `SelectorSlot.scope`). */
+  scope: string;
+  known: Known;
+  proficientSkills: Set<string>;
+  grantedExpertise: Set<string>;
+  grantedSkills: Map<string, SkillSource>;
+  /** Spells picked by the `SelectSpells` slots checked before this one (every scope, after swaps), each with the ability its slot casts with. */
+  spellPicks: { spell: string; scope: string; ability: Ability | null }[];
+};
+
+function copyKnown(known: Known): Known {
+  return {
+    spells: new Map([...known.spells].map(([scope, spells]) => [scope, new Set(spells)])),
+    passives: new Map([...known.passives].map(([list, names]) => [list, [...names]])),
+    skills: new Set(known.skills),
+    expertise: new Set(known.expertise),
+  };
+}
+
+/**
+ * What the engine knows at a picking slot (feat slots' own selectors included) of character level `level`, just before
+ * `validate` checks it: the slot's own picks are not counted, and an expertise slot is seen after the rest of its level,
+ * as `validate` checks it. Null when the level or the picking slot does not exist (a subclass or feat slot is no picking slot).
+ */
+export function slotSnapshot(character: Character, data: GameData, level: number, slot: string): SlotSnapshot | null {
+  let snapshot: SlotSnapshot | null = null;
+  /** Spells picked so far, in the order gained, kept in step with `known.spells` after each `SelectSpells` slot. */
+  const picks: SlotSnapshot["spellPicks"] = [];
+  let before: Set<string> = new Set();
+  validateCharacter(character, data, {
+    before: (state) => {
+      const { scope } = state.slot;
+      before = new Set(state.known.spells.get(scope) ?? []);
+      if (snapshot !== null || state.level.level !== level || state.slot.id !== slot) return;
+      snapshot = {
+        scope,
+        known: copyKnown(state.known),
+        proficientSkills: new Set(state.proficientSkills),
+        grantedExpertise: new Set(state.grantedExpertise),
+        grantedSkills: new Map(state.grantedSkills),
+        spellPicks: picks.map((pick) => ({ ...pick })),
+      };
+    },
+    after: (state) => {
+      if (state.slot.selector.function !== "SelectSpells") return;
+      const { scope } = state.slot;
+      const now = state.known.spells.get(scope) ?? new Set<string>();
+      for (let i = picks.length - 1; i >= 0; i--) if (picks[i]!.scope === scope && !now.has(picks[i]!.spell)) picks.splice(i, 1);
+      const ability = castingAbility(state.level, state.slot, data);
+      for (const spell of now) if (!before.has(spell)) picks.push({ spell, scope, ability });
+    },
+  });
+  return snapshot;
+}
+
+/**
+ * Why a skill pick at a skill slot would be refused, given what the engine knows there (`slotSnapshot`), in the order
+ * `checkChoice` checks: `alreadyKnown` for a `SelectSkills` pick made before; for `SelectSkillsExpertise`, `alreadyExpert`
+ * when the skill already has expertise (picked or granted), else `notProficient` when the selector requires proficiency
+ * and the character lacks it. Null when nothing refuses it (or the selector picks no skills).
+ */
+export function skillRefusal(selector: Selector, skill: string, snapshot: SlotSnapshot): "alreadyKnown" | "alreadyExpert" | "notProficient" | null {
+  if (selector.function === "SelectSkills") return snapshot.known.skills.has(skill) ? "alreadyKnown" : null;
+  if (selector.function !== "SelectSkillsExpertise") return null;
+  if (snapshot.known.expertise.has(skill) || snapshot.grantedExpertise.has(skill)) return "alreadyExpert";
+  if (selector.requires_proficiency !== false && !snapshot.proficientSkills.has(skill)) return "notProficient";
+  return null;
+}
+
 /**
  * Checks every character of a run: point buy, progression, each choice slot, then the multiclass levels the run's ruleset
  * forbids. Never corrects anything.
@@ -121,7 +195,20 @@ function multiclassLevels(character: Character): Issue[] {
 
 const PROFICIENCY = /^Proficiency\((\w+)\)$/;
 
-function validateCharacter(character: Character, data: GameData): Issue[] {
+/** What `validateCharacter` knows at one picking slot, handed to an observer just before and just after checking it. */
+type SlotState = {
+  level: ResolvedLevel;
+  slot: SelectorSlot;
+  known: Known;
+  proficientSkills: ReadonlySet<string>;
+  grantedExpertise: ReadonlySet<string>;
+  grantedSkills: ReadonlyMap<string, SkillSource>;
+};
+
+/** Follows the walk of `validateCharacter` slot by slot; the state is live (mutated as the walk goes on): copy what is kept. */
+type SlotObserver = { before: (state: SlotState) => void; after: (state: SlotState) => void };
+
+function validateCharacter(character: Character, data: GameData, observer?: SlotObserver): Issue[] {
   const { feats, passives } = data.rules;
   const issues: Issue[] = [...checkPointBuy(character)];
   const resolved = resolve(character, data);
@@ -166,8 +253,13 @@ function validateCharacter(character: Character, data: GameData): Issue[] {
     /** Expertise slots of the level (feat ones included), checked last: a skill gained anywhere in the level counts. */
     const expertiseSlots: SelectorSlot[] = [];
 
-    const checkSlot = ({ id: slot, selector, scope }: SelectorSlot) => {
+    const checkSlot = (selectorSlot: SelectorSlot) => {
+      const { id: slot, selector, scope } = selectorSlot;
       const choice = Object.hasOwn(choices, slot) ? choices[slot] : undefined;
+      const proficientSkills = skills.proficient(known);
+      const grantedExpertise = skills.grantedExpertise(known);
+      const state = { level, slot: selectorSlot, known, proficientSkills, grantedExpertise, grantedSkills: levelGranted };
+      observer?.before(state);
       if (choice === undefined && isOptionalSelector(selector)) {
         // Nothing to pick, or an optional replacement: leaving the key out keeps what is held.
       } else if (choice === undefined || choice === "todo") {
@@ -175,9 +267,10 @@ function validateCharacter(character: Character, data: GameData): Issue[] {
       } else if (!Array.isArray(choice)) {
         issue("notice", "offData", slot, { selector: selector.function });
       } else {
-        const ctx = { data, character: character.id, level: n, scope, slot, scores, known, grantedSkills: levelGranted, proficientSkills: skills.proficient(known), grantedExpertise: skills.grantedExpertise(known) };
+        const ctx = { data, character: character.id, level: n, scope, slot, scores, known, grantedSkills: levelGranted, proficientSkills, grantedExpertise };
         issues.push(...checkChoice(selector, choice, ctx));
       }
+      observer?.after(state);
     };
 
     /** Checks a slot now, or keeps an expertise slot for the end of the level. */

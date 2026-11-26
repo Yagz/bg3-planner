@@ -2,7 +2,8 @@ import { cleanup, fireEvent, render, screen, within } from "@testing-library/rea
 import { act } from "@testing-library/react";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import type { GameData } from "../../../src/data/types.ts";
-import { skillProficiencies } from "../../../src/engine/coverage.ts";
+import { characterSkillValues, skillProficiencies } from "../../../src/engine/coverage.ts";
+import { rulesetEffects } from "../../../src/engine/difficulty.ts";
 import { backgroundTraits } from "../../../src/engine/traits.ts";
 import { resolve, subclassSlot } from "../../../src/engine/progression.ts";
 import { featSlot, validate } from "../../../src/engine/validate.ts";
@@ -14,6 +15,7 @@ import Abilities from "../../../web/src/screens/character/Abilities.tsx";
 import NotesTab from "../../../web/src/screens/character/NotesTab.tsx";
 import IssueList from "../../../web/src/screens/character/IssueList.tsx";
 import { gameDescription, gameName } from "../../../web/src/names.ts";
+import { signed } from "../../../web/src/screens/Coverage.tsx";
 import { addCharacter } from "../../../web/src/state/partyOps.ts";
 import { loadTab, saveTab } from "../../../web/src/state/sessionTab.ts";
 import { createStore } from "../../../web/src/state/storage.ts";
@@ -726,6 +728,96 @@ describe("Character screen", () => {
         expect(classButton(3)!.textContent).toBe(rogue);
       });
     }
+  });
+});
+
+describe("skill and expertise pickers", () => {
+  const GUILD_ARTISAN = "e9aeac40-6c4e-4d81-9a24-e9eeb6208e85";
+  const french = () => fireEvent.change(screen.getByRole("combobox", { name: "Language" }), { target: { value: "fr" } });
+  const niveau = (n: number) => screen.getByRole("group", { name: `Niveau ${n}` });
+  /** What screen readers hear for an entry: the texts its aria-describedby points to. */
+  const said = (box: HTMLElement) => (box.getAttribute("aria-describedby") ?? "").split(" ").filter((ref) => ref !== "").map((ref) => document.getElementById(ref)!.textContent);
+
+  /** A High Elf Guild Artisan Lore Bard of 12 levels: Performance, Deception, Acrobatics at 1; Intimidation, Stealth, History at 3 with expertise in Intimidation and Performance. */
+  function loreBard(): { c: Character; expertise10: string; level10: number } {
+    const c: Character = { ...ranger(1), id: "bard", race: "Elf", subrace: "Elf_HighElf", background: GUILD_ARTISAN, levels: Array.from({ length: 12 }, () => ({ class: "Bard", choices: {} as Record<string, Choice> })) };
+    c.levels[2]!.choices["subclass:Bard"] = ["LoreCollege"];
+    const levels = resolve(c, data).levels;
+    const of = (n: number, fn: string) => levels[n - 1]!.slots.find((s) => s.selector.function === fn)!.id;
+    c.levels[0]!.choices[of(1, "SelectSkills")] = ["Performance", "Deception", "Acrobatics"];
+    c.levels[2]!.choices[of(3, "SelectSkills")] = ["Intimidation", "Stealth", "History"];
+    c.levels[2]!.choices[of(3, "SelectSkillsExpertise")] = ["Intimidation", "Performance"];
+    // The Bard's second expertise slot, wherever the data puts it.
+    const level10 = levels.findIndex((l, i) => i > 2 && l.slots.some((s) => s.selector.function === "SelectSkillsExpertise")) + 1;
+    return { c, expertise10: of(level10, "SelectSkillsExpertise"), level10 };
+  }
+
+  it("greys and disables at the second Bard expertise slot a skill already in expertise, with its reason, in French", () => {
+    const { c, level10 } = loreBard();
+    setup(runWith([c]), c.id);
+    french();
+    fireEvent.click(within(niveau(level10)).getByRole("button", { name: /^expertise/ }));
+    const dialog = screen.getByRole("dialog");
+    const intimidation = within(dialog).getByRole("checkbox", { name: gameName(data, "fr", "skill", "Intimidation") });
+    expect(intimidation).toHaveProperty("disabled", true);
+    expect(intimidation).toHaveProperty("checked", false);
+    expect(intimidation.closest("label")!.className).toContain("off");
+    expect(said(intimidation)).toContain("Déjà en expertise");
+    const arcana = within(dialog).getByRole("checkbox", { name: gameName(data, "fr", "skill", "Arcana") });
+    expect(arcana).toHaveProperty("disabled", true);
+    expect(said(arcana)).toContain("Demande la maîtrise de la compétence");
+    const persuasion = within(dialog).getByRole("checkbox", { name: gameName(data, "fr", "skill", "Persuasion") });
+    expect(persuasion).toHaveProperty("disabled", false);
+  });
+
+  it("shows on a level-1 skill pick of an Elf that the race already grants Perception, still enabled; each entry with its ability and signed value", () => {
+    const c: Character = { ...ranger(1), race: "Elf", subrace: "Elf_HighElf" };
+    const run = runWith([c]);
+    setup(run, c.id);
+    french();
+    fireEvent.click(within(niveau(1)).getByRole("button", { name: /^compétences/ }));
+    const dialog = screen.getByRole("dialog");
+    // `ranger` stores Perception at this slot: a slot's own picks never refuse themselves.
+    const perception = within(dialog).getByRole("checkbox", { name: gameName(data, "fr", "skill", "Perception") });
+    expect(perception).toHaveProperty("checked", true);
+    expect(perception).toHaveProperty("disabled", false);
+    expect(said(perception).some((text) => text?.startsWith("Déjà donnée par la race : ce choix ne rapporte rien"))).toBe(true);
+    const values = new Map(characterSkillValues(c, data, 1, rulesetEffects(run.difficulty, data).proficiencyBonus).map((v) => [v.skill, v]));
+    const boxes = within(within(dialog).getByRole("group", { name: "La liste du jeu" })).getAllByRole("checkbox");
+    expect(boxes.length).toBeGreaterThan(0);
+    for (const box of boxes) {
+      const skill = Object.keys(data.skills).find((id) => gameName(data, "fr", "skill", id) === box.getAttribute("aria-label"))!;
+      const ability = gameName(data, "fr", "ability", data.skills[skill]!);
+      const value = signed(values.get(skill)!.value);
+      const text = box.closest("label")!.textContent!;
+      expect(text).toContain(`(${ability})`);
+      expect(text).toContain(value);
+      // Screen readers hear the ability, the value and the status, not only the checkbox's name.
+      const facts = said(box)[0]!;
+      expect(facts.startsWith(`${ability}, ${value}`)).toBe(true);
+      expect(said(box)).toContain(gameDescription(data, "fr", "skill", skill));
+    }
+    expect(said(perception)[0]).toMatch(/, maîtrise$/);
+  });
+
+  it("keeps a stored refused pick checked with its reason so it can be unchecked, then saves without it", () => {
+    const { c, expertise10, level10 } = loreBard();
+    c.levels[level10 - 1]!.choices[expertise10] = ["Intimidation", "History"];
+    const { store, runId } = setup(runWith([c]), c.id);
+    french();
+    fireEvent.click(within(niveau(level10)).getByRole("button", { name: /^expertise/ }));
+    const dialog = screen.getByRole("dialog");
+    const intimidation = within(dialog).getByRole("checkbox", { name: gameName(data, "fr", "skill", "Intimidation") });
+    expect(intimidation).toHaveProperty("checked", true);
+    expect(intimidation).toHaveProperty("disabled", false);
+    expect(said(intimidation)).toContain("Déjà en expertise");
+    fireEvent.click(intimidation);
+    expect(intimidation).toHaveProperty("checked", false);
+    expect(intimidation).toHaveProperty("disabled", true);
+    fireEvent.click(within(dialog).getByRole("checkbox", { name: gameName(data, "fr", "skill", "Persuasion") }));
+    fireEvent.click(within(dialog).getByRole("button", { name: "Valider" }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect([...(store.load(runId)!.characters[0]!.levels[level10 - 1]!.choices[expertise10] as string[])].sort()).toEqual(["History", "Persuasion"]);
   });
 });
 
