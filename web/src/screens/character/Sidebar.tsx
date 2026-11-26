@@ -15,8 +15,6 @@ import { AbilityTiles, BringsPills, ClassLine } from "../party/MemberCard.tsx";
 
 type Props = {
   character: Character;
-  /** The character's display name, the sidebar's heading (the same as the page's). */
-  name: string;
   run: Run;
   data: GameData;
   /** The level the character is seen at, 1 to its number of levels (a larger value reads as its last level). */
@@ -25,10 +23,10 @@ type Props = {
 };
 
 /**
- * The character's side column: identity, classes, abilities, proficiency bonus, spell save DCs and all 18 skills at the
+ * The character's side column: the classes at the viewed level as its title, identity, abilities, proficiency bonus, spell save DCs and all 18 skills at the
  * viewed level, what it brings to the current act's active group, and what is left to settle in its whole plan.
  */
-export default function Sidebar({ character, name, run, data, viewed, onViewed }: Props) {
+export default function Sidebar({ character, run, data, viewed, onViewed }: Props) {
   const { t, lang } = useI18n();
   const id = useId();
   const levels = character.levels.length;
@@ -72,11 +70,10 @@ export default function Sidebar({ character, name, run, data, viewed, onViewed }
 
   return (
     <section className="frame sidebar">
-      <h2>{name}</h2>
-      <p className="subline">{identity}</p>
-      <p className="cls">
+      <h2 className="sidetitle">
         <ClassLine character={character} level={at} data={data} lang={lang} none={t("party.noClass")} />
-      </p>
+      </h2>
+      <p className="subline">{identity}</p>
       <label className="viewed">
         {t("character.summary.viewed")}
         <select value={at} onChange={(event) => onViewed(Number(event.target.value))}>
@@ -111,7 +108,7 @@ export default function Sidebar({ character, name, run, data, viewed, onViewed }
               </span>
               <b className={expertise ? "exp" : proficient ? "prof" : undefined}>{signed(value)}</b>
               <span className="mark">
-                {expertise ? <span aria-hidden="true">★</span> : null}
+                {expertise ? <span aria-hidden="true">◆</span> : null}
                 {proficient && <span className="sr">{expertise ? t("character.summary.expert") : t("character.summary.proficient")}</span>}
               </span>
               {description !== null && (
@@ -123,6 +120,7 @@ export default function Sidebar({ character, name, run, data, viewed, onViewed }
           );
         })}
       </ul>
+      <p className="legend">{t("character.summary.legend")}</p>
       <div className="brings">
         <h4>{t("character.summary.brings", { act })}</h4>
         <div className="pills">

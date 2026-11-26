@@ -255,6 +255,12 @@ describe("Tree view and impact preview", () => {
     expect(shown).toContain(gameName(data, "en", "spell", (removed[1]![1] as string[])[0]!));
   });
 
+  /** Removes the last level from its row's menu. */
+  const removeLevel = (n: number) => {
+    fireEvent.click(within(screen.getByRole("group", { name: `Level ${n}` })).getByRole("button", { name: `Level ${n} menu` }));
+    fireEvent.click(screen.getByRole("menuitem", { name: `Remove level ${n}` }));
+  };
+
   it("names the picks of a removed last level that grants nothing; Apply removes them, Cancel changes nothing", async () => {
     // A Ranger's level 2 grants no feature; its spells are its only content.
     const c: Character = {
@@ -275,7 +281,7 @@ describe("Tree view and impact preview", () => {
     const stored = await encode(store.load(runId)!);
     const versions = store.history(runId).length;
 
-    fireEvent.click(screen.getByRole("button", { name: "Remove level 2" }));
+    removeLevel(2);
     const removed = within(screen.getByRole("dialog")).getByRole("group", { name: "Removed choices" });
     expect(removed.querySelectorAll(".pill")).toHaveLength(1);
     for (const id of picks) expect(removed.textContent).toContain(gameName(data, "en", "spell", id));
@@ -283,7 +289,7 @@ describe("Tree view and impact preview", () => {
     expect(store.history(runId).length).toBe(versions);
     expect(await encode(store.load(runId)!)).toBe(stored);
 
-    fireEvent.click(screen.getByRole("button", { name: "Remove level 2" }));
+    removeLevel(2);
     fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Apply" }));
     expect(store.history(runId).length).toBe(versions + 1);
     expect(store.load(runId)!.characters[0]!.levels).toEqual([c.levels[0]]);

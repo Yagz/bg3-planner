@@ -1,4 +1,4 @@
-import { Fragment } from "react";
+import { Fragment, useState } from "react";
 import type { TextKind } from "../../../../src/data/names.ts";
 import type { GameData } from "../../../../src/data/types.ts";
 import { castingAbilities } from "../../../../src/engine/casting.ts";
@@ -13,7 +13,10 @@ import type { Ability, Character, Choice, OffData } from "../../../../src/plan/m
 import { useI18n } from "../../i18n/i18n.ts";
 import type { Lang, Translate } from "../../i18n/i18n.ts";
 import { gameName } from "../../names.ts";
-import { AbilityBadge, kindOfList, spellFacts, spellLevelTag } from "./ChoicePicker.tsx";
+import { kindOfList, spellFacts, spellLevel } from "./ChoicePicker.tsx";
+import Menu from "../../ui/Menu.tsx";
+import type { MenuItem } from "../../ui/Menu.tsx";
+import { classesAt, shortAbility } from "../party/MemberCard.tsx";
 import IssueList from "./IssueList.tsx";
 
 /** The slot `class` stands for the class taken at the level, as in the engine's issues. */
@@ -57,6 +60,25 @@ export function choiceText(data: GameData, lang: Lang, kind: TextKind | null, ch
 }
 
 /**
+ * A spell as a chip: its level on the left (the digit, `m` for a cantrip, nothing when the data does not know it), its
+ * name (`label` replaces it, for a swap shown as `old → new`), then the ability it is cast with, written out in the
+ * brass badge and never clipped; `isNew` marks a spell added at this level. The tooltip says all of it in a sentence.
+ */
+export function SpellChip({ data, spell, ability, isNew = false, label }: { data: GameData; spell: string; ability: Ability | null; isNew?: boolean; label?: string }) {
+  const { t, lang } = useI18n();
+  const level = spellLevel(data, spell);
+  const facts = [level === null ? null : level === 0 ? t("spell.tipCantrip") : t("spell.tipLevel", { level }), ability === null ? null : t("spell.castWithInline", { ability: gameName(data, lang, "ability", ability) })].filter((part) => part !== null);
+  return (
+    <span className={`sp${isNew ? " new" : ""}`} title={facts.length === 0 ? undefined : facts.join(", ")}>
+      {level !== null && <span className="lvl">{level === 0 ? t("spell.cantripMark") : level}</span>}
+      {label ?? gameName(data, lang, "spell", spell)}
+      {ability !== null && <span className="cast">{shortAbility(data, lang, ability)}</span>}
+      {isNew && <span className="tag">{t("spell.new")}</span>}
+    </span>
+  );
+}
+
+/**
  * The button of one slot: its picks by name, a dashed "to decide", or "optional" for a slot that may stay unset. A
  * spell slot shows one chip per pick: the spell's level (none when the data does not know it), its name (a replacement
  * as `old → new`, tagged with the new spell's level), and the ability it is cast with (`ability`, null for none).
@@ -79,16 +101,7 @@ export function SlotPick({ data, row, choice, ability = null, onPick }: { data: 
     const cut = entry.indexOf(SWAP_SEPARATOR);
     return cut < 0 ? entry : entry.slice(cut + SWAP_SEPARATOR.length);
   };
-  const chip = (entry: string, i: number) => {
-    const tag = spellLevelTag(data, t, spellOf(entry));
-    return (
-      <span key={i} className="sp">
-        {tag !== null && <span className="lvl">{tag}</span>}
-        {choiceText(data, lang, row.kind, [entry], "")}
-        {ability !== null && <AbilityBadge data={data} lang={lang} t={t} ability={ability} />}
-      </span>
-    );
-  };
+  const chip = (entry: string, i: number) => <SpellChip key={i} data={data} spell={spellOf(entry)} label={choiceText(data, lang, row.kind, [entry], "")} ability={ability} />;
   // Screen readers hear each chip whole: "Healing Word, lvl 1, cast with Charisma; Sleep, …".
   const said = chips ? choice.map((entry) => [choiceText(data, lang, row.kind, [entry], ""), ...spellFacts(data, lang, t, spellOf(entry), ability)].join(", ")).join("; ") : shown;
   return (
@@ -126,16 +139,17 @@ export function classStep(character: Character, level: number): ClassStep {
  * The class of a level: a pick for the first level, an undecided class or a level that changes class (marked
  * "multiclass"); a level that continues the previous class shows it muted with "Multiclass", which opens the class
  * picker. Neither mark nor button when the run's ruleset forbids multiclassing; a level the engine flags for it
- * (`flagged`) keeps its class pick, so it can be set back.
+ * (`flagged`) keeps its class pick, so it can be set back. In a list row (`inRow`) neither the button nor the pill is
+ * drawn: the row has its own tags and its level menu changes the class.
  */
-export function LevelClass({ data, cls, step, classLevel, multiclass, flagged, onPick }: { data: GameData; cls: string | OffData; step: ClassStep; classLevel: number; multiclass: boolean; flagged: boolean; onPick: () => void }) {
+export function LevelClass({ data, cls, step, classLevel, multiclass, flagged, onPick, inRow = false }: { data: GameData; cls: string | OffData; step: ClassStep; classLevel: number; multiclass: boolean; flagged: boolean; onPick: () => void; inRow?: boolean }) {
   const { t, lang } = useI18n();
   const counter = classLevel > 0 && <span className="counter">{classLevel}</span>;
   if (step === "continues" && !flagged) {
     return (
       <>
         <span className="same">{isOffData(cls) ? cls.offData : gameName(data, lang, "class", cls)}</span> {counter}
-        {multiclass && (
+        {multiclass && !inRow && (
           <button className="btn small" onClick={onPick}>
             {t("character.multiclass")}
           </button>
@@ -147,8 +161,29 @@ export function LevelClass({ data, cls, step, classLevel, multiclass, flagged, o
     <>
       <ClassPick data={data} cls={cls} onPick={onPick} /> {counter}
       {/* No pill when the ruleset forbids multiclassing: the engine flags each such level with its own message. */}
-      {step === "changes" && multiclass && <span className="pill acc">{t("tree.multiclass")}</span>}
+      {step === "changes" && multiclass && !inRow && <span className="pill acc">{t("tree.multiclass")}</span>}
     </>
+  );
+}
+
+/** What a level grants, as one line: the first `limit` names, then a button « and n more » that shows the rest. */
+export function GrantedList({ names, limit = 6 }: { names: string[]; limit?: number }) {
+  const { t } = useI18n();
+  const [open, setOpen] = useState(false);
+  if (names.length === 0) return null;
+  const folded = !open && names.length > limit;
+  return (
+    <div className="granted">
+      {t("character.granted")} <b>{(folded ? names.slice(0, limit) : names).join(", ")}</b>
+      {folded && (
+        <>
+          {" "}
+          <button type="button" className="linkbtn" onClick={() => setOpen(true)}>
+            {t("character.grantedMore", { count: names.length - limit })}
+          </button>
+        </>
+      )}
+    </div>
   );
 }
 
@@ -162,10 +197,16 @@ type Props = {
   /** Whether the run's ruleset allows multiclassing. */
   multiclass: boolean;
   onPick: (level: number, slot: string) => void;
+  /** Removes the last level (through the impact preview). */
+  onRemove: () => void;
 };
 
-/** One row per level: the class taken (continued, changed or to decide), every choice (picks or a dashed "to decide"), what the level grants, and the engine's issues in place. */
-export default function LevelList({ data, character, issues, progressLevel, multiclass, onPick }: Props) {
+/**
+ * One row per level in four parts: the level number, the class block (class and level, subclass, played or planned, multiclass),
+ * the choices (picks or a dashed "to decide", the engine's issues under their pick, what the level grants) and a level menu
+ * (change the class at this level; remove the level on the last row).
+ */
+export default function LevelList({ data, character, issues, progressLevel, multiclass, onPick, onRemove }: Props) {
   const { t, lang } = useI18n();
   const resolved = resolve(character, data).levels;
   const abilities = castingAbilities(character, data);
@@ -187,31 +228,47 @@ export default function LevelList({ data, character, issues, progressLevel, mult
         const features = grantedFeatures(level, data).map((feature) => gameName(data, lang, feature.kind, feature.id));
         const played = n <= progressLevel;
         const cls = entry?.class ?? "";
+        const step = classStep(character, n);
+        const flagged = here.some((issue) => issue.code === "multiclassDisabled");
+        const subclass = isOffData(cls) || cls === "" ? null : (classesAt(character, n, data, lang).find((classes) => classes.cls === cls)?.subclass ?? null);
+        const items: MenuItem[] = [];
+        if (multiclass && n > 1) items.push({ label: t("character.changeClassHere"), onSelect: () => onPick(n, CLASS_SLOT) });
+        if (n === resolved.length && n > 1) items.push({ label: t("character.removeLevel", { level: n }), onSelect: onRemove, danger: true, separatorBefore: items.length > 0 });
         return (
           <Fragment key={n}>
             {n === firstUpcoming && <div className="divider">{t("character.upcoming", { level: progressLevel })}</div>}
             <div className={`lv${played ? " played" : ""}`} role="group" aria-label={t("character.level", { level: n })}>
-              <span className="n">{String(n).padStart(2, "0")}</span>
-              <div className="c">
-                <LevelClass data={data} cls={cls} step={classStep(character, n)} classLevel={level.classLevel} multiclass={multiclass} flagged={here.some((issue) => issue.code === "multiclassDisabled")} onPick={() => onPick(n, CLASS_SLOT)} />
-                <small>{played ? t("character.played") : t("character.planned")}</small>
+              {/* The planned numbers are pale: the row's pill says played or planned in text. */}
+              <span className="n" aria-hidden="true">
+                {String(n).padStart(2, "0")}
+              </span>
+              <div className="klass">
+                <b>
+                  <LevelClass data={data} cls={cls} step={step} classLevel={level.classLevel} multiclass={multiclass} flagged={flagged} onPick={() => onPick(n, CLASS_SLOT)} inRow />
+                </b>
+                {subclass !== null && <span className="sub">{subclass}</span>}
+                <div className="tags">
+                  <span className={`pill ${played ? "good" : "muted"}`}>{played ? t("character.played") : t("character.planned")}</span>
+                  {step === "changes" && multiclass && <span className="pill acc">{t("tree.multiclass")}</span>}
+                </div>
               </div>
-              <div className="body">
+              <div className="picks">
                 {rows.map((row) => (
-                  <div key={row.slot} className="choice">
-                    <span className="k">{row.label}</span>
-                    <SlotPick data={data} row={row} choice={Object.hasOwn(choices, row.slot) ? choices[row.slot] : undefined} ability={abilities[n - 1]?.[row.slot] ?? null} onPick={() => onPick(n, row.slot)} />
-                    {row.settledIn === null && <IssueList data={data} issues={at(row.slot)} />}
-                  </div>
+                  <Fragment key={row.slot}>
+                    <span className="lab">{row.label}</span>
+                    <div className="val">
+                      <SlotPick data={data} row={row} choice={Object.hasOwn(choices, row.slot) ? choices[row.slot] : undefined} ability={abilities[n - 1]?.[row.slot] ?? null} onPick={() => onPick(n, row.slot)} />
+                      {row.settledIn === null && <IssueList data={data} issues={at(row.slot)} />}
+                    </div>
+                  </Fragment>
                 ))}
-                {rows.length === 0 && <span className="feat">{t("character.nothingToChoose")}</span>}
-                {features.length > 0 && (
-                  <div className="feat">
-                    {t("character.granted")} <b>{features.join(", ")}</b>
-                  </div>
-                )}
-                <IssueList data={data} issues={elsewhere} />
+                {rows.length === 0 && <span className="full feat">{t("character.nothingToChoose")}</span>}
+                <div className="full">
+                  <GrantedList names={features} />
+                  <IssueList data={data} issues={elsewhere} />
+                </div>
               </div>
+              <div className="more">{items.length > 0 && <Menu label={t("character.levelMenu", { level: n })} icon="⋯" items={items} />}</div>
             </div>
           </Fragment>
         );

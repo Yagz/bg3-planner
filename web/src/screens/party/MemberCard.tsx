@@ -56,7 +56,7 @@ function identityName(data: GameData, lang: Lang, kind: "race" | "background", v
 }
 
 /** The ability's short label: the first three letters of the game's name, upper-cased. */
-const shortLabel = (data: GameData, lang: Lang, ability: string) => gameName(data, lang, "ability", ability).slice(0, 3).toLocaleUpperCase(lang);
+export const shortAbility = (data: GameData, lang: Lang, ability: string) => gameName(data, lang, "ability", ability).slice(0, 3).toLocaleUpperCase(lang);
 
 /**
  * The six ability tiles: short label, total and modifier, the group's highest ones marked; with `base`, a last line
@@ -71,10 +71,10 @@ export function AbilityTiles({ totals, highest, data, lang, base }: { totals: Re
         const bonus = base === undefined ? 0 : totals[ability] - base[ability];
         return (
           <div key={ability} className={`ab${highest.includes(ability) ? " hi" : ""}`} role="group" aria-label={name} title={name}>
-            <span>{shortLabel(data, lang, ability)}</span>
+            <span>{shortAbility(data, lang, ability)}</span>
             <b>{totals[ability]}</b>
             <small>{signed(Math.floor((totals[ability] - 10) / 2))}</small>
-            {base !== undefined && bonus > 0 && <small className="up">{t("character.summary.base", { base: base[ability], bonus })}</small>}
+            {base !== undefined && bonus > 0 && <small className="gain">{t("character.summary.base", { base: base[ability], bonus })}</small>}
           </div>
         );
       })}

@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { resolve as resolve_ } from "node:path";
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { act } from "@testing-library/react";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
@@ -6,6 +8,7 @@ import { characterSkillValues, skillProficiencies } from "../../../src/engine/co
 import { rulesetEffects } from "../../../src/engine/difficulty.ts";
 import { backgroundTraits } from "../../../src/engine/traits.ts";
 import { resolve, subclassSlot } from "../../../src/engine/progression.ts";
+import { grantedFeatures } from "../../../src/engine/features.ts";
 import { featSlot, validate } from "../../../src/engine/validate.ts";
 import { emptyRun } from "../../../src/plan/model.ts";
 import type { Character, Choice, Run } from "../../../src/plan/model.ts";
@@ -503,17 +506,17 @@ describe("Character screen", () => {
         toFrench();
         const chipsOf = (button: HTMLElement) => [...button.querySelectorAll(".sp")] as HTMLElement[];
         const bardSpells = chipsOf(within(frLevel(1)).getByRole("button", { name: /^sorts \(4\)/ }));
-        expect(bardSpells.map((chip) => chip.querySelector(".lvl")!.textContent)).toEqual(["niv. 1", "niv. 1"]);
+        expect(bardSpells.map((chip) => chip.querySelector(".lvl")!.textContent)).toEqual(["1", "1"]);
         expect(bardSpells[0]!.textContent).toContain(gameName(data, "fr", "spell", "Target_HealingWord"));
         const badge = bardSpells[0]!.querySelector(".cast")!;
-        expect(badge.textContent).toBe(gameName(data, "fr", "ability", "Charisma"));
-        expect(badge.getAttribute("title")).toBe("Lancé avec Charisme");
+        expect(badge.textContent).toBe("CHA");
+        expect(bardSpells[0]!.getAttribute("title")).toBe("Sort de niveau 1, lancé avec Charisme");
         expect(within(frLevel(1)).getByRole("button", { name: /^sorts \(4\)/ }).getAttribute("aria-label")).toBe(
           `sorts (4): ${gameName(data, "fr", "spell", "Target_HealingWord")}, niv. 1, lancé avec Charisme; ${gameName(data, "fr", "spell", "Target_Sleep")}, niv. 1, lancé avec Charisme`,
         );
         const [cantrip] = chipsOf(within(frLevel(1)).getByRole("button", { name: /^sorts \(1\)/ }));
-        expect(cantrip!.querySelector(".lvl")!.textContent).toBe("mineur");
-        expect(cantrip!.querySelector(".cast")!.getAttribute("title")).toBe("Lancé avec Intelligence");
+        expect(cantrip!.querySelector(".lvl")!.textContent).toBe("m");
+        expect(cantrip!.getAttribute("title")).toBe("Sort mineur, lancé avec Intelligence");
         // Ritual Caster's selector names no ability: chips without a badge.
         const feat = chipsOf(within(frLevel(4)).getByRole("button", { name: /^sorts \(2\)/ }));
         expect(feat).toHaveLength(2);
@@ -793,11 +796,11 @@ describe("Character screen", () => {
       expect(heading()).not.toContain(`${bardName} 11`);
     });
 
-    it("heads the sidebar with the character's name, no Summary title, and puts it after the tabs in the DOM", () => {
+    it("heads the sidebar with the classes at the viewed level, no Summary title, and puts it after the tabs in the DOM", () => {
       const c = { ...bard(), who: "Gale" };
       setup(runWith([c], 3), c.id);
       const region = screen.getByRole("complementary", { name: "Summary" });
-      expect(within(region).getByRole("heading", { level: 2 }).textContent).toBe(gameName(data, "en", "origin", "Gale"));
+      expect(within(region).getByRole("heading", { level: 2 }).textContent).toBe(`${gameName(data, "en", "class", "Cleric")} 1 · ${gameName(data, "en", "class", "Bard")} 11`);
       expect(within(region).queryByRole("heading", { name: "Summary" })).toBeNull();
       const select = within(region).getByRole("combobox", { name: "Seen at level" });
       expect(screen.getByRole("tablist").compareDocumentPosition(select) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
@@ -851,7 +854,8 @@ describe("Character screen", () => {
       const d = ranger(3);
       setup(runWith([d], 1), d.id);
       expect((within(sidebar()).getByRole("combobox", { name: "Seen at level" }) as HTMLSelectElement).value).toBe("3");
-      fireEvent.click(screen.getByRole("button", { name: /^Remove level 3/ }));
+      fireEvent.click(within(level(3)).getByRole("button", { name: "Level 3 menu" }));
+      fireEvent.click(screen.getByRole("menuitem", { name: "Remove level 3" }));
       const after = within(sidebar()).getByRole("combobox", { name: "Seen at level" }) as HTMLSelectElement;
       expect(after.value).toBe("2");
       expect(after.options).toHaveLength(2);
@@ -891,7 +895,15 @@ describe("Character screen", () => {
       return c;
     }
     const classButton = (n: number) => within(level(n)).queryByRole("button", { name: /^Class:/ });
-    const multiclassButton = (n: number) => within(level(n)).queryByRole("button", { name: "Multiclass" });
+    /** The way to multiclass a level: its "Multiclass" button in the tree, the entry of its level menu in the list (opened on the way). */
+    const multiclassButton = (n: number): HTMLElement | null => {
+      const button = within(level(n)).queryByRole("button", { name: "Multiclass" });
+      if (button !== null) return button;
+      const menu = within(level(n)).queryByRole("button", { name: `Level ${n} menu` });
+      if (menu === null) return null;
+      if (menu.getAttribute("aria-expanded") !== "true") fireEvent.click(menu);
+      return screen.queryByRole("menuitem", { name: "Change class at this level (multiclass)" });
+    };
 
     for (const view of ["list", "tree"] as const) {
       it(`shows a continuing level muted with Multiclass, and a level that changes class with a multiclass pill (${view})`, () => {
@@ -903,7 +915,8 @@ describe("Character screen", () => {
         for (const n of [2, 4]) {
           expect(classButton(n)).not.toBeNull();
           expect(within(level(n)).getByText("multiclass")).toBeTruthy();
-          expect(multiclassButton(n)).toBeNull();
+          // The tree draws no button on a level that already changes class; the list's menu always offers the change.
+          expect(multiclassButton(n) === null).toBe(view === "tree");
         }
         expect(classButton(3)).toBeNull();
         expect(within(level(3)).getByText(gameName(data, "en", "class", "Rogue")).className).toContain("same");
@@ -917,7 +930,7 @@ describe("Character screen", () => {
       c.levels[1]!.class = "";
       setup(runWith([c]), c.id);
       expect(classButton(2)!.textContent).toBe("to decide");
-      expect(multiclassButton(2)).toBeNull();
+      expect(within(level(2)).queryByRole("button", { name: "Multiclass" })).toBeNull();
       expect(within(level(2)).queryByText("multiclass")).toBeNull();
     });
 
@@ -1315,5 +1328,131 @@ describe("creation cards", () => {
     expect(cardElement("Race").querySelector(".traits")).toBeNull();
     expect(card("Historique").getByText("à décider")).toBeTruthy();
     expect(cardElement("Historique").querySelector(".traits")).toBeNull();
+  });
+});
+
+describe("camp-style character screen", () => {
+  const french = () => setLanguage("fr");
+  const frLevel = (n: number) => screen.getByRole("group", { name: `Niveau ${n}` });
+  const levelMenu = (n: number, name = `Level ${n} menu`) => within(level(n)).queryByRole("button", { name });
+
+  it("the character heading and member buttons come before the sidebar in DOM order", () => {
+    const a = ranger(1);
+    const b = { ...ranger(1), id: "other", who: "Gale" };
+    setup(runWith([a, b]), a.id);
+    const heading = screen.getByRole("heading", { level: 1 });
+    const members = screen.getByRole("group", { name: "Characters" });
+    const side = screen.getByRole("complementary");
+    const before = (x: Node, y: Node) => (x.compareDocumentPosition(y) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
+    expect(before(heading, members)).toBe(true);
+    expect(before(members, side)).toBe(true);
+    expect(before(members, screen.getByRole("tablist"))).toBe(true);
+    // The heading row is not a banner landmark.
+    expect(heading.closest("header")).toBeNull();
+  });
+
+  it("a level row has no Multiclasser button; its menu offers multiclassing, and removing the level only on the last row", () => {
+    const c = ranger(3);
+    setup(runWith([c]), c.id);
+    french();
+    expect(within(frLevel(2)).queryByRole("button", { name: "Multiclasser" })).toBeNull();
+    for (const n of [1, 2, 3]) expect(within(frLevel(n)).queryByRole("button", { name: "Multiclasser" })).toBeNull();
+    fireEvent.click(within(frLevel(2)).getByRole("button", { name: "Menu du niveau 2" }));
+    expect(screen.getAllByRole("menuitem").map((item) => item.textContent)).toEqual(["Changer de classe à ce niveau (multiclasser)"]);
+    fireEvent.keyDown(screen.getAllByRole("menuitem")[0]!, { key: "Escape" });
+    fireEvent.click(within(frLevel(3)).getByRole("button", { name: "Menu du niveau 3" }));
+    expect(screen.getAllByRole("menuitem").map((item) => item.textContent)).toEqual(["Changer de classe à ce niveau (multiclasser)", "Retirer le niveau 3"]);
+  });
+
+  it("the menu's multiclass entry opens the class picker; its removal entry removes the last level", () => {
+    const c = ranger(3);
+    const { store, runId } = setup(runWith([c]), c.id);
+    fireEvent.click(levelMenu(2)!);
+    fireEvent.click(screen.getByRole("menuitem", { name: "Change class at this level (multiclass)" }));
+    expect(screen.getByRole("dialog")).toBeTruthy();
+    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Cancel" }));
+    fireEvent.click(levelMenu(3)!);
+    fireEvent.click(screen.getByRole("menuitem", { name: "Remove level 3" }));
+    expect(store.load(runId)!.characters[0]!.levels).toHaveLength(2);
+  });
+
+  it("offers no multiclass entry where the difficulty forbids multiclassing, and a single level has no menu", () => {
+    const c = ranger(1);
+    const run = runWith([c]);
+    setup({ ...run, difficulty: { ruleset: "DIFFICULTY_EASY", overrides: {} } }, c.id);
+    expect(levelMenu(1)).toBeNull();
+  });
+
+  it("Accordé folds beyond six names and unfolds on click", () => {
+    // The first level of a class that grants more than six features, found in the real data.
+    const found = ["Cleric", "Druid", "Wizard", "Fighter", "Paladin", "Bard", "Rogue", "Ranger", "Sorcerer", "Warlock", "Barbarian", "Monk"]
+      .flatMap((cls) => Array.from({ length: 12 }, (_, i) => ({ cls, n: i + 1 })))
+      .map(({ cls, n }) => {
+        const c: Character = { ...ranger(12), id: "many", levels: Array.from({ length: 12 }, () => ({ class: cls, choices: {} as Record<string, Choice> })) };
+        return { c, n, names: grantedFeatures(resolve(c, data).levels[n - 1]!, data) };
+      })
+      .find(({ names }) => names.length > 6);
+    expect(found).toBeDefined();
+    const { c, n, names } = found!;
+    setup(runWith([c]), c.id);
+    french();
+    const row = frLevel(n);
+    const granted = () => row.querySelector(".granted")!;
+    expect(granted().querySelector("b")!.textContent!.split(", ")).toHaveLength(6);
+    const more = within(row).getByRole("button", { name: `et ${names.length - 6} de plus` });
+    fireEvent.click(more);
+    expect(granted().querySelector("b")!.textContent!.split(", ")).toHaveLength(names.length);
+    expect(within(row).queryByRole("button", { name: /de plus/ })).toBeNull();
+  });
+
+  it("a spell chip shows the level (m for a cantrip) and the full casting ability", () => {
+    const c: Character = { ...ranger(1), id: "bard", race: "Elf", subrace: "Elf_HighElf", levels: [{ class: "Bard", choices: {} }] };
+    const slotOf = (id: string) => resolve(c, data).levels[0]!.slots.find((s) => s.selector.id === id)!.id;
+    c.levels[0]!.choices[slotOf("BardSpells")] = ["Target_HealingWord"];
+    c.levels[0]!.choices[slotOf("HighElfCantrip")] = ["Projectile_FireBolt"];
+    setup(runWith([c]), c.id);
+    french();
+    const chips = [...frLevel(1).querySelectorAll(".sp")] as HTMLElement[];
+    expect(chips.length).toBeGreaterThan(1);
+    const healing = chips.find((chip) => chip.textContent!.includes(gameName(data, "fr", "spell", "Target_HealingWord")))!;
+    expect(healing.querySelector(".lvl")!.textContent).toBe("1");
+    expect(healing.querySelector(".cast")!.textContent).toBe("CHA");
+    expect(healing.getAttribute("title")).toBe("Sort de niveau 1, lancé avec Charisme");
+    const cantrip = chips.find((chip) => chip.textContent!.includes(gameName(data, "fr", "spell", "Projectile_FireBolt")))!;
+    expect(cantrip.querySelector(".lvl")!.textContent).toBe("m");
+  });
+
+  it("the sidebar shows the gain over the base without the good style", () => {
+    const c = ranger(1);
+    c.levels[0]!.choices[resolve(c, data).levels[0]!.slots.find((s) => s.selector.function === "SelectAbilityBonus")!.id] = ["Dexterity", "Wisdom"];
+    setup(runWith([c]), c.id);
+    const gain = within(screen.getByRole("complementary")).getByText("base 15 +2");
+    expect(gain.className).not.toMatch(/good|up\b/);
+    const css = readFileSync(resolve_(process.cwd(), "web/src/app.css"), "utf8");
+    const rule = css.split("\n").filter((line) => /small\.gain/.test(line));
+    expect(rule.length).toBeGreaterThan(0);
+    expect(rule.join("")).not.toContain("--good");
+    expect(css).not.toMatch(/small\.up/);
+  });
+
+  it("the sidebar's title is the classes at the viewed level, and expertise carries a diamond with a legend", () => {
+    const c = ranger(2);
+    setup(runWith([c]), c.id);
+    const side = within(screen.getByRole("complementary"));
+    expect(side.getByRole("heading", { level: 2 }).textContent).toContain(`${gameName(data, "en", "class", "Ranger")} 2`);
+    expect(side.getByText(/◆/)).toBeTruthy();
+  });
+
+  it("a played level shows joué, a planned one prévu, a multiclass level multiclasse", () => {
+    const c = ranger(3);
+    c.levels[2]!.class = "Rogue";
+    setup(runWith([c], 2), c.id);
+    french();
+    expect(within(frLevel(2)).getByText("joué")).toBeTruthy();
+    expect(within(frLevel(3)).getByText("prévu")).toBeTruthy();
+    expect(within(frLevel(3)).getByText("multiclasse")).toBeTruthy();
+    expect(within(frLevel(2)).queryByText("multiclasse")).toBeNull();
+    // The planned level's number is faint, so the row says its state in text and keeps the number out of the accessibility tree.
+    expect(frLevel(3).querySelector(".n")!.getAttribute("aria-hidden")).toBe("true");
   });
 });

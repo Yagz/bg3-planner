@@ -8,7 +8,7 @@ import type { Character, Choice } from "../../../../src/plan/model.ts";
 import { useI18n } from "../../i18n/i18n.ts";
 import { gameName } from "../../names.ts";
 import IssueList from "./IssueList.tsx";
-import { CLASS_SLOT, LevelClass, SlotPick, classStep, slotRows } from "./LevelList.tsx";
+import { CLASS_SLOT, GrantedList, LevelClass, SlotPick, classStep, slotRows } from "./LevelList.tsx";
 
 type Props = {
   data: GameData;
@@ -86,11 +86,7 @@ export default function LevelTree({ data, character, issues, progressLevel, mult
                   )}
                 </div>
               ))}
-              {features.length > 0 && (
-                <div className="feat">
-                  {t("character.granted")} <b>{features.join(", ")}</b>
-                </div>
-              )}
+              <GrantedList names={features} />
               <IssueList data={data} issues={elsewhere} />
             </div>
           </div>

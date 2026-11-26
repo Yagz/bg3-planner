@@ -281,24 +281,26 @@ export default function Character({ data, run, saveRun, characterId, onSelect, t
 
   return (
     <div className="character">
-      {run.characters.length > 1 && (
-        <div className="chips" role="group" aria-label={t("character.choose")}>
-          {run.characters.map((c) => (
-            <button key={c.id} className="chip" aria-pressed={c.id === character.id} onClick={() => onSelect(c.id)}>
-              {label(c)}
-            </button>
-          ))}
+      <div className="charhead">
+        <div>
+          <h1>{label(character)}</h1>
+          <p className="sub">{[identity, classLineText(character, viewed, data, lang)].filter((part) => part !== "").join(" · ")}</p>
         </div>
-      )}
+        {run.characters.length > 1 && (
+          <div className="chips" role="group" aria-label={t("character.choose")}>
+            {run.characters.map((c) => (
+              <button key={c.id} className="chip" aria-pressed={c.id === character.id} onClick={() => onSelect(c.id)}>
+                {label(c)}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
       {error !== null && (
         <p className="banner" role="alert">
           {t("character.error", { message: error })}
         </p>
       )}
-      <header className="charhead">
-        <h1>{label(character)}</h1>
-        <p className="sub">{[identity, classLineText(character, viewed, data, lang)].filter((part) => part !== "").join(" · ")}</p>
-      </header>
       <div className="charlayout">
         <div className="charmain">
           <div className="tabs" role="tablist" aria-label={t("character.tabs")} onKeyDown={onTabKey}>
@@ -353,15 +355,18 @@ export default function Character({ data, run, saveRun, characterId, onSelect, t
                   onChoose={(level, slot, choice) => commit(setChoice(character, level, slot, choice))}
                 />
               ) : (
-                <LevelList data={data} character={character} issues={levelIssues} progressLevel={run.progress.level} multiclass={multiclass} onPick={(level, slot) => setTarget({ level, slot })} />
+                <LevelList data={data} character={character} issues={levelIssues} progressLevel={run.progress.level} multiclass={multiclass} onPick={(level, slot) => setTarget({ level, slot })} onRemove={() => commit(removeLastLevel(character))} />
               )}
               <div className="row levelactions">
                 <button className="btn" disabled={character.levels.length >= MAX_LEVELS} onClick={() => commit(addLevel(character))}>
                   {t("character.addLevel")}
                 </button>
-                <button className="btn" disabled={character.levels.length <= 1} onClick={() => commit(removeLastLevel(character))}>
-                  {t("character.removeLevel", { level: character.levels.length })}
-                </button>
+                {/* The list removes the last level from its row's menu; the tree has no menu. */}
+                {tree && (
+                  <button className="btn" disabled={character.levels.length <= 1} onClick={() => commit(removeLastLevel(character))}>
+                    {t("character.removeLevel", { level: character.levels.length })}
+                  </button>
+                )}
               </div>
             </section>
           </div>
@@ -373,7 +378,6 @@ export default function Character({ data, run, saveRun, characterId, onSelect, t
         <aside className="charside" aria-label={t("character.summary")}>
           <Sidebar
             character={character}
-            name={label(character)}
             run={run}
             data={data}
             viewed={viewed}
