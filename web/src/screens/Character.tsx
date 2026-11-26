@@ -323,8 +323,10 @@ export default function Character({ data, run, saveRun, characterId, onSelect, t
               data={data}
               character={character}
               issues={issues}
-              onBase={(ability, value) => commit(setAbilities(character, { ...character.abilities, [ability]: value }))}
-              onBonus={(slot, choice) => commit(setChoice(character, 1, slot, choice))}
+              onCommit={(base, bonus) => {
+                const scored = setAbilities(character, base);
+                return commit(bonus === null ? scored : setChoice(scored, 1, bonus.slot, bonus.choice));
+              }}
             />
             <section className="frame levelsframe" aria-labelledby="levels-title">
               <div className="framehead">

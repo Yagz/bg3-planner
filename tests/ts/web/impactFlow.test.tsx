@@ -89,6 +89,9 @@ function setup(run: Run, id: string) {
 }
 
 const showTree = () => fireEvent.click(screen.getByRole("checkbox", { name: "Tree" }));
+/** Focus moves from the abilities table to a control outside it: the table commits its pending edits (React's onBlur listens to focusout). */
+const leaveAbilities = () =>
+  fireEvent.focusOut(screen.getByRole("region", { name: "Abilities" }).querySelector(".tblwrap button")!, { relatedTarget: screen.getByRole("checkbox", { name: "Tree" }) });
 const openAlternative = (subclass: string) =>
   fireEvent.click(within(screen.getByRole("group", { name: "Untaken branches" })).getByRole("button", { name: gameName(data, "en", "class", subclass) }));
 /** Restores the version before the current one through the history panel. */
@@ -156,6 +159,9 @@ describe("Tree view and impact preview", () => {
     showTree();
 
     fireEvent.click(within(screen.getByRole("region", { name: "Abilities" })).getByRole("radio", { name: `+2 ${gameName(data, "en", "ability", "Strength")}` }));
+    // The edit is committed, and the preview opens, once focus leaves the abilities table.
+    expect(screen.queryByRole("dialog")).toBeNull();
+    leaveAbilities();
 
     const dialog = screen.getByRole("dialog");
     const flagged = within(dialog).getByRole("group", { name: "Later choices that no longer hold" }).textContent ?? "";
@@ -248,6 +254,7 @@ describe("Tree view and impact preview", () => {
     const strength = gameName(data, "en", "ability", "Strength");
     const next = c.abilities.Strength + 1;
     fireEvent.click(screen.getByRole("button", { name: `Raise ${strength}` }));
+    leaveAbilities();
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(store.load(runId)!.characters[0]!.abilities.Strength).toBe(next);
     expect(screen.getByText("Point buy: 28 points spent for a budget of 27.")).toBeTruthy();

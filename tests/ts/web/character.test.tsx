@@ -168,7 +168,7 @@ describe("Character screen", () => {
     expect([...dexterity.querySelectorAll("td")].map((td) => td.textContent)).toEqual(["Dexterity", "−15+", "", "", "17", "+3"]);
     expect(within(dexterity).getByRole("radio", { name: "+2 Dexterity" })).toHaveProperty("checked", true);
     expect(within(rowOf(frame, "Wisdom")).getByRole("radio", { name: "+1 Wisdom" })).toHaveProperty("checked", true);
-    expect(within(rowOf(frame, "Strength")).getAllByRole("cell").at(-1)!.textContent).toBe("-1");
+    expect(within(rowOf(frame, "Strength")).getAllByRole("cell").at(-1)!.textContent).toBe("−1");
     // The table keeps its own class: never the ability tiles' `.ab6` of the sidebar.
     expect(frame.querySelector(".abiltable")).not.toBeNull();
     expect(frame.closest(".ab6")).toBeNull();
@@ -206,8 +206,96 @@ describe("Character screen", () => {
 
   describe("abilities table", () => {
     const radio = (ability: string, bonus: string) => within(rowOf(abilitiesFrame(), ability)).getByRole("radio", { name: `${bonus} ${ability}` });
+    /** Focus moves from the table to a control outside it (React's onBlur listens to focusout). */
+    const leaveTable = () => fireEvent.focusOut(abilitiesFrame().querySelector(".tblwrap button")!, { relatedTarget: screen.getByRole("tab", { name: "Notes" }) });
+    const raise = (ability: string) => fireEvent.click(within(rowOf(abilitiesFrame(), ability)).getByRole("button", { name: `Raise ${ability}` }));
 
-    it("gives the level-1 bonuses in the order picked, +2 then +1, saved once both are chosen and with no picker", () => {
+    it("saves seven Raise clicks as one version with the final scores when focus leaves the table, not before", () => {
+      const c = ranger(1);
+      const { store, runId } = setup(runWith([c]), c.id);
+      const versions = store.history(runId).length;
+      for (let i = 0; i < 7; i++) raise("Strength");
+      // The pending scores show at once: base, total, modifier and counter.
+      expect([...rowOf(abilitiesFrame(), "Strength").querySelectorAll("td")].map((td) => td.textContent)).toEqual(["Strength", "−15+", "", "", "15", "+2"]);
+      expect(within(abilitiesFrame()).getByText("36 / 27 points")).toBeTruthy();
+      expect(store.history(runId).length).toBe(versions);
+      // Focus moving inside the table saves nothing.
+      const buttons = abilitiesFrame().querySelectorAll(".tblwrap button");
+      fireEvent.focusOut(buttons[0]!, { relatedTarget: buttons[1]! });
+      expect(store.history(runId).length).toBe(versions);
+      leaveTable();
+      expect(store.history(runId).length).toBe(versions + 1);
+      expect(store.load(runId)!.characters[0]!.abilities).toEqual({ ...c.abilities, Strength: 15 });
+      leaveTable();
+      expect(store.history(runId).length).toBe(versions + 1);
+    });
+
+    it("moves the +2 across three abilities with no impact preview, then saves one version on leaving the table", () => {
+      const c = ranger(1);
+      const bonus = resolve(c, data).levels[0]!.slots.find((s) => s.selector.function === "SelectAbilityBonus")!;
+      c.levels[0]!.choices[bonus.id] = ["Dexterity", "Wisdom"];
+      const { store, runId } = setup(runWith([c]), c.id);
+      const versions = store.history(runId).length;
+      // ArrowDown in a radio group checks the next enabled radio and fires its change; jsdom has no arrow-key radio
+      // navigation, so each step is the click that change amounts to (Wisdom, holding the +1, is skipped as disabled).
+      for (const ability of ["Constitution", "Intelligence", "Charisma"]) {
+        fireEvent.click(radio(ability, "+2"));
+        expect(screen.queryByRole("dialog")).toBeNull();
+      }
+      expect(store.history(runId).length).toBe(versions);
+      expect(rowOf(abilitiesFrame(), "Charisma").querySelector("td.tot")!.textContent).toBe("12");
+      expect(rowOf(abilitiesFrame(), "Dexterity").querySelector("td.tot")!.textContent).toBe("15");
+      leaveTable();
+      expect(screen.queryByRole("dialog")).toBeNull();
+      expect(store.history(runId).length).toBe(versions + 1);
+      expect(store.load(runId)!.characters[0]!.levels[0]!.choices[bonus.id]).toEqual(["Charisma", "Wisdom"]);
+    });
+
+    it("saves pending edits once on unmount, and once on pagehide", () => {
+      const c = ranger(1);
+      const bonus = resolve(c, data).levels[0]!.slots.find((s) => s.selector.function === "SelectAbilityBonus")!;
+      const onCommit = vi.fn(() => true);
+      const view = () => (
+        <I18nContext.Provider value={createI18n("en")}>
+          <Abilities data={data} character={c} issues={[]} onCommit={onCommit} />
+        </I18nContext.Provider>
+      );
+      const { unmount } = render(view());
+      raise("Strength");
+      fireEvent.click(radio("Charisma", "+2"));
+      fireEvent.click(radio("Constitution", "+1"));
+      unmount();
+      expect(onCommit).toHaveBeenCalledTimes(1);
+      expect(onCommit).toHaveBeenCalledWith({ ...c.abilities, Strength: 9 }, { slot: bonus.id, choice: ["Charisma", "Constitution"] });
+      // On pagehide, then unmount: still one save. A half-made bonus is left out.
+      onCommit.mockClear();
+      const second = render(view());
+      raise("Strength");
+      fireEvent.click(radio("Charisma", "+2"));
+      window.dispatchEvent(new Event("pagehide"));
+      second.unmount();
+      expect(onCommit).toHaveBeenCalledTimes(1);
+      expect(onCommit).toHaveBeenCalledWith({ ...c.abilities, Strength: 9 }, null);
+    });
+
+    it("tries a refused ability save again when focus next leaves the table", () => {
+      const c = ranger(1);
+      const onCommit = vi.fn().mockReturnValueOnce(false).mockReturnValue(true);
+      render(
+        <I18nContext.Provider value={createI18n("en")}>
+          <Abilities data={data} character={c} issues={[]} onCommit={onCommit} />
+        </I18nContext.Provider>,
+      );
+      raise("Strength");
+      const button = abilitiesFrame().querySelector(".tblwrap button")!;
+      fireEvent.focusOut(button, { relatedTarget: null });
+      expect(rowOf(abilitiesFrame(), "Strength").querySelector("td.tot")!.textContent).toBe("9");
+      fireEvent.focusOut(button, { relatedTarget: null });
+      expect(onCommit).toHaveBeenCalledTimes(2);
+      expect(onCommit).toHaveBeenLastCalledWith({ ...c.abilities, Strength: 9 }, null);
+    });
+
+    it("gives the level-1 bonuses in the order picked, +2 then +1, saved once both are chosen and focus leaves the table, with no picker", () => {
       const c = ranger(1);
       const bonus = resolve(c, data).levels[0]!.slots.find((s) => s.selector.function === "SelectAbilityBonus")!;
       const { store, runId } = setup(runWith([c]), c.id);
@@ -220,6 +308,9 @@ describe("Character screen", () => {
       // An ability holding the +2 cannot take the +1.
       expect(radio("Charisma", "+1")).toHaveProperty("disabled", true);
       fireEvent.click(radio("Constitution", "+1"));
+      // Complete, still pending until focus leaves the table.
+      expect(store.history(runId).length).toBe(versions);
+      leaveTable();
       expect(screen.queryByRole("dialog")).toBeNull();
       expect(store.history(runId).length).toBe(versions + 1);
       expect(store.load(runId)!.characters[0]!.levels[0]!.choices[bonus.id]).toEqual(["Charisma", "Constitution"]);
@@ -233,9 +324,10 @@ describe("Character screen", () => {
       expect(within(abilitiesFrame()).getByText("27 / 27 points")).toBeTruthy();
       expect(within(rowOf(abilitiesFrame(), "Strength")).getByRole("button", { name: "Lower Strength" })).toHaveProperty("disabled", true);
       fireEvent.click(within(rowOf(abilitiesFrame(), "Strength")).getByRole("button", { name: "Raise Strength" }));
-      expect(store.load(runId)!.characters[0]!.abilities.Strength).toBe(9);
       expect(within(abilitiesFrame()).getByText("28 / 27 points")).toBeTruthy();
       expect(within(rowOf(abilitiesFrame(), "Dexterity")).getByRole("button", { name: "Raise Dexterity" })).toHaveProperty("disabled", true);
+      leaveTable();
+      expect(store.load(runId)!.characters[0]!.abilities.Strength).toBe(9);
     });
 
     it("moves a score outside the point-buy range back towards it", () => {
@@ -243,9 +335,11 @@ describe("Character screen", () => {
       const { store, runId } = setup(runWith([c]), c.id);
       expect(within(rowOf(abilitiesFrame(), "Strength")).getByRole("button", { name: "Raise Strength" })).toHaveProperty("disabled", true);
       fireEvent.click(within(rowOf(abilitiesFrame(), "Strength")).getByRole("button", { name: "Lower Strength" }));
-      expect(store.load(runId)!.characters[0]!.abilities.Strength).toBe(15);
+      expect(within(rowOf(abilitiesFrame(), "Strength")).getAllByRole("cell")[1]!.textContent).toBe("−15+");
       expect(within(rowOf(abilitiesFrame(), "Intelligence")).getByRole("button", { name: "Lower Intelligence" })).toHaveProperty("disabled", true);
       fireEvent.click(within(rowOf(abilitiesFrame(), "Intelligence")).getByRole("button", { name: "Raise Intelligence" }));
+      leaveTable();
+      expect(store.load(runId)!.characters[0]!.abilities.Strength).toBe(15);
       expect(store.load(runId)!.characters[0]!.abilities.Intelligence).toBe(8);
     });
 
@@ -259,12 +353,12 @@ describe("Character screen", () => {
       expect(within(level(1)).queryByRole("button", { name: /^ability scores/ })).toBeNull();
     });
 
-    it("drops a half-made bonus when the stored choice or the level-1 class changes under the same character", () => {
+    it("drops a half-made bonus when the stored choice or the level-1 class changes under the same character, and pending base scores when the stored ones change", () => {
       const c = ranger(1);
       const bonus = resolve(c, data).levels[0]!.slots.find((s) => s.selector.function === "SelectAbilityBonus")!;
       const view = (character: Character) => (
         <I18nContext.Provider value={createI18n("en")}>
-          <Abilities data={data} character={character} issues={[]} onBase={() => {}} onBonus={() => {}} />
+          <Abilities data={data} character={character} issues={[]} onCommit={() => true} />
         </I18nContext.Provider>
       );
       const { rerender } = render(view(c));
@@ -284,6 +378,12 @@ describe("Character screen", () => {
       expect(total("Charisma")).toBe("12");
       rerender(view(empty));
       expect(total("Charisma")).toBe("10");
+      // Pending base scores, then the stored scores changed from outside.
+      rerender(view(c));
+      raise("Strength");
+      expect(total("Strength")).toBe("9");
+      rerender(view({ ...c, abilities: { ...c.abilities, Strength: 12 } }));
+      expect(total("Strength")).toBe("12");
     });
 
     it("asks for the level-1 class first when there is none: radios disabled, no throw", () => {
