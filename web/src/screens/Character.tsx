@@ -27,6 +27,7 @@ import {
 } from "../state/characterOps.ts";
 import ChoicePicker, { kindOfList } from "./character/ChoicePicker.tsx";
 import type { PickerMode, PickerSpec } from "./character/ChoicePicker.tsx";
+import Abilities from "./character/Abilities.tsx";
 import Creation from "./character/Creation.tsx";
 import type { IdentityField } from "./character/Creation.tsx";
 import { traitNames } from "./character/Traits.tsx";
@@ -291,7 +292,14 @@ export default function Character({ data, run, saveRun, characterId, onSelect, t
               hasSubraces={subraces.length > 0}
               onPick={(field) => setTarget({ field })}
               origin={character.who === "player" ? { value: run.origin, options: originOptions, onChange: changeOrigin } : undefined}
-              onAbility={(ability, value) => commit(setAbilities(character, { ...character.abilities, [ability]: value }))}
+            />
+            <Abilities
+              key={character.id}
+              data={data}
+              character={character}
+              issues={issues}
+              onBase={(ability, value) => commit(setAbilities(character, { ...character.abilities, [ability]: value }))}
+              onBonus={(slot, choice) => commit(setChoice(character, 1, slot, choice))}
             />
             <section className="frame levelsframe" aria-labelledby="levels-title">
               <div className="framehead">

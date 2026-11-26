@@ -155,10 +155,7 @@ describe("Tree view and impact preview", () => {
     const { store, runId } = setup(runOf(c), c.id);
     showTree();
 
-    fireEvent.click(within(screen.getByRole("group", { name: "Level 1" })).getByRole("button", { name: /^ability scores/ }));
-    const picker = screen.getByRole("dialog");
-    fireEvent.change(within(picker).getByRole("combobox", { name: "+2" }), { target: { value: "Strength" } });
-    fireEvent.click(within(picker).getByRole("button", { name: "Validate" }));
+    fireEvent.click(within(screen.getByRole("region", { name: "Abilities" })).getByRole("radio", { name: `+2 ${gameName(data, "en", "ability", "Strength")}` }));
 
     const dialog = screen.getByRole("dialog");
     const flagged = within(dialog).getByRole("group", { name: "Later choices that no longer hold" }).textContent ?? "";
@@ -250,7 +247,7 @@ describe("Tree view and impact preview", () => {
     const { store, runId } = setup(runOf(c), c.id);
     const strength = gameName(data, "en", "ability", "Strength");
     const next = c.abilities.Strength + 1;
-    fireEvent.change(screen.getByRole("combobox", { name: `Base ${strength}` }), { target: { value: String(next) } });
+    fireEvent.click(screen.getByRole("button", { name: `Raise ${strength}` }));
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(store.load(runId)!.characters[0]!.abilities.Strength).toBe(next);
     expect(screen.getByText("Point buy: 28 points spent for a budget of 27.")).toBeTruthy();

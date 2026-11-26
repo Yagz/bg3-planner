@@ -1,11 +1,11 @@
 import type { GameData } from "../../../../src/data/types.ts";
-import { POINT_BUY, abilityTotals, pointsSpent } from "../../../../src/engine/abilities.ts";
 import type { Issue } from "../../../../src/engine/issues.ts";
 import { backgroundTraits, identityTraits } from "../../../../src/engine/traits.ts";
-import { ABILITIES, isOffData } from "../../../../src/plan/model.ts";
-import type { Ability, Character } from "../../../../src/plan/model.ts";
+import { isOffData } from "../../../../src/plan/model.ts";
+import type { Character } from "../../../../src/plan/model.ts";
 import { useI18n } from "../../i18n/i18n.ts";
 import { gameDescription, gameName } from "../../names.ts";
+import { isScoreIssue } from "./Abilities.tsx";
 import IssueList from "./IssueList.tsx";
 import { TraitList } from "./Traits.tsx";
 
@@ -23,16 +23,11 @@ type Props = {
   onPick: (field: IdentityField) => void;
   /** For the player only: the run's origin (`""` for the custom player), the origins offered, and what choosing one does. */
   origin?: { value: string; options: string[]; onChange: (origin: string) => void };
-  onAbility: (ability: Ability, value: number) => void;
 };
 
-const BASE_VALUES = Array.from({ length: POINT_BUY.max - POINT_BUY.min + 1 }, (_, i) => POINT_BUY.min + i);
-
-/** The creation block: race, subrace, background, and the six base scores with the level-1 bonus and the point-buy counter. */
-export default function Creation({ data, character, issues, locked, hasSubraces, onPick, origin, onAbility }: Props) {
+/** The creation block: the origin (player only), race, subrace and background. */
+export default function Creation({ data, character, issues, locked, hasSubraces, onPick, origin }: Props) {
   const { t, lang } = useI18n();
-  const totals = abilityTotals(character, data, 1);
-  const spent = pointsSpent(character.abilities);
 
   const field = (name: IdentityField) => {
     const value = character[name];
@@ -88,38 +83,7 @@ export default function Creation({ data, character, issues, locked, hasSubraces,
         </div>
       )}
       <div className="ident">{(["race", "subrace", "background"] as const).map(field)}</div>
-      <div className="row">
-        <span className="k">{t("character.abilities")}</span>
-        <span className={`pill ${spent === POINT_BUY.budget ? "good" : spent > POINT_BUY.budget ? "bad" : "todo"}`} aria-label={t("character.pointBuy")}>
-          {`${spent} / ${POINT_BUY.budget}`}
-        </span>
-        <span className="feat">{t("character.abilitiesHint")}</span>
-      </div>
-      <div className="abil">
-        {ABILITIES.map((ability) => {
-          const base = character.abilities[ability];
-          const bonus = totals[ability] - base;
-          const name = gameName(data, lang, "ability", ability);
-          const values = BASE_VALUES.includes(base) ? BASE_VALUES : [...BASE_VALUES, base].sort((a, b) => a - b);
-          return (
-            <div key={ability} className="ab" role="group" aria-label={name}>
-              <span className="nm">{name}</span>
-              <span className="tot">{totals[ability]}</span>
-              <span className="det">
-                <select aria-label={t("character.base", { ability: name })} value={base} onChange={(event) => onAbility(ability, Number(event.target.value))}>
-                  {values.map((value) => (
-                    <option key={value} value={value}>
-                      {value}
-                    </option>
-                  ))}
-                </select>
-                {bonus !== 0 && <b>{bonus > 0 ? `+${bonus}` : String(bonus)}</b>}
-              </span>
-            </div>
-          );
-        })}
-      </div>
-      <IssueList data={data} issues={issues.filter((issue) => issue.slot === null)} />
+      <IssueList data={data} issues={issues.filter((issue) => issue.slot === null && !isScoreIssue(issue))} />
     </section>
   );
 }

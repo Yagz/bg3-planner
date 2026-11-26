@@ -42,7 +42,7 @@ export default function LevelTree({ data, character, issues, progressLevel, mult
         const cls = entry?.class ?? "";
         const step = classStep(character, n);
         const slots = levelSlots(level, choices, data);
-        const rows = slotRows(slots, data, t);
+        const rows = slotRows(slots, data, t, n);
         const here = issues.filter((issue) => issue.level === n);
         const at = (slot: string) => here.filter((issue) => issue.slot === slot);
         const placed = new Set(rows.map((row) => row.slot));
@@ -70,7 +70,7 @@ export default function LevelTree({ data, character, issues, progressLevel, mult
                 <div key={row.slot} className="choice">
                   <span className="k">{row.label}</span>
                   <SlotPick data={data} row={row} choice={stored(row.slot)} ability={abilities[n - 1]?.[row.slot] ?? null} onPick={() => onPick(n, row.slot)} />
-                  <IssueList data={data} issues={at(row.slot)} />
+                  {row.settledIn === null && <IssueList data={data} issues={at(row.slot)} />}
                   {row.slot === slots.subclass && untaken.length > 0 && (
                     <div className="alts" role="group" aria-label={t("tree.untaken")}>
                       <span className="lbl" aria-hidden="true">

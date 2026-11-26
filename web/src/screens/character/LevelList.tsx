@@ -20,22 +20,24 @@ import IssueList from "./IssueList.tsx";
 export const CLASS_SLOT = "class";
 
 /** One choice row of a level: its slot, label, kind of names, whether it may stay unset, and whether it picks spells (`SelectSpells`). */
-export type SlotRow = { slot: string; label: string; kind: TextKind | null; optional: boolean; spells: boolean };
+export type SlotRow = { slot: string; label: string; kind: TextKind | null; optional: boolean; spells: boolean; settledIn: "abilities" | null };
 
 /** The choice rows of a level's slots, in the engine's order: subclass, row selectors, then the feat and its selectors. */
-export function slotRows(slots: LevelSlots, data: GameData, t: Translate): SlotRow[] {
+export function slotRows(slots: LevelSlots, data: GameData, t: Translate, level: number): SlotRow[] {
   const rows: SlotRow[] = [];
-  if (slots.subclass !== null) rows.push({ slot: slots.subclass, label: t("choice.subclass"), kind: "class", optional: false, spells: false });
+  if (slots.subclass !== null) rows.push({ slot: slots.subclass, label: t("choice.subclass"), kind: "class", optional: false, spells: false, settledIn: null });
   const selectorRow = ({ id, selector }: SelectorSlot): SlotRow => ({
     slot: id,
     label: "count" in selector && selector.count > 0 ? `${t(`choice.${selector.function}`)} (${selector.count})` : t(`choice.${selector.function}`),
     kind: kindOfList(data, selector.list),
     optional: isOptionalSelector(selector),
     spells: selector.function === "SelectSpells",
+    // The level-1 +2 / +1 is chosen in the Abilities frame, as at the game's character creation.
+    settledIn: level === 1 && selector.function === "SelectAbilityBonus" ? "abilities" : null,
   });
   rows.push(...slots.selectors.map(selectorRow));
   if (slots.feat !== null) {
-    rows.push({ slot: slots.feat.id, label: t("choice.feat"), kind: "feat", optional: false, spells: false });
+    rows.push({ slot: slots.feat.id, label: t("choice.feat"), kind: "feat", optional: false, spells: false, settledIn: null });
     rows.push(...slots.feat.selectors.map(selectorRow));
   }
   return rows;
@@ -61,6 +63,7 @@ export function choiceText(data: GameData, lang: Lang, kind: TextKind | null, ch
  */
 export function SlotPick({ data, row, choice, ability = null, onPick }: { data: GameData; row: SlotRow; choice: Choice | undefined; ability?: Ability | null; onPick: () => void }) {
   const { t, lang } = useI18n();
+  if (row.settledIn !== null) return <span className="feat">{t("character.settledInAbilities")}</span>;
   const todo = t("character.todo");
   let shown: string;
   let className = "pick";
@@ -178,7 +181,7 @@ export default function LevelList({ data, character, issues, progressLevel, mult
         const slots = levelSlots(level, choices, data);
         const here = issues.filter((issue) => issue.level === n);
         const at = (slot: string) => here.filter((issue) => issue.slot === slot);
-        const rows = slotRows(slots, data, t);
+        const rows = slotRows(slots, data, t, n);
         const placed = new Set(rows.map((row) => row.slot));
         const elsewhere = here.filter((issue) => issue.slot === null || !placed.has(issue.slot));
         const features = grantedFeatures(level, data).map((feature) => gameName(data, lang, feature.kind, feature.id));
@@ -198,7 +201,7 @@ export default function LevelList({ data, character, issues, progressLevel, mult
                   <div key={row.slot} className="choice">
                     <span className="k">{row.label}</span>
                     <SlotPick data={data} row={row} choice={Object.hasOwn(choices, row.slot) ? choices[row.slot] : undefined} ability={abilities[n - 1]?.[row.slot] ?? null} onPick={() => onPick(n, row.slot)} />
-                    <IssueList data={data} issues={at(row.slot)} />
+                    {row.settledIn === null && <IssueList data={data} issues={at(row.slot)} />}
                   </div>
                 ))}
                 {rows.length === 0 && <span className="feat">{t("character.nothingToChoose")}</span>}

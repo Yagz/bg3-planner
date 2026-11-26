@@ -8,13 +8,13 @@ function selectors(css: string): string[] {
 }
 
 describe("app.css", () => {
-  it("keeps the ability tiles (.ab6) and the Creation ability block (.abil) apart: every .ab rule is scoped under one of them", () => {
+  it("keeps the ability tiles (.ab6) apart from the abilities table (.abiltable): every .ab rule is scoped under .ab6", () => {
     const tileRules = selectors(readFileSync("web/src/app.css", "utf8")).filter((selector) => /\.ab(?![\w-])/.test(selector));
     expect(tileRules.length).toBeGreaterThan(0);
-    expect(tileRules.filter((selector) => !/^\.(ab6|abil) \.ab(?![\w-])/.test(selector))).toEqual([]);
+    expect(tileRules.filter((selector) => !/^\.ab6 \.ab(?![\w-])/.test(selector))).toEqual([]);
     // Both looks are still defined.
     expect(tileRules.some((selector) => selector.startsWith(".ab6 "))).toBe(true);
-    expect(tileRules.some((selector) => selector.startsWith(".abil "))).toBe(true);
+    expect(selectors(readFileSync("web/src/app.css", "utf8")).some((selector) => selector.startsWith(".abiltable "))).toBe(true);
   });
 
   it("keeps [hidden] stronger than display rules, which jsdom cannot show", () => {

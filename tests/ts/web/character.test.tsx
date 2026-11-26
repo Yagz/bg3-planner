@@ -69,6 +69,8 @@ function setup(run: Run, id: string, game: GameData = data) {
   return { store, runId: saved.id };
 }
 
+const abilitiesFrame = () => screen.getByRole("region", { name: "Abilities" });
+const rowOf = (frame: HTMLElement, ability: string) => within(frame).getByRole("cell", { name: ability }).closest("tr") as HTMLElement;
 const level = (n: number) => screen.getByRole("group", { name: `Level ${n}` });
 const openSpells = () => fireEvent.click(within(level(2)).getByRole("button", { name: /^spells/ }));
 
@@ -146,23 +148,24 @@ describe("Character screen", () => {
     expect(within(level(2)).getByRole("button", { name: /^spells/ }).textContent).toBe("to decide");
   });
 
-  it("shows the level-1 ability bonus, the point-buy counter, and played levels apart from upcoming ones", () => {
+  it("shows the abilities table: base, the level-1 +2 and +1, the total and the modifier, the point-buy counter, and played levels apart from upcoming ones", () => {
     const c = ranger(3);
     const bonus = resolve(c, data).levels[0]!.slots.find((s) => s.selector.function === "SelectAbilityBonus")!;
     c.levels[0]!.choices[bonus.id] = ["Dexterity", "Wisdom"];
     c.levels[2]!.choices[subclassSlot("Ranger")] = ["GloomStalker"];
     setup(runWith([c], 2), c.id);
-    const creation = screen.getByRole("region", { name: "Creation" });
-    expect(within(creation).getByText("27 / 27")).toBeTruthy();
-    const dexterity = within(creation).getByRole("group", { name: "Dexterity" });
-    expect(within(dexterity).getByText("17")).toBeTruthy();
-    expect(within(dexterity).getByText("+2")).toBeTruthy();
-    // Creation's ability block keeps its own style: its tiles sit in `.abil`, never in the summary tiles' `.ab6`.
-    expect(dexterity.closest(".abil")).not.toBeNull();
-    expect(dexterity.closest(".ab6")).toBeNull();
-    const summaryTile = within(screen.getByRole("complementary")).getByRole("group", { name: "Dexterity" });
-    expect(summaryTile.closest(".ab6")).not.toBeNull();
-    expect(summaryTile.closest(".abil")).toBeNull();
+    const frame = abilitiesFrame();
+    expect(within(frame).getByText("27 / 27 points")).toBeTruthy();
+    expect(within(frame).getAllByRole("columnheader").map((h) => h.textContent)).toEqual(["Ability", "Base", "+2", "+1", "Level 1 total", "Mod."]);
+    const dexterity = rowOf(frame, "Dexterity");
+    expect([...dexterity.querySelectorAll("td")].map((td) => td.textContent)).toEqual(["Dexterity", "−15+", "", "", "17", "+3"]);
+    expect(within(dexterity).getByRole("radio", { name: "+2 Dexterity" })).toHaveProperty("checked", true);
+    expect(within(rowOf(frame, "Wisdom")).getByRole("radio", { name: "+1 Wisdom" })).toHaveProperty("checked", true);
+    expect(within(rowOf(frame, "Strength")).getAllByRole("cell").at(-1)!.textContent).toBe("-1");
+    // The table keeps its own class: never the ability tiles' `.ab6` of the sidebar.
+    expect(frame.querySelector(".abiltable")).not.toBeNull();
+    expect(frame.closest(".ab6")).toBeNull();
+    expect(within(screen.getByRole("complementary")).getByRole("group", { name: "Dexterity" }).closest(".ab6")).not.toBeNull();
     expect(level(1).className).toContain("played");
     expect(level(3).className).not.toContain("played");
     expect(screen.getByText(/Upcoming/)).toBeTruthy();
@@ -194,20 +197,67 @@ describe("Character screen", () => {
     expect(store.load(runId)!.characters[0]!.race).toBe("Halfling");
   });
 
-  it("gives the level-1 bonuses in the order picked, +2 then +1", () => {
-    const c = ranger(1);
-    const bonus = resolve(c, data).levels[0]!.slots.find((s) => s.selector.function === "SelectAbilityBonus")!;
-    const { store, runId } = setup(runWith([c]), c.id);
-    fireEvent.click(within(level(1)).getByRole("button", { name: /^ability scores/ }));
-    const dialog = screen.getByRole("dialog");
-    fireEvent.change(within(dialog).getByRole("combobox", { name: "+2" }), { target: { value: "Wisdom" } });
-    const validate = within(dialog).getByRole("button", { name: "Validate" });
-    fireEvent.change(within(dialog).getByRole("combobox", { name: "+1" }), { target: { value: "Wisdom" } });
-    expect(validate).toHaveProperty("disabled", true);
-    fireEvent.change(within(dialog).getByRole("combobox", { name: "+1" }), { target: { value: "Dexterity" } });
-    fireEvent.click(validate);
-    expect(store.load(runId)!.characters[0]!.levels[0]!.choices[bonus.id]).toEqual(["Wisdom", "Dexterity"]);
-    expect(within(within(screen.getByRole("region", { name: "Creation" })).getByRole("group", { name: "Wisdom" })).getByText("17")).toBeTruthy();
+  describe("abilities table", () => {
+    const radio = (ability: string, bonus: string) => within(rowOf(abilitiesFrame(), ability)).getByRole("radio", { name: `${bonus} ${ability}` });
+
+    it("gives the level-1 bonuses in the order picked, +2 then +1, saved once both are chosen and with no picker", () => {
+      const c = ranger(1);
+      const bonus = resolve(c, data).levels[0]!.slots.find((s) => s.selector.function === "SelectAbilityBonus")!;
+      const { store, runId } = setup(runWith([c]), c.id);
+      const versions = store.history(runId).length;
+      fireEvent.click(radio("Charisma", "+2"));
+      // Half made: nothing saved, the frame says so, the +2 already counts in the total.
+      expect(store.history(runId).length).toBe(versions);
+      expect(within(abilitiesFrame()).getByText("to choose")).toBeTruthy();
+      expect(rowOf(abilitiesFrame(), "Charisma").querySelector("td.tot")!.textContent).toBe("12");
+      // An ability holding the +2 cannot take the +1.
+      expect(radio("Charisma", "+1")).toHaveProperty("disabled", true);
+      fireEvent.click(radio("Constitution", "+1"));
+      expect(screen.queryByRole("dialog")).toBeNull();
+      expect(store.history(runId).length).toBe(versions + 1);
+      expect(store.load(runId)!.characters[0]!.levels[0]!.choices[bonus.id]).toEqual(["Charisma", "Constitution"]);
+      expect(within(abilitiesFrame()).queryByText("to choose")).toBeNull();
+      expect(rowOf(abilitiesFrame(), "Constitution").querySelector("td.tot")!.textContent).toBe("15");
+    });
+
+    it("moves the base score by one with the Raise and Lower buttons, within 8 to 15, and the counter follows", () => {
+      const c = ranger(1);
+      const { store, runId } = setup(runWith([c]), c.id);
+      expect(within(abilitiesFrame()).getByText("27 / 27 points")).toBeTruthy();
+      expect(within(rowOf(abilitiesFrame(), "Strength")).getByRole("button", { name: "Lower Strength" })).toHaveProperty("disabled", true);
+      fireEvent.click(within(rowOf(abilitiesFrame(), "Strength")).getByRole("button", { name: "Raise Strength" }));
+      expect(store.load(runId)!.characters[0]!.abilities.Strength).toBe(9);
+      expect(within(abilitiesFrame()).getByText("28 / 27 points")).toBeTruthy();
+      expect(within(rowOf(abilitiesFrame(), "Dexterity")).getByRole("button", { name: "Raise Dexterity" })).toHaveProperty("disabled", true);
+    });
+
+    it("moves a score outside the point-buy range back towards it", () => {
+      const c = { ...ranger(1), abilities: { ...ranger(1).abilities, Strength: 18, Intelligence: 5 } };
+      const { store, runId } = setup(runWith([c]), c.id);
+      expect(within(rowOf(abilitiesFrame(), "Strength")).getByRole("button", { name: "Raise Strength" })).toHaveProperty("disabled", true);
+      fireEvent.click(within(rowOf(abilitiesFrame(), "Strength")).getByRole("button", { name: "Lower Strength" }));
+      expect(store.load(runId)!.characters[0]!.abilities.Strength).toBe(15);
+      expect(within(rowOf(abilitiesFrame(), "Intelligence")).getByRole("button", { name: "Lower Intelligence" })).toHaveProperty("disabled", true);
+      fireEvent.click(within(rowOf(abilitiesFrame(), "Intelligence")).getByRole("button", { name: "Raise Intelligence" }));
+      expect(store.load(runId)!.characters[0]!.abilities.Intelligence).toBe(8);
+    });
+
+    it("settles the level-1 bonus row in the Abilities frame, in the list and in the tree", () => {
+      const c = ranger(1);
+      setup(runWith([c]), c.id);
+      expect(within(level(1)).getByText("Settled in the Abilities frame")).toBeTruthy();
+      expect(within(level(1)).queryByRole("button", { name: /^ability scores/ })).toBeNull();
+      fireEvent.click(screen.getByRole("checkbox", { name: "Tree" }));
+      expect(within(level(1)).getByText("Settled in the Abilities frame")).toBeTruthy();
+      expect(within(level(1)).queryByRole("button", { name: /^ability scores/ })).toBeNull();
+    });
+
+    it("asks for the level-1 class first when there is none: radios disabled, no throw", () => {
+      const c = { ...ranger(1), levels: [{ class: "", choices: {} as Record<string, Choice> }] };
+      setup(runWith([c]), c.id);
+      expect(within(abilitiesFrame()).getByText("Choose the level 1 class first")).toBeTruthy();
+      for (const input of within(abilitiesFrame()).getAllByRole("radio")) expect(input).toHaveProperty("disabled", true);
+    });
   });
 
   it("offers to replace a spell known from an earlier level, stored as old>new", () => {

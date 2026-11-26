@@ -38,7 +38,7 @@ function unique(features: Feature[]): Feature[] {
 function rowOf(character: Character, level: number, slot: string, data: GameData, t: Translate): SlotRow | null {
   const resolved = resolve(character, data).levels[level - 1];
   if (resolved === undefined) return null;
-  return slotRows(levelSlots(resolved, character.levels[level - 1]?.choices ?? {}, data), data, t).find((row) => row.slot === slot) ?? null;
+  return slotRows(levelSlots(resolved, character.levels[level - 1]?.choices ?? {}, data), data, t, level).find((row) => row.slot === slot) ?? null;
 }
 
 /** The engine's impact of a change before it is applied: features gained and lost, choices opened and removed, later choices made impossible, party coverage. */
