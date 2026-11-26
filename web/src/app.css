@@ -317,3 +317,5 @@ select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
 .charside .settle { margin: 0; padding-left: 18px; font-size: 13px }
 .notes { display: grid; gap: 6px }
 .notes textarea { width: 100%; box-sizing: border-box; font: inherit; color: var(--fg); background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; resize: vertical; min-height: 12em }
+/* A spell's school beside its name: muted text, never colour alone. */
+.opt .school { color: var(--fg-muted); font-size: 12px; font-style: italic }

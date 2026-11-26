@@ -10,7 +10,7 @@ import { resolve } from "../../../src/engine/progression.ts";
 import { characterSkillValues } from "../../../src/engine/coverage.ts";
 import { isOptionalSelector, knownSpellsBefore, levelSlots, skillRefusal, slotSnapshot, validate } from "../../../src/engine/validate.ts";
 import { MAX_LEVELS, isOffData } from "../../../src/plan/model.ts";
-import type { Character as CharacterModel, Choice, Run } from "../../../src/plan/model.ts";
+import type { Ability, Character as CharacterModel, Choice, Run } from "../../../src/plan/model.ts";
 import { useI18n } from "../i18n/i18n.ts";
 import { characterLabel, gameName } from "../names.ts";
 import {
@@ -223,7 +223,25 @@ export default function Character({ data, run, saveRun, characterId, onSelect, t
       initial,
     };
     if (selector.function === "SelectSpells") {
-      spec.spells = { ability: castingAbility(resolved, found, data) };
+      const snapshot = slotSnapshot(character, data, n, slot);
+      /** The display name of the source a scope stands for: a class, the race or subrace owning a table, or the feat picked at that level. */
+      const sourceName = (owner: string): string => {
+        if (owner.startsWith("race:")) {
+          const race = Object.entries(data.rules.races).find(([, def]) => `race:${def.table}` === owner);
+          return race === undefined ? owner : gameName(data, lang, "race", race[0]);
+        }
+        if (owner.startsWith("feat:")) {
+          const picked = character.levels[Number(owner.slice("feat:".length)) - 1]?.choices[owner];
+          return Array.isArray(picked) && picked[0] !== undefined ? gameName(data, lang, "feat", picked[0]) : owner;
+        }
+        return gameName(data, lang, "class", owner);
+      };
+      const others: Record<string, { source: string; ability: Ability | null }[]> = {};
+      for (const pick of snapshot?.spellPicks ?? []) {
+        if (pick.scope === scope) continue;
+        (others[pick.spell] ??= []).push({ source: sourceName(pick.scope), ability: pick.ability });
+      }
+      spec.spells = { ability: castingAbility(resolved, found, data), same: [...(snapshot?.known.spells.get(scope) ?? [])], others };
       if (selector.swaps > 0) spec.swaps = { max: selector.swaps, known: knownSpellsBefore(character, data, n, scope) };
     }
     if (selector.function === "SelectSkills" || selector.function === "SelectSkillsExpertise") {

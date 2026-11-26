@@ -75,6 +75,8 @@ function setup(run: Run, id: string, game: GameData = data) {
 const abilitiesFrame = () => screen.getByRole("region", { name: "Abilities" });
 const rowOf = (frame: HTMLElement, ability: string) => within(frame).getByRole("cell", { name: ability }).closest("tr") as HTMLElement;
 const level = (n: number) => screen.getByRole("group", { name: `Level ${n}` });
+/** What screen readers hear for an entry: the texts its aria-describedby points to. */
+const said = (box: HTMLElement) => (box.getAttribute("aria-describedby") ?? "").split(" ").filter((ref) => ref !== "").map((ref) => document.getElementById(ref)!.textContent);
 const openSpells = () => fireEvent.click(within(level(2)).getByRole("button", { name: /^spells/ }));
 
 describe("Character screen", () => {
@@ -418,6 +420,76 @@ describe("Character screen", () => {
       });
     }
 
+    describe("enriched spell entries (school, same source, other source)", () => {
+      /** A High Elf Cleric 1 / Bard 4 whose High Elf cantrip is Minor Illusion. */
+      function clericBard(): Character {
+        const c: Character = { ...bard(5), id: "cb", levels: ["Cleric", "Bard", "Bard", "Bard", "Bard"].map((class_) => ({ class: class_, choices: {} as Record<string, Choice> })) };
+        c.levels[0]!.choices[slotOf(c, 1, "HighElfCantrip").id] = ["Target_MinorIllusion"];
+        return c;
+      }
+      const entry = (dialog: HTMLElement, id: string) => within(dialog).getByRole("checkbox", { name: gameName(data, "fr", "spell", id) });
+
+      it("shows a spell the High Elf row already gave, enabled, with its source and both abilities, in the Bard cantrip picker", () => {
+        const c = clericBard();
+        setup(runWith([c]), c.id);
+        toFrench();
+        // Level 5 offers the Bard cantrip first, then the Bard spell.
+        fireEvent.click(within(frLevel(5)).getAllByRole("button", { name: /^sorts \(1\)/ })[0]!);
+        const dialog = screen.getByRole("dialog");
+        const box = entry(dialog, "Target_MinorIllusion");
+        expect(box).toHaveProperty("disabled", false);
+        expect(said(box)).toContain("Déjà connu par Haut-elfe, lancé avec Intelligence ; ici avec Charisme");
+        expect(box.closest("label")!.className).not.toContain("off");
+        fireEvent.click(box);
+        fireEvent.click(within(dialog).getByRole("button", { name: "Valider" }));
+        expect(screen.queryByRole("dialog")).toBeNull();
+      });
+
+      it("greys and disables a spell this source already knows, with its reason", () => {
+        const c = { ...bard(2), id: "b2" };
+        c.levels[0]!.choices[slotOf(c, 1, "BardSpells").id] = ["Target_HealingWord", "Target_Sleep", "Target_Bane", "Target_Heroism"];
+        setup(runWith([c]), c.id);
+        toFrench();
+        fireEvent.click(within(frLevel(2)).getByRole("button", { name: /^sorts \(1\)/ }));
+        const dialog = screen.getByRole("dialog");
+        const healing = entry(dialog, "Target_HealingWord");
+        expect(healing).toHaveProperty("disabled", true);
+        expect(healing).toHaveProperty("checked", false);
+        expect(healing.closest("label")!.className).toContain("off");
+        expect(said(healing)).toContain("Déjà connu par cette source");
+        expect(said(entry(dialog, "Target_CharmPerson"))).not.toContain("Déjà connu par cette source");
+      });
+
+      it("shows each spell's school name, nothing for a spell without one", () => {
+        const c = bard(2);
+        setup(runWith([c]), c.id);
+        toFrench();
+        fireEvent.click(within(frLevel(2)).getByRole("button", { name: /^sorts \(1\)/ }));
+        const dialog = screen.getByRole("dialog");
+        expect(data.rules.spells["Target_HealingWord"]!.school).toBe("Evocation");
+        const healing = entry(dialog, "Target_HealingWord").closest("label")!;
+        expect(within(healing).getByText("Évocation")).toBeTruthy();
+        expect(said(entry(dialog, "Target_HealingWord"))).toContain("Évocation");
+      });
+
+      it("keeps a stored spell known by the same source checked, with its reason, so it can be unchecked", () => {
+        const c = { ...bard(2), id: "b3" };
+        c.levels[0]!.choices[slotOf(c, 1, "BardSpells").id] = ["Target_HealingWord", "Target_Sleep", "Target_Bane", "Target_Heroism"];
+        c.levels[1]!.choices[slotOf(c, 2, "BardSpells").id] = ["Target_HealingWord"];
+        setup(runWith([c]), c.id);
+        toFrench();
+        fireEvent.click(within(frLevel(2)).getByRole("button", { name: /^sorts \(1\)/ }));
+        const dialog = screen.getByRole("dialog");
+        const healing = entry(dialog, "Target_HealingWord");
+        expect(healing).toHaveProperty("checked", true);
+        expect(healing).toHaveProperty("disabled", false);
+        expect(said(healing)).toContain("Déjà connu par cette source");
+        fireEvent.click(healing);
+        expect(healing).toHaveProperty("checked", false);
+        expect(healing).toHaveProperty("disabled", true);
+      });
+    });
+
     it("keeps a replacement as old → new inside one chip, and shows an unnamed item by its identifier", () => {
       const c = bard(1);
       c.levels[0]!.choices[slotOf(c, 1, "BardSpells").id] = ["Target_Sleep", "Target_Bane>Target_Heroism"];
@@ -735,9 +807,6 @@ describe("skill and expertise pickers", () => {
   const GUILD_ARTISAN = "e9aeac40-6c4e-4d81-9a24-e9eeb6208e85";
   const french = () => fireEvent.change(screen.getByRole("combobox", { name: "Language" }), { target: { value: "fr" } });
   const niveau = (n: number) => screen.getByRole("group", { name: `Niveau ${n}` });
-  /** What screen readers hear for an entry: the texts its aria-describedby points to. */
-  const said = (box: HTMLElement) => (box.getAttribute("aria-describedby") ?? "").split(" ").filter((ref) => ref !== "").map((ref) => document.getElementById(ref)!.textContent);
-
   /** A High Elf Guild Artisan Lore Bard of 12 levels: Performance, Deception, Acrobatics at 1; Intimidation, Stealth, History at 3 with expertise in Intimidation and Performance. */
   function loreBard(): { c: Character; expertise10: string; level10: number } {
     const c: Character = { ...ranger(1), id: "bard", race: "Elf", subrace: "Elf_HighElf", background: GUILD_ARTISAN, levels: Array.from({ length: 12 }, () => ({ class: "Bard", choices: {} as Record<string, Choice> })) };

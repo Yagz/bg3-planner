@@ -30,8 +30,12 @@ export type PickerSpec = {
   mode: PickerMode;
   /** For a `SelectSpells` slot that allows replacements: how many, and the spells known before (what may be replaced). */
   swaps?: { max: number; known: string[] };
-  /** For a `SelectSpells` slot: entries grouped by spell level, each with the ability the slot's spells are cast with (null for none). */
-  spells?: { ability: Ability | null };
+  /**
+   * For a `SelectSpells` slot: entries grouped by spell level, each with the ability the slot's spells are cast with (null
+   * for none), the spells this slot's source already knows (`same`: refused) and, per spell, the other sources that
+   * know it with the ability each casts it with (`others`: allowed, each copy is cast with its source's ability).
+   */
+  spells?: { ability: Ability | null; same: string[]; others: Record<string, { source: string; ability: Ability | null }[]> };
   /**
    * For a `SelectSkills` or `SelectSkillsExpertise` slot, per skill: its ability, its value at the slot's level (and
    * whether it is proficient or expert there), why the engine would refuse it at this slot, and what already grants it.
@@ -214,6 +218,15 @@ export default function ChoicePicker({ data, spec, onSave, onClear, onClose }: P
 
   const full = mode.type === "set" && picks.length >= mode.max;
   const castWith = spec.spells?.ability ?? null;
+  const sameSource = (entry: string) => spec.spells !== undefined && spec.spells.same.includes(entry);
+  const otherSources = (entry: string) => (spec.spells !== undefined && Object.hasOwn(spec.spells.others, entry) ? (spec.spells.others[entry] ?? []) : []);
+  /** A spell's school name in the current language; null when the data names no school or its name is unknown. */
+  const schoolOf = (entry: string): string | null => {
+    const school = spec.spells !== undefined && Object.hasOwn(data.rules.spells, entry) ? data.rules.spells[entry]?.school : null;
+    if (school === null || school === undefined) return null;
+    const text = gameName(data, lang, "school", school);
+    return text === school ? null : text;
+  };
   const facts = (entry: string) => (spec.spells === undefined ? [] : spellFacts(data, lang, t, entry, castWith));
   const skillOf = (entry: string): SkillEntry | null => (spec.skills !== undefined && Object.hasOwn(spec.skills, entry) ? (spec.skills[entry] ?? null) : null);
   /** Why the engine refuses the skill here, then what already grants it: muted lines under its name, read with it. */
@@ -231,11 +244,21 @@ export default function ChoicePicker({ data, spec, onSave, onClear, onClose }: P
     signed(skill.value),
     ...(skill.proficient ? [skill.expertise ? t("character.summary.expert") : t("character.summary.proficient")] : []),
   ];
-  const detailLines = (entry: string) => [...skillLines(entry), ...(spec.details !== undefined && Object.hasOwn(spec.details, entry) ? (spec.details[entry] ?? []) : [])];
+  /** For a spell: that this source already knows it, or which other sources do and with which ability each casts it. */
+  const spellLines = (entry: string): string[] => [
+    ...(sameSource(entry) ? [t("picker.knownHere")] : []),
+    ...otherSources(entry).map(({ source, ability }) =>
+      castWith === null
+        ? t("picker.knownElsewhere", { source, ability: ability === null ? "?" : gameName(data, lang, "ability", ability) })
+        : t("picker.knownElsewhereHere", { source, ability: ability === null ? "?" : gameName(data, lang, "ability", ability), here: gameName(data, lang, "ability", castWith) }),
+    ),
+  ];
+  const detailLines = (entry: string) => [...skillLines(entry), ...spellLines(entry), ...(spec.details !== undefined && Object.hasOwn(spec.details, entry) ? (spec.details[entry] ?? []) : [])];
   const label = (entry: string) => {
     const text = description(entry);
     const said = facts(entry);
     const skill = skillOf(entry);
+    const school = schoolOf(entry);
     return (
       <span>
         {skill !== null && (
@@ -266,6 +289,14 @@ export default function ChoicePicker({ data, spec, onSave, onClear, onClose }: P
             <AbilityBadge data={data} lang={lang} t={t} ability={castWith} />
           </>
         )}
+        {school !== null && (
+          <>
+            {" "}
+            <span className="school" id={`${id}-${entry}-school`}>
+              {school}
+            </span>
+          </>
+        )}
         {text !== null && (
           <span className="d" id={`${id}-${entry}`}>
             {text}
@@ -280,15 +311,15 @@ export default function ChoicePicker({ data, spec, onSave, onClear, onClose }: P
     );
   };
   const describedBy = (entry: string) => {
-    const ids = [...(skillOf(entry) === null ? [] : [`${id}-${entry}-skill`]), ...(facts(entry).length > 0 ? [`${id}-${entry}-spell`] : []), ...(description(entry) === null ? [] : [`${id}-${entry}`]), ...detailLines(entry).map((_, i) => `${id}-${entry}-d${i}`)];
+    const ids = [...(skillOf(entry) === null ? [] : [`${id}-${entry}-skill`]), ...(facts(entry).length > 0 ? [`${id}-${entry}-spell`] : []), ...(schoolOf(entry) === null ? [] : [`${id}-${entry}-school`]), ...(description(entry) === null ? [] : [`${id}-${entry}`]), ...detailLines(entry).map((_, i) => `${id}-${entry}-d${i}`)];
     return ids.length === 0 ? undefined : ids.join(" ");
   };
 
   /** One entry of the game's list: a checkbox (a radio for a single pick) with its name and description. */
   const option = (entry: string) => {
     const on = picks.includes(entry);
-    // A refused skill can still be unchecked when stored, so validating never keeps it silently.
-    const off = !on && (full || (skillOf(entry)?.refused ?? null) !== null);
+    // A refused skill or a spell this source already knows can still be unchecked when stored, so validating never keeps it silently.
+    const off = !on && (full || (skillOf(entry)?.refused ?? null) !== null || sameSource(entry));
     return (
       <label key={entry} className={`opt${off ? " off" : ""}`}>
         <input
