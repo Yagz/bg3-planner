@@ -211,7 +211,7 @@ describe("validate", () => {
   it("stops counting a replaced passive's armour proficiency", () => {
     // Synthetic: the Bear totem is given Heavy Armor proficiency so that replacing it matters for HeavyArmorMaster.
     const patched: GameData = structuredClone(data);
-    patched.rules.passives["TotemSpirit_Bear"] = { boosts: ["Proficiency(HeavyArmor)"] };
+    patched.rules.passives["TotemSpirit_Bear"] = { boosts: ["Proficiency(HeavyArmor)"], params: [] };
     const classes = ["Barbarian", "Barbarian", "Barbarian", "Barbarian"];
     const totem = { 3: { "subclass:Barbarian": ["TotemWarriorPath"] } };
     const pick = slotId(classes, totem, 3, "SelectPassives");

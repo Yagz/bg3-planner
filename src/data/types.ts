@@ -157,10 +157,14 @@ export interface SpellDef {
   type: string;
   level: number | null;
   school: string | null;
+  /** The stats entry's `DescriptionParams`, aligned with `[1]`, `[2]`… in the description. */
+  params: string[];
 }
 
 export interface PassiveDef {
   boosts: string[];
+  /** The stats entry's `DescriptionParams`, aligned with `[1]`, `[2]`… in the description. */
+  params: string[];
   /** An engine helper the interface hides (listed in `scripts/data/technical_passives.txt`); absent otherwise. */
   technical?: boolean;
 }

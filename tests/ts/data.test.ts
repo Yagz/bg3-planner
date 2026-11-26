@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { loadGameData } from "../../src/data/load.ts";
+import { descriptionOf, renderParams } from "../../src/data/names.ts";
 
 describe("game data", () => {
   it("loads the committed data", async () => {
@@ -96,5 +97,50 @@ describe("game data", () => {
       expect(Object.keys(texts).filter((k) => k.startsWith("slot:")).sort()).toEqual(slots.map((id) => `slot:${id}`).sort());
       expect(Object.keys(texts).filter((k) => k.startsWith("damage:")).sort()).toEqual(damageTypes.map((id) => `damage:${id}`).sort());
     }
+  });
+});
+
+describe("description parameters (real data)", () => {
+  it("renders every placeholder, and only level-dependent forms read as the marker", async () => {
+    const data = await loadGameData("data/larian");
+    const marker = "\u0000marker";
+    const format = { lang: "fr" as const, damageName: (type: string) => data.texts.fr[`damage:${type}`]?.name ?? null, variable: marker };
+    // The form is the first identifier of the parameter once wrappers (DealDamage, RegainHitPoints, GainTemporaryHitPoints) and dice are set aside; "" for an empty parameter.
+    const form = (param: string) =>
+      param
+        .replace(/\b(DealDamage|RegainHitPoints|GainTemporaryHitPoints)\(/g, "(")
+        .replace(/\d+d\d+/g, "")
+        .match(/[A-Za-z_]\w*/)?.[0] ?? "";
+    const forms = new Set<string>();
+    for (const def of [...Object.values(data.rules.spells), ...Object.values(data.rules.passives)]) {
+      for (const param of def.params) {
+        if (renderParams("[1]", [param], format) === marker) forms.add(form(param));
+      }
+    }
+    expect([...forms].toSorted()).toEqual([
+      "",
+      "CharismaModifier",
+      "ClassLevel",
+      "ConstitutionModifier",
+      "Level",
+      "LevelMapValue",
+      "MainMeleeWeapon",
+      "MainRangedWeapon",
+      "ProficiencyBonus",
+      "SpellCastingAbilityModifier",
+      "WisdomModifier",
+      "max",
+    ]);
+  });
+
+  it("shows Darkvision's distance in metres", async () => {
+    const data = await loadGameData("data/larian");
+    const text = descriptionOf(data.texts.fr, "passive", "Darkvision", data.rules.passives["Darkvision"]?.params, {
+      lang: "fr",
+      damageName: () => null,
+      variable: "?",
+    });
+    expect(text).not.toContain("[1]");
+    expect(text).toContain(" m");
   });
 });

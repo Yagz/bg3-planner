@@ -20145,10 +20145,14 @@
   "AccursedSpecter": {
    "boosts": [
     "UnlockInterrupt(Interrupt_AccursedSpecter)"
+   ],
+   "params": [
+    "Distance(18)"
    ]
   },
   "AcolyteOfNature": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "Actor": {
    "boosts": [
@@ -20157,17 +20161,25 @@
     "ProficiencyBonus(Skill,Performance)",
     "ExpertiseBonus(Performance)",
     "Ability(Charisma, 1)"
+   ],
+   "params": [
+    "1",
+    "20"
    ]
   },
   "AgonizingBlast": {
    "boosts": [
     "IF(SpellId('Projectile_EldritchBlast') and IsCharismaModifierPositive()):DamageBonus(CharismaModifier,Force)"
-   ]
+   ],
+   "params": []
   },
   "Alert": {
    "boosts": [
     "Initiative(5)",
     "StatusImmunity(SURPRISED)"
+   ],
+   "params": [
+    "5"
    ]
   },
   "ArcaneShot": {
@@ -20177,40 +20189,52 @@
     "IF(SpellId('Projectile_ArcaneShot_EnfeeblingArrow') and not TotalDamageDoneGreaterThan(0)):DamageBonus(2d6,Necrotic,Magical)",
     "IF(SpellId('Projectile_ArcaneShot_GraspingArrow') and not TotalDamageDoneGreaterThan(0)):DamageBonus(2d6,Poison,Magical)",
     "IF(SpellId('Projectile_ArcaneShot_SeekingArrow') and not TotalDamageDoneGreaterThan(0)):DamageBonus(1d6,Force,Magical)"
-   ]
+   ],
+   "params": []
   },
   "ArcaneWard": {
-   "boosts": []
+   "boosts": [],
+   "params": [
+    "ClassLevel(Wizard)"
+   ]
   },
   "ArcaneWard_Cast": {
    "boosts": [],
+   "params": [],
    "technical": true
   },
   "ArmorOfHexes": {
    "boosts": [
     "UnlockInterrupt(Interrupt_ArmorOfHexes)"
-   ]
+   ],
+   "params": []
   },
   "ArmorOfShadows": {
    "boosts": [
     "UnlockSpell(Shout_MageArmor_ArmorOfShadows,Singular)"
-   ]
+   ],
+   "params": []
   },
   "AspectOfTheBeast_Bear": {
    "boosts": [
     "CarryCapacityMultiplier(2)",
     "Advantage(Ability, Strength)"
-   ]
+   ],
+   "params": []
   },
   "AspectOfTheBeast_Chimpanzee": {
    "boosts": [
     "FallDamageMultiplier(0.5)"
-   ]
+   ],
+   "params": []
   },
   "AspectOfTheBeast_Crocodile": {
    "boosts": [
     "ActionResource(Movement,3,0)",
     "Tag(SLIPPING_ADV)"
+   ],
+   "params": [
+    "Distance(3)"
    ]
   },
   "AspectOfTheBeast_Eagle": {
@@ -20218,386 +20242,486 @@
     "DarkvisionRangeMin(12)",
     "ActiveCharacterLight(051648e6-f05a-e41f-e398-ffd5cd148989)",
     "Advantage(Skill,Perception)"
+   ],
+   "params": [
+    "Distance(12)"
    ]
   },
   "AspectOfTheBeast_Elk": {
    "boosts": [
     "UnlockSpell(Shout_AspectOfTheElk)"
+   ],
+   "params": [
+    "Distance(1.5)"
    ]
   },
   "AspectOfTheBeast_HoneyBadger": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "AspectOfTheBeast_Stallion": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "AspectOfTheBeast_Tiger": {
    "boosts": [
     "ProficiencyBonus(Skill,Survival)",
     "IF(HasStatus('BLEEDING',context.Target)):RollBonus(Attack, StrengthModifier)",
     "IF(HasStatus('SG_Poisoned',context.Target)):RollBonus(Attack, StrengthModifier)"
-   ]
+   ],
+   "params": []
   },
   "AspectOfTheBeast_Wolf": {
    "boosts": [
     "ProficiencyBonus(Skill,Stealth)",
     "UnlockSpell(Shout_AspectOfTheWolf)"
-   ]
+   ],
+   "params": []
   },
   "AspectOfTheBeast_Wolverine": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "Assassinate_Ambush": {
    "boosts": [
     "IF(HasStatus('SURPRISED')):CriticalDamageOnHit()"
-   ]
+   ],
+   "params": []
   },
   "Assassinate_Initiative": {
    "boosts": [
     "IF(Combat(context.Source) and Combat() and not HadTurnInCombat()):Advantage(AttackRoll)"
-   ]
+   ],
+   "params": []
   },
   "Assassinate_Resource": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "Athlete_StandUp": {
    "boosts": [
     "JumpMaxDistanceMultiplier(1.5)"
+   ],
+   "params": [
+    "Distance(1.5)"
    ]
   },
   "Background_Acolyte": {
    "boosts": [
     "ProficiencyBonus(Skill,Insight)",
     "ProficiencyBonus(Skill,Religion)"
-   ]
+   ],
+   "params": []
   },
   "Background_AstralZealot": {
    "boosts": [
     "ProficiencyBonus(Skill,Athletics)",
     "ProficiencyBonus(Skill,Intimidation)"
-   ]
+   ],
+   "params": []
   },
   "Background_BladeOfFrontiers": {
    "boosts": [
     "ProficiencyBonus(Skill,Athletics)",
     "ProficiencyBonus(Skill,Persuasion)"
-   ]
+   ],
+   "params": []
   },
   "Background_BloodWarVeteran": {
    "boosts": [
     "ProficiencyBonus(Skill,Athletics)",
     "ProficiencyBonus(Skill,Survival)"
-   ]
+   ],
+   "params": []
   },
   "Background_Charlatan": {
    "boosts": [
     "ProficiencyBonus(Skill,Deception)",
     "ProficiencyBonus(Skill,SleightOfHand)"
-   ]
+   ],
+   "params": []
   },
   "Background_CloisteredStray": {
    "boosts": [
     "ProficiencyBonus(Skill,Religion)",
     "ProficiencyBonus(Skill,Survival)"
-   ]
+   ],
+   "params": []
   },
   "Background_Criminal": {
    "boosts": [
     "ProficiencyBonus(Skill,Deception)",
     "ProficiencyBonus(Skill,Stealth)"
-   ]
+   ],
+   "params": []
   },
   "Background_Entertainer": {
    "boosts": [
     "ProficiencyBonus(Skill,Acrobatics)",
     "ProficiencyBonus(Skill,Performance)"
-   ]
+   ],
+   "params": []
   },
   "Background_FolkHero": {
    "boosts": [
     "ProficiencyBonus(Skill,AnimalHandling)",
     "ProficiencyBonus(Skill,Survival)"
-   ]
+   ],
+   "params": []
   },
   "Background_GroveKeeper": {
    "boosts": [
     "ProficiencyBonus(Skill,AnimalHandling)",
     "ProficiencyBonus(Skill,Nature)"
-   ]
+   ],
+   "params": []
   },
   "Background_GuildArtisan": {
    "boosts": [
     "ProficiencyBonus(Skill,Insight)",
     "ProficiencyBonus(Skill,Persuasion)"
-   ]
+   ],
+   "params": []
   },
   "Background_HauntedOne": {
    "boosts": [
     "ProficiencyBonus(Skill,Medicine)",
     "ProficiencyBonus(Skill,Intimidation)"
-   ]
+   ],
+   "params": []
   },
   "Background_LegendOfBaldur'sGate": {
    "boosts": [
     "ProficiencyBonus(Skill,AnimalHandling)",
     "ProficiencyBonus(Skill,Perception)"
-   ]
+   ],
+   "params": []
   },
   "Background_Noble": {
    "boosts": [
     "ProficiencyBonus(Skill,History)",
     "ProficiencyBonus(Skill,Persuasion)"
-   ]
+   ],
+   "params": []
   },
   "Background_Outlander": {
    "boosts": [
     "ProficiencyBonus(Skill,Athletics)",
     "ProficiencyBonus(Skill,Survival)"
-   ]
+   ],
+   "params": []
   },
   "Background_Sage": {
    "boosts": [
     "ProficiencyBonus(Skill,Arcana)",
     "ProficiencyBonus(Skill,History)"
-   ]
+   ],
+   "params": []
   },
   "Background_Soldier": {
    "boosts": [
     "ProficiencyBonus(Skill,Athletics)",
     "ProficiencyBonus(Skill,Intimidation)"
-   ]
+   ],
+   "params": []
   },
   "Background_TricksterHedonist": {
    "boosts": [
     "ProficiencyBonus(Skill,Deception)",
     "ProficiencyBonus(Skill,Stealth)"
-   ]
+   ],
+   "params": []
   },
   "Background_UnderdarkExile": {
    "boosts": [
     "ProficiencyBonus(Skill,Deception)",
     "ProficiencyBonus(Skill,Intimidation)"
-   ]
+   ],
+   "params": []
   },
   "Background_Urchin": {
    "boosts": [
     "ProficiencyBonus(Skill,SleightOfHand)",
     "ProficiencyBonus(Skill,Stealth)"
-   ]
+   ],
+   "params": []
   },
   "Background_VeteranMentor": {
    "boosts": [
     "ProficiencyBonus(Skill,Insight)",
     "ProficiencyBonus(Skill,Intimidation)"
-   ]
+   ],
+   "params": []
   },
   "Background_WaterdavianMagus": {
    "boosts": [
     "ProficiencyBonus(Skill,Arcana)",
     "ProficiencyBonus(Skill,History)"
-   ]
+   ],
+   "params": []
   },
   "BardSpellcasting": {
    "boosts": [
     "UnlockSpellVariant(IsAnInstrumentRequired(),ModifyTargetRadius(Multiplicative,1))"
    ],
+   "params": [],
    "technical": true
   },
   "BardicInspiration": {
    "boosts": [
     "UnlockSpell(Target_BardicInspiration)"
-   ]
+   ],
+   "params": []
   },
   "BardicInspiration_d10": {
-   "boosts": []
+   "boosts": [],
+   "params": [
+    "1d10"
+   ]
   },
   "BardicInspiration_d8": {
-   "boosts": []
+   "boosts": [],
+   "params": [
+    "1d8"
+   ]
   },
   "BeastSpeech": {
    "boosts": [
     "UnlockSpell(Shout_SpeakWithAnimals_BeastSpeech)"
-   ]
+   ],
+   "params": []
   },
   "BeguilingDefenses": {
    "boosts": [
     "StatusImmunity(SG_Charmed)"
-   ]
+   ],
+   "params": []
   },
   "BeguilingInfluence": {
    "boosts": [
     "ProficiencyBonus(Skill,Deception)",
     "ProficiencyBonus(Skill,Persuasion)"
-   ]
+   ],
+   "params": []
   },
   "BendLuck": {
    "boosts": [
     "UnlockSpell(Target_BendLuck)",
     "UnlockInterrupt(Interrupt_BendLuck_Bonus)",
     "UnlockInterrupt(Interrupt_BendLuck_Malus)"
+   ],
+   "params": [
+    "1d4"
    ]
   },
   "BestialFury": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "Bladesong_Armor_Message": {
    "boosts": [],
+   "params": [],
    "technical": true
   },
   "Bladesong_Shield": {
    "boosts": [],
+   "params": [],
    "technical": true
   },
   "Bladesong_Shield_Message": {
    "boosts": [],
+   "params": [],
    "technical": true
   },
   "Bladesong_Unarmed": {
    "boosts": [],
+   "params": [],
    "technical": true
   },
   "Bladesong_Weapon": {
    "boosts": [],
+   "params": [],
    "technical": true
   },
   "Bladesong_Weapon_Message": {
    "boosts": [],
+   "params": [],
    "technical": true
   },
   "BlessedHealer": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "BookOfAncientSecrets": {
    "boosts": [
     "UnlockSpell(Target_Silence_BookOfAncientSecrets)",
     "UnlockSpell(Projectile_RayOfSickness_BookOfAnceintSecrets)",
     "UnlockSpell(Projectile_ChromaticOrb_BookOfAncientSecrets)"
-   ]
+   ],
+   "params": []
   },
   "BrutalCritical": {
    "boosts": [
     "CriticalHitExtraDice(1, MeleeWeaponAttack)",
     "CriticalHitExtraDice(1, MeleeUnarmedAttack)"
-   ]
+   ],
+   "params": []
   },
   "Charger": {
    "boosts": [
     "UnlockSpell(Rush_Charger_Attack)",
     "UnlockSpell(Rush_Charger_Push)"
-   ]
+   ],
+   "params": []
   },
   "CheekyTipple": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "CheekyTipple_Drunk": {
    "boosts": [],
+   "params": [],
    "technical": true
   },
   "ClarifiedMortality": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "ColossusSlayer": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "CombatInspiration": {
    "boosts": [
     "UnlockSpell(Target_BardicInspiration_Combat)"
-   ]
+   ],
+   "params": []
   },
   "CommanderStrike_Maneuver": {
    "boosts": [
     "UnlockSpell(Target_CommandersStrike)"
-   ]
+   ],
+   "params": []
   },
   "CompanionsBond": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "ControlledChaos": {
    "boosts": [
     "UnlockInterrupt(Interrupt_ControlledChaos)"
-   ]
+   ],
+   "params": []
   },
   "CosmicOmen": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "CosmicOmen_Ability": {
    "boosts": [
     "UnlockSpell(Target_CosmicOmen_AbilityCheck)"
    ],
+   "params": [],
    "technical": true
   },
   "CosmicOmen_Rest": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "CrossbowExpert_PointBlank": {
    "boosts": [
     "IgnorePointBlankDisadvantage(Loading)"
+   ],
+   "params": [
+    "Distance(1.5)"
    ]
   },
   "CrossbowExpert_Wounding": {
    "boosts": [
     "UnlockSpellVariant(SpellId('Projectile_PiercingShot'), ModifyTooltipDescription())"
-   ]
+   ],
+   "params": []
   },
   "CurvingShot": {
    "boosts": [
     "UnlockInterrupt(Interrupt_CurvingShot)",
     "ActionResource(CurvingShot_Charge,1,0)"
-   ]
+   ],
+   "params": []
   },
   "CuttingWords": {
    "boosts": [
     "UnlockInterrupt(Interrupt_CuttingWords)"
-   ]
+   ],
+   "params": []
   },
   "DampenElements": {
    "boosts": [
     "UnlockInterrupt(Interrupt_DampenElements)"
-   ]
+   ],
+   "params": []
   },
   "DangerSense": {
    "boosts": [
     "Advantage(SavingThrow,Dexterity)"
-   ]
+   ],
+   "params": []
   },
   "DarkOnesBlessing": {
-   "boosts": []
+   "boosts": [],
+   "params": [
+    "RegainHitPoints(0)",
+    "GainTemporaryHitPoints(CharismaModifier+ClassLevel(Warlock))"
+   ]
   },
   "DarkOnesOwnLuck": {
    "boosts": [
     "RollBonus(SkillCheck,1d10)",
     "RollBonus(RawAbility,1d10)"
-   ]
+   ],
+   "params": []
   },
   "Darkvision": {
    "boosts": [
     "DarkvisionRangeMin(12)",
     "ActiveCharacterLight(051648e6-f05a-e41f-e398-ffd5cd148989)"
+   ],
+   "params": [
+    "Distance(12)"
    ]
   },
   "DeepGnome_StoneCamouflage": {
    "boosts": [
     "Advantage(Skill,Stealth)"
-   ]
+   ],
+   "params": []
   },
   "DefensiveDuelist": {
    "boosts": [
     "UnlockInterrupt(Interrupt_DefensiveDuelist)"
+   ],
+   "params": [
+    "ProficiencyBonus"
    ]
   },
   "DeflectMissiles": {
    "boosts": [
     "IF(not HasStatus('SG_Polymorph_BeastShape')):UnlockInterrupt(Interrupt_DeflectMissiles)",
     "UnlockInterrupt(Interrupt_DeflectMissiles_Return)"
-   ]
+   ],
+   "params": []
   },
   "DestroyUndead": {
-   "boosts": []
+   "boosts": [],
+   "params": [
+    "DealDamage(4d6,Radiant)"
+   ]
   },
   "DestructiveWrath": {
    "boosts": [
     "UnlockInterrupt(Interrupt_DestructiveWrath)"
-   ]
+   ],
+   "params": []
   },
   "DevilsSight": {
    "boosts": [
@@ -20605,37 +20729,50 @@
     "ActiveCharacterLight(c46e7ba8-e746-7020-5146-287474d7b9f7)",
     "StatusImmunity(BLINDED_DARKNESS)",
     "IgnoreSurfaceCover(SurfaceDarknessCloud)"
+   ],
+   "params": [
+    "Distance(24)"
    ]
   },
   "DisarmingAttack": {
    "boosts": [
     "UnlockSpell(Target_DisarmingAttack)",
     "UnlockSpell(Projectile_DisarmingAttack)"
+   ],
+   "params": [
+    "LevelMapValue(SuperiorityDie)"
    ]
   },
   "DiscipleOfLife": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "DistractingStrike": {
    "boosts": [
     "UnlockSpell(Target_DistractingStrike)",
     "UnlockSpell(Projectile_DistractingStrike)"
-   ]
+   ],
+   "params": []
   },
   "DivineAllegiance": {
    "boosts": [
     "UnlockInterrupt(Interrupt_DivineAllegiance)"
+   ],
+   "params": [
+    "Distance(1.5)"
    ]
   },
   "DivineHealth": {
    "boosts": [
     "StatusImmunity(SG_Disease)"
-   ]
+   ],
+   "params": []
   },
   "DivineIntervention": {
    "boosts": [
     "Tag(DIVINE_INTERVENTION)"
-   ]
+   ],
+   "params": []
   },
   "Divine_Strike_Death": {
    "boosts": [
@@ -20643,6 +20780,7 @@
     "UnlockInterrupt(Interrupt_DivineStrike_Necrotic_Critical)",
     "ActionResource(Interrupt_DivineStrike,1,0)"
    ],
+   "params": [],
    "technical": true
   },
   "Divine_Strike_Life_Toggle": {
@@ -20651,6 +20789,7 @@
     "UnlockInterrupt(Interrupt_DivineStrike_Radiant_Critical)",
     "ActionResource(Interrupt_DivineStrike,1,0)"
    ],
+   "params": [],
    "technical": true
   },
   "Divine_Strike_Nature_Toggle": {
@@ -20663,6 +20802,7 @@
     "UnlockInterrupt(Interrupt_DivineStrike_Lightning_Critical)",
     "ActionResource(Interrupt_DivineStrike,1,0)"
    ],
+   "params": [],
    "technical": true
   },
   "Divine_Strike_Tempest_Toggle": {
@@ -20671,6 +20811,7 @@
     "UnlockInterrupt(Interrupt_DivineStrike_Thunder_Critical)",
     "ActionResource(Interrupt_DivineStrike,1,0)"
    ],
+   "params": [],
    "technical": true
   },
   "Divine_Strike_Trickery_Toggle": {
@@ -20679,6 +20820,7 @@
     "UnlockInterrupt(Interrupt_DivineStrike_Poison_Critical)",
     "ActionResource(Interrupt_DivineStrike,1,0)"
    ],
+   "params": [],
    "technical": true
   },
   "Divine_Strike_War_Toggle": {
@@ -20689,137 +20831,168 @@
     "UnlockInterrupt(Interrupt_DivineStrike_RangedWeapon_Critical)",
     "ActionResource(Interrupt_DivineStrike,1,0)"
    ],
+   "params": [],
    "technical": true
   },
   "DomainSpells": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "DraconicAncestry_Black": {
    "boosts": [
     "UnlockSpell(Target_Grease,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Charisma)"
-   ]
+   ],
+   "params": []
   },
   "DraconicAncestry_Blue": {
    "boosts": [
     "UnlockSpell(Projectile_WitchBolt,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Charisma)"
-   ]
+   ],
+   "params": []
   },
   "DraconicAncestry_Brass": {
    "boosts": [
     "UnlockSpell(Target_Sleep,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Charisma)"
-   ]
+   ],
+   "params": []
   },
   "DraconicAncestry_Bronze": {
    "boosts": [
     "UnlockSpell(Target_FogCloud,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Charisma)"
-   ]
+   ],
+   "params": []
   },
   "DraconicAncestry_Copper": {
    "boosts": [
     "UnlockSpell(Target_HideousLaughter,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Charisma)"
-   ]
+   ],
+   "params": []
   },
   "DraconicAncestry_Gold": {
    "boosts": [
     "UnlockSpell(Shout_DisguiseSelf,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Charisma)"
-   ]
+   ],
+   "params": []
   },
   "DraconicAncestry_Green": {
    "boosts": [
     "UnlockSpell(Projectile_RayOfSickness,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Charisma)"
-   ]
+   ],
+   "params": []
   },
   "DraconicAncestry_Red": {
    "boosts": [
     "UnlockSpell(Zone_BurningHands,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Charisma)"
-   ]
+   ],
+   "params": []
   },
   "DraconicAncestry_Silver": {
    "boosts": [
     "UnlockSpell(Shout_FeatherFall,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Charisma)"
-   ]
+   ],
+   "params": []
   },
   "DraconicAncestry_White": {
    "boosts": [
     "UnlockSpell(Shout_ArmorOfAgathys,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Charisma)"
-   ]
+   ],
+   "params": []
   },
   "DraconicResilience": {
    "boosts": [
     "ACOverrideFormula(13,true,Dexterity)"
-   ]
+   ],
+   "params": []
   },
   "Dragonborn_Resistance_Acid": {
    "boosts": [
     "Resistance(Acid,Resistant)"
-   ]
+   ],
+   "params": []
   },
   "Dragonborn_Resistance_Cold": {
    "boosts": [
     "Resistance(Cold,Resistant)"
-   ]
+   ],
+   "params": []
   },
   "Dragonborn_Resistance_Fire": {
    "boosts": [
     "Resistance(Fire,Resistant)"
-   ]
+   ],
+   "params": []
   },
   "Dragonborn_Resistance_Lightning": {
    "boosts": [
     "Resistance(Lightning,Resistant)"
-   ]
+   ],
+   "params": []
   },
   "Dragonborn_Resistance_Poison": {
    "boosts": [
     "Resistance(Poison,Resistant)"
-   ]
+   ],
+   "params": []
   },
   "DreadAmbusher": {
    "boosts": [
     "Initiative(3)"
+   ],
+   "params": [
+    "3",
+    "Distance(3)",
+    "1d8"
    ]
   },
   "DreadfulWord": {
    "boosts": [
     "UnlockSpell(Target_Confusion,MostPowerful,e9127b70-22b7-42a1-b172-d02f828f260a)"
-   ]
+   ],
+   "params": []
   },
   "Drow_DrowWeaponTraining": {
    "boosts": [
     "Proficiency(Rapiers)",
     "Proficiency(Shortswords)",
     "Proficiency(HandCrossbows)"
-   ]
+   ],
+   "params": []
   },
   "DrunkardsLuck": {
    "boosts": [
     "UnlockInterrupt(Interupt_DrunkardsLuck)"
-   ]
+   ],
+   "params": []
   },
   "DrunkenPerformance": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "DualWielder_BonusAC": {
    "boosts": [
     "AC(1)"
-   ]
+   ],
+   "params": []
   },
   "DualWielder_PassiveBonuses": {
    "boosts": [
     "DualWielding(true)",
     "DualWielding(false)"
-   ]
+   ],
+   "params": []
   },
   "Duergar_DuergarResilience": {
    "boosts": [
     "Tag(CHARMED_ADV)",
     "Tag(PARALYZED_ADV)"
-   ]
+   ],
+   "params": []
   },
   "DungeonDelver_Perception": {
    "boosts": [
     "IF(Item()):Advantage(Skill,Perception)"
-   ]
+   ],
+   "params": []
   },
   "DungeonDelver_ResistTraps": {
    "boosts": [
@@ -20830,12 +21003,14 @@
     "IF(IsTrap()):Advantage(SavingThrow, Intelligence)",
     "IF(IsTrap()):Advantage(SavingThrow, Charisma)",
     "IF(IsTrap()):DamageReduction(All,Half)"
-   ]
+   ],
+   "params": []
   },
   "Durable": {
    "boosts": [
     "Ability(Constitution,1,20)"
-   ]
+   ],
+   "params": []
   },
   "Dwarf_DwarvenCombatTraining": {
    "boosts": [
@@ -20843,54 +21018,74 @@
     "Proficiency(Handaxes)",
     "Proficiency(LightHammers)",
     "Proficiency(Warhammers)"
-   ]
+   ],
+   "params": []
   },
   "Dwarf_DwarvenResilience": {
    "boosts": [
     "Resistance(Poison, Resistant)",
     "Tag(POISONED_ADV)"
-   ]
+   ],
+   "params": []
   },
   "EldritchStrike": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "ElementalAdept_Acid": {
    "boosts": [
     "IF(MainDamageTypeIs(DamageType.Acid)):MinimumRollResult(Damage,2)",
     "IgnoreResistance(Acid,Resistant)"
+   ],
+   "params": [
+    "1"
    ]
   },
   "ElementalAdept_Cold": {
    "boosts": [
     "IF(MainDamageTypeIs(DamageType.Cold)):MinimumRollResult(Damage,2)",
     "IgnoreResistance(Cold,Resistant)"
+   ],
+   "params": [
+    "1"
    ]
   },
   "ElementalAdept_Fire": {
    "boosts": [
     "IF(MainDamageTypeIs(DamageType.Fire)):MinimumRollResult(Damage,2)",
     "IgnoreResistance(Fire,Resistant)"
+   ],
+   "params": [
+    "1"
    ]
   },
   "ElementalAdept_Lightning": {
    "boosts": [
     "IF(MainDamageTypeIs(DamageType.Lightning)):MinimumRollResult(Damage,2)",
     "IgnoreResistance(Lightning,Resistant)"
+   ],
+   "params": [
+    "1"
    ]
   },
   "ElementalAdept_Thunder": {
    "boosts": [
     "IF(MainDamageTypeIs(DamageType.Thunder)):MinimumRollResult(Damage,2)",
     "IgnoreResistance(Thunder,Resistant)"
+   ],
+   "params": [
+    "1"
    ]
   },
   "ElementalAffinity_Damage": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "ElementalAffinity_Resistance_Check": {
    "boosts": [
     "UnlockInterrupt(Interrupt_ElementalAffinity)"
-   ]
+   ],
+   "params": []
   },
   "Elf_WeaponTraining": {
    "boosts": [
@@ -20898,108 +21093,142 @@
     "Proficiency(Shortswords)",
     "Proficiency(Longbows)",
     "Proficiency(Shortbows)"
-   ]
+   ],
+   "params": []
   },
   "EmpoweredEvocation": {
    "boosts": [
     "IF(IsSpell() and IsSpellSchool(SpellSchool.Evocation)):DamageBonus(max(0, IntelligenceModifier))"
-   ]
+   ],
+   "params": []
   },
   "EntropicWard": {
    "boosts": [
     "UnlockInterrupt(Interrupt_EntropicWard)",
     "ActionResource(Interrupt_EntropicWard_Charge,1,0)"
-   ]
+   ],
+   "params": []
   },
   "EscapeTheHorde": {
    "boosts": [
     "IF(IsReactionAttack(context.Source)):Disadvantage(AttackTarget)"
-   ]
+   ],
+   "params": []
   },
   "Evasion": {
    "boosts": [
     "AreaDamageEvade()"
-   ]
+   ],
+   "params": []
   },
   "EvasiveFootwork": {
    "boosts": [
     "UnlockSpell(Shout_EvasiveFootwork)"
-   ]
+   ],
+   "params": []
   },
   "ExceptionalTraining": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "ExperimentalAlchemy": {
    "boosts": [
     "Tag(DOUBLE_ALCHEMY)"
+   ],
+   "params": [
+    "15"
    ]
   },
   "ExpertDivination": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "ExtraAttack": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "ExtraAttack_2": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "EyesOfTheDark": {
    "boosts": [
     "DarkvisionRangeMin(24)",
     "ActiveCharacterLight(c46e7ba8-e746-7020-5146-287474d7b9f7)"
+   ],
+   "params": [
+    "Distance(24)"
    ]
   },
   "FancyFootwork": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "FastHands": {
    "boosts": [
     "ActionResource(BonusActionPoint,1,0)"
-   ]
+   ],
+   "params": []
   },
   "FastMovement": {
    "boosts": [
     "ActionResource(Movement, 3, 0)"
+   ],
+   "params": [
+    "Distance(3)"
    ]
   },
   "FavoredEnemy_BountyHunter": {
    "boosts": [
     "ProficiencyBonus(Skill,Investigation)"
-   ]
+   ],
+   "params": []
   },
   "FavoredEnemy_KeeperOfTheVeil": {
    "boosts": [
     "ProficiencyBonus(Skill,Arcana)",
     "UnlockSpell(Target_ProtectionFromEvilAndGood,Singular,None,UntilRest,Wisdom)"
-   ]
+   ],
+   "params": []
   },
   "FavoredEnemy_MageBreaker": {
    "boosts": [
     "ProficiencyBonus(Skill,Arcana)",
     "UnlockSpell(Target_TrueStrike,,,,Wisdom)"
-   ]
+   ],
+   "params": []
   },
   "FavoredEnemy_RangerKnight": {
    "boosts": [
     "ProficiencyBonus(Skill,History)",
     "Proficiency(HeavyArmor)"
-   ]
+   ],
+   "params": []
   },
   "FavoredEnemy_SanctifiedStalker": {
    "boosts": [
     "ProficiencyBonus(Skill,Religion)",
     "UnlockSpell(Target_SacredFlame,,,,Wisdom)"
+   ],
+   "params": [
+    "DealDamage(1d8,Radiant)"
    ]
   },
   "FeintingAttack": {
    "boosts": [
     "UnlockSpell(Target_FeintingAttack)"
+   ],
+   "params": [
+    "LevelMapValue(SuperiorityDie)"
    ]
   },
   "FeralInstinct": {
    "boosts": [
     "Initiative(3)",
     "StatusImmunity(SURPRISED)"
+   ],
+   "params": [
+    "3"
    ]
   },
   "FeyAncestry": {
@@ -21008,80 +21237,97 @@
     "StatusImmunity(POISON_DROW_CONDITION)",
     "Tag(CHARMED_ADV)",
     "StatusImmunity(SG_Sleeping_Magical)"
-   ]
+   ],
+   "params": []
   },
   "FiendishResilience": {
    "boosts": [
     "UnlockSpell(Target_Fiendish_Resilience_Container)"
-   ]
+   ],
+   "params": []
   },
   "FiendishVigor": {
    "boosts": [
     "UnlockSpell(Shout_FalseLife_FiendishVigor,Singular)"
-   ]
+   ],
+   "params": []
   },
   "FightingStyle_Archery": {
    "boosts": [
     "RollBonus(RangedWeaponAttack, 2)",
     "RollBonus(RangedOffHandWeaponAttack, 2)"
-   ]
+   ],
+   "params": []
   },
   "FightingStyle_Defense": {
    "boosts": [
     "AC(1)"
-   ]
+   ],
+   "params": []
   },
   "FightingStyle_Dueling": {
    "boosts": [
     "IF(FightingStyle_Dueling(context.Source)):CharacterWeaponDamage(2)"
-   ]
+   ],
+   "params": []
   },
   "FightingStyle_GreatWeaponFighting": {
    "boosts": [
     "IF(FightingStyle_GreatWeapon(context.Source)):Reroll(MeleeWeaponDamage,2,true)"
-   ]
+   ],
+   "params": []
   },
   "FightingStyle_Protection": {
    "boosts": [
     "UnlockInterrupt(Interrupt_FightingStyle_Protection)"
+   ],
+   "params": [
+    "Distance(1.5)"
    ]
   },
   "FightingStyle_TwoWeaponFighting": {
    "boosts": [
     "TwoWeaponFighting()"
-   ]
+   ],
+   "params": []
   },
   "FlurryOfBlowsUnlock": {
    "boosts": [
     "UnlockSpell(Target_FlurryOfBlows)"
-   ]
+   ],
+   "params": []
   },
   "FocusedConjuration": {
    "boosts": [
     "ConcentrationIgnoreDamage(Conjuration)"
-   ]
+   ],
+   "params": []
   },
   "FontOfInspiration": {
    "boosts": [
     "ActionResourceReplenishTypeOverride(BardicInspiration,ShortRest)"
-   ]
+   ],
+   "params": []
   },
   "FungalInfestation": {
    "boosts": [
     "UnlockInterrupt(Interrupt_FungalInfestation)"
    ],
+   "params": [],
    "technical": true
   },
   "GiantKiller": {
    "boosts": [
     "UnlockInterrupt(Interrupt_GiantKiller)"
-   ]
+   ],
+   "params": []
   },
   "Giants_CarryCapacity": {
    "boosts": [
     "IF(Tagged('HUMAN')):CarryCapacityMultiplier(1.50)",
     "IF(not Tagged('HUMAN')):CarryCapacityMultiplier(1.25)"
-   ]
+   ],
+   "params": []
   },
   "Gith_MartialProdigy": {
    "boosts": [
@@ -21090,42 +21336,52 @@
     "Proficiency(Shortswords)",
     "Proficiency(Longswords)",
     "Proficiency(Greatswords)"
-   ]
+   ],
+   "params": []
   },
   "Gnome_Cunning": {
    "boosts": [
     "Advantage(SavingThrow, Intelligence)",
     "Advantage(SavingThrow, Wisdom)",
     "Advantage(SavingThrow, Charisma)"
-   ]
+   ],
+   "params": []
   },
   "GoadingAttack": {
    "boosts": [
     "UnlockSpell(Target_GoadingAttack)",
     "UnlockSpell(Projectile_GoadingAttack)"
+   ],
+   "params": [
+    "LevelMapValue(SuperiorityDie)"
    ]
   },
   "GreatWeaponMaster_BonusAttack": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "GreatWeaponMaster_BonusDamage": {
    "boosts": [
     "IF(GreatWeaponMaster(context.Source)):RollBonus(MeleeWeaponAttack, -5)",
     "IF(GreatWeaponMaster(context.Source)):CharacterWeaponDamage(10)"
-   ]
+   ],
+   "params": []
   },
   "GrimHarvest": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "Halfling_Brave": {
    "boosts": [
     "Tag(FRIGHTENED_ADV)"
-   ]
+   ],
+   "params": []
   },
   "Halfling_LightfootStealth": {
    "boosts": [
     "Advantage(Skill,Stealth)"
-   ]
+   ],
+   "params": []
   },
   "Halfling_Lucky": {
    "boosts": [
@@ -21133,31 +21389,40 @@
     "Reroll(SkillCheck,1,true)",
     "Reroll(RawAbility,1,true)",
     "Reroll(SavingThrow,1,true)"
-   ]
+   ],
+   "params": []
   },
   "Halfling_StoutResilience": {
    "boosts": [
     "Resistance(Poison,Resistant)",
     "Tag(POISONED_ADV)"
-   ]
+   ],
+   "params": []
   },
   "HeartOfTheStorm": {
    "boosts": [
     "UnlockInterrupt(Interrupt_HeartOfTheStorm_Lightning)",
     "UnlockInterrupt(Interrupt_HeartOfTheStorm_Thunder)"
+   ],
+   "params": [
+    "DealDamage(ClassLevel(Sorcerer)/2,Lightning)",
+    "Distance(6)",
+    "DealDamage(ClassLevel(Sorcerer)/2,Thunder)"
    ]
   },
   "HeartOfTheStorm_Resistance": {
    "boosts": [
     "Resistance(Lightning, Resistant)",
     "Resistance(Thunder, Resistant)"
-   ]
+   ],
+   "params": []
   },
   "HeavilyArmored": {
    "boosts": [
     "Ability(Strength, 1, 20)",
     "Proficiency(HeavyArmor)"
-   ]
+   ],
+   "params": []
   },
   "HeavyArmorMaster": {
    "boosts": [
@@ -21165,6 +21430,11 @@
     "IF(HasHeavyArmor() and not HasDamageEffectFlag(DamageFlags.Magical)):DamageReduction(Slashing, Flat, 3)",
     "IF(HasHeavyArmor() and not HasDamageEffectFlag(DamageFlags.Magical)):DamageReduction(Bludgeoning, Flat, 3)",
     "IF(HasHeavyArmor() and not HasDamageEffectFlag(DamageFlags.Magical)):DamageReduction(Piercing, Flat, 3)"
+   ],
+   "params": [
+    "1",
+    "20",
+    "3"
    ]
   },
   "HexWarrior": {
@@ -21173,19 +21443,22 @@
     "Proficiency(Shields)",
     "Proficiency(MartialWeapons)",
     "UnlockSpell(Shout_Hexblade_Bind)"
-   ]
+   ],
+   "params": []
   },
   "HexbladesCurse": {
    "boosts": [
     "IF(HasStatus('HEXBLADES_CURSE',context.Target,context.Source)):DamageBonus(ProficiencyBonus)",
     "IF(HasStatus('HEXBLADES_CURSE',context.Target,context.Source)):ReduceCriticalAttackThreshold(1)\""
-   ]
+   ],
+   "params": []
   },
   "HordeBreaker": {
    "boosts": [
     "UnlockSpell(Target_HordeBreaker,Singular)",
     "UnlockSpell(Projectile_HordeBreaker,Singular)"
-   ]
+   ],
+   "params": []
   },
   "HumanMilitia": {
    "boosts": [
@@ -21195,61 +21468,80 @@
     "Proficiency(Glaives)",
     "Proficiency(LightArmor)",
     "Proficiency(Shields)"
-   ]
+   ],
+   "params": []
   },
   "HumanVersatility": {
    "boosts": [
     "CarryCapacityMultiplier(1.25)"
-   ]
+   ],
+   "params": []
   },
   "HuntersMark_Swarmkeeper": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "IllusorySelf": {
    "boosts": [
     "UnlockInterrupt(Interrupt_IllusorySelf)",
     "ActionResource(Interrupt_IllusorySelf_Charge,1,0)"
-   ]
+   ],
+   "params": []
   },
   "ImprovedAbjuration": {
-   "boosts": []
+   "boosts": [],
+   "params": [
+    "ClassLevel(Wizard)"
+   ]
   },
   "ImprovedCombatSuperiority": {
-   "boosts": []
+   "boosts": [],
+   "params": [
+    "1d10"
+   ]
   },
   "ImprovedCritical": {
    "boosts": [
     "ReduceCriticalAttackThreshold(1)"
-   ]
+   ],
+   "params": []
   },
   "ImprovedDivineSmite": {
    "boosts": [
     "IF(IsMeleeAttack()):CharacterWeaponDamage(1d8,Radiant)"
+   ],
+   "params": [
+    "DealDamage(1d8,Radiant)"
    ]
   },
   "ImprovedElementalCasting": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "ImprovedMinorIllusion": {
    "boosts": [
     "UnlockSpell(Target_ImprovedMinorIllusion)"
-   ]
+   ],
+   "params": []
   },
   "Indomitable": {
    "boosts": [
     "UnlockInterrupt(Interrupt_Indomitable)",
     "ActionResource(Interrupt_Indomitable,1,0)"
-   ]
+   ],
+   "params": []
   },
   "InescapableDestruction": {
    "boosts": [
     "IgnoreResistance(Necrotic,Resistant)"
-   ]
+   ],
+   "params": []
   },
   "InstinctiveCharm": {
    "boosts": [
     "UnlockInterrupt(Interrupt_InstinctiveCharm)"
-   ]
+   ],
+   "params": []
   },
   "InuredtoUndeath": {
    "boosts": [
@@ -21262,226 +21554,264 @@
     "StatusImmunity(MOO_ABSOLUTES_CURSE)",
     "StatusImmunity(MOO_BALTHAZARSSECRETS_HEARTALTAR)",
     "StatusImmunity(LOW_ANCIENTLAIR_CURSE)"
-   ]
+   ],
+   "params": []
   },
   "IronMind": {
    "boosts": [
     "ProficiencyBonus(SavingThrow,Wisdom)",
     "ProficiencyBonus(SavingThrow,Intelligence)"
-   ]
+   ],
+   "params": []
   },
   "JackOfAllTrades": {
    "boosts": [
     "IF(not HasProficiencyBonus(context.CheckedAbility,context.CheckedSkill,context.Source)):RollBonus(SkillCheck,ProficiencyBonus/2)",
     "IF(not HasProficiencyBonus(context.CheckedAbility,context.CheckedSkill,context.Source)):RollBonus(RawAbility,ProficiencyBonus/2)"
-   ]
+   ],
+   "params": []
   },
   "KiEmpoweredStrikes": {
    "boosts": [
     "UnarmedMagicalProperty()"
-   ]
+   ],
+   "params": []
   },
   "Land_Arctic": {
    "boosts": [
     "UnlockSpell(Target_HoldPerson,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
     "UnlockSpell(Target_SpikeGrowth,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
-   ]
+   ],
+   "params": []
   },
   "Land_Arctic_2": {
    "boosts": [
     "UnlockSpell(Target_SleetStorm,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
     "UnlockSpell(Target_Haste,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
-   ]
+   ],
+   "params": []
   },
   "Land_Arctic_3": {
    "boosts": [
     "UnlockSpell(Target_ConjureElementals_Minor_Container,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
     "UnlockSpell(Target_IceStorm,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
-   ]
+   ],
+   "params": []
   },
   "Land_Arctic_4": {
    "boosts": [
     "UnlockSpell(Zone_ConeOfCold,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
     "UnlockSpell(Target_Contagion,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
-   ]
+   ],
+   "params": []
   },
   "Land_Coast": {
    "boosts": [
     "UnlockSpell(Shout_MirrorImage,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
     "UnlockSpell(Target_MistyStep,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
-   ]
+   ],
+   "params": []
   },
   "Land_Coast_2": {
    "boosts": [
     "UnlockSpell(Target_SleetStorm,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
     "UnlockSpell(Target_CallLightning,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
-   ]
+   ],
+   "params": []
   },
   "Land_Coast_3": {
    "boosts": [
     "UnlockSpell(Target_FreedomOfMovement,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
     "UnlockSpell(Target_Confusion,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
-   ]
+   ],
+   "params": []
   },
   "Land_Coast_4": {
    "boosts": [
     "UnlockSpell(Target_ConjureElemental_Container,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
     "UnlockSpell(Target_GreaterRestoration,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
-   ]
+   ],
+   "params": []
   },
   "Land_Desert": {
    "boosts": [
     "UnlockSpell(Shout_Blur,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
     "UnlockSpell(Target_Silence,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
-   ]
+   ],
+   "params": []
   },
   "Land_Desert_2": {
    "boosts": [
     "UnlockSpell(Target_ProtectionFromEnergy,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
     "UnlockSpell(Target_HypnoticPattern,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
-   ]
+   ],
+   "params": []
   },
   "Land_Desert_3": {
    "boosts": [
     "UnlockSpell(Target_Blight,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
     "UnlockSpell(Wall_WallOfFire,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
-   ]
+   ],
+   "params": []
   },
   "Land_Desert_4": {
    "boosts": [
     "UnlockSpell(Wall_WallOfStone,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
     "UnlockSpell(Target_InsectPlague,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
-   ]
+   ],
+   "params": []
   },
   "Land_Forest": {
    "boosts": [
     "UnlockSpell(Target_Barkskin,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
     "UnlockSpell(Target_HoldPerson,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
-   ]
+   ],
+   "params": []
   },
   "Land_Forest_2": {
    "boosts": [
     "UnlockSpell(Target_CallLightning,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
     "UnlockSpell(Target_PlantGrowth,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
-   ]
+   ],
+   "params": []
   },
   "Land_Forest_3": {
    "boosts": [
     "UnlockSpell(Target_ConjureElementals_Minor_Container,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
     "UnlockSpell(Target_GraspingVine,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
-   ]
+   ],
+   "params": []
   },
   "Land_Forest_4": {
    "boosts": [
     "UnlockSpell(Target_CureWounds_Mass,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
     "UnlockSpell(Target_Contagion,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
-   ]
+   ],
+   "params": []
   },
   "Land_Grassland": {
    "boosts": [
     "UnlockSpell(Target_Invisibility,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
     "UnlockSpell(Shout_PassWithoutTrace,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
-   ]
+   ],
+   "params": []
   },
   "Land_Grassland_2": {
    "boosts": [
     "UnlockSpell(Target_Daylight_Container,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
     "UnlockSpell(Target_Haste,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
-   ]
+   ],
+   "params": []
   },
   "Land_Grassland_3": {
    "boosts": [
     "UnlockSpell(Target_FreedomOfMovement,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
     "UnlockSpell(Target_Polymorph,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
-   ]
+   ],
+   "params": []
   },
   "Land_Grassland_4": {
    "boosts": [
     "UnlockSpell(Target_GreaterRestoration,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
     "UnlockSpell(Target_InsectPlague,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
-   ]
+   ],
+   "params": []
   },
   "Land_Mountain": {
    "boosts": [
     "UnlockSpell(Shout_MirrorImage,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
     "UnlockSpell(Target_SpikeGrowth,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
-   ]
+   ],
+   "params": []
   },
   "Land_Mountain_2": {
    "boosts": [
     "UnlockSpell(Zone_LightningBolt,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
     "UnlockSpell(Target_Fly,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
-   ]
+   ],
+   "params": []
   },
   "Land_Mountain_3": {
    "boosts": [
     "UnlockSpell(Target_Stoneskin,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
     "UnlockSpell(Target_DominateBeast,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
-   ]
+   ],
+   "params": []
   },
   "Land_Mountain_4": {
    "boosts": [
     "UnlockSpell(Wall_WallOfStone,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
     "UnlockSpell(Target_ConjureElemental_Container,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
-   ]
+   ],
+   "params": []
   },
   "Land_Swamp": {
    "boosts": [
     "UnlockSpell(Projectile_AcidArrow,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
     "UnlockSpell(Target_Darkness,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
-   ]
+   ],
+   "params": []
   },
   "Land_Swamp_2": {
    "boosts": [
     "UnlockSpell(Target_StinkingCloud,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
     "UnlockSpell(Target_VampiricTouch,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
-   ]
+   ],
+   "params": []
   },
   "Land_Swamp_3": {
    "boosts": [
     "UnlockSpell(Target_Blight,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
     "UnlockSpell(Target_GraspingVine,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
-   ]
+   ],
+   "params": []
   },
   "Land_Swamp_4": {
    "boosts": [
     "UnlockSpell(Target_InsectPlague,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
     "UnlockSpell(Target_Cloudkill,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
-   ]
+   ],
+   "params": []
   },
   "Land_Underdark": {
    "boosts": [
     "UnlockSpell(Target_Web,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
     "UnlockSpell(Target_MistyStep,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
-   ]
+   ],
+   "params": []
   },
   "Land_Underdark_2": {
    "boosts": [
     "UnlockSpell(Target_GaseousForm,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
     "UnlockSpell(Target_StinkingCloud,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
-   ]
+   ],
+   "params": []
   },
   "Land_Underdark_3": {
    "boosts": [
     "UnlockSpell(Target_Invisibility_Greater,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
     "UnlockSpell(Target_DominateBeast,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
-   ]
+   ],
+   "params": []
   },
   "Land_Underdark_4": {
    "boosts": [
     "UnlockSpell(Target_Contagion,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)",
     "UnlockSpell(Target_Cloudkill,AddChildren,d136c5d9-0ff0-43da-acce-a74a07f8d6bf,,Wisdom)"
-   ]
+   ],
+   "params": []
   },
   "LandsStride_Advantage": {
    "boosts": [
     "Tag(PLANT_IMPEDE_ADV)"
-   ]
+   ],
+   "params": []
   },
   "LandsStride_DifficultTerrain": {
    "boosts": [
     "StatusImmunity(SG_DifficultTerrain)"
-   ]
+   ],
+   "params": []
   },
   "LandsStride_Surfaces": {
    "boosts": [
@@ -21493,59 +21823,80 @@
     "StatusImmunity(DIFFICULT_TERRAIN_OVERGROWTH)",
     "StatusImmunity(ENSNARED_VINES)",
     "StatusImmunity(TWN_ARABELLAPOWERS_ARABELLAVINES)"
-   ]
+   ],
+   "params": []
   },
   "LeapToYourFeet": {
-   "boosts": []
+   "boosts": [],
+   "params": [
+    "Distance(1.5)"
+   ]
   },
   "LifeOfTheParty": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "Lifedrinker": {
-   "boosts": []
+   "boosts": [],
+   "params": [
+    "DealDamage(CharismaModifier,Necrotic)"
+   ]
   },
   "LightlyArmored": {
    "boosts": [
     "Proficiency(LightArmor)"
-   ]
+   ],
+   "params": []
   },
   "Lucky": {
    "boosts": [
     "Advantage(AllAbilities)"
-   ]
+   ],
+   "params": []
   },
   "Lucky_Unlock": {
    "boosts": [
     "UnlockInterrupt(Interrupt_Lucky_RollAdditionalDie)",
     "UnlockInterrupt(Interrupt_Lucky_ReplaceAttackersDie)",
     "ActionResource(LuckPoint,3,0)"
-   ]
+   ],
+   "params": []
   },
   "MageHandLegerdemain": {
    "boosts": [
     "UnlockSpellVariant(SpellId('Target_MageHand'),ModifyTooltipDescription())"
-   ]
+   ],
+   "params": []
   },
   "MageSlayer_Advantage": {
    "boosts": [
     "IF(InMeleeRange() and IsSpell()):Advantage(AllSavingThrows)"
+   ],
+   "params": [
+    "Distance(1.5)"
    ]
   },
   "MageSlayer_AttackCaster": {
    "boosts": [
     "UnlockInterrupt(Interrupt_MageSlayer)"
+   ],
+   "params": [
+    "Distance(1.5)"
    ]
   },
   "MageSlayer_BreakConcentration": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "MagicArrow": {
    "boosts": [
     "Tag(MAGICARROW_PASSIVE)"
-   ]
+   ],
+   "params": []
   },
   "MagicInitiate_Bard": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "MagicInitiate_Cleric": {
    "boosts": [
@@ -21554,57 +21905,83 @@
     "ArmorAbilityModifierCapOverride(ScaleMail, 3)",
     "ArmorAbilityModifierCapOverride(BreastPlate, 3)",
     "ArmorAbilityModifierCapOverride(HalfPlate, 3)"
-   ]
+   ],
+   "params": []
   },
   "MagicInitiate_Druid": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "MagicInitiate_Sorcerer": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "MagicInitiate_Warlock": {
    "boosts": [
     "ActionResourceOverride(Interrupt_HellishRebukeWarlockMI_Charge,1,0)"
-   ]
+   ],
+   "params": []
   },
   "MagicInitiate_Wizard": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "MagicalAmbush": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "ManeuveringAttack": {
    "boosts": [
     "UnlockSpell(Target_ManeuveringAttack)",
     "UnlockSpell(Projectile_ManeuveringAttack)"
+   ],
+   "params": [
+    "LevelMapValue(SuperiorityDie)"
    ]
   },
   "Manifestation_of_Body": {
    "boosts": [
     "IF(IsMeleeUnarmedAttack()):CharacterUnarmedDamage(1d4+WisdomModifier, Necrotic)",
     "UnlockSpellVariant(MeleeUnarmedAttackCheck(),ModifyTargetRadius(Multiplicative,1))"
+   ],
+   "params": [
+    "DealDamage(1d4+WisdomModifier, Necrotic)"
    ]
   },
   "Manifestation_of_Mind": {
    "boosts": [
     "IF(IsMeleeUnarmedAttack()):CharacterUnarmedDamage(1d4+WisdomModifier, Psychic)",
     "UnlockSpellVariant(MeleeUnarmedAttackCheck(),ModifyTargetRadius(Multiplicative,1))"
+   ],
+   "params": [
+    "DealDamage(1d4+WisdomModifier, Psychic)"
    ]
   },
   "Manifestation_of_Soul": {
    "boosts": [
     "IF(IsMeleeUnarmedAttack()):CharacterUnarmedDamage(1d4+WisdomModifier, Radiant)",
     "UnlockSpellVariant(MeleeUnarmedAttackCheck(),ModifyTargetRadius(Multiplicative,1))"
+   ],
+   "params": [
+    "DealDamage(1d4+WisdomModifier, Radiant)"
    ]
   },
   "MantleOfInspiration_Unlock": {
    "boosts": [
     "UnlockSpell(Target_MantleOfInspiration)"
+   ],
+   "params": [
+    "2",
+    "GainTemporaryHitPoints(5)"
    ]
   },
   "MantleOfInspiration_Unlock2": {
    "boosts": [
     "UnlockSpell(Target_MantleOfInspiration_2)"
+   ],
+   "params": [
+    "2",
+    "GainTemporaryHitPoints(5)"
    ],
    "technical": true
   },
@@ -21612,30 +21989,43 @@
    "boosts": [
     "UnlockSpell(Target_MantleOfInspiration_3)"
    ],
+   "params": [
+    "2",
+    "GainTemporaryHitPoints(5)"
+   ],
    "technical": true
   },
   "MartialAdept": {
    "boosts": [
     "ActionResource(SuperiorityDie,1,0)"
-   ]
+   ],
+   "params": []
   },
   "MartialArts_BonusUnarmedStrike": {
-   "boosts": []
+   "boosts": [],
+   "params": [
+    "DealDamage(LevelMapValue(MartialArts), Bludgeoning)"
+   ]
   },
   "MartialArts_DextrousUnarmedAttacks": {
    "boosts": [
     "MonkWeaponAttackOverride()"
-   ]
+   ],
+   "params": []
   },
   "MartialArts_UnarmedDamage": {
    "boosts": [
     "MonkWeaponDamageDiceOverride(LevelMapValue(MartialArts))"
+   ],
+   "params": [
+    "DealDamage(LevelMapValue(MartialArts), Bludgeoning)"
    ]
   },
   "MaskOfManyFaces": {
    "boosts": [
     "UnlockSpell(Shout_DisguiseSelf_MaskOfManyFaces,Singular)"
-   ]
+   ],
+   "params": []
   },
   "MediumArmorMaster": {
    "boosts": [
@@ -21644,43 +22034,70 @@
     "IF(not HasStatus('MAG_EXOTIC_MATERIAL_ARMOR_TECHNICAL', context.Source)):ArmorAbilityModifierCapOverride(ScaleMail, 3)",
     "IF(not HasStatus('MAG_EXOTIC_MATERIAL_ARMOR_TECHNICAL', context.Source)):ArmorAbilityModifierCapOverride(BreastPlate, 3)",
     "IF(not HasStatus('MAG_EXOTIC_MATERIAL_ARMOR_TECHNICAL', context.Source)):ArmorAbilityModifierCapOverride(HalfPlate, 3)"
+   ],
+   "params": [
+    "3",
+    "2"
    ]
   },
   "MenacingAttack": {
    "boosts": [
     "UnlockSpell(Target_MenacingAttack)",
     "UnlockSpell(Projectile_MenacingAttack)"
+   ],
+   "params": [
+    "LevelMapValue(SuperiorityDie)"
    ]
   },
   "Metamagic_Careful": {
    "boosts": [
     "UnlockSpellVariant(CarefulSpellCheck(),ModifySpellRoll('not SavingThrow','SpellAutoResolveOnAlly'),ModifyUseCosts(Add,SorceryPoint,1,0))"
+   ],
+   "params": [
+    "1"
    ]
   },
   "Metamagic_Distant": {
    "boosts": [
     "UnlockSpellVariant(DistantSpellCheck(),ModifyTargetRadius(Multiplicative,1.5),ModifyUseCosts(Add,SorceryPoint,1,0))",
     "UnlockSpellVariant(DistantTouchSpellCheck(),ModifyTargetRadius(Override,9),ModifySpellFlags(Melee,0),ModifyUseCosts(Add,SorceryPoint,1,0))"
+   ],
+   "params": [
+    "1",
+    "Distance(1.5)",
+    "Distance(9)"
    ]
   },
   "Metamagic_Extended": {
    "boosts": [
     "UnlockSpellVariant(ExtendedSpellCheck(),ModifyUseCosts(Add,SorceryPoint,1,0),ModifyStatusDuration(Multiplicative,2),ModifySummonDuration(Multiplicative,2),ModifySurfaceDuration(Multiplicative,2))"
+   ],
+   "params": [
+    "1"
    ]
   },
   "Metamagic_Heightened": {
    "boosts": [
     "UnlockSpellVariant(HeightenedSpellCheck(),ModifyUseCosts(Add,SorceryPoint,3,0),ModifySavingThrowDisadvantage())"
+   ],
+   "params": [
+    "3"
    ]
   },
   "Metamagic_Quickened": {
    "boosts": [
     "UnlockSpellVariant(QuickenedSpellCheck(),ModifyUseCosts(Add,SorceryPoint,3,0),ModifyUseCosts(Replace,BonusActionPoint,1,0,ActionPoint))"
+   ],
+   "params": [
+    "3"
    ]
   },
   "Metamagic_Subtle": {
    "boosts": [
     "UnlockSpellVariant(SubtleSpellCheck(),ModifyUseCosts(Add,SorceryPoint,1,0),ModifySpellFlags(Verbal,0),ModifySpellFlags(Stealth,1))"
+   ],
+   "params": [
+    "1"
    ]
   },
   "Metamagic_Twinned": {
@@ -21691,84 +22108,106 @@
     "IF(HasPassive('Reaper', context.Source)):UnlockSpellVariant(TwinnedProjectileSpellCheckReaper(),ModifyNumberOfTargets(AdditiveBase,1,false),ModifyUseCosts(Add,SorceryPoint,SpellPowerLevel,0))",
     "IF(HasPassive('Reaper', context.Source)):UnlockSpellVariant(TwinnedTargetSpellCheckReaper(),ModifyNumberOfTargets(AdditiveBase,1,false),ModifyUseCosts(Add,SorceryPoint,SpellPowerLevel,0))",
     "IF(HasPassive('Reaper', context.Source)):UnlockSpellVariant(TwinnedTargetTouchSpellCheckReaper(),ModifyNumberOfTargets(AdditiveBase,1,false),ModifyUseCosts(Add,SorceryPoint,SpellPowerLevel,0))"
-   ]
+   ],
+   "params": []
   },
   "MightySwarm": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "MindlessRage": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "MinionsOfChaos": {
    "boosts": [
     "UnlockSpell(Target_ConjureElemental_Container,MostPowerful,e9127b70-22b7-42a1-b172-d02f828f260a)"
-   ]
+   ],
+   "params": []
   },
   "MireTheMind": {
    "boosts": [
     "UnlockSpell(Target_Slow,MostPowerful,e9127b70-22b7-42a1-b172-d02f828f260a)"
-   ]
+   ],
+   "params": []
   },
   "MistyEscape": {
    "boosts": [
     "UnlockInterrupt(Interrupt_MistyEscape)",
     "ActionResource(Interrupt_MistyEscape,1,0)"
-   ]
+   ],
+   "params": []
   },
   "Mobile_CounterAttackOfOpportunity": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "Mobile_DashAcrossDifficultTerrain": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "Mobile_PassiveBonuses": {
    "boosts": [
     "ActionResource(Movement,3,0)"
+   ],
+   "params": [
+    "Distance(3)"
    ]
   },
   "ModeratelyArmored": {
    "boosts": [
     "Proficiency(MediumArmor)",
     "Proficiency(Shields)"
-   ]
+   ],
+   "params": []
   },
   "Monk_SoundSwitch": {
    "boosts": [],
+   "params": [],
    "technical": true
   },
   "MountainDwarf_DwarvenArmorTraining": {
    "boosts": [
     "Proficiency(LightArmor)",
     "Proficiency(MediumArmor)"
-   ]
+   ],
+   "params": []
   },
   "MultiattackDefense": {
-   "boosts": []
+   "boosts": [],
+   "params": [
+    "4"
+   ]
   },
   "NaturalExplorer_BeastTamer": {
    "boosts": [
     "UnlockSpell(Target_FindFamiliar_Ritual)"
-   ]
+   ],
+   "params": []
   },
   "NaturalExplorer_UrbanTracker": {
    "boosts": [
     "ProficiencyBonus(Skill,SleightOfHand)"
-   ]
+   ],
+   "params": []
   },
   "NaturalExplorer_WastelandWander_Cold": {
    "boosts": [
     "Resistance(Cold, Resistant)"
-   ]
+   ],
+   "params": []
   },
   "NaturalExplorer_WastelandWander_Fire": {
    "boosts": [
     "Resistance(Fire, Resistant)"
-   ]
+   ],
+   "params": []
   },
   "NaturalExplorer_WastelandWander_Poison": {
    "boosts": [
     "Resistance(Poison, Resistant)"
-   ]
+   ],
+   "params": []
   },
   "NaturesWard": {
    "boosts": [
@@ -21776,278 +22215,340 @@
     "StatusImmunity(SG_Poisoned)",
     "StatusImmunity(SG_Charmed,ELEMENTAL,FEY)",
     "StatusImmunity(SG_Frightened,ELEMENTAL,FEY)"
-   ]
+   ],
+   "params": []
   },
   "Oath_Ancients_Tenents": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "Oath_Crown_Tenents": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "Oath_Devotion_Tenents": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "Oath_Vengeance_Tenents": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "OneWithShadows": {
    "boosts": [
     "UnlockSpell(Shout_OneWithShadows)"
-   ]
+   ],
+   "params": []
   },
   "OtherworldlyLeap": {
    "boosts": [
     "UnlockSpell(Target_Jump,MostPowerful,e9127b70-22b7-42a1-b172-d02f828f260a)"
-   ]
+   ],
+   "params": []
   },
   "PactOfTheBlade_Hex": {
    "boosts": [
     "IF(not HasPassive('HexWarrior',context.Source)):UnlockSpell(Shout_PactOfTheBlade)",
     "IF(not HasPassive('HexWarrior',context.Source)):UnlockSpell(Shout_PactOfTheBlade_Bind)"
-   ]
+   ],
+   "params": []
   },
   "PactOfTheChain": {
    "boosts": [
     "UnlockSpell(Target_FindFamiliar_Ritual)",
     "UnlockSpell(Target_PactOfTheChain_Imp)",
     "UnlockSpell(Target_PactOfTheChain_Quasit)"
-   ]
+   ],
+   "params": []
   },
   "PactOfTheTome": {
    "boosts": [
     "UnlockSpell(Target_Guidance)",
     "UnlockSpell(Target_ViciousMockery)",
     "UnlockSpell(Target_ThornWhip)"
-   ]
+   ],
+   "params": []
   },
   "Performer": {
    "boosts": [
     "Proficiency(MusicalInstrument)"
-   ]
+   ],
+   "params": []
   },
   "PolearmMaster_AttackOfOpportunity": {
    "boosts": [
     "UnlockInterrupt(Interrupt_PolearmMaster)"
-   ]
+   ],
+   "params": []
   },
   "PolearmMaster_BonusAttack": {
-   "boosts": []
+   "boosts": [],
+   "params": [
+    "DealDamage(1d4+max(DexterityModifier,StrengthModifier), Bludgeoning)"
+   ]
   },
   "Portent": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "PotentCantrip": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "PotentSpellcasting": {
    "boosts": [
     "IF(IsClericCantrip()):DamageBonus(max(0, WisdomModifier))"
-   ]
+   ],
+   "params": []
   },
   "PrecisionAttack": {
    "boosts": [
     "UnlockSpell(Shout_PrecisionAttack)"
-   ]
+   ],
+   "params": []
   },
   "PrimalStrike": {
    "boosts": [
     "UnarmedMagicalProperty()"
-   ]
+   ],
+   "params": []
   },
   "Proficiency_Battleaxes": {
    "boosts": [
     "Proficiency(Battleaxes)"
-   ]
+   ],
+   "params": []
   },
   "Proficiency_Clubs": {
    "boosts": [
     "Proficiency(Clubs)"
-   ]
+   ],
+   "params": []
   },
   "Proficiency_Daggers": {
    "boosts": [
     "Proficiency(Daggers)"
-   ]
+   ],
+   "params": []
   },
   "Proficiency_Flails": {
    "boosts": [
     "Proficiency(Flails)"
-   ]
+   ],
+   "params": []
   },
   "Proficiency_Glaives": {
    "boosts": [
     "Proficiency(Glaives)"
-   ]
+   ],
+   "params": []
   },
   "Proficiency_Greataxe": {
    "boosts": [
     "Proficiency(Greataxes)"
-   ]
+   ],
+   "params": []
   },
   "Proficiency_Greatclub": {
    "boosts": [
     "Proficiency(Greatclubs)"
-   ]
+   ],
+   "params": []
   },
   "Proficiency_Greatswords": {
    "boosts": [
     "Proficiency(Greatswords)"
-   ]
+   ],
+   "params": []
   },
   "Proficiency_Halberds": {
    "boosts": [
     "Proficiency(Halberds)"
-   ]
+   ],
+   "params": []
   },
   "Proficiency_HandCrossbows": {
    "boosts": [
     "Proficiency(HandCrossbows)"
-   ]
+   ],
+   "params": []
   },
   "Proficiency_Handaxes": {
    "boosts": [
     "Proficiency(Handaxes)"
-   ]
+   ],
+   "params": []
   },
   "Proficiency_HeavyCrossbows": {
    "boosts": [
     "Proficiency(HeavyCrossbows)"
-   ]
+   ],
+   "params": []
   },
   "Proficiency_Javelins": {
    "boosts": [
     "Proficiency(Javelins)"
-   ]
+   ],
+   "params": []
   },
   "Proficiency_LightCrossbows": {
    "boosts": [
     "Proficiency(LightCrossbows)"
-   ]
+   ],
+   "params": []
   },
   "Proficiency_LightHammers": {
    "boosts": [
     "Proficiency(LightHammers)"
-   ]
+   ],
+   "params": []
   },
   "Proficiency_Longbows": {
    "boosts": [
     "Proficiency(Longbows)"
-   ]
+   ],
+   "params": []
   },
   "Proficiency_Longswords": {
    "boosts": [
     "Proficiency(Longswords)"
-   ]
+   ],
+   "params": []
   },
   "Proficiency_Maces": {
    "boosts": [
     "Proficiency(Maces)"
-   ]
+   ],
+   "params": []
   },
   "Proficiency_Mauls": {
    "boosts": [
     "Proficiency(Mauls)"
-   ]
+   ],
+   "params": []
   },
   "Proficiency_Morningstars": {
    "boosts": [
     "Proficiency(Morningstars)"
-   ]
+   ],
+   "params": []
   },
   "Proficiency_Pikes": {
    "boosts": [
     "Proficiency(Pikes)"
-   ]
+   ],
+   "params": []
   },
   "Proficiency_Quarterstaffs": {
    "boosts": [
     "Proficiency(Quarterstaffs)"
-   ]
+   ],
+   "params": []
   },
   "Proficiency_Rapiers": {
    "boosts": [
     "Proficiency(Rapiers)"
-   ]
+   ],
+   "params": []
   },
   "Proficiency_Scimitars": {
    "boosts": [
     "Proficiency(Scimitars)"
-   ]
+   ],
+   "params": []
   },
   "Proficiency_Shortbows": {
    "boosts": [
     "Proficiency(Shortbows)"
-   ]
+   ],
+   "params": []
   },
   "Proficiency_Shortswords": {
    "boosts": [
     "Proficiency(Shortswords)"
-   ]
+   ],
+   "params": []
   },
   "Proficiency_Sickles": {
    "boosts": [
     "Proficiency(Sickles)"
-   ]
+   ],
+   "params": []
   },
   "Proficiency_Spears": {
    "boosts": [
     "Proficiency(Spears)"
-   ]
+   ],
+   "params": []
   },
   "Proficiency_Tridents": {
    "boosts": [
     "Proficiency(Tridents)"
-   ]
+   ],
+   "params": []
   },
   "Proficiency_Warhammers": {
    "boosts": [
     "Proficiency(Warhammers)"
-   ]
+   ],
+   "params": []
   },
   "Proficiency_Warpicks": {
    "boosts": [
     "Proficiency(Warpicks)"
-   ]
+   ],
+   "params": []
   },
   "ProjectedWard": {
    "boosts": [
     "UnlockInterrupt(Interrupt_ProjectedWard)"
-   ]
+   ],
+   "params": []
   },
   "PurityOfBody": {
    "boosts": [
     "StatusImmunity(SG_Disease)",
     "StatusImmunity(SG_Poisoned)",
     "Resistance(Poison, Immune)"
-   ]
+   ],
+   "params": []
   },
   "PushingAttack": {
    "boosts": [
     "UnlockSpell(Target_PushingAttack)",
     "UnlockSpell(Projectile_PushingAttack)"
+   ],
+   "params": [
+    "Distance(4.5)",
+    "LevelMapValue(SuperiorityDie)"
    ]
   },
   "RageFrenzyUnlock": {
    "boosts": [
     "UnlockSpell(Shout_Rage_Frenzy)"
-   ]
+   ],
+   "params": []
   },
   "RageGiantUnlock": {
    "boosts": [
     "UnlockSpell(Shout_Rage_Giant)"
-   ]
+   ],
+   "params": []
   },
   "RageUnlock": {
    "boosts": [
     "UnlockSpell(Shout_Rage)"
-   ]
+   ],
+   "params": []
   },
   "Rage_Armour_Message": {
    "boosts": [],
+   "params": [],
    "technical": true
   },
   "Rage_NoHeavyArmour_VFX": {
    "boosts": [],
+   "params": [],
    "technical": true
   },
   "RakishAudacity": {
@@ -22055,11 +22556,18 @@
     "IF(not ClassLevelHigherOrEqualThan(5,'Rogue')):Initiative(2)",
     "IF(ClassLevelHigherOrEqualThan(5,'Rogue') and not ClassLevelHigherOrEqualThan(10,'Rogue')):Initiative(3)",
     "IF(ClassLevelHigherOrEqualThan(10,'Rogue')):Initiative(4)"
+   ],
+   "params": [
+    "LevelMapValue(RakishAudacity)",
+    "Distance(1.5)"
    ]
   },
   "Rally": {
    "boosts": [
     "UnlockSpell(Target_Rally)"
+   ],
+   "params": [
+    "GainTemporaryHitPoints(8)"
    ]
   },
   "Reaper": {
@@ -22067,180 +22575,250 @@
     "UnlockSpellVariant(SpellId('Target_ChillTouch'),ModifyNumberOfTargets(AdditiveBase,1,false))",
     "UnlockSpellVariant(SpellId('Target_BurstingSinew'),ModifyNumberOfTargets(AdditiveBase,1,false))",
     "UnlockSpellVariant(SpellId('Target_TollTheDead'),ModifyNumberOfTargets(AdditiveBase,1,false))"
-   ]
+   ],
+   "params": []
   },
   "RecklessAttack": {
    "boosts": [
     "UnlockInterrupt(Interrupt_RecklessAttack)",
     "UnlockSpell(Target_RecklessAttack)"
-   ]
+   ],
+   "params": []
   },
   "RedirectAttack_Unlock": {
    "boosts": [
     "UnlockInterrupt(Interrupt_RedirectAttack)"
+   ],
+   "params": [
+    "Distance(1.5)"
    ]
   },
   "RelentlessAvenger": {
-   "boosts": []
+   "boosts": [],
+   "params": [
+    "Distance(4.5)"
+   ]
   },
   "RelentlessEndurance": {
-   "boosts": []
+   "boosts": [],
+   "params": [
+    "RegainHitPoints(1)"
+   ]
   },
   "RelentlessRage": {
-   "boosts": []
+   "boosts": [],
+   "params": [
+    "0",
+    "RegainHitPoints(1)"
+   ]
   },
   "ReliableTalent": {
    "boosts": [
     "IF(HasProficiencyBonus(context.CheckedAbility,context.CheckedSkill,context.Source)):MinimumRollResult(RawAbility,10)",
     "IF(HasProficiencyBonus(context.CheckedAbility,context.CheckedSkill,context.Source)):MinimumRollResult(SkillCheck,10)",
     "IF(HasProficiencyBonus(context.CheckedAbility,context.CheckedSkill,context.Source)):MinimumRollResult(SavingThrow,10)"
+   ],
+   "params": [
+    "10"
    ]
   },
   "RemarkableAthlete_Jump": {
    "boosts": [
     "JumpMaxDistanceBonus(3)"
+   ],
+   "params": [
+    "Distance(3)"
    ]
   },
   "RemarkableAthlete_Proficiency": {
    "boosts": [
     "IF(not HasProficiencyBonus(context.CheckedAbility,context.CheckedSkill,context.Source) and CheckedPhysicalAbility(context.Source)):RollBonus(SkillCheck,ProficiencyBonus/2)",
     "IF(not HasProficiencyBonus(context.CheckedAbility,context.CheckedSkill,context.Source) and CheckedPhysicalAbility(context.Source)):RollBonus(RawAbility,ProficiencyBonus/2)"
-   ]
+   ],
+   "params": []
   },
   "RepellingBlast": {
-   "boosts": []
+   "boosts": [],
+   "params": [
+    "Distance(4.5)"
+   ]
   },
   "Resilient_Charisma": {
    "boosts": [
     "Ability(Charisma,1,20)",
     "ProficiencyBonus(SavingThrow,Charisma)"
+   ],
+   "params": [
+    "1"
    ]
   },
   "Resilient_Constitution": {
    "boosts": [
     "Ability(Constitution,1,20)",
     "ProficiencyBonus(SavingThrow,Constitution)"
+   ],
+   "params": [
+    "1"
    ]
   },
   "Resilient_Dexterity": {
    "boosts": [
     "Ability(Dexterity,1,20)",
     "ProficiencyBonus(SavingThrow,Dexterity)"
+   ],
+   "params": [
+    "1"
    ]
   },
   "Resilient_Intelligence": {
    "boosts": [
     "Ability(Intelligence,1,20)",
     "ProficiencyBonus(SavingThrow,Intelligence)"
+   ],
+   "params": [
+    "1"
    ]
   },
   "Resilient_Strength": {
    "boosts": [
     "Ability(Strength,1,20)",
     "ProficiencyBonus(SavingThrow,Strength)"
+   ],
+   "params": [
+    "1"
    ]
   },
   "Resilient_Wisdom": {
    "boosts": [
     "Ability(Wisdom,1,20)",
     "ProficiencyBonus(SavingThrow,Wisdom)"
+   ],
+   "params": [
+    "1"
    ]
   },
   "Riposte": {
    "boosts": [
     "UnlockInterrupt(Interrupt_Riposte)"
+   ],
+   "params": [
+    "LevelMapValue(SuperiorityDie)"
    ]
   },
   "RitualCaster_FreeSpells": {
-   "boosts": []
+   "boosts": [],
+   "params": [
+    "2"
+   ]
   },
   "RockGnome_ArtificersLore": {
    "boosts": [
     "ProficiencyBonus(Skill,History)",
     "ExpertiseBonus(History)"
-   ]
+   ],
+   "params": []
   },
   "SavageAttacker": {
    "boosts": [
     "Reroll(MeleeWeaponDamage,20,false)"
-   ]
+   ],
+   "params": []
   },
   "SavageAttacks": {
    "boosts": [
     "CriticalHitExtraDice(1,MeleeWeaponAttack)",
     "CriticalHitExtraDice(1,MeleeOffHandWeaponAttack)"
-   ]
+   ],
+   "params": []
   },
   "SculptSpells": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "SculptorOfFlesh": {
    "boosts": [
     "UnlockSpell(Target_Polymorph,MostPowerful,e9127b70-22b7-42a1-b172-d02f828f260a)"
-   ]
+   ],
+   "params": []
   },
   "SecondStoryWork": {
    "boosts": [
     "FallDamageMultiplier(0.5)"
-   ]
+   ],
+   "params": []
   },
   "Sentinel_Attack": {
    "boosts": [
     "UnlockInterrupt(Interrupt_Sentinel)"
-   ]
+   ],
+   "params": []
   },
   "Sentinel_OpportunityAdvantage": {
    "boosts": [
     "IF(SpellId('Target_Sentinel_AttackOfOpportunity')):Advantage(AttackRoll)"
-   ]
+   ],
+   "params": []
   },
   "Sentinel_ZeroSpeed": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "Shapechanger": {
    "boosts": [
     "UnlockSpell(Target_Polymorph_Shapechanger)"
-   ]
+   ],
+   "params": []
   },
   "Sharpshooter_AllIn": {
    "boosts": [
     "IF(Sharpshooter(context.Source)):RollBonus(RangedWeaponAttack, -5)",
     "IF(Sharpshooter(context.Source)):RollBonus(RangedOffHandWeaponAttack, -5)",
     "IF(Sharpshooter(context.Source)):CharacterWeaponDamage(10)"
+   ],
+   "params": [
+    "5",
+    "10"
    ]
   },
   "Sharpshooter_Bonuses": {
    "boosts": [
     "IgnoreLowGroundPenalty(RangedWeaponAttack)",
     "IgnoreLowGroundPenalty(RangedOffHandWeaponAttack)"
-   ]
+   ],
+   "params": []
   },
   "ShieldMaster_Block": {
    "boosts": [
     "UnlockInterrupt(Interrupt_ShieldMaster)"
-   ]
+   ],
+   "params": []
   },
   "ShieldMaster_PassiveBonuses": {
    "boosts": [
     "IF(HasShieldEquipped() and not HasStatus('SG_Incapacitated')):RollBonus(SavingThrow,2,Dexterity)"
-   ]
+   ],
+   "params": []
   },
   "SignOfIllOmen": {
    "boosts": [
     "UnlockSpell(Target_BestowCurse,MostPowerful,e9127b70-22b7-42a1-b172-d02f828f260a)"
-   ]
+   ],
+   "params": []
   },
   "Skilled": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "SlowFall": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "Smite_Divine": {
    "boosts": [
     "UnlockInterrupt(Interrupt_Smite_Divine)",
     "UnlockInterrupt(Interrupt_Smite_Divine_Critical)"
-   ]
+   ],
+   "params": []
   },
   "SneakAttackSwitch": {
    "boosts": [
@@ -22249,6 +22827,7 @@
     "UnlockSpell(Target_SneakAttack_Rakish)",
     "UnlockSpell(Projectile_SneakAttack_Rakish)"
    ],
+   "params": [],
    "technical": true
   },
   "SneakAttack_Unlock": {
@@ -22258,6 +22837,7 @@
     "UnlockSpell(Target_SneakAttack)",
     "UnlockSpell(Projectile_SneakAttack)"
    ],
+   "params": [],
    "technical": true
   },
   "SongOfDefense": {
@@ -22267,55 +22847,73 @@
     "UnlockInterrupt(Interrupt_SongOfDefense_3)",
     "UnlockInterrupt(Interrupt_SongOfDefense_4)",
     "UnlockInterrupt(Interrupt_SongOfDefense_5)"
-   ]
+   ],
+   "params": []
   },
   "SongOfDefense_6": {
    "boosts": [
     "UnlockInterrupt(Interrupt_SongOfDefense_6)"
    ],
+   "params": [],
    "technical": true
   },
   "SpellSniper_Critical": {
    "boosts": [
     "IF(IsSpell() and IsSpellAttack()):ReduceCriticalAttackThreshold(1)"
-   ]
+   ],
+   "params": []
   },
   "SplitEnchantment": {
    "boosts": [
     "UnlockSpellVariant(SplitEnchantmentProjectileSpellCheck(),ModifyNumberOfTargets(AdditiveBase,1,false),ModifyTooltipDescription(),ModifyIconGlow())",
     "UnlockSpellVariant(SplitEnchantmentTargetSpellCheck(),ModifyNumberOfTargets(AdditiveBase,1,false),ModifyMaximumTargets(Override,2),ModifyTooltipDescription(),ModifyIconGlow())",
     "UnlockSpellVariant(SplitEnchantmentTargetTouchSpellCheck(),ModifyNumberOfTargets(AdditiveBase,1,false),ModifyMaximumTargets(Override,2),ModifyTooltipDescription(),ModifyIconGlow())"
-   ]
+   ],
+   "params": []
   },
   "SpreadingSpores": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "StalkersFlurry": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "StarryForm": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "SteelWill": {
    "boosts": [
     "Tag(FRIGHTENED_ADV)"
-   ]
+   ],
+   "params": []
   },
   "StillnessOfMind": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "StormsFury": {
    "boosts": [
     "UnlockInterrupt(Interrupt_StormsFury)"
+   ],
+   "params": [
+    "DealDamage(ClassLevel(Sorcerer),Lightning)"
    ]
   },
   "StrengthOfTheGrave": {
-   "boosts": []
+   "boosts": [],
+   "params": [
+    "1"
+   ]
   },
   "SuperiorDarkvision": {
    "boosts": [
     "DarkvisionRangeMin(24)",
     "ActiveCharacterLight(c46e7ba8-e746-7020-5146-287474d7b9f7)"
+   ],
+   "params": [
+    "Distance(24)"
    ]
   },
   "Swarmkeeper_Bee": {
@@ -22323,26 +22921,30 @@
     "UnlockInterrupt(Interrupt_GatheredSwarm_Bee_Knockback)",
     "UnlockInterrupt(Interrupt_GatheredSwarm_Bee_Attack)",
     "UnlockInterrupt(Interrupt_GatheredSwarm_Bee_Teleport)"
-   ]
+   ],
+   "params": []
   },
   "Swarmkeeper_Jellyfish": {
    "boosts": [
     "UnlockInterrupt(Interrupt_GatheredSwarm_Jellyfish_Shock)",
     "UnlockInterrupt(Interrupt_GatheredSwarm_Jellyfish_Attack)",
     "UnlockInterrupt(Interrupt_GatheredSwarm_Jellyfish_Teleport)"
-   ]
+   ],
+   "params": []
   },
   "Swarmkeeper_Moth": {
    "boosts": [
     "UnlockInterrupt(Interrupt_GatheredSwarm_Moth_Blind)",
     "UnlockInterrupt(Interrupt_GatheredSwarm_Moth_Attack)",
     "UnlockInterrupt(Interrupt_GatheredSwarm_Moth_Teleport)"
-   ]
+   ],
+   "params": []
   },
   "SweepingAttack": {
    "boosts": [
     "UnlockSpell(Zone_SweepingAttack)"
-   ]
+   ],
+   "params": []
   },
   "TavernBrawler": {
    "boosts": [
@@ -22350,22 +22952,27 @@
     "IF(IsMeleeUnarmedAttack()):CharacterUnarmedDamage(StrengthModifier)",
     "IF(IsRangedUnarmedAttack()):RollBonus(Attack, StrengthModifier)",
     "IF(HasStatus('SG_Polymorph_BeastShape',context.Source) and not (Tagged('MYRMIDON_AIR',context.Source) or Tagged('MYRMIDON_FIRE',context.Source) or Tagged('MYRMIDON_WATER',context.Source))):DamageBonus(StrengthModifier)"
-   ]
+   ],
+   "params": []
   },
   "TempestuousMagic": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "ThiefOfFiveFates": {
    "boosts": [
     "UnlockSpell(Target_Bane_ThiefOfFiveFates,MostPowerful,e9127b70-22b7-42a1-b172-d02f828f260a,UntilRest)"
-   ]
+   ],
+   "params": []
   },
   "ThirstingBlade_Blade": {
    "boosts": [],
+   "params": [],
    "technical": true
   },
   "ThirstingBlade_Check": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "ThirstingBlade_Tome": {
    "boosts": [
@@ -22373,249 +22980,335 @@
     "UnlockSpell(Target_CallLightning,Singular,,UntilRest,Charisma)",
     "UnlockSpell(Target_Haste,Singular,,UntilRest,Charisma)"
    ],
+   "params": [],
    "technical": true
   },
   "Thought_Shield_Psychic_Reflection": {
    "boosts": [
     "RedirectDamage(1,,Psychic,true)"
-   ]
+   ],
+   "params": []
   },
   "Thought_Shield_Psychic_Resistance": {
    "boosts": [
     "Resistance(Psychic,Resistant)"
-   ]
+   ],
+   "params": []
   },
   "ThunderboltStrike": {
-   "boosts": []
+   "boosts": [],
+   "params": [
+    "Distance(3)"
+   ]
   },
   "TidesOfChaos": {
    "boosts": [
     "Advantage(AllAbilities)"
-   ]
+   ],
+   "params": []
   },
   "TidesOfChaos_Unlock": {
    "boosts": [
     "UnlockInterrupt(Interrupt_TidesOfChaos)"
    ],
+   "params": [],
    "technical": true
   },
   "Tiefling_HellishResistance": {
    "boosts": [
     "Resistance(Fire, Resistant)"
-   ]
+   ],
+   "params": []
   },
   "TotemSpirit_Bear": {
    "boosts": [
     "UnlockSpell(Shout_Rage_Totem_Bear)",
     "UnlockSpell(Shout_FerociousAppetite)"
-   ]
+   ],
+   "params": []
   },
   "TotemSpirit_Eagle": {
    "boosts": [
     "UnlockSpell(Shout_Rage_Totem_Eagle)",
     "UnlockSpell(Projectile_DivingStrike)"
-   ]
+   ],
+   "params": []
   },
   "TotemSpirit_Elk": {
    "boosts": [
     "UnlockSpell(Shout_Rage_Totem_Elk)",
     "UnlockSpell(Rush_Primal_Stampede)"
+   ],
+   "params": [
+    "Distance(4.5)"
    ]
   },
   "TotemSpirit_Tiger": {
    "boosts": [
     "UnlockSpell(Shout_Rage_Totem_Tiger)",
     "UnlockSpell(Zone_TigersBloodlust)"
+   ],
+   "params": [
+    "Distance(4.5)"
    ]
   },
   "TotemSpirit_Wolf": {
    "boosts": [
     "UnlockSpell(Shout_Rage_Totem_Wolf)",
     "UnlockSpell(Shout_PackHowl_Barbarian)"
+   ],
+   "params": [
+    "Distance(2)"
    ]
   },
   "TouchOfDeath": {
    "boosts": [
     "UnlockInterrupt(Interrupt_ChannelDivinity_TouchOfDeath)"
-   ]
+   ],
+   "params": []
   },
   "Tough": {
    "boosts": [
     "IncreaseMaxHP(Level*2)"
+   ],
+   "params": [
+    "Level*2"
    ]
   },
   "TraininginWarandSong": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "Tranquility": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "TransmutationStone": {
    "boosts": [
     "UnlockSpell(Target_TransmutersStone)"
-   ]
+   ],
+   "params": []
   },
   "TransmutationStone_Activation": {
    "boosts": [],
+   "params": [],
    "technical": true
   },
   "TripAttack": {
    "boosts": [
     "UnlockSpell(Target_TripAttack)",
     "UnlockSpell(Projectile_TripAttack)"
+   ],
+   "params": [
+    "LevelMapValue(SuperiorityDie)"
    ]
   },
   "TwinklingConstellations": {
    "boosts": [
     "ActionResource(TwinklingConstitution_Charge,1,0)"
+   ],
+   "params": [
+    "Distance(6)"
    ]
   },
   "UnarmoredDefense_Monk": {
    "boosts": [
     "ACOverrideFormula(10,true,Dexterity,Wisdom)"
-   ]
+   ],
+   "params": []
   },
   "UnarmoredMovement_1": {
    "boosts": [
     "ActionResource(Movement, 3, 0)"
+   ],
+   "params": [
+    "Distance(3)"
    ]
   },
   "UnarmoredMovement_2": {
    "boosts": [
     "ActionResource(Movement, 4.5, 0)"
+   ],
+   "params": [
+    "Distance(4.5)"
    ]
   },
   "UnarmoredMovement_3": {
    "boosts": [
     "ActionResource(Movement, 6, 0)"
+   ],
+   "params": [
+    "Distance(6)"
    ]
   },
   "UnarmoredMovement_DifficultTerrain": {
    "boosts": [
     "StatusImmunity(SG_DifficultTerrain)",
     "JumpMaxDistanceBonus(6)"
+   ],
+   "params": [
+    "Distance(6)"
    ]
   },
   "UnarmouredDefence_Barbarian": {
    "boosts": [
     "ACOverrideFormula(10,true,Dexterity,Constitution)"
-   ]
+   ],
+   "params": []
   },
   "UncannyDodge": {
    "boosts": [
     "DamageReduction(All,Half,)"
-   ]
+   ],
+   "params": []
   },
   "UndeadThrall_BetterSummon": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "UndeadThrall_ExtraSummon": {
    "boosts": [
     "UnlockSpellVariant(UndeadThrallAnimateDeadSpellVariation(),ModifyNumberOfTargets(AdditiveFinal,1,false),ModifyTargetRadius(Override,6))",
     "UnlockSpellVariant(SpellId('Target_CursedTome_WakeTheDead'),ModifyNumberOfTargets(AdditiveFinal,1,false))"
-   ]
+   ],
+   "params": []
   },
   "UndeadThrall_FreeSpell": {
    "boosts": [
     "UnlockSpell(Target_AnimateDead,AddChildren ,d136c5d9-0ff0-43da-acce-a74a07f8d6bf)"
-   ]
+   ],
+   "params": []
   },
   "UnlockedSpellSlotLevel1": {
    "boosts": [],
+   "params": [],
    "technical": true
   },
   "UnlockedSpellSlotLevel2": {
    "boosts": [],
+   "params": [],
    "technical": true
   },
   "UnlockedSpellSlotLevel3": {
    "boosts": [],
+   "params": [],
    "technical": true
   },
   "UnlockedWarlockSpellSlotLevel1": {
    "boosts": [],
+   "params": [],
    "technical": true
   },
   "UnlockedWarlockSpellSlotLevel2": {
    "boosts": [],
+   "params": [],
    "technical": true
   },
   "UnlockedWarlockSpellSlotLevel3": {
    "boosts": [],
+   "params": [],
    "technical": true
   },
   "Unstable_Backlash": {
    "boosts": [
     "UnlockInterrupt(Interrupt_Unstable_Backlash)"
-   ]
+   ],
+   "params": []
   },
   "WarCaster_Bonuses": {
    "boosts": [
     "Advantage(Concentration)"
-   ]
+   ],
+   "params": []
   },
   "WarCaster_OpportunitySpell": {
    "boosts": [
     "UnlockInterrupt(Interrupt_WarCaster)"
-   ]
+   ],
+   "params": []
   },
   "WarGodsBlessing": {
    "boosts": [
     "UnlockInterrupt(Interrupt_WarGodsBlessing)"
+   ],
+   "params": [
+    "10"
    ]
   },
   "WarMagic": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "WarPriest": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "WardingFlare": {
    "boosts": [
     "UnlockInterrupt(Interrupt_WardingFlare)"
-   ]
+   ],
+   "params": []
   },
   "WardingFlare_Improved": {
    "boosts": [
     "UnlockInterrupt(Interrupt_WardingFlare_Improved)"
-   ]
+   ],
+   "params": []
   },
   "WeaponMaster": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "WhispersOfTheGrave": {
    "boosts": [
     "UnlockSpell(Target_SpeakWithDead_WhispersOfTheGrave)"
-   ]
+   ],
+   "params": []
   },
   "WildMagic": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "WildMagicRage": {
    "boosts": [
     "UnlockSpell(Shout_Rage_WildMagic)"
-   ]
+   ],
+   "params": []
   },
   "WildShape_Combat": {
    "boosts": [
     "IF(ConditionResult(false)):UnlockSpell(Shout_WildShape_Combat_Heal,,d136c5d9-0ff0-43da-acce-a74a07f8d6bf)",
     "UnlockSpellVariant(SpellId('Shout_AberrantShape'),ModifyUseCosts(Replace,BonusActionPoint,1,0,ActionPoint))"
+   ],
+   "params": [
+    "RegainHitPoints(1d8)"
    ]
   },
   "WildStrike": {
-   "boosts": []
+   "boosts": [],
+   "params": []
   },
   "WildStrike_2": {
-   "boosts": []
+   "boosts": [],
+   "params": [
+    "2"
+   ]
   },
   "WrathOfTheStorm": {
    "boosts": [
     "UnlockInterrupt(Interrupt_WrathOfTheStorm_Lightning)",
     "UnlockInterrupt(Interrupt_WrathOfTheStorm_Thunder)"
+   ],
+   "params": [
+    "DealDamage(2d8,Lightning)",
+    "DealDamage(2d8,Thunder)"
    ]
   },
   "WrithingTide": {
-   "boosts": []
+   "boosts": [],
+   "params": [
+    "Distance(3)"
+   ]
   },
   "WrithingTide_Technical": {
    "boosts": [
@@ -22623,6 +23316,7 @@
     "IF(HasPassive('Swarmkeeper_Jellyfish',context.Source)):UnlockSpell(Projectile_Fly_WrithingTide_Jellyfish)",
     "IF(HasPassive('Swarmkeeper_Moth',context.Source)):UnlockSpell(Projectile_Fly_WrithingTide_Moth)"
    ],
+   "params": [],
    "technical": true
   }
  },
@@ -39988,2081 +40682,2826 @@
  "spells": {
   "Projectile_AcidArrow": {
    "level": 2,
+   "params": [
+    "DealDamage(4d4,Acid)",
+    "DealDamage(2d4,Acid)"
+   ],
    "school": "Evocation",
    "type": "Projectile"
   },
   "Projectile_AcidSplash": {
    "level": 0,
+   "params": [],
    "school": "Conjuration",
    "type": "Projectile"
   },
   "Projectile_ArcaneShot_BanishingArrow": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Projectile"
   },
   "Projectile_ArcaneShot_BeguilingArrow": {
    "level": null,
+   "params": [
+    "DealDamage(2d6,Psychic)"
+   ],
    "school": null,
    "type": "Projectile"
   },
   "Projectile_ArcaneShot_BurstingArrow": {
    "level": null,
+   "params": [
+    "DealDamage(2d6,Force)",
+    "Distance(3)"
+   ],
    "school": null,
    "type": "Projectile"
   },
   "Projectile_ArcaneShot_EnfeeblingArrow": {
    "level": null,
+   "params": [
+    "DealDamage(2d6,Necrotic)"
+   ],
    "school": null,
    "type": "Projectile"
   },
   "Projectile_ArcaneShot_GraspingArrow": {
    "level": null,
+   "params": [
+    "DealDamage(2d6,Poison)",
+    "DealDamage(2d6,Slashing)",
+    "Distance(3)"
+   ],
    "school": null,
    "type": "Projectile"
   },
   "Projectile_ArcaneShot_SeekingArrow": {
    "level": null,
+   "params": [
+    "DealDamage(1d6,Force)"
+   ],
    "school": null,
    "type": "Projectile"
   },
   "Projectile_ArcaneShot_ShadowArrow": {
    "level": null,
+   "params": [
+    "DealDamage(2d6,Psychic)"
+   ],
    "school": null,
    "type": "Projectile"
   },
   "Projectile_BladeFlourish_Defensive": {
    "level": null,
+   "params": [
+    "4"
+   ],
    "school": null,
    "type": "Projectile"
   },
   "Projectile_BladeFlourish_Mobile": {
    "level": null,
+   "params": [
+    "DealDamage(MainRangedWeapon+1d6, MainRangedWeaponDamageType)",
+    "Distance(6)"
+   ],
    "school": null,
    "type": "Projectile"
   },
   "Projectile_BladeFlourish_Slashing": {
    "level": null,
+   "params": [
+    "2",
+    "DealDamage(MainRangedWeapon, MainRangedWeaponDamageType)"
+   ],
    "school": null,
    "type": "Projectile"
   },
   "Projectile_BladeOfTheRime": {
    "level": null,
+   "params": [
+    "DealDamage(1d10,Piercing)",
+    "DealDamage(2d6,Cold)"
+   ],
    "school": null,
    "type": "Projectile"
   },
   "Projectile_ChainLightning": {
    "level": 6,
+   "params": [
+    "Distance(18)"
+   ],
    "school": "Evocation",
    "type": "Projectile"
   },
   "Projectile_ChromaticOrb": {
    "level": 1,
+   "params": [
+    "DealDamage(3d8,Thunder)"
+   ],
    "school": "Evocation",
    "type": "Projectile"
   },
   "Projectile_ChromaticOrb_Monk": {
    "level": null,
+   "params": [
+    "DealDamage(3d8,Thunder)"
+   ],
    "school": "Evocation",
    "type": "Projectile"
   },
   "Projectile_Disintegrate": {
    "level": 6,
+   "params": [
+    "DealDamage(10d6+40,Force)"
+   ],
    "school": "Transmutation",
    "type": "Projectile"
   },
   "Projectile_EldritchBlast": {
    "level": 0,
+   "params": [
+    "LevelMapValue(EldritchBlast)"
+   ],
    "school": "Evocation",
    "type": "Projectile"
   },
   "Projectile_EnsnaringStrike_Container": {
    "level": 1,
+   "params": [],
    "school": "Conjuration",
    "type": "Projectile"
   },
   "Projectile_FangsOfTheFireSnake": {
    "level": null,
+   "params": [
+    "DealDamage(1d4,Fire)"
+   ],
    "school": null,
    "type": "Projectile"
   },
   "Projectile_FireBolt": {
    "level": 0,
+   "params": [],
    "school": "Evocation",
    "type": "Projectile"
   },
   "Projectile_Fireball": {
    "level": 3,
+   "params": [],
    "school": "Evocation",
    "type": "Projectile"
   },
   "Projectile_Fireball_Monk": {
    "level": null,
+   "params": [],
    "school": "Evocation",
    "type": "Projectile"
   },
   "Projectile_Fly_DragonWings": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Projectile"
   },
   "Projectile_GuidingBolt": {
    "level": 1,
+   "params": [],
    "school": "Evocation",
    "type": "Projectile"
   },
   "Projectile_GuidingBolt_StarMap": {
    "level": 1,
+   "params": [],
    "school": "Evocation",
    "type": "Projectile"
   },
   "Projectile_HailOfThorns": {
    "level": 1,
+   "params": [
+    "DealDamage(MainRangedWeapon, MainRangedWeaponDamageType)",
+    "DealDamage(1d10,Piercing)"
+   ],
    "school": "Conjuration",
    "type": "Projectile"
   },
   "Projectile_IceKnife": {
    "level": 1,
+   "params": [
+    "DealDamage(1d10,Piercing)",
+    "DealDamage(2d6,Cold)"
+   ],
    "school": "Conjuration",
    "type": "Projectile"
   },
   "Projectile_LightningArrow": {
    "level": 3,
+   "params": [
+    "DealDamage(4d8,Lightning)",
+    "Distance(3)",
+    "DealDamage(2d8,Lightning)"
+   ],
    "school": "Transmutation",
    "type": "Projectile"
   },
   "Projectile_MagicMissile": {
    "level": 1,
+   "params": [
+    "DealDamage(1d4+1,Force)",
+    "3"
+   ],
    "school": "Evocation",
    "type": "Projectile"
   },
   "Projectile_PoisonSpray": {
    "level": 0,
+   "params": [],
    "school": "Conjuration",
    "type": "Projectile"
   },
   "Projectile_RayOfEnfeeblement": {
    "level": 2,
+   "params": [],
    "school": "Necromancy",
    "type": "Projectile"
   },
   "Projectile_RayOfFrost": {
    "level": 0,
+   "params": [
+    "Distance(3)"
+   ],
    "school": "Evocation",
    "type": "Projectile"
   },
   "Projectile_RayOfFrost_Monk": {
    "level": null,
+   "params": [
+    "Distance(3)"
+   ],
    "school": "Evocation",
    "type": "Projectile"
   },
   "Projectile_RayOfSickness": {
    "level": 1,
+   "params": [],
    "school": "Necromancy",
    "type": "Projectile"
   },
   "Projectile_ScorchingRay": {
    "level": 2,
+   "params": [
+    "DealDamage(2d6,Fire)",
+    "3"
+   ],
    "school": "Evocation",
    "type": "Projectile"
   },
   "Projectile_ScorchingRay_Monk": {
    "level": null,
+   "params": [
+    "LevelMapValue(ScorchingRay_Monk)",
+    "DealDamage(2d6,Fire)"
+   ],
    "school": "Evocation",
    "type": "Projectile"
   },
   "Projectile_Smite_Banishing_Container": {
    "level": 5,
+   "params": [],
    "school": "Abjuration",
    "type": "Projectile"
   },
   "Projectile_WitchBolt": {
    "level": 1,
+   "params": [
+    "DealDamage(1d12,Lightning)"
+   ],
    "school": "Evocation",
    "type": "Projectile"
   },
   "Shout_ActionSurge": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_Aid": {
    "level": 2,
+   "params": [
+    "RegainHitPoints(5)"
+   ],
    "school": "Abjuration",
    "type": "Shout"
   },
   "Shout_ArcaneRecovery": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_ArmorOfAgathys": {
    "level": 1,
+   "params": [
+    "GainTemporaryHitPoints(5)",
+    "DealDamage(5,Cold)"
+   ],
    "school": "Abjuration",
    "type": "Shout"
   },
   "Shout_ArmsOfHadar": {
    "level": 1,
+   "params": [
+    "DealDamage(2d6,Necrotic)"
+   ],
    "school": "Conjuration",
    "type": "Shout"
   },
   "Shout_AstralKnowledge": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_AuraOfVitality": {
    "level": 3,
+   "params": [],
    "school": "Evocation",
    "type": "Shout"
   },
   "Shout_AuraOf_Courage": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_AuraOf_Devotion": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_AuraOf_Hate": {
    "level": null,
+   "params": [
+    "DealDamage(max(1,CharismaModifier), MainMeleeWeaponDamageType)"
+   ],
    "school": null,
    "type": "Shout"
   },
   "Shout_AuraOf_Protection": {
    "level": null,
+   "params": [
+    "max(1,CharismaModifier)"
+   ],
    "school": null,
    "type": "Shout"
   },
   "Shout_AuraOf_Warding": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_BeaconOfHope": {
    "level": 3,
+   "params": [],
    "school": "Abjuration",
    "type": "Shout"
   },
   "Shout_BladeWard": {
    "level": 0,
+   "params": [],
    "school": "Abjuration",
    "type": "Shout"
   },
   "Shout_Bladesong": {
    "level": null,
+   "params": [
+    "LevelMapValue(Bladesong)",
+    "Distance(3)",
+    "LevelMapValue(Bladesong)"
+   ],
    "school": null,
    "type": "Shout"
   },
   "Shout_Blink": {
    "level": 3,
+   "params": [],
    "school": "Transmutation",
    "type": "Shout"
   },
   "Shout_Blur": {
    "level": 2,
+   "params": [],
    "school": "Illusion",
    "type": "Shout"
   },
   "Shout_Champion_Challenge": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_CharmAnimalsAndPlants": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_CloakOfShadows": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_CloakOfShadows_Monk": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_CreateSorceryPoints": {
    "level": null,
+   "params": [
+    "1"
+   ],
    "school": null,
    "type": "Shout"
   },
   "Shout_CreateSpellSlot": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_CrusadersMantle": {
    "level": 3,
+   "params": [
+    "DealDamage(1d4,Radiant)"
+   ],
    "school": "Evocation",
    "type": "Shout"
   },
   "Shout_Darkvision_ThirdEye": {
    "level": null,
+   "params": [
+    "Distance(24)"
+   ],
    "school": null,
    "type": "Shout"
   },
   "Shout_Dash_CunningAction": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_Dash_StepOfTheWind": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_DestructiveWave": {
    "level": 5,
+   "params": [],
    "school": "Evocation",
    "type": "Shout"
   },
   "Shout_DetectThoughts": {
    "level": 2,
+   "params": [],
    "school": "Divination",
    "type": "Shout"
   },
   "Shout_Disengage_CunningAction": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_Disengage_StepOfTheWind": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_DisguiseSelf": {
    "level": 1,
+   "params": [],
    "school": "Illusion",
    "type": "Shout"
   },
   "Shout_DispelEvilAndGood": {
    "level": 5,
+   "params": [],
    "school": "Abjuration",
    "type": "Shout"
   },
   "Shout_DivineFavor": {
    "level": 1,
+   "params": [
+    "DealDamage(1d4,Radiant)"
+   ],
    "school": "Evocation",
    "type": "Shout"
   },
   "Shout_DivineSense": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_Dreadful_Aspect": {
    "level": null,
+   "params": [
+    "Distance(9)"
+   ],
    "school": null,
    "type": "Shout"
   },
   "Shout_ElementalCleaver": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_Enlarge_Duergar": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_ExpeditiousRetreat": {
    "level": 1,
+   "params": [],
    "school": "Transmutation",
    "type": "Shout"
   },
   "Shout_FalseLife": {
    "level": 1,
+   "params": [
+    "GainTemporaryHitPoints(7)"
+   ],
    "school": "Necromancy",
    "type": "Shout"
   },
   "Shout_FeatherFall": {
    "level": 1,
+   "params": [],
    "school": "Transmutation",
    "type": "Shout"
   },
   "Shout_FeyPresence_Container": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_FireShield": {
    "level": 4,
+   "params": [
+    "Distance(3)"
+   ],
    "school": "Evocation",
    "type": "Shout"
   },
   "Shout_FlameBlade": {
    "level": 2,
+   "params": [
+    "DealDamage(3d6,Fire)",
+    "Distance(3)",
+    "Distance(6)"
+   ],
    "school": "Evocation",
    "type": "Shout"
   },
   "Shout_FlameBlade_MephistophelesTiefling": {
    "level": 2,
+   "params": [
+    "DealDamage(3d6,Fire)",
+    "Distance(3)",
+    "Distance(6)"
+   ],
    "school": "Evocation",
    "type": "Shout"
   },
   "Shout_Fly_Monk": {
    "level": null,
+   "params": [],
    "school": "Transmutation",
    "type": "Shout"
   },
   "Shout_GaseousForm_Monk": {
    "level": null,
+   "params": [],
    "school": "Transmutation",
    "type": "Shout"
   },
   "Shout_GuidedStrike": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_HarmonyOfFireAndWater": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_HealingRadiance": {
    "level": null,
+   "params": [
+    "RegainHitPoints(ClassLevel(Paladin)+Cause.CharismaModifier+ProficiencyBonus)",
+    ""
+   ],
    "school": null,
    "type": "Shout"
   },
   "Shout_HealingWord_Mass": {
    "level": 3,
+   "params": [
+    "RegainHitPoints(1d4+SpellCastingAbilityModifier)"
+   ],
    "school": "Evocation",
    "type": "Shout"
   },
   "Shout_HellishRebuke": {
    "level": 1,
+   "params": [
+    "DealDamage(2d10,Fire)"
+   ],
    "school": "Evocation",
    "type": "Shout"
   },
   "Shout_HellishRebuke_AsmodeusTiefling": {
    "level": 2,
+   "params": [
+    "DealDamage(3d10,Fire)"
+   ],
    "school": "Evocation",
    "type": "Shout"
   },
   "Shout_HellishRebuke_WarlockMI": {
    "level": 1,
+   "params": [
+    "DealDamage(2d10,Fire)"
+   ],
    "school": "Evocation",
    "type": "Shout"
   },
   "Shout_HeroesFeast": {
    "level": 6,
+   "params": [],
    "school": "Conjuration",
    "type": "Shout"
   },
   "Shout_HideInPlainSight": {
    "level": null,
+   "params": [
+    "10"
+   ],
    "school": null,
    "type": "Shout"
   },
   "Shout_Hide_BonusAction": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_Hide_DreadAmbusher": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_Hide_ShadowArts": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_InfiltrationExpertise": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_Invisibility_Duergar": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_KnowledgeOfTheAges": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_MagicAwareness": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_MirrorImage": {
    "level": 2,
+   "params": [],
    "school": "Illusion",
    "type": "Shout"
   },
   "Shout_NaturalRecovery": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_PassWithoutTrace": {
    "level": 2,
+   "params": [],
    "school": "Abjuration",
    "type": "Shout"
   },
   "Shout_PassWithoutTrace_Monk": {
    "level": null,
+   "params": [],
    "school": "Abjuration",
    "type": "Shout"
   },
   "Shout_PatientDefense": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_PrayerOfHealing": {
    "level": 2,
+   "params": [],
    "school": "Evocation",
    "type": "Shout"
   },
   "Shout_PreserveLife": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_ProduceFlame": {
    "level": 0,
+   "params": [
+    "Distance(9)",
+    "DealDamage(1d8,Fire)"
+   ],
    "school": "Conjuration",
    "type": "Shout"
   },
   "Shout_RadianceOfTheDawn": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_ReadThoughts": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_SacredWeapon": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_SecondWind": {
    "level": null,
+   "params": [
+    "RegainHitPoints(1d10+ClassLevel(Fighter))"
+   ],
    "school": null,
    "type": "Shout"
   },
   "Shout_SeeInvisibility": {
    "level": 2,
+   "params": [],
    "school": "Divination",
    "type": "Shout"
   },
   "Shout_SeeInvisibility_ThirdEye": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_SeeInvisibility_TrainedEye": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_ShadowBlade_Class": {
    "level": 2,
+   "params": [
+    "DealDamage(2d8,Psychic)",
+    ""
+   ],
    "school": "Illusion",
    "type": "Shout"
   },
   "Shout_Shield_Sorcerer": {
    "level": 1,
+   "params": [
+    "5"
+   ],
    "school": "Abjuration",
    "type": "Shout"
   },
   "Shout_Shield_Warlock": {
    "level": 1,
+   "params": [
+    "5"
+   ],
    "school": "Abjuration",
    "type": "Shout"
   },
   "Shout_Shield_Wizard": {
    "level": 1,
+   "params": [
+    "5"
+   ],
    "school": "Abjuration",
    "type": "Shout"
   },
   "Shout_Shillelagh": {
    "level": 0,
+   "params": [
+    "DealDamage(1d8+SpellCastingAbilityModifier, Bludgeoning)"
+   ],
    "school": "Transmutation",
    "type": "Shout"
   },
   "Shout_SongOfRest": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_SpeakWithAnimals": {
    "level": 1,
+   "params": [],
    "school": "Divination",
    "type": "Shout"
   },
   "Shout_SpeakWithAnimals_Barbarian": {
    "level": 1,
+   "params": [],
    "school": "Divination",
    "type": "Shout"
   },
   "Shout_SpeakWithAnimals_ForestGnome": {
    "level": 1,
+   "params": [],
    "school": "Divination",
    "type": "Shout"
   },
   "Shout_SpeakWithAnimals_KnowledgeCleric": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_SpiritGuardians": {
    "level": 3,
+   "params": [
+    "DealDamage(3d8,Radiant)",
+    "DealDamage(3d8,Necrotic)"
+   ],
    "school": "Conjuration",
    "type": "Shout"
   },
   "Shout_SupremeSneak": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_SymbioticEntity": {
    "level": null,
+   "params": [
+    "GainTemporaryHitPoints(ClassLevel(Druid)*4)",
+    "DealDamage(1d6,Necrotic)"
+   ],
    "school": null,
    "type": "Shout"
   },
   "Shout_Thaumaturgy": {
    "level": null,
+   "params": [],
    "school": "Transmutation",
    "type": "Shout"
   },
   "Shout_TurnTheFaithless": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_TurnTheTide": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_TurnTheUnholy": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_TurnUndead": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_UmbralCloak": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_WeaponBond": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_Whirlwind": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_WholenessOfBody": {
    "level": null,
+   "params": [
+    "Level",
+    "RegainHitPoints(1d8+ConstitutionModifier)"
+   ],
    "school": null,
    "type": "Shout"
   },
   "Shout_WildShape": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_WildShape_Badger": {
    "level": null,
+   "params": [
+    "RegainHitPoints(13)"
+   ],
    "school": null,
    "type": "Shout"
   },
   "Shout_WildShape_Cat": {
    "level": null,
+   "params": [
+    "RegainHitPoints(2)"
+   ],
    "school": null,
    "type": "Shout"
   },
   "Shout_WildShape_Combat": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_WildShape_Combat_Badger": {
    "level": null,
+   "params": [
+    "RegainHitPoints(13)"
+   ],
    "school": null,
    "type": "Shout"
   },
   "Shout_WildShape_Combat_Bear_Polar": {
    "level": null,
+   "params": [
+    "RegainHitPoints(30)"
+   ],
    "school": null,
    "type": "Shout"
   },
   "Shout_WildShape_Combat_Cat": {
    "level": null,
+   "params": [
+    "RegainHitPoints(2)"
+   ],
    "school": null,
    "type": "Shout"
   },
   "Shout_WildShape_Combat_DeepRothe": {
    "level": null,
+   "params": [
+    "RegainHitPoints(23)"
+   ],
    "school": null,
    "type": "Shout"
   },
   "Shout_WildShape_Combat_Dilophosaurus": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_WildShape_Combat_Myrmidon_Air": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_WildShape_Combat_Myrmidon_Earth": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_WildShape_Combat_Myrmidon_Fire": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_WildShape_Combat_Myrmidon_Water": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_WildShape_Combat_Owlbear": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_WildShape_Combat_Raven": {
    "level": null,
+   "params": [
+    "RegainHitPoints(13)"
+   ],
    "school": null,
    "type": "Shout"
   },
   "Shout_WildShape_Combat_Spider": {
    "level": null,
+   "params": [
+    "RegainHitPoints(20)"
+   ],
    "school": null,
    "type": "Shout"
   },
   "Shout_WildShape_Combat_Wolf_Dire": {
    "level": null,
+   "params": [
+    "RegainHitPoints(18)"
+   ],
    "school": null,
    "type": "Shout"
   },
   "Shout_WildShape_DeepRothe": {
    "level": null,
+   "params": [
+    "RegainHitPoints(23)"
+   ],
    "school": null,
    "type": "Shout"
   },
   "Shout_WildShape_Dilophosaurus": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_WildShape_Owlbear": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_WildShape_Spider": {
    "level": null,
+   "params": [
+    "RegainHitPoints(20)"
+   ],
    "school": null,
    "type": "Shout"
   },
   "Shout_WildShape_Wolf_Dire": {
    "level": null,
+   "params": [
+    "RegainHitPoints(18)"
+   ],
    "school": null,
    "type": "Shout"
   },
   "Shout_Wildshape_Combat_Panther": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_Wildshape_Combat_SaberTooth_Tiger": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_Wildshape_Panther": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_Wildshape_Star_Archer": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_Wildshape_Star_Chalice": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_Wildshape_Star_Dragon": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Shout"
   },
   "Shout_WindWalk": {
    "level": 6,
+   "params": [],
    "school": "Transmutation",
    "type": "Shout"
   },
   "Target_AbjureEnemy": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Target"
   },
   "Target_AnimalFriendship": {
    "level": 1,
+   "params": [],
    "school": "Enchantment",
    "type": "Target"
   },
   "Target_AnimateDead": {
    "level": 3,
+   "params": [],
    "school": "Necromancy",
    "type": "Target"
   },
   "Target_ArcaneEye": {
    "level": 4,
+   "params": [],
    "school": "Conjuration",
    "type": "Target"
   },
   "Target_ArcaneLock": {
    "level": 2,
+   "params": [],
    "school": "Abjuration",
    "type": "Target"
   },
   "Target_Bane": {
    "level": 1,
+   "params": [
+    "1d4",
+    "3"
+   ],
    "school": "Enchantment",
    "type": "Target"
   },
   "Target_Banishment": {
    "level": 4,
+   "params": [],
    "school": "Abjuration",
    "type": "Target"
   },
   "Target_Barkskin": {
    "level": 2,
+   "params": [],
    "school": "Transmutation",
    "type": "Target"
   },
   "Target_BenignTransposition_Teleport": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Target"
   },
   "Target_BestowCurse": {
    "level": 3,
+   "params": [],
    "school": "Necromancy",
    "type": "Target"
   },
   "Target_BlackTentacles": {
    "level": 4,
+   "params": [],
    "school": "Conjuration",
    "type": "Target"
   },
   "Target_BladeFlourish_Defensive": {
    "level": null,
+   "params": [
+    "4"
+   ],
    "school": null,
    "type": "Target"
   },
   "Target_BladeFlourish_Mobile": {
    "level": null,
+   "params": [
+    "Distance(6)"
+   ],
    "school": null,
    "type": "Target"
   },
   "Target_Bless": {
    "level": 1,
+   "params": [
+    "1d4",
+    "3"
+   ],
    "school": "Enchantment",
    "type": "Target"
   },
   "Target_BlessingOfTheTrickster": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Target"
   },
   "Target_Blight": {
    "level": 4,
+   "params": [],
    "school": "Necromancy",
    "type": "Target"
   },
   "Target_Blindness": {
    "level": 2,
+   "params": [],
    "school": "Necromancy",
    "type": "Target"
   },
   "Target_BolsteringMagic_Boost": {
    "level": null,
+   "params": [
+    "1d4"
+   ],
    "school": null,
    "type": "Target"
   },
   "Target_BolsteringMagic_SpellSlot1": {
    "level": null,
+   "params": [
+    "1"
+   ],
    "school": null,
    "type": "Target"
   },
   "Target_BolsteringMagic_SpellSlot2": {
    "level": null,
+   "params": [
+    "2"
+   ],
    "school": null,
    "type": "Target"
   },
   "Target_BolsteringMagic_SpellSlot3": {
    "level": null,
+   "params": [
+    "3"
+   ],
    "school": null,
    "type": "Target"
   },
   "Target_BoomingBlade_ClassSpell": {
    "level": null,
+   "params": [
+    "DealDamage(LevelMapValue(BoomingBlade_Walk),Thunder)",
+    ""
+   ],
    "school": "Evocation",
    "type": "Target"
   },
   "Target_BootOfTheGiants": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Target"
   },
   "Target_BurstingSinew": {
    "level": 0,
+   "params": [],
    "school": "Necromancy",
    "type": "Target"
   },
   "Target_CallLightning": {
    "level": 3,
+   "params": [],
    "school": "Conjuration",
    "type": "Target"
   },
   "Target_CalmEmotions": {
    "level": 2,
+   "params": [],
    "school": "Enchantment",
    "type": "Target"
   },
   "Target_CharmPerson": {
    "level": 1,
+   "params": [],
    "school": "Enchantment",
    "type": "Target"
   },
   "Target_ChillTouch": {
    "level": 0,
+   "params": [],
    "school": "Necromancy",
    "type": "Target"
   },
   "Target_CircleOfDeath": {
    "level": 6,
+   "params": [
+    "DealDamage(8d6, Necrotic)"
+   ],
    "school": "Necromancy",
    "type": "Target"
   },
   "Target_CloudOfDaggers": {
    "level": 2,
+   "params": [],
    "school": "Conjuration",
    "type": "Target"
   },
   "Target_Cloudkill": {
    "level": 5,
+   "params": [
+    "DealDamage(5d8,Poison)"
+   ],
    "school": "Conjuration",
    "type": "Target"
   },
   "Target_Command_Container": {
    "level": 1,
+   "params": [],
    "school": "Enchantment",
    "type": "Target"
   },
   "Target_CompelledDuel": {
    "level": 1,
+   "params": [],
    "school": "Enchantment",
    "type": "Target"
   },
   "Target_Confusion": {
    "level": 4,
+   "params": [],
    "school": "Enchantment",
    "type": "Target"
   },
   "Target_ConjureElemental_Container": {
    "level": 5,
+   "params": [],
    "school": "Conjuration",
    "type": "Target"
   },
   "Target_ConjureElementals_Minor_Container": {
    "level": 4,
+   "params": [],
    "school": "Conjuration",
    "type": "Target"
   },
   "Target_ConjureWoodlandBeings": {
    "level": 4,
+   "params": [],
    "school": "Conjuration",
    "type": "Target"
   },
   "Target_Contagion": {
    "level": 5,
+   "params": [
+    "3"
+   ],
    "school": "Necromancy",
    "type": "Target"
   },
   "Target_ControlUndead": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Target"
   },
   "Target_Countercharm": {
    "level": null,
+   "params": [
+    "Distance(9)"
+   ],
    "school": null,
    "type": "Target"
   },
   "Target_Counterspell": {
    "level": 3,
+   "params": [],
    "school": "Abjuration",
    "type": "Target"
   },
   "Target_CreateDestroyWater": {
    "level": 1,
+   "params": [],
    "school": "Transmutation",
    "type": "Target"
   },
   "Target_CreateUndead": {
    "level": 6,
+   "params": [],
    "school": "Necromancy",
    "type": "Target"
   },
   "Target_CreateWater_MinorConjuration": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Target"
   },
   "Target_CrownOfMadness": {
    "level": 2,
+   "params": [],
    "school": "Enchantment",
    "type": "Target"
   },
   "Target_CureWounds": {
    "level": 1,
+   "params": [],
    "school": "Evocation",
    "type": "Target"
   },
   "Target_CureWounds_Mass": {
    "level": 5,
+   "params": [
+    "RegainHitPoints(3d8+SpellCastingAbilityModifier)"
+   ],
    "school": "Evocation",
    "type": "Target"
   },
   "Target_DancingLights": {
    "level": 0,
+   "params": [
+    "Distance(9)"
+   ],
    "school": "Evocation",
    "type": "Target"
   },
   "Target_Darkness": {
    "level": 2,
+   "params": [],
    "school": "Evocation",
    "type": "Target"
   },
   "Target_Darkness_DrowMagic": {
    "level": 2,
+   "params": [],
    "school": "Evocation",
    "type": "Target"
   },
   "Target_Darkness_Monk": {
    "level": null,
+   "params": [],
    "school": "Evocation",
    "type": "Target"
   },
   "Target_Darkness_Sorcerer": {
    "level": 2,
+   "params": [],
    "school": "Evocation",
    "type": "Target"
   },
   "Target_Darkvision": {
    "level": 2,
+   "params": [
+    "Distance(12)"
+   ],
    "school": "Transmutation",
    "type": "Target"
   },
   "Target_Darkvision_Monk": {
    "level": null,
+   "params": [
+    "Distance(12)"
+   ],
    "school": "Transmutation",
    "type": "Target"
   },
   "Target_Daylight_Container": {
    "level": 3,
+   "params": [],
    "school": "Evocation",
    "type": "Target"
   },
   "Target_DeathWard": {
    "level": 4,
+   "params": [],
    "school": "Abjuration",
    "type": "Target"
   },
   "Target_DirtyTrick_Blind": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Target"
   },
   "Target_DirtyTrick_Disarm": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Target"
   },
   "Target_DirtyTrick_Vicious": {
    "level": 0,
+   "params": [],
    "school": "Enchantment",
    "type": "Target"
   },
   "Target_DissonantWhispers": {
    "level": 1,
+   "params": [],
    "school": "Enchantment",
    "type": "Target"
   },
   "Target_DivineStrike_Death_Container": {
    "level": null,
+   "params": [
+    "DealDamage(1d8, Necrotic)",
+    "DealDamage(MainMeleeWeapon, MainMeleeWeaponDamageType)"
+   ],
    "school": null,
    "type": "Target"
   },
   "Target_DivineStrike_Life_Container": {
    "level": null,
+   "params": [
+    "DealDamage(1d8,Radiant)",
+    "DealDamage(MainMeleeWeapon,MainMeleeWeaponDamageType)"
+   ],
    "school": null,
    "type": "Target"
   },
   "Target_DivineStrike_Nature_Container": {
    "level": null,
+   "params": [
+    "DealDamage(1d8,Cold)",
+    "DealDamage(MainMeleeWeapon, MainMeleeWeaponDamageType)",
+    "DealDamage(1d8,Fire)",
+    "DealDamage(1d8,Lightning)"
+   ],
    "school": null,
    "type": "Target"
   },
   "Target_DivineStrike_Tempest_Container": {
    "level": null,
+   "params": [
+    "DealDamage(1d8,Thunder)",
+    "DealDamage(MainMeleeWeapon, MainMeleeWeaponDamageType)"
+   ],
    "school": null,
    "type": "Target"
   },
   "Target_DivineStrike_Trickery_Container": {
    "level": null,
+   "params": [
+    "DealDamage(1d8,Poison)",
+    "DealDamage(MainMeleeWeapon, MainMeleeWeaponDamageType)"
+   ],
    "school": null,
    "type": "Target"
   },
   "Target_DivineStrike_War_Container": {
    "level": null,
+   "params": [
+    "DealDamage(1d8, MainMeleeWeaponDamageType)"
+   ],
    "school": null,
    "type": "Target"
   },
   "Target_DominateBeast": {
    "level": 4,
+   "params": [],
    "school": "Enchantment",
    "type": "Target"
   },
   "Target_DominatePerson": {
    "level": 5,
+   "params": [],
    "school": "Enchantment",
    "type": "Target"
   },
   "Target_DrunkenTechnique": {
    "level": null,
+   "params": [
+    "Distance(3)"
+   ],
    "school": null,
    "type": "Target"
   },
   "Target_ElementalWeapon": {
    "level": 3,
+   "params": [
+    "1"
+   ],
    "school": "Transmutation",
    "type": "Target"
   },
   "Target_EnhanceAbility": {
    "level": 2,
+   "params": [],
    "school": "Transmutation",
    "type": "Target"
   },
   "Target_EnlargeReduce": {
    "level": 2,
+   "params": [],
    "school": "Transmutation",
    "type": "Target"
   },
   "Target_Entangle": {
    "level": 1,
+   "params": [],
    "school": "Conjuration",
    "type": "Target"
   },
   "Target_Enthrall": {
    "level": 2,
+   "params": [],
    "school": "Enchantment",
    "type": "Target"
   },
   "Target_Eyebite": {
    "level": 6,
+   "params": [],
    "school": "Necromancy",
    "type": "Target"
   },
   "Target_FaerieFire": {
    "level": 1,
+   "params": [],
    "school": "Evocation",
    "type": "Target"
   },
   "Target_FaerieFire_DrowMagic": {
    "level": 1,
+   "params": [],
    "school": "Evocation",
    "type": "Target"
   },
   "Target_FeignDeath": {
    "level": 3,
+   "params": [],
    "school": "Necromancy",
    "type": "Target"
   },
   "Target_FindFamiliar": {
    "level": 1,
+   "params": [],
    "school": "Conjuration",
    "type": "Target"
   },
   "Target_FistOfUnbrokenAir": {
    "level": null,
+   "params": [
+    "Distance(6)"
+   ],
    "school": null,
    "type": "Target"
   },
   "Target_FlameStrike": {
    "level": 5,
+   "params": [],
    "school": "Evocation",
    "type": "Target"
   },
   "Target_FlamingSphere": {
    "level": 2,
+   "params": [],
    "school": "Conjuration",
    "type": "Target"
   },
   "Target_FleshToStone": {
    "level": 6,
+   "params": [],
    "school": "Transmutation",
    "type": "Target"
   },
   "Target_Fly": {
    "level": 3,
+   "params": [],
    "school": "Transmutation",
    "type": "Target"
   },
   "Target_FogCloud": {
    "level": 1,
+   "params": [],
    "school": "Conjuration",
    "type": "Target"
   },
   "Target_FreedomOfMovement": {
    "level": 4,
+   "params": [],
    "school": "Abjuration",
    "type": "Target"
   },
   "Target_FreezingSphere": {
    "level": 6,
+   "params": [
+    "DealDamage(10d6,Cold)"
+   ],
    "school": "Evocation",
    "type": "Target"
   },
   "Target_FrenziedStrike": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Target"
   },
   "Target_Friends": {
    "level": 0,
+   "params": [],
    "school": "Enchantment",
    "type": "Target"
   },
   "Target_FungalInfestation": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Target"
   },
   "Target_GaseousForm": {
    "level": 3,
+   "params": [],
    "school": "Transmutation",
    "type": "Target"
   },
   "Target_GlobeOfInvulnerability": {
    "level": 6,
+   "params": [],
    "school": "Abjuration",
    "type": "Target"
   },
   "Target_GlyphOfWarding": {
    "level": 3,
+   "params": [],
    "school": "Abjuration",
    "type": "Target"
   },
   "Target_Goodberry": {
    "level": 1,
+   "params": [
+    "RegainHitPoints(1d4)"
+   ],
    "school": "Transmutation",
    "type": "Target"
   },
   "Target_GraspingVine": {
    "level": 4,
+   "params": [],
    "school": "Conjuration",
    "type": "Target"
   },
   "Target_Grease": {
    "level": 1,
+   "params": [],
    "school": "Conjuration",
    "type": "Target"
   },
   "Target_GreaterRestoration": {
    "level": 5,
+   "params": [],
    "school": "Abjuration",
    "type": "Target"
   },
   "Target_GuardianOfFaith": {
    "level": 4,
+   "params": [],
    "school": "Conjuration",
    "type": "Target"
   },
   "Target_Guidance": {
    "level": 0,
+   "params": [],
    "school": "Divination",
    "type": "Target"
   },
   "Target_HaloOfSpores": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Target"
   },
   "Target_Harm": {
    "level": 6,
+   "params": [
+    "1"
+   ],
    "school": "Necromancy",
    "type": "Target"
   },
   "Target_Haste": {
    "level": 3,
+   "params": [],
    "school": "Transmutation",
    "type": "Target"
   },
   "Target_Heal": {
    "level": 6,
+   "params": [],
    "school": "Evocation",
    "type": "Target"
   },
   "Target_HealingWord": {
    "level": 1,
+   "params": [],
    "school": "Evocation",
    "type": "Target"
   },
   "Target_HeatMetal": {
    "level": 2,
+   "params": [],
    "school": "Transmutation",
    "type": "Target"
   },
   "Target_Heroism": {
    "level": 1,
+   "params": [
+    "GainTemporaryHitPoints(5)"
+   ],
    "school": "Enchantment",
    "type": "Target"
   },
   "Target_Hex": {
    "level": 1,
+   "params": [
+    "DealDamage(1d6,Necrotic)"
+   ],
    "school": "Enchantment",
    "type": "Target"
   },
   "Target_HexbladesCurse": {
    "level": null,
+   "params": [
+    "ProficiencyBonus"
+   ],
    "school": null,
    "type": "Target"
   },
   "Target_HideousLaughter": {
    "level": 1,
+   "params": [],
    "school": "Enchantment",
    "type": "Target"
   },
   "Target_HoldMonster": {
    "level": 5,
+   "params": [
+    "Distance(3)"
+   ],
    "school": "Enchantment",
    "type": "Target"
   },
   "Target_HoldPerson": {
    "level": 2,
+   "params": [
+    "Distance(3)"
+   ],
    "school": "Enchantment",
    "type": "Target"
   },
   "Target_HoldPerson_Monk": {
    "level": null,
+   "params": [
+    "Distance(3)"
+   ],
    "school": "Enchantment",
    "type": "Target"
   },
   "Target_HolyRebuke": {
    "level": null,
+   "params": [
+    "DealDamage(1d4,Radiant)"
+   ],
    "school": null,
    "type": "Target"
   },
   "Target_HoundOfIllOmen": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Target"
   },
   "Target_HungerOfHadar": {
    "level": 3,
+   "params": [],
    "school": "Conjuration",
    "type": "Target"
   },
   "Target_HuntersMark": {
    "level": 1,
+   "params": [
+    "DealDamage(1d6,MainWeaponDamageType)"
+   ],
    "school": "Divination",
    "type": "Target"
   },
   "Target_HypnoticGaze": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Target"
   },
   "Target_HypnoticPattern": {
    "level": 3,
+   "params": [],
    "school": "Illusion",
    "type": "Target"
   },
   "Target_IceStorm": {
    "level": 4,
+   "params": [],
    "school": "Evocation",
    "type": "Target"
   },
   "Target_InflictWounds": {
    "level": 1,
+   "params": [],
    "school": "Necromancy",
    "type": "Target"
   },
   "Target_InquisitorsMight": {
    "level": null,
+   "params": [
+    "DealDamage(max(1,Cause.CharismaModifier),Radiant)"
+   ],
    "school": null,
    "type": "Target"
   },
   "Target_InsectPlague": {
    "level": 5,
+   "params": [],
    "school": "Conjuration",
    "type": "Target"
   },
   "Target_IntimidatingPresence": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Target"
   },
   "Target_IntoxicatingStrike": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Target"
   },
   "Target_IntoxicatingStrike_BonusAction": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Target"
   },
   "Target_Invisibility": {
    "level": 2,
+   "params": [],
    "school": "Illusion",
    "type": "Target"
   },
   "Target_Invisibility_Greater": {
    "level": 4,
+   "params": [],
    "school": "Illusion",
    "type": "Target"
   },
   "Target_InvokeDuplicity": {
    "level": null,
+   "params": [
+    "Distance(3)"
+   ],
    "school": null,
    "type": "Target"
   },
   "Target_IrresistibleDance": {
    "level": 6,
+   "params": [],
    "school": "Enchantment",
    "type": "Target"
   },
   "Target_Jump": {
    "level": 1,
+   "params": [],
    "school": "Transmutation",
    "type": "Target"
   },
   "Target_Jump_Githyanki": {
    "level": 1,
+   "params": [],
    "school": "Transmutation",
    "type": "Target"
   },
   "Target_KiResonation_Blast": {
    "level": null,
+   "params": [
+    "Distance(5)"
+   ],
    "school": null,
    "type": "Target"
   },
   "Target_KiResonation_Punch": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Target"
   },
   "Target_KiResonation_Punch_BonusAction": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Target"
   },
   "Target_Knock": {
    "level": 2,
+   "params": [],
    "school": "Transmutation",
    "type": "Target"
   },
   "Target_LayOnHands": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Target"
   },
   "Target_LesserRestoration": {
    "level": 2,
+   "params": [],
    "school": "Abjuration",
    "type": "Target"
   },
   "Target_Light": {
    "level": 0,
+   "params": [],
    "school": "Evocation",
    "type": "Target"
   },
   "Target_Longstrider": {
    "level": 1,
+   "params": [
+    "Distance(3)"
+   ],
    "school": "Transmutation",
    "type": "Target"
   },
   "Target_MageArmor": {
    "level": 1,
+   "params": [],
    "school": "Abjuration",
    "type": "Target"
   },
   "Target_MageHand": {
    "level": 0,
+   "params": [],
    "school": "Conjuration",
    "type": "Target"
   },
   "Target_MageHand_GithyankiPsionics": {
    "level": 0,
+   "params": [],
    "school": "Conjuration",
    "type": "Target"
   },
   "Target_MagicWeapon": {
    "level": 2,
+   "params": [
+    "1"
+   ],
    "school": "Transmutation",
    "type": "Target"
   },
   "Target_MantleOfMajesty": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Target"
   },
   "Target_MinorIllusion": {
    "level": 0,
+   "params": [],
    "school": "Illusion",
    "type": "Target"
   },
   "Target_MistyStep": {
    "level": 2,
+   "params": [],
    "school": "Conjuration",
    "type": "Target"
   },
   "Target_MistyStep_Githyanki": {
    "level": 0,
+   "params": [],
    "school": "Conjuration",
    "type": "Target"
   },
   "Target_Moonbeam": {
    "level": 2,
+   "params": [
+    "Distance(18)"
+   ],
    "school": "Evocation",
    "type": "Target"
   },
   "Target_NaturesWrath": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Target"
   },
   "Target_OpenHandTechnique_Knock": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Target"
   },
   "Target_OpenHandTechnique_NoReactions": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Target"
   },
   "Target_OpenHandTechnique_Push": {
    "level": null,
+   "params": [
+    "Distance(5)"
+   ],
    "school": null,
    "type": "Target"
   },
   "Target_Panache": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Target"
   },
   "Target_PhantasmalForce": {
    "level": 2,
+   "params": [],
    "school": "Illusion",
    "type": "Target"
   },
   "Target_PhantasmalKiller": {
    "level": 4,
+   "params": [
+    "DealDamage(4d10,Psychic)"
+   ],
    "school": "Illusion",
    "type": "Target"
   },
   "Target_PlanarAlly_Container": {
    "level": 6,
+   "params": [],
    "school": "Conjuration",
    "type": "Target"
   },
   "Target_PlanarBinding": {
    "level": 5,
+   "params": [],
    "school": "Abjuration",
    "type": "Target"
   },
   "Target_PlantGrowth": {
    "level": 3,
+   "params": [],
    "school": "Transmutation",
    "type": "Target"
   },
   "Target_Polymorph": {
    "level": 4,
+   "params": [],
    "school": "Transmutation",
    "type": "Target"
   },
   "Target_ProtectionFromEnergy": {
    "level": 3,
+   "params": [],
    "school": "Abjuration",
    "type": "Target"
   },
   "Target_ProtectionFromEvilAndGood": {
    "level": 1,
+   "params": [],
    "school": "Abjuration",
    "type": "Target"
   },
   "Target_ProtectionFromPoison": {
    "level": 2,
+   "params": [],
    "school": "Abjuration",
    "type": "Target"
   },
   "Target_RangersCompanion": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Target"
   },
   "Target_RemoveCurse": {
    "level": 3,
+   "params": [],
    "school": "Abjuration",
    "type": "Target"
   },
   "Target_ResilientSphere": {
    "level": 4,
+   "params": [],
    "school": "Evocation",
    "type": "Target"
   },
   "Target_Resistance": {
    "level": 0,
+   "params": [
+    "1d4"
+   ],
    "school": "Abjuration",
    "type": "Target"
   },
   "Target_RighteousClarity": {
    "level": null,
+   "params": [
+    "ProficiencyBonus"
+   ],
    "school": null,
    "type": "Target"
   },
   "Target_SacredFlame": {
    "level": 0,
+   "params": [],
    "school": "Evocation",
    "type": "Target"
   },
   "Target_Sanctuary": {
    "level": 1,
+   "params": [],
    "school": "Abjuration",
    "type": "Target"
   },
   "Target_Seeming": {
    "level": 5,
+   "params": [
+    "4"
+   ],
    "school": "Illusion",
    "type": "Target"
   },
   "Target_ShadowStep": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Target"
   },
   "Target_ShadowStrike_Instant": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Target"
   },
   "Target_ShadowStrike_Instant_Unarmed": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Target"
   },
   "Target_ShadowWalk": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Target"
   },
   "Target_ShapeTheFlowingRiver_IceBlock": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Target"
   },
   "Target_Shatter": {
    "level": 2,
+   "params": [],
    "school": "Evocation",
    "type": "Target"
   },
   "Target_Shatter_Monk": {
    "level": null,
+   "params": [],
    "school": "Evocation",
    "type": "Target"
   },
   "Target_ShieldOfFaith": {
    "level": 1,
+   "params": [],
    "school": "Abjuration",
    "type": "Target"
   },
   "Target_ShockingGrasp": {
    "level": 0,
+   "params": [
+    "DealDamage(LevelMapValue(D8Cantrip),Lightning)"
+   ],
    "school": "Evocation",
    "type": "Target"
   },
   "Target_ShockingGrasp_Monk": {
    "level": null,
+   "params": [
+    "DealDamage(LevelMapValue(D8Cantrip),Lightning)"
+   ],
    "school": "Evocation",
    "type": "Target"
   },
   "Target_Silence": {
    "level": 2,
+   "params": [],
    "school": "Illusion",
    "type": "Target"
   },
   "Target_Silence_Monk": {
    "level": null,
+   "params": [],
    "school": "Illusion",
    "type": "Target"
   },
   "Target_Sleep": {
    "level": 1,
+   "params": [
+    "RegainHitPoints(24)"
+   ],
    "school": "Enchantment",
    "type": "Target"
   },
   "Target_SleetStorm": {
    "level": 3,
+   "params": [],
    "school": "Conjuration",
    "type": "Target"
   },
   "Target_Slow": {
    "level": 3,
+   "params": [],
    "school": "Transmutation",
    "type": "Target"
   },
   "Target_Smite_Blinding": {
    "level": 3,
+   "params": [],
    "school": "Evocation",
    "type": "Target"
   },
   "Target_Smite_Branding_Container": {
    "level": 2,
+   "params": [],
    "school": "Evocation",
    "type": "Target"
   },
   "Target_Smite_Branding_ZarielTiefling_Container": {
    "level": 2,
+   "params": [],
    "school": "Evocation",
    "type": "Target"
   },
   "Target_Smite_Divine": {
    "level": 1,
+   "params": [
+    "DealDamage(1d8,Radiant)"
+   ],
    "school": null,
    "type": "Target"
   },
   "Target_Smite_Divine_Critical_Unlock": {
    "level": 1,
+   "params": [
+    "DealDamage(1d8,Radiant)"
+   ],
    "school": null,
    "type": "Target"
   },
   "Target_Smite_Divine_Unlock": {
    "level": 1,
+   "params": [
+    "DealDamage(1d8,Radiant)"
+   ],
    "school": null,
    "type": "Target"
   },
   "Target_Smite_Searing": {
    "level": 1,
+   "params": [
+    "DealDamage(1d6,Fire)",
+    "DealDamage(1d6,Fire)"
+   ],
    "school": "Evocation",
    "type": "Target"
   },
   "Target_Smite_Searing_ZarielTiefling": {
    "level": 1,
+   "params": [
+    "DealDamage(2d6,Fire)",
+    "DealDamage(1d6,Fire)"
+   ],
    "school": "Evocation",
    "type": "Target"
   },
   "Target_Smite_Thunderous": {
    "level": 1,
+   "params": [
+    "Distance(3)"
+   ],
    "school": "Evocation",
    "type": "Target"
   },
   "Target_Smite_Wrathful": {
    "level": 1,
+   "params": [],
    "school": "Evocation",
    "type": "Target"
   },
   "Target_SoberingRealisation": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Target"
   },
   "Target_SpeakWithDead": {
    "level": 3,
+   "params": [],
    "school": "Necromancy",
    "type": "Target"
   },
   "Target_SpikeGrowth": {
    "level": 2,
+   "params": [
+    "DealDamage(2d4,Piercing)",
+    "Distance(1.5)"
+   ],
    "school": "Transmutation",
    "type": "Target"
   },
   "Target_SpiritualWeapon": {
    "level": 2,
+   "params": [
+    "DealDamage(1d8+SpellCastingAbilityModifier, Force)"
+   ],
    "school": "Evocation",
    "type": "Target"
   },
   "Target_SpitefulSuffering": {
    "level": null,
+   "params": [
+    "DealDamage(1d4+max(1, CharismaModifier),Necrotic)"
+   ],
    "school": null,
    "type": "Target"
   },
   "Target_StaggeringSmite": {
    "level": 4,
+   "params": [],
    "school": "Evocation",
    "type": "Target"
   },
   "Target_StinkingCloud": {
    "level": 3,
+   "params": [],
    "school": "Conjuration",
    "type": "Target"
   },
   "Target_Stoneskin": {
    "level": 4,
+   "params": [],
    "school": "Abjuration",
    "type": "Target"
   },
   "Target_StunningStrike": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Target"
   },
   "Target_StunningStrike_Unarmed": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Target"
   },
   "Target_Summon_Quasit": {
    "level": 1,
+   "params": [],
    "school": "Conjuration",
    "type": "Target"
   },
   "Target_ThornWhip": {
    "level": 0,
+   "params": [
+    "Distance(3)"
+   ],
    "school": "Transmutation",
    "type": "Target"
   },
   "Target_TollTheDead": {
    "level": 0,
+   "params": [
+    "DealDamage(LevelMapValue(D8Cantrip),Necrotic)"
+   ],
    "school": "Necromancy",
    "type": "Target"
   },
   "Target_TrueStrike": {
    "level": 0,
+   "params": [],
    "school": "Divination",
    "type": "Target"
   },
   "Target_VampiricTouch": {
    "level": 3,
+   "params": [
+    "DealDamage(3d6,Necrotic)"
+   ],
    "school": "Necromancy",
    "type": "Target"
   },
   "Target_ViciousMockery": {
    "level": 0,
+   "params": [],
    "school": "Enchantment",
    "type": "Target"
   },
   "Target_Volley": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Target"
   },
   "Target_VowOfEnmity": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Target"
   },
   "Target_WardingBond": {
    "level": 2,
+   "params": [
+    "1"
+   ],
    "school": "Abjuration",
    "type": "Target"
   },
   "Target_WaterWhip": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Target"
   },
   "Target_Web": {
    "level": 2,
+   "params": [],
    "school": "Conjuration",
    "type": "Target"
   },
   "Teleportation_ArcaneGate": {
    "level": 6,
+   "params": [],
    "school": "Conjuration",
    "type": "Teleportation"
   },
   "Teleportation_DimensionDoor": {
    "level": 4,
+   "params": [],
    "school": "Conjuration",
    "type": "Teleportation"
   },
   "Teleportation_Revivify": {
    "level": 3,
+   "params": [],
    "school": "Necromancy",
    "type": "Teleportation"
   },
   "Throw_FrenziedThrow": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Throw"
   },
   "Throw_MightyImpel": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Throw"
   },
   "Throw_Telekinesis": {
    "level": 5,
+   "params": [
+    "Distance(18)"
+   ],
    "school": "Transmutation",
    "type": "Throw"
   },
   "Wall_BladeBarrier": {
    "level": 6,
+   "params": [],
    "school": "Evocation",
    "type": "Wall"
   },
   "Wall_WallOfFire": {
    "level": 4,
+   "params": [],
    "school": "Evocation",
    "type": "Wall"
   },
   "Wall_WallOfIce": {
    "level": 6,
+   "params": [
+    "DealDamage(10d6,Cold)"
+   ],
    "school": "Evocation",
    "type": "Wall"
   },
   "Wall_WallOfStone": {
    "level": 5,
+   "params": [],
    "school": "Evocation",
    "type": "Wall"
   },
   "Wall_WallOfThorns": {
    "level": 6,
+   "params": [],
    "school": "Conjuration",
    "type": "Wall"
   },
   "Zone_ArcaneShot_PiercingArrow": {
    "level": null,
+   "params": [
+    "DealDamage(1d6,Piercing)"
+   ],
    "school": null,
    "type": "Zone"
   },
   "Zone_BladeFlourish_Slashing": {
    "level": null,
+   "params": [
+    "2"
+   ],
    "school": null,
    "type": "Zone"
   },
   "Zone_BreathWeapon_Acid": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Zone"
   },
   "Zone_BreathWeapon_Cold": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Zone"
   },
   "Zone_BreathWeapon_Fire_Cone": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Zone"
   },
   "Zone_BreathWeapon_Fire_Line": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Zone"
   },
   "Zone_BreathWeapon_Lightning": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Zone"
   },
   "Zone_BreathWeapon_Poison": {
    "level": null,
+   "params": [],
    "school": null,
    "type": "Zone"
   },
   "Zone_BurningHands": {
    "level": 1,
+   "params": [
+    "DealDamage(3d6,Fire)"
+   ],
    "school": "Evocation",
    "type": "Zone"
   },
   "Zone_BurningHands_MephistophelesTiefling": {
    "level": 2,
+   "params": [
+    "DealDamage(3d6,Fire)"
+   ],
    "school": "Evocation",
    "type": "Zone"
   },
   "Zone_BurningHands_Monk": {
    "level": null,
+   "params": [
+    "DealDamage(3d6,Fire)"
+   ],
    "school": "Evocation",
    "type": "Zone"
   },
   "Zone_ColorSpray": {
    "level": 1,
+   "params": [
+    "RegainHitPoints(33)"
+   ],
    "school": "Illusion",
    "type": "Zone"
   },
   "Zone_ConeOfCold": {
    "level": 5,
+   "params": [
+    "Distance(9)",
+    "DealDamage(8d8,Cold)"
+   ],
    "school": "Evocation",
    "type": "Zone"
   },
   "Zone_ConjureBarrage": {
    "level": 3,
+   "params": [],
    "school": "Conjuration",
    "type": "Zone"
   },
   "Zone_Fear": {
    "level": 3,
+   "params": [],
    "school": "Illusion",
    "type": "Zone"
   },
   "Zone_GustOfWind": {
    "level": 2,
+   "params": [
+    "Distance(5)"
+   ],
    "school": "Evocation",
    "type": "Zone"
   },
   "Zone_GustOfWind_Monk": {
    "level": null,
+   "params": [
+    "Distance(5)"
+   ],
    "school": null,
    "type": "Zone"
   },
   "Zone_LightningBolt": {
    "level": 3,
+   "params": [],
    "school": "Evocation",
    "type": "Zone"
   },
   "Zone_Sunbeam": {
    "level": 6,
+   "params": [],
    "school": "Evocation",
    "type": "Zone"
   },
   "Zone_Thunderwave": {
    "level": 1,
+   "params": [],
    "school": "Evocation",
    "type": "Zone"
   },
   "Zone_Thunderwave_Monk": {
    "level": null,
+   "params": [],
    "school": "Evocation",
    "type": "Zone"
   }

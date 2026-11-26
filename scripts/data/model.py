@@ -51,6 +51,12 @@ def _split(value: str | None, separator: str = ";") -> list[str]:
     return [v.strip() for v in (value or "").split(separator) if v.strip()]
 
 
+def _params(attributes: dict) -> list[str]:
+    """`DescriptionParams` split on `;` and stripped; empty parts are kept so positions stay aligned with `[n]`."""
+    value = attributes.get("DescriptionParams")
+    return [part.strip() for part in value.split(";")] if value else []
+
+
 def _listed_lines(path: Path) -> list[tuple[int, str, str]]:
     """(line number, content, reason) of each non-comment line; a line without a reason is refused."""
     res = []
@@ -461,8 +467,9 @@ class _Builder:
                 "level": self.read_int(s, "Level", f"spell {name}"),
                 "school": s.get("SpellSchool") or None,
                 "text": _text(s),
+                "params": _params(s),
             }
-        passives = {name: {"boosts": _split(s.get("Boosts")), "text": _text(s)}
+        passives = {name: {"boosts": _split(s.get("Boosts")), "text": _text(s), "params": _params(s)}
                     for name, s in self.stats_entries(list(passive_refs), "passive", passive_refs).items()}
         for name in sorted(self.technical):
             if name in passives:

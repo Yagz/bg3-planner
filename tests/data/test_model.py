@@ -188,6 +188,23 @@ class TestModel(unittest.TestCase):
         self.assertEqual(rules["lists"]["l-class"], {"name": "Class", "type": "spells", "items": ["Target_Prepared"]})
         self.assertIn("Target_Prepared", rules["spells"])
 
+    def test_description_params_split_and_kept_aligned(self):
+        data = dataset()
+        data[0]["ClassDescriptions"]["c-ek"]["attributes"]["SpellList"] = "l-class"
+        data[0]["SpellLists"]["l-class"] = node("SpellList", UUID="l-class", Name="Class", Spells="Target_A;Target_B;Target_C")
+        data[2]["Target_A"] = {"type": "SpellData", "SpellType": "Target", "Level": "1",
+                               "DescriptionParams": "DealDamage(1d8,Fire);Distance(9)"}
+        data[2]["Target_B"] = {"type": "SpellData", "SpellType": "Target", "Level": "1"}
+        data[2]["Target_C"] = {"type": "SpellData", "SpellType": "Target", "Level": "1", "DescriptionParams": "1;;3"}
+        spells = build(data)["spells"]
+        self.assertEqual(spells["Target_A"]["params"], ["DealDamage(1d8,Fire)", "Distance(9)"])
+        self.assertEqual(spells["Target_B"]["params"], [])
+        self.assertEqual(spells["Target_C"]["params"], ["1", "", "3"])
+
+    def test_passive_description_params(self):
+        data = dataset()
+        self.assertEqual(build(data)["passives"]["Alert_Passive"]["params"], [])
+
     def test_class_spell_list_unknown_is_orphan(self):
         data = dataset()
         data[0]["ClassDescriptions"]["c-ek"]["attributes"]["SpellList"] = "l-skills"
@@ -257,10 +274,10 @@ class TestModel(unittest.TestCase):
                                                       "items": ["Target_FireBolt", "Shout_Shield"]})
         self.assertNotIn("l-unused", rules["lists"])
         self.assertEqual(rules["spells"]["Target_FireBolt"], {
-            "type": "Target", "level": 0, "school": "Evocation",
+            "type": "Target", "level": 0, "school": "Evocation", "params": [],
             "text": {"name": "hFireBolt", "description": "hFireBoltDesc"}})
         self.assertEqual(rules["spells"]["Shout_Shield"], {
-            "type": "SpellData", "level": None, "school": None, "text": {"name": "hShield", "description": None}})
+            "type": "SpellData", "level": None, "school": None, "params": [], "text": {"name": "hShield", "description": None}})
         self.assertNotIn("Target_NotInStats", rules["spells"])
 
     def test_passive_list_split_on_comma(self):
@@ -276,7 +293,7 @@ class TestModel(unittest.TestCase):
         self.assertEqual(sorted(build()["passives"]), sorted([
             "Acolyte_Passive", "Alert_Passive", "Fighter_Passive", "Old_Passive", "Darkvision", "Style_A",
             "Style_B"]))
-        self.assertEqual(build()["passives"]["Darkvision"], {"boosts": [], "text": {
+        self.assertEqual(build()["passives"]["Darkvision"], {"boosts": [], "params": [], "text": {
             "name": "hDarkvision", "description": "hDarkvisionDesc"}})
 
     def test_passive_boosts(self):

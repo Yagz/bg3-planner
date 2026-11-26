@@ -1,4 +1,5 @@
 {
+  "description.variable": "(selon le niveau)",
   "app.title": "Planificateur BG3",
   "app.loading": "Chargement des données du jeu…",
   "app.loadError": "Les données du jeu n’ont pas pu être chargées ({message}). Recharge la page.",
