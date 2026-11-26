@@ -115,7 +115,7 @@ describe("spellSources", () => {
   });
 
   it("skips a race whose spells have no ability and takes one with an ability", () => {
-    expect(spellSources(character(["Fighter"], [{}], "Dwarf", "Duergar"), data, 5)).toEqual([]);
+    expect(spellSources(character(["Fighter", "Fighter", "Fighter", "Fighter", "Fighter"], [], "Dwarf", "Duergar"), data, 5)).toEqual([]);
     expect(spellSources(character(["Fighter"], [{}], "Drow", "Drow_Seldarine"), data, 1)).toEqual([{ kind: "race", id: "Drow", ability: "Charisma" }]);
   });
 });

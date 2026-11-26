@@ -155,7 +155,9 @@ describe("characterSkillValues", () => {
 
   it("cuts the character to the level asked", () => {
     const c = character("r", ["Ranger", "Ranger", "Ranger", "Ranger", "Ranger", "Ranger"], [{ SelectSkills: ["Stealth", "Perception", "Survival"], SelectAbilityBonus: ["Dexterity", "Wisdom"] }]);
-    expect(characterSkillValues(c, data, 5, 0).find((v) => v.skill === "Stealth")?.value).toBe(3 + 3);
+    // Stealth: Dexterity modifier 3 plus the proficiency bonus of the reached level (2 up to level 4, 3 from 5).
+    expect(characterSkillValues(c, data, 4, 0).find((v) => v.skill === "Stealth")?.value).toBe(3 + 2);
+    expect(characterSkillValues(c, data, 6, 0).find((v) => v.skill === "Stealth")?.value).toBe(3 + 3);
     expect(characterSkillValues(c, data, 12, 0).find((v) => v.skill === "Stealth")?.value).toBe(3 + 3);
   });
 });
