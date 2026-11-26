@@ -166,7 +166,9 @@ function slotsCommand(run: Run, data: GameData, lang: "en" | "fr", characterId: 
     }
     // Prepared spells of a preparing class: the effective list, where it comes from, the expected count and the pool.
     const state = offClass ? null : preparedState(character, data, level.level);
-    if (state !== null) {
+    // Like decided level slots, a complete list is not an open choice: no block (the engine's thresholds).
+    const open = state !== null && (state.list === null ? state.pool.length > 0 : state.list.length > state.count || state.list.length < Math.min(state.count, state.pool.length));
+    if (state !== null && open) {
       const list = state.list === null ? "none" : state.list.length === 0 ? "empty" : state.list.map((id) => label(id, data, lang)).join(", ");
       const from = state.from === null ? "" : state.from === level.level ? " (own list)" : ` (from level ${state.from})`;
       out.push(`  prepared: ${state.cls} class level ${state.classLevel}, count ${state.count}, current ${list}${from}`);

@@ -3,6 +3,7 @@ import { chmodSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { loadGameData } from "../../src/data/load.ts";
 import { encode } from "../../src/plan/codec.ts";
 import { emptyRun } from "../../src/plan/model.ts";
 import type { Run } from "../../src/plan/model.ts";
@@ -232,7 +233,7 @@ describe("run command line", () => {
 
   it("slots says No open slots for a character with nothing left to decide", async () => {
     const run = rangerRun(0);
-    run.characters[0]!.background = cli("slots", await encode({ ...rangerRun(0), characters: [{ ...rangerRun(0).characters[0]!, background: "" }] }), "c1").out.match(/^    ([0-9a-f-]{36}) /m)![1]!;
+    run.characters[0]!.background = Object.keys((await loadGameData(join(import.meta.dirname, "../../data/larian"))).rules.backgrounds)[0]!;
     const result = cli("slots", await encode(run), "c1");
     expect(result.code).toBe(0);
     expect(result.out).toMatch(/^No open slots$/m);
@@ -254,6 +255,10 @@ describe("run command line", () => {
     const prepared = cli("slots", await encode(clericRun(["Target_CureWounds"])), "c1");
     expect(prepared.out).toMatch(/^  prepared: Cleric class level 1, count \d+, current Target_CureWounds \(Cure Wounds\) \(own list\)$/m);
     expect(cli("slots", runFile, "c1").out).not.toContain("  prepared:");
+    const complete = cli("slots", await encode(clericRun(["Target_CureWounds", "Projectile_GuidingBolt", "Target_HealingWord"])), "c1");
+    expect(complete.out).not.toContain("  prepared:");
+    const over = cli("slots", await encode(clericRun(["Target_CureWounds", "Projectile_GuidingBolt", "Target_HealingWord", "Target_InflictWounds"])), "c1");
+    expect(over.out).toContain("  prepared:");
   });
 
   it("validate exits 1 with preparedMissing and 2 with preparedTooMany", async () => {
