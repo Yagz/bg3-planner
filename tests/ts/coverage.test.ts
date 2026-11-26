@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { loadGameData } from "../../src/data/load.ts";
 import type { GameData, Selector } from "../../src/data/types.ts";
 import { abilityTotals } from "../../src/engine/abilities.ts";
-import { coverage, skillProficiencies } from "../../src/engine/coverage.ts";
+import { characterSkillValues, coverage, skillProficiencies } from "../../src/engine/coverage.ts";
 import { resolve } from "../../src/engine/progression.ts";
 import { emptyRun } from "../../src/plan/model.ts";
 import type { Character, Choice, Run } from "../../src/plan/model.ts";
@@ -133,5 +133,29 @@ describe("coverage", () => {
       expect(medicine.best).toEqual({ character: "f", value: 3, proficient: false, expertise: false });
       expect(coverage(runOf([fighter]), data, 1).find((s) => s.skill === "Medicine")!.proficient).toEqual([]);
     });
+  });
+});
+
+describe("characterSkillValues", () => {
+  const ranger = () => character("r", ["Ranger"], [{ SelectSkills: ["Stealth", "Perception", "Survival"], SelectAbilityBonus: ["Dexterity", "Wisdom"] }]);
+
+  it("gives every skill of the game in its order, with the proficiency bonus on proficient ones", () => {
+    const values = characterSkillValues(ranger(), data, 1, 0);
+    expect(values.map((v) => v.skill)).toEqual(Object.keys(data.skills));
+    expect(values).toHaveLength(18);
+    expect(values.find((v) => v.skill === "Stealth")).toEqual({ skill: "Stealth", ability: "Dexterity", value: 5, proficient: true, expertise: false });
+    expect(values.find((v) => v.skill === "Arcana")).toMatchObject({ value: -1, proficient: false });
+  });
+
+  it("adds the ruleset's bonus to the proficiency bonus of proficient skills only", () => {
+    const values = characterSkillValues(ranger(), data, 1, 1);
+    expect(values.find((v) => v.skill === "Stealth")?.value).toBe(6);
+    expect(values.find((v) => v.skill === "Arcana")?.value).toBe(-1);
+  });
+
+  it("cuts the character to the level asked", () => {
+    const c = character("r", ["Ranger", "Ranger", "Ranger", "Ranger", "Ranger", "Ranger"], [{ SelectSkills: ["Stealth", "Perception", "Survival"], SelectAbilityBonus: ["Dexterity", "Wisdom"] }]);
+    expect(characterSkillValues(c, data, 5, 0).find((v) => v.skill === "Stealth")?.value).toBe(3 + 3);
+    expect(characterSkillValues(c, data, 12, 0).find((v) => v.skill === "Stealth")?.value).toBe(3 + 3);
   });
 });

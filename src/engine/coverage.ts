@@ -74,6 +74,28 @@ export function truncate(character: Character, level: number): Character {
 /** One active member's value in one skill. */
 export type MemberSkillValue = { character: string; value: number; proficient: boolean; expertise: boolean };
 
+/** One skill's value for one character. */
+export type SkillValue = { skill: string; ability: Ability; value: number; proficient: boolean; expertise: boolean };
+
+/**
+ * One character's value in every skill of the game, in the game's skill order, the character cut to
+ * `min(level, its levels)`: ability modifier, plus the proficiency bonus of the reached level plus `addedBonus` (the
+ * ruleset's `PROFICIENCY_BONUS`), doubled with expertise, when proficient.
+ */
+export function characterSkillValues(character: Character, data: GameData, level: number, addedBonus: number): SkillValue[] {
+  const cut = truncate(character, level);
+  const reached = cut.levels.length;
+  const totals = abilityTotals(cut, data, reached);
+  const bonus = proficiencyBonus(reached) + addedBonus;
+  const { proficient: skills, expertise: experts } = skillProficiencies(cut, data);
+  return Object.entries(data.skills).map(([skill, ability]) => {
+    const proficient = skills.has(skill);
+    const expertise = experts.has(skill);
+    const value = Math.floor((totals[ability] - 10) / 2) + (proficient ? bonus * (expertise ? 2 : 1) : 0);
+    return { skill, ability, value, proficient, expertise };
+  });
+}
+
 /**
  * Every active member's value in every skill, in the game's skill order then party order, each character cut to
  * `min(level, its levels)`: ability modifier, plus the proficiency bonus (doubled with expertise) when proficient; the
@@ -81,19 +103,13 @@ export type MemberSkillValue = { character: string; value: number; proficient: b
  */
 export function partySkillValues(run: Run, data: GameData, level: number): { skill: string; ability: Ability; members: MemberSkillValue[] }[] {
   const added = rulesetEffects(run.difficulty, data).proficiencyBonus;
-  const members = activeParty(run).map((character) => {
-    const cut = truncate(character, level);
-    const reached = cut.levels.length;
-    return { id: character.id, totals: abilityTotals(cut, data, reached), bonus: proficiencyBonus(reached) + added, ...skillProficiencies(cut, data) };
-  });
-  return Object.entries(data.skills).map(([skill, ability]) => ({
+  const members = activeParty(run).map((character) => ({ id: character.id, values: characterSkillValues(character, data, level, added) }));
+  return Object.entries(data.skills).map(([skill, ability], i) => ({
     skill,
     ability,
-    members: members.map((member) => {
-      const proficient = member.proficient.has(skill);
-      const expertise = member.expertise.has(skill);
-      const value = Math.floor((member.totals[ability] - 10) / 2) + (proficient ? member.bonus * (expertise ? 2 : 1) : 0);
-      return { character: member.id, value, proficient, expertise };
+    members: members.map(({ id, values }) => {
+      const { value, proficient, expertise } = values[i] as SkillValue;
+      return { character: id, value, proficient, expertise };
     }),
   }));
 }

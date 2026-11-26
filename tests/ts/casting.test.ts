@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { loadGameData } from "../../src/data/load.ts";
 import type { GameData } from "../../src/data/types.ts";
-import { castingAbilities, castingAbility } from "../../src/engine/casting.ts";
+import { castingAbilities, castingAbility, spellSources } from "../../src/engine/casting.ts";
 import { resolve } from "../../src/engine/progression.ts";
 import { levelSlots } from "../../src/engine/validate.ts";
 import type { Ability, Character, Choice } from "../../src/plan/model.ts";
@@ -80,5 +80,42 @@ describe("castingAbility", () => {
     expect(found[0]?.["db13a1fb-7d64-4309-a1c8-e2a5c752ded5/0"]).toBe("Intelligence");
     expect(Object.values(found[0] ?? {})).toContain("Charisma");
     expect(Object.values(found[1] ?? {}).every((a) => a === "Charisma")).toBe(true);
+  });
+});
+
+describe("spellSources", () => {
+  it("lists the classes then the race of a High Elf Cleric 1 / Bard", () => {
+    const c = character(["Cleric", "Bard"], [{}, {}], "Elf", "Elf_HighElf");
+    expect(spellSources(c, data, 2)).toEqual([
+      { kind: "class", id: "Cleric", ability: "Wisdom" },
+      { kind: "class", id: "Bard", ability: "Charisma" },
+      { kind: "race", id: "Elf_HighElf", ability: "Intelligence" },
+    ]);
+    expect(spellSources(c, data, 1)).toEqual([
+      { kind: "class", id: "Cleric", ability: "Wisdom" },
+      { kind: "race", id: "Elf_HighElf", ability: "Intelligence" },
+    ]);
+  });
+
+  it("gives a Fighter without subclass no class entry", () => {
+    expect(spellSources(character(["Fighter", "Fighter", "Fighter"], [{}, {}, {}]), data, 3)).toEqual([]);
+  });
+
+  it("gives a Ranger an entry once it holds a spell selector", () => {
+    const c = character(["Ranger", "Ranger"], [{}, {}]);
+    expect(spellSources(c, data, 1)).toEqual([]);
+    expect(spellSources(c, data, 2)).toEqual([{ kind: "class", id: "Ranger", ability: "Wisdom" }]);
+  });
+
+  it("takes the ability of a spellcasting subclass", () => {
+    const c = character(["Fighter", "Fighter", "Fighter"], [{}, {}, { "subclass:Fighter": ["EldritchKnight"] }]);
+    const expected = data.rules.classes.EldritchKnight?.spellcasting_ability;
+    expect(expected).toBeTruthy();
+    expect(spellSources(c, data, 3)).toEqual([{ kind: "class", id: "Fighter", ability: expected }]);
+  });
+
+  it("skips a race whose spells have no ability and takes one with an ability", () => {
+    expect(spellSources(character(["Fighter"], [{}], "Dwarf", "Duergar"), data, 5)).toEqual([]);
+    expect(spellSources(character(["Fighter"], [{}], "Drow", "Drow_Seldarine"), data, 1)).toEqual([{ kind: "race", id: "Drow", ability: "Charisma" }]);
   });
 });
