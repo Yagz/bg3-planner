@@ -413,7 +413,12 @@ describe("validate, duplicate progression rows of the game", () => {
   });
 
   const cantrips = ["Target_Guidance", "Target_Light", "Target_SacredFlame"];
-  const clericAt2 = (cleric: Record<string, Choice>) => character(["Fighter", "Cleric"], [fighter1(), cleric], FIGHTER_SCORES);
+  /** A Fighter 1 / Cleric 1 with Wisdom 8: one prepared spell, so that only the slots are judged. */
+  const clericAt2 = (cleric: Record<string, Choice>) => {
+    const c = character(["Fighter", "Cleric"], [fighter1(), cleric], FIGHTER_SCORES);
+    c.levels[1]!.prepared = ["Projectile_GuidingBolt"];
+    return c;
+  };
 
   it("requires the 2 skills and the 3 cantrips of a Cleric taken at level 2, in the first row's slots", () => {
     expect(summary(clericAt2({ "subclass:Cleric": ["WarDomain"] }))).toEqual({
@@ -573,6 +578,8 @@ describe("validate, skills already granted and expertise", () => {
         [of("SelectAbilityBonus")]: ["Wisdom", "Constitution"],
       },
     ]);
+    // Wisdom 17: four prepared spells.
+    cleric.levels[0]!.prepared = ["Projectile_GuidingBolt", "Target_HealingWord", "Target_ShieldOfFaith", "Target_Bane"];
     expect(validate(runOf(cleric), data)).toEqual({
       status: "valid",
       issues: [{ severity: "notice", code: "skillAlreadyGranted", character: "c1", level: 1, slot: skills, params: { item: "Persuasion", source: "background" } }],

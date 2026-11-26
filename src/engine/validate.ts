@@ -3,6 +3,7 @@ import type { Ability, Character, Choice, Run } from "../plan/model.ts";
 import { abilityTotals, checkPointBuy } from "./abilities.ts";
 import { checkChoice, emptyKnown, heldPassives } from "./choices.ts";
 import { equipmentIssues } from "./equipment.ts";
+import { preparedIssues } from "./prepared.ts";
 import type { Known } from "./choices.ts";
 import { rulesetEffects } from "./difficulty.ts";
 import { reportFrom } from "./issues.ts";
@@ -325,6 +326,8 @@ function validateCharacter(character: Character, data: GameData, observer?: Slot
       for (const key of Object.keys(choices)) if (!open.has(key)) issue("invalid", "unknownSlot", key);
     }
   }
+  // Prepared spells do not change what a slot knows: an observer (`slotSnapshot`) does not need them.
+  if (observer === undefined) issues.push(...preparedIssues(character, data));
   return issues;
 }
 
