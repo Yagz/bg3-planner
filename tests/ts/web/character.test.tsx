@@ -3,6 +3,7 @@ import { act } from "@testing-library/react";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import type { GameData } from "../../../src/data/types.ts";
 import { skillProficiencies } from "../../../src/engine/coverage.ts";
+import { backgroundTraits } from "../../../src/engine/traits.ts";
 import { resolve, subclassSlot } from "../../../src/engine/progression.ts";
 import { featSlot, validate } from "../../../src/engine/validate.ts";
 import { emptyRun } from "../../../src/plan/model.ts";
@@ -11,7 +12,7 @@ import App from "../../../web/src/App.tsx";
 import { I18nContext, createI18n } from "../../../web/src/i18n/i18n.ts";
 import NotesTab from "../../../web/src/screens/character/NotesTab.tsx";
 import IssueList from "../../../web/src/screens/character/IssueList.tsx";
-import { gameName } from "../../../web/src/names.ts";
+import { gameDescription, gameName } from "../../../web/src/names.ts";
 import { addCharacter } from "../../../web/src/state/partyOps.ts";
 import { loadTab, saveTab } from "../../../web/src/state/sessionTab.ts";
 import { createStore } from "../../../web/src/state/storage.ts";
@@ -176,7 +177,7 @@ describe("Character screen", () => {
     for (const field of ["Race", "Subrace", "Background"]) {
       expect(within(creation).getByRole("button", { name: new RegExp(`^${field}`) })).toHaveProperty("disabled", true);
     }
-    expect(within(creation).getByRole("button", { name: /^Race/ }).textContent).toBe(gameName(data, "en", "race", "HalfElf"));
+    expect(within(within(creation).getByRole("button", { name: /^Race/ }).closest(".idcard") as HTMLElement).getByText(gameName(data, "en", "race", "HalfElf"))).toBeTruthy();
   });
 
   it("lets the player pick a race from the game's races, a first pick applied directly", () => {
@@ -184,7 +185,7 @@ describe("Character screen", () => {
     const player = run.characters[0]!;
     const { store, runId } = setup(run, player.id);
     const race = within(screen.getByRole("region", { name: "Creation" })).getByRole("button", { name: /^Race/ });
-    expect(race.textContent).toBe("to decide");
+    expect(within(race.closest(".idcard") as HTMLElement).getByText("to decide")).toBeTruthy();
     fireEvent.click(race);
     const dialog = screen.getByRole("dialog");
     fireEvent.click(within(dialog).getByRole("radio", { name: gameName(data, "en", "race", "Halfling") }));
@@ -820,5 +821,75 @@ describe("session tab storage", () => {
     backend.failWrites = "QuotaExceededError";
     expect(loadTab(backend, "x")).toBe("sheet");
     expect(() => saveTab(backend, "x", "notes")).not.toThrow();
+  });
+});
+
+describe("creation cards", () => {
+  function setupFr(c: Character) {
+    const store = createStore(new MemoryBackend());
+    store.save(runWith([c]));
+    const settings = new MemoryBackend();
+    settings.setItem("bg3p:settings", JSON.stringify({ lang: "fr" }));
+    window.history.replaceState(null, "", `#/character/${c.id}`);
+    render(<App data={data} store={store} settingsBackend={settings} sessionBackend={new MemoryBackend()} />);
+  }
+  const creation = () => within(screen.getByRole("region", { name: "Création" }));
+  const cardElement = (label: string) => creation().getByRole("button", { name: new RegExp(`^${label}:`) }).closest(".idcard") as HTMLElement;
+  const card = (label: string) => within(cardElement(label));
+  const persuasion = () => Object.keys(data.rules.backgrounds).find((id) => backgroundTraits(data, id).some((trait) => trait.kind === "skill" && trait.skill === "Persuasion"))!;
+  const as = (race: Character["race"], subrace: Character["subrace"], background: Character["background"] = persuasion()): Character => ({ ...ranger(1), race, subrace, background });
+
+  it("lists a race's passive with its description and the skill it grants on its card", () => {
+    setupFr(as("Elf", null));
+    const elf = card("Race");
+    expect(elf.getByText("Vision dans le noir")).toBeTruthy();
+    expect(elf.getByText(gameDescription(data, "fr", "passive", "Darkvision")!)).toBeTruthy();
+    expect(elf.getByText("Maîtrise : Perception")).toBeTruthy();
+    expect(elf.getByText("Vitesse : 9 m")).toBeTruthy();
+  });
+
+  it("lists the High Elf's spell choice cast with its ability, and the subrace's speed as an addition", () => {
+    setupFr(as("Elf", "Elf_HighElf"));
+    expect(card("Sous-race").getByText("Sorts mineurs (1), lancé avec Intelligence")).toBeTruthy();
+  });
+
+  it("shows the background's game description and the skill it grants", () => {
+    const id = persuasion();
+    setupFr(as("Elf", null, id));
+    const background = card("Historique");
+    expect(background.getByText(gameDescription(data, "fr", "background", id)!)).toBeTruthy();
+    expect(background.getByText("Maîtrise : Persuasion")).toBeTruthy();
+  });
+
+  it("prefixes the Duergar's traits above level 1 with their level", () => {
+    setupFr(as("Duergar", null));
+    const duergar = card("Race");
+    expect(duergar.getByText(/^Niveau 3 :/)).toBeTruthy();
+    expect(duergar.getByText(/^Niveau 5 :/)).toBeTruthy();
+  });
+
+  it("shows under each race of the picker what it gives and its subraces, and under each subrace its traits", () => {
+    setupFr(as("Dwarf", null));
+    fireEvent.click(creation().getByRole("button", { name: /^Race:/ }));
+    let dialog = within(screen.getByRole("dialog"));
+    const dwarf = dialog.getByRole("radio", { name: "Nain" });
+    const lines = (dwarf.getAttribute("aria-describedby") ?? "").split(" ").map((id) => document.getElementById(id)!.textContent);
+    expect(lines.some((line) => /^Sous-races : .*Duergar/.test(line ?? ""))).toBe(true);
+    expect(lines).toContain("Vitesse : 7,5 m");
+    fireEvent.click(dialog.getByRole("button", { name: "Annuler" }));
+    cleanup();
+    setupFr(as("Elf", "Elf_HighElf"));
+    fireEvent.click(creation().getByRole("button", { name: /^Sous-race:/ }));
+    dialog = within(screen.getByRole("dialog"));
+    expect(dialog.getByText("Sorts mineurs (1), lancé avec Intelligence")).toBeTruthy();
+  });
+
+  it("shows a race outside the game data without a trait list, and an undecided background as to decide", () => {
+    setupFr(as({ offData: "ModRace" }, null, ""));
+    expect(card("Race").getByText("ModRace")).toBeTruthy();
+    expect(card("Race").queryByText("Aucun trait propre")).toBeNull();
+    expect(cardElement("Race").querySelector(".traits")).toBeNull();
+    expect(card("Historique").getByText("à décider")).toBeTruthy();
+    expect(cardElement("Historique").querySelector(".traits")).toBeNull();
   });
 });

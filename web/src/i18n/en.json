@@ -296,5 +296,17 @@
   "character.tab.sheet": "Sheet",
   "character.tab.notes": "Notes",
   "character.notes": "Notes",
-  "character.notes.help": "Plain text, saved when you leave the field or this tab."
+  "character.notes.help": "Plain text, saved when you leave the field or this tab.",
+  "character.change": "Change",
+  "character.noTraits": "No traits of its own",
+  "trait.proficiency": "Proficiency: {skill}",
+  "trait.speed": "Speed: {meters} m",
+  "trait.speedAdded": "Speed: +{meters} m",
+  "trait.hpPerLevel": "+1 hit point per level",
+  "trait.spellsCast": "{spells}, cast with {ability}",
+  "trait.spellsCastMany": "{spells}, cast with {ability}",
+  "trait.choice": "{what} ({count})",
+  "trait.choiceCast": "{what} ({count}), cast with {ability}",
+  "trait.atLevel": "Level {level}:",
+  "trait.subraces": "Subraces: {names}"
 }

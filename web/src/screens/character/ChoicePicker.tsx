@@ -30,6 +30,8 @@ export type PickerSpec = {
   swaps?: { max: number; known: string[] };
   /** For a `SelectSpells` slot: entries grouped by spell level, each with the ability the slot's spells are cast with (null for none). */
   spells?: { ability: Ability | null };
+  /** Lines shown under an entry's name (muted), also part of its description for screen readers. */
+  details?: Record<string, string[]>;
   /** The stored choice; absent when nothing is stored. */
   initial: Choice | undefined;
 };
@@ -196,6 +198,7 @@ export default function ChoicePicker({ data, spec, onSave, onClear, onClose }: P
   const full = mode.type === "set" && picks.length >= mode.max;
   const castWith = spec.spells?.ability ?? null;
   const facts = (entry: string) => (spec.spells === undefined ? [] : spellFacts(data, lang, t, entry, castWith));
+  const detailLines = (entry: string) => (spec.details !== undefined && Object.hasOwn(spec.details, entry) ? (spec.details[entry] ?? []) : []);
   const label = (entry: string) => {
     const text = description(entry);
     const said = facts(entry);
@@ -218,11 +221,16 @@ export default function ChoicePicker({ data, spec, onSave, onClear, onClose }: P
             {text}
           </span>
         )}
+        {detailLines(entry).map((line, i) => (
+          <span key={i} className="d" id={`${id}-${entry}-d${i}`}>
+            {line}
+          </span>
+        ))}
       </span>
     );
   };
   const describedBy = (entry: string) => {
-    const ids = [...(facts(entry).length > 0 ? [`${id}-${entry}-spell`] : []), ...(description(entry) === null ? [] : [`${id}-${entry}`])];
+    const ids = [...(facts(entry).length > 0 ? [`${id}-${entry}-spell`] : []), ...(description(entry) === null ? [] : [`${id}-${entry}`]), ...detailLines(entry).map((_, i) => `${id}-${entry}-d${i}`)];
     return ids.length === 0 ? undefined : ids.join(" ");
   };
 

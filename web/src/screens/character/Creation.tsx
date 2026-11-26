@@ -1,11 +1,13 @@
 import type { GameData } from "../../../../src/data/types.ts";
 import { POINT_BUY, abilityTotals, pointsSpent } from "../../../../src/engine/abilities.ts";
 import type { Issue } from "../../../../src/engine/issues.ts";
+import { backgroundTraits, identityTraits } from "../../../../src/engine/traits.ts";
 import { ABILITIES, isOffData } from "../../../../src/plan/model.ts";
 import type { Ability, Character } from "../../../../src/plan/model.ts";
 import { useI18n } from "../../i18n/i18n.ts";
-import { gameName } from "../../names.ts";
+import { gameDescription, gameName } from "../../names.ts";
 import IssueList from "./IssueList.tsx";
+import { TraitList } from "./Traits.tsx";
 
 export type IdentityField = "race" | "subrace" | "background";
 
@@ -41,14 +43,25 @@ export default function Creation({ data, character, issues, locked, hasSubraces,
     // A subrace outside the game data can still be typed in for a race outside it.
     const disabled = locked || (name === "subrace" && !hasSubraces && value === null && !isOffData(character.race));
     const label = t(`character.${name}`);
+    // A value outside the game data, an unset field and an unknown identifier carry no trait list.
+    const known = typeof value === "string" && value !== "";
+    const description = name === "background" && known ? gameDescription(data, lang, "background", value) : null;
+    const traits = !known ? null : name === "background" ? backgroundTraits(data, value) : identityTraits(data, value);
     return (
-      <span key={name} className="choice">
-        <span className="k">{label}</span>
-        <button className={`pick${todo ? " todo" : ""}`} aria-label={`${label}: ${todo ? t("character.todo") : shown}`} disabled={disabled} onClick={() => onPick(name)}>
+      <div key={name} className="idcard">
+        <div className="top">
+          <span className="lbl">{label}</span>
+          <button className={`pick${todo ? " todo" : ""}`} aria-label={`${label}: ${todo ? t("character.todo") : shown}`} disabled={disabled} onClick={() => onPick(name)}>
+            {t("character.change")}
+          </button>
+        </div>
+        <span className={`val${todo ? " todo" : ""}`} aria-hidden="true">
           {todo ? t("character.todo") : shown}
-        </button>
+        </span>
         <IssueList data={data} issues={issues.filter((issue) => issue.slot === name)} />
-      </span>
+        {description !== null && <p className="trait sub">{description}</p>}
+        {traits !== null && <TraitList data={data} traits={traits} descriptions />}
+      </div>
     );
   };
 
@@ -58,8 +71,8 @@ export default function Creation({ data, character, issues, locked, hasSubraces,
         <h2>{t("character.creation")}</h2>
         {locked && <span className="pill muted">{t("character.locked")}</span>}
       </div>
-      <div className="row">
-        {origin !== undefined && (
+      {origin !== undefined && (
+        <div className="row">
           <label className="choice">
             <span className="k">{t("character.origin")}</span>
             <select value={origin.value} onChange={(event) => origin.onChange(event.target.value)}>
@@ -72,9 +85,9 @@ export default function Creation({ data, character, issues, locked, hasSubraces,
               ))}
             </select>
           </label>
-        )}
-        {(["race", "subrace", "background"] as const).map(field)}
-      </div>
+        </div>
+      )}
+      <div className="ident">{(["race", "subrace", "background"] as const).map(field)}</div>
       <div className="row">
         <span className="k">{t("character.abilities")}</span>
         <span className={`pill ${spent === POINT_BUY.budget ? "good" : spent > POINT_BUY.budget ? "bad" : "todo"}`} aria-label={t("character.pointBuy")}>

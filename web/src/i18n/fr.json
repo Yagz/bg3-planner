@@ -296,5 +296,17 @@
   "character.tab.sheet": "Fiche",
   "character.tab.notes": "Notes",
   "character.notes": "Notes",
-  "character.notes.help": "Texte brut, enregistré quand vous quittez le champ ou cet onglet."
+  "character.notes.help": "Texte brut, enregistré quand vous quittez le champ ou cet onglet.",
+  "character.change": "Changer",
+  "character.noTraits": "Aucun trait propre",
+  "trait.proficiency": "Maîtrise : {skill}",
+  "trait.speed": "Vitesse : {meters} m",
+  "trait.speedAdded": "Vitesse : +{meters} m",
+  "trait.hpPerLevel": "+1 point de vie par niveau",
+  "trait.spellsCast": "{spells}, lancé avec {ability}",
+  "trait.spellsCastMany": "{spells}, lancés avec {ability}",
+  "trait.choice": "{what} ({count})",
+  "trait.choiceCast": "{what} ({count}), lancé avec {ability}",
+  "trait.atLevel": "Niveau {level} :",
+  "trait.subraces": "Sous-races : {names}"
 }

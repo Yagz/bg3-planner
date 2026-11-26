@@ -10,7 +10,7 @@ export type Trait = { level: number } & (
   | { kind: "speed"; meters: number; added: boolean }
   | { kind: "hpPerLevel" }
   | { kind: "spells"; spells: string[]; ability: Ability | null }
-  | { kind: "choice"; function: "SelectSpells" | "SelectSkills" | "SelectPassives"; count: number; ability: Ability | null }
+  | { kind: "choice"; function: "SelectSpells" | "SelectSkills" | "SelectPassives"; count: number; ability: Ability | null; list: string }
   /** A resource counter such as a racial spell's charges; the interface does not display it, the spell it charges is already a `spells` trait. */
   | { kind: "resource"; resource: string; amount: number }
   | { kind: "unknownBoost"; boost: string }
@@ -52,9 +52,9 @@ export function identityTraits(data: GameData, race: string): Trait[] {
         const spells = Object.hasOwn(lists, selector.list) ? (lists[selector.list]?.items ?? []) : [];
         traits.push({ level, kind: "spells", spells: [...spells], ability: asAbility(selector.ability) });
       } else if (selector.function === "SelectSpells") {
-        traits.push({ level, kind: "choice", function: selector.function, count: selector.count, ability: asAbility(selector.ability) });
+        traits.push({ level, kind: "choice", function: selector.function, count: selector.count, ability: asAbility(selector.ability), list: selector.list });
       } else if (selector.function === "SelectSkills" || selector.function === "SelectPassives") {
-        traits.push({ level, kind: "choice", function: selector.function, count: selector.count, ability: null });
+        traits.push({ level, kind: "choice", function: selector.function, count: selector.count, ability: null, list: selector.list });
       }
     }
   }

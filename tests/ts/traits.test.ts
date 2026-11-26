@@ -34,11 +34,11 @@ describe("identityTraits", () => {
   });
 
   it("offers the Human one skill", () => {
-    expect(identityTraits(data, "Human")).toContainEqual({ level: 1, kind: "choice", function: "SelectSkills", count: 1, ability: null });
+    expect(identityTraits(data, "Human")).toContainEqual({ level: 1, kind: "choice", function: "SelectSkills", count: 1, ability: null, list: expect.any(String) });
   });
 
   it("offers the High Elf a spell choice cast with Intelligence", () => {
-    expect(identityTraits(data, "Elf_HighElf")).toContainEqual({ level: 1, kind: "choice", function: "SelectSpells", count: 1, ability: "Intelligence" });
+    expect(identityTraits(data, "Elf_HighElf")).toContainEqual({ level: 1, kind: "choice", function: "SelectSpells", count: 1, ability: "Intelligence", list: expect.any(String) });
   });
 
   it("leaves technical passives out", () => {

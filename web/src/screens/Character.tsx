@@ -3,6 +3,7 @@ import type { KeyboardEvent } from "react";
 import type { TextKind } from "../../../src/data/names.ts";
 import type { GameData, Selector } from "../../../src/data/types.ts";
 import type { Impact } from "../../../src/engine/impact.ts";
+import { identityTraits } from "../../../src/engine/traits.ts";
 import { castingAbility } from "../../../src/engine/casting.ts";
 import { rulesetEffects } from "../../../src/engine/difficulty.ts";
 import { resolve } from "../../../src/engine/progression.ts";
@@ -28,6 +29,7 @@ import ChoicePicker, { kindOfList } from "./character/ChoicePicker.tsx";
 import type { PickerMode, PickerSpec } from "./character/ChoicePicker.tsx";
 import Creation from "./character/Creation.tsx";
 import type { IdentityField } from "./character/Creation.tsx";
+import { traitNames } from "./character/Traits.tsx";
 import ImpactPreview from "./character/ImpactPreview.tsx";
 import LevelList, { CLASS_SLOT } from "./character/LevelList.tsx";
 import LevelTree from "./character/LevelTree.tsx";
@@ -170,8 +172,17 @@ export default function Character({ data, run, saveRun, characterId, onSelect, t
               sortByName(Object.keys(data.rules.backgrounds).filter((id) => !data.rules.backgrounds[id]!.origin || id === originBackground), "background");
       const value = character[field];
       const initial: Choice | undefined = isOffData(value) ? value : value === null || value === "" ? undefined : [value];
+      // Race and subrace entries list what they give; a race also names its subraces.
+      const details: Record<string, string[]> = {};
+      if (field !== "background") {
+        for (const name of items) {
+          const own = traitNames(data, lang, t, identityTraits(data, name));
+          const children = field === "race" ? sortByName(Object.keys(data.rules.races).filter((other) => data.rules.races[other]!.parent === name), "race") : [];
+          details[name] = children.length === 0 ? own : [...own, t("trait.subraces", { names: children.map((child) => gameName(data, lang, "race", child)).join(", ") })];
+        }
+      }
       return {
-        spec: { title: t(`character.${field}`), items, kind: field === "background" ? "background" : "race", mode: { type: "single" }, initial },
+        spec: { title: t(`character.${field}`), items, kind: field === "background" ? "background" : "race", mode: { type: "single" }, ...(field === "background" ? {} : { details }), initial },
         save: (choice) => setIdentity(character, field, single(choice)),
         clear: () => setIdentity(character, field, field === "subrace" ? null : ""),
       };
