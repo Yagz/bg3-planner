@@ -43,15 +43,15 @@ export default function Creation({ data, character, issues, locked, hasSubraces,
     // A subrace outside the game data can still be typed in for a race outside it.
     const disabled = locked || (name === "subrace" && !hasSubraces && value === null && !isOffData(character.race));
     const label = t(`character.${name}`);
-    // A value outside the game data, an unset field and an unknown identifier carry no trait list.
-    const known = typeof value === "string" && value !== "";
+    // A value outside the game data, an unset field and an identifier absent from the data carry no trait list.
+    const known = typeof value === "string" && value !== "" && Object.hasOwn(name === "background" ? data.rules.backgrounds : data.rules.races, value);
     const description = name === "background" && known ? gameDescription(data, lang, "background", value) : null;
     const traits = !known ? null : name === "background" ? backgroundTraits(data, value) : identityTraits(data, value);
     return (
       <div key={name} className="idcard">
         <div className="top">
           <span className="lbl">{label}</span>
-          <button className={`pick${todo ? " todo" : ""}`} aria-label={`${label}: ${todo ? t("character.todo") : shown}`} disabled={disabled} onClick={() => onPick(name)}>
+          <button className={`pick${todo ? " todo" : ""}`} aria-label={t("character.changeField", { label, value: todo ? t("character.todo") : shown })} disabled={disabled} onClick={() => onPick(name)}>
             {t("character.change")}
           </button>
         </div>

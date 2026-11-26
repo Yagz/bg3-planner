@@ -308,5 +308,6 @@
   "trait.choice": "{what} ({count})",
   "trait.choiceCast": "{what} ({count}), cast with {ability}",
   "trait.atLevel": "Level {level}:",
-  "trait.subraces": "Subraces: {names}"
+  "trait.subraces": "Subraces: {names}",
+  "character.changeField": "Change — {label}: {value}"
 }

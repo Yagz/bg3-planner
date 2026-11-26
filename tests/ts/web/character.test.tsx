@@ -175,16 +175,16 @@ describe("Character screen", () => {
     setup(run, shadowheart.id);
     const creation = screen.getByRole("region", { name: "Creation" });
     for (const field of ["Race", "Subrace", "Background"]) {
-      expect(within(creation).getByRole("button", { name: new RegExp(`^${field}`) })).toHaveProperty("disabled", true);
+      expect(within(creation).getByRole("button", { name: new RegExp(`^Change — ${field}`) })).toHaveProperty("disabled", true);
     }
-    expect(within(within(creation).getByRole("button", { name: /^Race/ }).closest(".idcard") as HTMLElement).getByText(gameName(data, "en", "race", "HalfElf"))).toBeTruthy();
+    expect(within(within(creation).getByRole("button", { name: /^Change — Race/ }).closest(".idcard") as HTMLElement).getByText(gameName(data, "en", "race", "HalfElf"))).toBeTruthy();
   });
 
   it("lets the player pick a race from the game's races, a first pick applied directly", () => {
     const run = addCharacter(emptyRun("r"), data, "player");
     const player = run.characters[0]!;
     const { store, runId } = setup(run, player.id);
-    const race = within(screen.getByRole("region", { name: "Creation" })).getByRole("button", { name: /^Race/ });
+    const race = within(screen.getByRole("region", { name: "Creation" })).getByRole("button", { name: /^Change — Race/ });
     expect(within(race.closest(".idcard") as HTMLElement).getByText("to decide")).toBeTruthy();
     fireEvent.click(race);
     const dialog = screen.getByRole("dialog");
@@ -352,7 +352,7 @@ describe("Character screen", () => {
 
   describe("player origin", () => {
     const originBox = () => within(screen.getByRole("region", { name: "Creation" })).getByRole("combobox", { name: "Origin" }) as HTMLSelectElement;
-    const raceButton = () => within(screen.getByRole("region", { name: "Creation" })).getByRole("button", { name: /^Race/ }) as HTMLButtonElement;
+    const raceButton = () => within(screen.getByRole("region", { name: "Creation" })).getByRole("button", { name: /^Change — Race/ }) as HTMLButtonElement;
 
     it("offers the custom player and the origins the game offers at character creation, minus those already in the run as companions", () => {
       const run = addCharacter(addCharacter(emptyRun("r"), data, "player"), data, "Gale");
@@ -428,7 +428,7 @@ describe("Character screen", () => {
     expect(data.rules.backgrounds[hauntedOne]!.origin).toBe(true);
     const openBackgrounds = (run: Run) => {
       setup(run, run.characters[0]!.id);
-      fireEvent.click(within(screen.getByRole("region", { name: "Creation" })).getByRole("button", { name: /^Background/ }));
+      fireEvent.click(within(screen.getByRole("region", { name: "Creation" })).getByRole("button", { name: /^Change — Background/ }));
       return within(screen.getByRole("dialog")).queryByRole("radio", { name: gameName(data, "en", "background", hauntedOne) });
     };
     const darkUrge = addCharacter({ ...emptyRun("r"), origin: "DarkUrge" }, data, "player");
@@ -834,7 +834,7 @@ describe("creation cards", () => {
     render(<App data={data} store={store} settingsBackend={settings} sessionBackend={new MemoryBackend()} />);
   }
   const creation = () => within(screen.getByRole("region", { name: "Création" }));
-  const cardElement = (label: string) => creation().getByRole("button", { name: new RegExp(`^${label}:`) }).closest(".idcard") as HTMLElement;
+  const cardElement = (label: string) => creation().getByRole("button", { name: new RegExp(`^Changer — ${label} :`) }).closest(".idcard") as HTMLElement;
   const card = (label: string) => within(cardElement(label));
   const persuasion = () => Object.keys(data.rules.backgrounds).find((id) => backgroundTraits(data, id).some((trait) => trait.kind === "skill" && trait.skill === "Persuasion"))!;
   const as = (race: Character["race"], subrace: Character["subrace"], background: Character["background"] = persuasion()): Character => ({ ...ranger(1), race, subrace, background });
@@ -848,9 +848,21 @@ describe("creation cards", () => {
     expect(elf.getByText("Vitesse : 9 m")).toBeTruthy();
   });
 
-  it("lists the High Elf's spell choice cast with its ability, and the subrace's speed as an addition", () => {
+  it("lists the High Elf's spell choice, the Wood Elf's added speed and the Gold Dwarf's hit points", () => {
     setupFr(as("Elf", "Elf_HighElf"));
     expect(card("Sous-race").getByText("Sorts mineurs (1), lancé avec Intelligence")).toBeTruthy();
+    cleanup();
+    setupFr(as("Elf", "Elf_WoodElf"));
+    expect(card("Sous-race").getByText("Vitesse : +1,5 m")).toBeTruthy();
+    cleanup();
+    setupFr(as("Dwarf", "Dwarf_GoldHill"));
+    expect(card("Sous-race").getByText("+1 point de vie par niveau")).toBeTruthy();
+  });
+
+  it("shows no trait list for an identifier absent from the game data", () => {
+    setupFr(as("NoSuchRace", null));
+    expect(cardElement("Race").querySelector(".traits")).toBeNull();
+    expect(card("Race").queryByText("Aucun trait propre")).toBeNull();
   });
 
   it("shows the background's game description and the skill it grants", () => {
@@ -870,7 +882,7 @@ describe("creation cards", () => {
 
   it("shows under each race of the picker what it gives and its subraces, and under each subrace its traits", () => {
     setupFr(as("Dwarf", null));
-    fireEvent.click(creation().getByRole("button", { name: /^Race:/ }));
+    fireEvent.click(creation().getByRole("button", { name: /^Changer — Race :/ }));
     let dialog = within(screen.getByRole("dialog"));
     const dwarf = dialog.getByRole("radio", { name: "Nain" });
     const lines = (dwarf.getAttribute("aria-describedby") ?? "").split(" ").map((id) => document.getElementById(id)!.textContent);
@@ -879,7 +891,7 @@ describe("creation cards", () => {
     fireEvent.click(dialog.getByRole("button", { name: "Annuler" }));
     cleanup();
     setupFr(as("Elf", "Elf_HighElf"));
-    fireEvent.click(creation().getByRole("button", { name: /^Sous-race:/ }));
+    fireEvent.click(creation().getByRole("button", { name: /^Changer — Sous-race :/ }));
     dialog = within(screen.getByRole("dialog"));
     expect(dialog.getByText("Sorts mineurs (1), lancé avec Intelligence")).toBeTruthy();
   });
