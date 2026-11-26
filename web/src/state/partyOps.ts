@@ -11,7 +11,7 @@ const key = (act: Act): "1" | "2" | "3" => String(act) as "1" | "2" | "3";
 const DEFAULT_SCORES = { Strength: 8, Dexterity: 8, Constitution: 8, Intelligence: 8, Wisdom: 8, Charisma: 8 };
 
 function blank(): Character {
-  return { id: crypto.randomUUID(), who: "player", race: "", subrace: null, background: "", abilities: { ...DEFAULT_SCORES }, levels: [{ class: "", choices: {} }], items: [], notes: "" };
+  return { id: crypto.randomUUID(), who: "player", race: "", subrace: null, background: "", abilities: { ...DEFAULT_SCORES }, levels: [{ class: "", choices: {} }], equipment: { "1": {}, "2": {}, "3": {} }, notes: "" };
 }
 
 /** Whether a companion origin can be added: it names a class (`Generic` does not). */

@@ -176,8 +176,24 @@ describe("run store", () => {
     const v2 = { ...named("Old", "old"), version: 2, difficulty: "Balanced" };
     backend.items.set("bg3p:run:old", JSON.stringify({ history: [{ at: "2026-11-25T10:00:00.000Z", text: JSON.stringify(v2) }] }));
     const run = createStore(backend).load("old");
-    expect(run?.version).toBe(3);
+    expect(run?.version).toBe(4);
     expect(run?.difficulty).toEqual({ ruleset: "DIFFICULTY_MEDIUM", overrides: {} });
+  });
+
+  it("a stored version-3 run with items reads back migrated with the store's item slots", () => {
+    const backend = new MemoryBackend();
+    const character = { id: "c1", who: "player", race: "", subrace: null, background: "", abilities: { Strength: 8, Dexterity: 8, Constitution: 8, Intelligence: 8, Wisdom: 8, Charisma: 8 }, levels: [], items: ["RING_A", "RING_B", "UNKNOWN"], notes: "" };
+    const v3 = { ...named("Old", "old"), version: 3, characters: [character] };
+    backend.items.set("bg3p:run:old", JSON.stringify({ history: [{ at: "2026-11-25T10:00:00.000Z", text: JSON.stringify(v3) }] }));
+    const slots: Record<string, string> = { RING_A: "Ring", RING_B: "Ring" };
+    const store = createStore(backend, { itemSlot: (id) => slots[id] ?? null });
+    const run = store.load("old")!;
+    expect(run.version).toBe(4);
+    expect(run.characters[0]!.equipment).toEqual({ "1": { Ring: "RING_A", Ring2: "RING_B" }, "2": {}, "3": {} });
+    expect(run.characters[0]!.notes).toBe("BG3P3 items not placed: UNKNOWN");
+    expect(JSON.parse(store.history("old")[0]!.text).version).toBe(3);
+    // The restored version goes through the same migration.
+    expect(store.restore("old", "2026-11-25T10:00:00.000Z").characters[0]!.equipment["1"]).toEqual({ Ring: "RING_A", Ring2: "RING_B" });
   });
 
   it("treats a stored version whose date is not a date as unreadable, and keeps it", () => {

@@ -33,10 +33,10 @@ export function versionDate(at: string, lang: Lang): string {
 /** One line of a version: who it concerns, what changed, and the value it replaced (shown struck). */
 type Line = { who: string; what: string; was?: string };
 
-function readRun(entry: HistoryEntry | undefined): Run | null {
+function readRun(entry: HistoryEntry | undefined, data: GameData): Run | null {
   if (entry === undefined) return null;
   try {
-    return decodeJson(entry.text);
+    return decodeJson(entry.text, undefined, { itemSlot: (id) => data.rules.items[id]?.slot ?? null });
   } catch {
     return null;
   }
@@ -49,8 +49,8 @@ type Described = {
 };
 
 /** The changes of every version against the one saved before it, decoding each version once. The oldest has none. */
-function changesOf(versions: HistoryEntry[]): Described[] {
-  const runs = versions.map(readRun);
+function changesOf(versions: HistoryEntry[], data: GameData): Described[] {
+  const runs = versions.map((entry) => readRun(entry, data));
   return versions.map((_, i) => {
     const after = runs[i];
     const before = runs[i + 1];
@@ -71,7 +71,7 @@ export default function HistoryPanel({ data, name, versions, onRestore }: Props)
   // `store.history()` returns a fresh array on every call: the memo is keyed on the versions' times, so each is decoded once.
   const key = versions.map((version) => version.at).join("|");
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const described = useMemo(() => changesOf(versions), [key]);
+  const described = useMemo(() => changesOf(versions, data), [key]);
   const named = (kind: TextKind | null, id: string) => (id === "" ? t("history.none") : gameName(data, lang, kind, id));
   const list = (kind: TextKind | null, ids: string[]) => ids.map((id) => named(kind, id)).join(", ");
   const members = (ids: string[]) => ids.map((id) => characterLabel(data, lang, id, t("party.player"))).join(", ");

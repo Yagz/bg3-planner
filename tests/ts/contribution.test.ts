@@ -19,7 +19,7 @@ const SCORES = { Strength: 8, Dexterity: 15, Constitution: 14, Intelligence: 8, 
 
 /** A Haunted One Lightfoot Halfling; `picks` maps a selector function to the picks made at its first slot per level. */
 function character(id: string, classes: string[], picks: Partial<Record<Selector["function"], string[]>>[], abilities = SCORES): Character {
-  const c: Character = { id, who: "player", race: "Halfling", subrace: "Halfling_Lightfoot", background: hauntedOne, abilities: { ...abilities }, levels: classes.map((cls) => ({ class: cls, choices: {} })), items: [], notes: "" };
+  const c: Character = { id, who: "player", race: "Halfling", subrace: "Halfling_Lightfoot", background: hauntedOne, abilities: { ...abilities }, levels: classes.map((cls) => ({ class: cls, choices: {} })), equipment: { "1": {}, "2": {}, "3": {} }, notes: "" };
   for (const level of resolve(c, data).levels) {
     const choices: Record<string, Choice> = c.levels[level.level - 1]!.choices;
     for (const [fn, value] of Object.entries(picks[level.level - 1] ?? {})) {

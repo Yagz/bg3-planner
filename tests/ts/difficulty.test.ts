@@ -16,7 +16,7 @@ beforeAll(async () => {
 const SCORES = { Strength: 8, Dexterity: 15, Constitution: 14, Intelligence: 8, Wisdom: 15, Charisma: 10 };
 
 function character(id: string, classes: Character["levels"][number]["class"][]): Character {
-  return { id, who: "player", race: "Halfling", subrace: "Halfling_Lightfoot", background: "", abilities: { ...SCORES }, levels: classes.map((cls) => ({ class: cls, choices: {} })), items: [], notes: "" };
+  return { id, who: "player", race: "Halfling", subrace: "Halfling_Lightfoot", background: "", abilities: { ...SCORES }, levels: classes.map((cls) => ({ class: cls, choices: {} })), equipment: { "1": {}, "2": {}, "3": {} }, notes: "" };
 }
 
 function runOf(characters: Character[], ruleset: string, overrides: Difficulty["overrides"] = {}): Run {

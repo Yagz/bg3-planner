@@ -14,7 +14,7 @@ beforeAll(async () => {
 function character(scores: number[], levels: Character["levels"] = []): Character {
   const names = ["Strength", "Dexterity", "Constitution", "Intelligence", "Wisdom", "Charisma"] as const;
   const abilities = Object.fromEntries(names.map((n, i) => [n, scores[i] ?? 8])) as Record<Ability, number>;
-  return { id: "c1", who: "player", race: "", subrace: null, background: "", abilities, levels, items: [], notes: "" };
+  return { id: "c1", who: "player", race: "", subrace: null, background: "", abilities, levels, equipment: { "1": {}, "2": {}, "3": {} }, notes: "" };
 }
 
 describe("checkPointBuy", () => {

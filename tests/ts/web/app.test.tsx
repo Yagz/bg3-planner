@@ -326,7 +326,7 @@ describe("history panel: what each version changed", () => {
     background: "Soldier",
     abilities: { Strength: 8, Dexterity: 8, Constitution: 8, Intelligence: 8, Wisdom: 8, Charisma: 8 },
     levels: classes.map((cls) => ({ class: cls, choices: {} })),
-    items: [],
+    equipment: { "1": {}, "2": {}, "3": {} },
     notes: "",
   });
   const withSubclass = (subclass: string, extra: Partial<Run> = {}): Run => {
@@ -431,7 +431,7 @@ describe("history panel: what each version changed", () => {
 });
 
 describe("history panel: new values, separators and the kept window (English, game data)", () => {
-  const player = (abilities: Character["abilities"]): Character => ({ id: "c1", who: "player", race: "Human", subrace: null, background: "", abilities, levels: [{ class: "Fighter", choices: {} }], items: [], notes: "" });
+  const player = (abilities: Character["abilities"]): Character => ({ id: "c1", who: "player", race: "Human", subrace: null, background: "", abilities, levels: [{ class: "Fighter", choices: {} }], equipment: { "1": {}, "2": {}, "3": {} }, notes: "" });
   const SCORES = { Strength: 8, Dexterity: 15, Constitution: 14, Intelligence: 8, Wisdom: 15, Charisma: 10 };
   const englishApp = (store: RunStore) => {
     window.history.replaceState(null, "", "/#/history");
@@ -610,7 +610,7 @@ describe("difficulty picker", () => {
     const run: Run = {
       ...emptyRun("d5"),
       difficulty: { ruleset: "DIFFICULTY_MEDIUM", overrides: {} },
-      characters: [{ id: "p", who: "player", race: "Halfling", subrace: "Halfling_Lightfoot", background: Object.keys(d.rules.backgrounds)[0]!, abilities: { Strength: 8, Dexterity: 15, Constitution: 14, Intelligence: 8, Wisdom: 15, Charisma: 10 }, levels, items: [], notes: "" }],
+      characters: [{ id: "p", who: "player", race: "Halfling", subrace: "Halfling_Lightfoot", background: Object.keys(d.rules.backgrounds)[0]!, abilities: { Strength: 8, Dexterity: 15, Constitution: 14, Intelligence: 8, Wisdom: 15, Charisma: 10 }, levels, equipment: { "1": {}, "2": {}, "3": {} }, notes: "" }],
     };
     run.party["1"].active = ["p"];
     const { store, id } = renderRun(run, "en");

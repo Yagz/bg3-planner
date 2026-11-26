@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { CodecError, PREFIX, decode, decodeJson, encode, toReadableJson } from "../../src/plan/codec.ts";
 import { loadGameData } from "../../src/data/load.ts";
@@ -22,12 +24,20 @@ function sampleRun(): Run {
         { class: "Ranger", choices: { "uuid-a/0": ["Skill_Stealth"], "uuid-a/1": "todo", "uuid-a/2": { offData: "Mod ünï ✓" } } },
         { class: "Rogue", choices: {} },
       ],
-      items: ["MAG_Acrobat_Shoes"],
+      equipment: { "1": { Boots: "MAG_Acrobat_Shoes" }, "2": {}, "3": {} },
       notes: "line1\nline2 \"quoted\"",
     },
   ];
   return run;
 }
+
+/** The sample run in the shape of versions 1 to 3: a flat, empty `items` list instead of `equipment`. */
+function legacySample(): Omit<Run, "characters"> & { characters: unknown[] } {
+  const run = sampleRun();
+  return { ...run, characters: run.characters.map(({ equipment: _e, ...c }) => ({ ...c, items: [] })) };
+}
+
+const NO_EQUIPMENT = { "1": {}, "2": {}, "3": {} };
 
 async function rejects(promise: Promise<unknown>): Promise<CodecError> {
   try {
@@ -44,7 +54,7 @@ describe("export string", () => {
   it("round trips losslessly", async () => {
     const run = sampleRun();
     const text = await encode(run);
-    expect(text.startsWith(`${PREFIX}3:`)).toBe(true);
+    expect(text.startsWith(`${PREFIX}4:`)).toBe(true);
     const decoded = await decode(text);
     expect(decoded.run).toEqual(run);
     expect(decoded.warnings).toEqual([]);
@@ -87,7 +97,7 @@ describe("readable JSON", () => {
         id: "c1", who: "player", race: "Elf", subrace: "Elf_HighElf", background: "",
         abilities: { Strength: 8, Dexterity: 15, Constitution: 14, Intelligence: 8, Wisdom: 13, Charisma: 10 },
         levels: [{ class: "Bard", choices: {} }],
-        items: [], notes: "",
+        equipment: { "1": {}, "2": {}, "3": {} }, notes: "",
       },
     ];
     const json = toReadableJson(run, data.texts.en, data);
@@ -111,7 +121,7 @@ describe("readable JSON", () => {
         id: "c1", who: "player", race: "Halfling", subrace: "LightfootHalfling", background,
         abilities: { Strength: 8, Dexterity: 15, Constitution: 14, Intelligence: 8, Wisdom: 13, Charisma: 10 },
         levels: [{ class: "Ranger", choices: { "x/0": [spell] } }],
-        items: [], notes: "",
+        equipment: { "1": {}, "2": {}, "3": {} }, notes: "",
       },
     ];
     for (const lang of ["en", "fr"] as const) {
@@ -126,6 +136,21 @@ describe("readable JSON", () => {
     }
     const fr = JSON.parse(toReadableJson(run, data.texts.fr)).characters[0]._names["Ranger"];
     expect(fr).toBe(data.texts.fr["class:Ranger"]?.name);
+  });
+
+  it("hints the names of equipped items and prepared spells, and ignores the hints on import", async () => {
+    const run = sampleRun();
+    run.characters[0]!.equipment = { "1": { Boots: "MAG_Acrobat_Shoes", Cloak: null }, "2": {}, "3": { Helmet: "ARM_Hat" } };
+    run.characters[0]!.levels[0]!.prepared = ["Spell_Bless"];
+    const texts = {
+      "item:MAG_Acrobat_Shoes": { name: "Acrobat Shoes", description: null },
+      "item:ARM_Hat": { name: "Hat", description: null },
+      "spell:Spell_Bless": { name: "Bless", description: null },
+    };
+    const parsed = JSON.parse(toReadableJson(run, texts));
+    expect(parsed.characters[0]._names).toMatchObject({ MAG_Acrobat_Shoes: "Acrobat Shoes", ARM_Hat: "Hat" });
+    expect(parsed.characters[0].levels[0]._names).toMatchObject({ Spell_Bless: "Bless" });
+    expect((await decode(JSON.stringify(parsed))).run).toEqual(run);
   });
 
   it("accepts a hand-written _name hint", async () => {
@@ -192,7 +217,7 @@ describe("errors", () => {
     expect((await mutate((r) => (r.characters[0].levels = Array.from({ length: 13 }, () => ({ class: "Ranger", choices: {} }))))).message).toContain("levels");
     expect((await mutate((r) => (r.characters[0].levels[0].choices["a/0"] = "done"))).message).toContain("choices");
     expect((await mutate((r) => (r.characters[0].levels[0].choices["a/0"] = [1]))).message).toContain("choices");
-    expect((await mutate((r) => (r.version = 4))).message).toMatch(/version/);
+    expect((await mutate((r) => (r.version = 5))).message).toMatch(/version/);
   });
 });
 
@@ -259,7 +284,7 @@ describe("__proto__ keys", () => {
 
 describe("migrations", () => {
   it("an older version goes through the registry", async () => {
-    expect(CURRENT_VERSION).toBe(3);
+    expect(CURRENT_VERSION).toBe(4);
     const old: Record<string, unknown> = { ...emptyRun("r1"), version: 0 };
     delete old["notes"];
     old["comment"] = "legacy";
@@ -272,7 +297,7 @@ describe("migrations", () => {
     };
     const decoded = await decode(JSON.stringify(old), registry);
     expect(decoded.run.notes).toBe("legacy");
-    expect(decoded.run.version).toBe(3);
+    expect(decoded.run.version).toBe(4);
   });
 
   it("works for the string form with an older prefix", async () => {
@@ -297,39 +322,39 @@ describe("migrations", () => {
       ["", ""], ["RULESET_LARIAN", "RULESET_LARIAN"], ["balanced", "DIFFICULTY_MEDIUM"], ["EXPLORER", "DIFFICULTY_EASY"], ["Nightmare", "Nightmare"],
     ];
     for (const [label, ruleset] of table) {
-      const migrated = MIGRATIONS[2]!({ version: 2, difficulty: label }) as { version: number; difficulty: unknown };
+      const migrated = MIGRATIONS[2]!({ version: 2, difficulty: label }, { itemSlot: null, warnings: [] }) as { version: number; difficulty: unknown };
       expect(migrated.version).toBe(3);
       expect(migrated.difficulty).toEqual({ ruleset, overrides: {} });
     }
   });
 
   it("decodes a v2 document with a difficulty label to a v3 run", () => {
-    const { difficulty: _d, ...rest } = sampleRun();
+    const { difficulty: _d, ...rest } = legacySample();
     const run = decodeJson(JSON.stringify({ ...rest, version: 2, difficulty: "Balanced" }));
-    expect(run.version).toBe(3);
+    expect(run.version).toBe(4);
     expect(run.difficulty).toEqual({ ruleset: "DIFFICULTY_MEDIUM", overrides: {} });
   });
 
   it("decodes a BG3P1 string through both migrations", async () => {
-    const { id, updatedAt, difficulty, ...rest } = sampleRun();
+    const { id, updatedAt, difficulty, ...rest } = legacySample();
     const { run, warnings } = await decode(`BG3P1:${await packed({ ...rest, version: 1, difficulty: "Explorer" })}`);
     expect(warnings).toEqual([]);
-    expect(run.version).toBe(3);
+    expect(run.version).toBe(4);
     expect(run.id).toBe("");
     expect(run.difficulty).toEqual({ ruleset: "DIFFICULTY_EASY", overrides: {} });
   });
 
   it("decodes a BG3P2 string", async () => {
-    const { difficulty, ...rest } = sampleRun();
+    const { difficulty, ...rest } = legacySample();
     const { run } = await decode(`BG3P2:${await packed({ ...rest, version: 2, difficulty: "Tactician" })}`);
     expect(run.difficulty).toEqual({ ruleset: "DIFFICULTY_HARD", overrides: {} });
   });
 
-  it("encodes with the BG3P3 prefix and round-trips", async () => {
+  it("encodes a difficulty and round-trips", async () => {
     const run = sampleRun();
     run.difficulty = { ruleset: "DIFFICULTY_EASY", overrides: { MULTICLASSING: true, PROFICIENCY_BONUS: 3 } };
     const text = await encode(run);
-    expect(text.startsWith("BG3P3:")).toBe(true);
+    expect(text.startsWith("BG3P4:")).toBe(true);
     expect(await decode(text)).toEqual({ run, warnings: [] });
   });
 
@@ -344,17 +369,141 @@ describe("migrations", () => {
   });
 
   it("a v1 string decodes to the current version with id \"\" and updatedAt null", async () => {
-    const { id, updatedAt, difficulty, ...rest } = sampleRun();
+    const { id, updatedAt, difficulty, ...rest } = legacySample();
     const v1 = { ...rest, version: 1, difficulty: "" };
     const { run, warnings } = await decode(`BG3P1:${await packed(v1)}`);
     expect(warnings).toEqual([]);
-    expect(run.version).toBe(3);
+    expect(run.version).toBe(4);
     expect(run.id).toBe("");
     expect(run.updatedAt).toBeNull();
     const { id: _i, updatedAt: _u, version: _v, ...others } = run;
     const { version: _w, difficulty: _x, ...expected } = v1;
-    expect(others).toEqual({ ...expected, difficulty: { ruleset: "", overrides: {} } });
+    const characters = sampleRun().characters.map((c) => ({ ...c, equipment: NO_EQUIPMENT }));
+    expect(others).toEqual({ ...expected, characters, difficulty: { ruleset: "", overrides: {} } });
     expect(await decode(await encode(run))).toEqual({ run, warnings: [] });
+  });
+
+  it("encodes as BG3P4", async () => {
+    expect(PREFIX).toBe("BG3P");
+    expect((await encode(emptyRun("r1"))).startsWith("BG3P4:")).toBe(true);
+  });
+
+  /** A version-3 document whose first character carries `items` and `notes`. */
+  function v3With(items: string[], notes: string) {
+    const doc = { ...legacySample(), version: 3 } as Record<string, unknown> & { characters: Record<string, unknown>[] };
+    doc.characters[0] = { ...doc.characters[0], items, notes };
+    return doc;
+  }
+
+  const SLOTS: Record<string, string> = { RING_A: "Ring", RING_B: "Ring", RING_C: "Ring", HELMET_A: "Helmet", HELMET_B: "Helmet", SWORD: "Melee Main Weapon", ODD: "Belt" };
+  const itemSlot = (id: string) => SLOTS[id] ?? null;
+
+  it("migrates a version-3 character: rings to Ring then Ring2, other items to their slot at act 1, extras and unplaceable ids to one notes line and one warning each", async () => {
+    const doc = v3With(["RING_A", "RING_B", "RING_C", "HELMET_A", "HELMET_B", "NOT_AN_ITEM"], "My notes");
+    const { run, warnings } = await decode(`BG3P3:${await packed(doc)}`, MIGRATIONS, { itemSlot });
+    const c = run.characters[0]!;
+    expect(c.equipment).toEqual({ "1": { Ring: "RING_A", Ring2: "RING_B", Helmet: "HELMET_A" }, "2": {}, "3": {} });
+    expect("items" in c).toBe(false);
+    expect(c.notes).toBe("My notes\n\nBG3P3 items not placed: RING_C, HELMET_B, NOT_AN_ITEM");
+    expect(warnings).toHaveLength(3);
+    expect(warnings[0]).toMatch(/^Item RING_C of c1 could not be placed: /);
+    expect(warnings[1]).toMatch(/^Item HELMET_B of c1 could not be placed: /);
+    expect(warnings[2]).toMatch(/^Item NOT_AN_ITEM of c1 could not be placed: /);
+  });
+
+  it("places weapons through the data slot names, and an item whose data slot has no equipment slot goes to the notes", () => {
+    const run = decodeJson(JSON.stringify(v3With(["SWORD", "ODD"], "")), MIGRATIONS, { itemSlot });
+    expect(run.characters[0]!.equipment["1"]).toEqual({ MeleeMainHand: "SWORD" });
+    expect(run.characters[0]!.notes).toBe("BG3P3 items not placed: ODD");
+  });
+
+  it("without item slots every old item goes to the notes line", async () => {
+    const { run, warnings } = await decode(JSON.stringify(v3With(["RING_A", "HELMET_A"], "")));
+    expect(run.characters[0]!.equipment).toEqual(NO_EQUIPMENT);
+    expect(run.characters[0]!.notes).toBe("BG3P3 items not placed: RING_A, HELMET_A");
+    expect(warnings).toHaveLength(2);
+    expect(warnings.every((w) => w.startsWith("Item "))).toBe(true);
+  });
+
+  it("an empty items list adds no notes line and no warning", async () => {
+    const { run, warnings } = await decode(JSON.stringify(v3With([], "kept")), MIGRATIONS, { itemSlot });
+    expect(run.characters[0]!.notes).toBe("kept");
+    expect(run.characters[0]!.equipment).toEqual(NO_EQUIPMENT);
+    expect(warnings).toEqual([]);
+  });
+
+  it("migration warnings follow the hint warning", async () => {
+    const doc = { ...v3With(["NOT_AN_ITEM"], ""), _name: "hint" };
+    const { warnings } = await decode(JSON.stringify(doc), MIGRATIONS, { itemSlot });
+    expect(warnings).toHaveLength(2);
+    expect(warnings[0]).toMatch(/hint/);
+    expect(warnings[1]).toMatch(/NOT_AN_ITEM/);
+  });
+
+  it("absent, null and an id stay distinct through encode and decode", async () => {
+    const run = sampleRun();
+    run.characters[0]!.equipment = { "1": { Helmet: "ARM_Hat", Cloak: null }, "2": { Helmet: null }, "3": {} };
+    const decoded = (await decode(await encode(run))).run.characters[0]!.equipment;
+    expect(decoded).toEqual(run.characters[0]!.equipment);
+    expect(Object.hasOwn(decoded["1"], "Cloak")).toBe(true);
+    expect(decoded["1"].Cloak).toBeNull();
+    expect(Object.hasOwn(decoded["2"], "Cloak")).toBe(false);
+    expect(Object.hasOwn(decoded["3"], "Helmet")).toBe(false);
+  });
+
+  it("prepared lists survive a round trip; an empty list stays empty, not absent", async () => {
+    const run = sampleRun();
+    run.characters[0]!.levels[0]!.prepared = ["Spell_A", "Spell_B"];
+    run.characters[0]!.levels[1]!.prepared = [];
+    const decoded = (await decode(await encode(run))).run.characters[0]!;
+    expect(decoded.levels[0]!.prepared).toEqual(["Spell_A", "Spell_B"]);
+    expect(decoded.levels[1]!.prepared).toEqual([]);
+    const without = (await decode(await encode(sampleRun()))).run.characters[0]!;
+    expect("prepared" in without.levels[0]!).toBe(false);
+  });
+
+  it("refuses an equipment value that is neither a string nor null, and an act key other than 1, 2, 3", async () => {
+    const mutate = async (f: (raw: any) => void) => {
+      const raw = JSON.parse(JSON.stringify(sampleRun()));
+      f(raw);
+      return rejects(decode(JSON.stringify(raw)));
+    };
+    expect((await mutate((r) => (r.characters[0].equipment["1"].Helmet = 3))).message).toContain("characters[0].equipment.1.Helmet");
+    expect((await mutate((r) => (r.characters[0].equipment["1"].Helmet = ["x"]))).message).toContain("equipment.1.Helmet");
+    expect((await mutate((r) => (r.characters[0].equipment["4"] = {}))).message).toContain("equipment.4");
+    expect((await mutate((r) => delete r.characters[0].equipment["2"])).message).toContain("equipment.2");
+    expect((await mutate((r) => (r.characters[0].equipment = []))).message).toContain("equipment");
+    expect((await mutate((r) => (r.characters[0].items = []))).message).toContain("items");
+    expect((await mutate((r) => (r.characters[0].levels[0].prepared = "Spell_A"))).message).toContain("levels[0].prepared");
+    expect((await mutate((r) => (r.characters[0].levels[0].prepared = [1]))).message).toContain("levels[0].prepared");
+    // Any slot key is accepted here: the engine judges it.
+    const raw = JSON.parse(JSON.stringify(sampleRun()));
+    raw.characters[0].equipment["1"].NotASlot = "X";
+    expect((await decode(JSON.stringify(raw))).run.characters[0]!.equipment["1"]).toHaveProperty("NotASlot", "X");
+  });
+
+  it("BG3P1, BG3P2 and BG3P3 fixtures still decode", async () => {
+    const data = await loadGameData("data/larian");
+    const slotOf = (id: string) => data.rules.items[id]?.slot ?? null;
+    const expectedDifficulty: Record<number, string> = { 1: "DIFFICULTY_EASY", 2: "DIFFICULTY_HARD", 3: "DIFFICULTY_MEDIUM" };
+    for (const version of [1, 2, 3]) {
+      const text = readFileSync(join(import.meta.dirname, "fixtures", `bg3p${version}.txt`), "utf8");
+      expect(text.startsWith(`BG3P${version}:`)).toBe(true);
+      const { run, warnings } = await decode(text, MIGRATIONS, { itemSlot: slotOf });
+      expect(run.version).toBe(4);
+      expect(run.name).toBe("Fixture run");
+      expect(run.difficulty.ruleset).toBe(expectedDifficulty[version]);
+      const c = run.characters[0]!;
+      expect(c.equipment).toEqual({
+        "1": { Ring: "DEN_Thiefling_Ring1", Ring2: "DEN_Thiefling_Ring3", Helmet: "ARM_Hat", Boots: "MAG_Acrobat_Shoes" },
+        "2": {},
+        "3": {},
+      });
+      expect(c.notes).toBe("Fixture notes\n\nBG3P3 items not placed: DEN_Thiefling_Ring5, NOT_AN_ITEM");
+      expect(warnings).toHaveLength(2);
+      const again = await decode(await encode(run));
+      expect(again).toEqual({ run, warnings: [] });
+    }
   });
 
   it("a missing step, a future version or a version mismatch is an error", async () => {
@@ -390,9 +539,9 @@ describe("synchronous JSON decoding", () => {
   });
 
   it("migrates a version 1 document", () => {
-    const { id, updatedAt, difficulty, ...rest } = sampleRun();
+    const { id, updatedAt, difficulty, ...rest } = legacySample();
     const run = decodeJson(JSON.stringify({ ...rest, version: 1, difficulty: "" }));
-    expect(run.version).toBe(3);
+    expect(run.version).toBe(4);
     expect(run.id).toBe("");
     expect(run.updatedAt).toBeNull();
   });

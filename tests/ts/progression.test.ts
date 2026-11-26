@@ -17,7 +17,7 @@ function level(cls: string, choices: Record<string, Choice> = {}): Level {
 
 function character(levels: Level[], race: Character["race"] = "Human", subrace: Character["subrace"] = null): Character {
   const abilities = { Strength: 8, Dexterity: 8, Constitution: 8, Intelligence: 8, Wisdom: 8, Charisma: 8 };
-  return { id: "c1", who: "player", race, subrace, background, abilities, levels, items: [], notes: "" };
+  return { id: "c1", who: "player", race, subrace, background, abilities, levels, equipment: { "1": {}, "2": {}, "3": {} }, notes: "" };
 }
 
 function classRows(name: string, lvl: number, multiclass: boolean) {

@@ -34,7 +34,7 @@ function gale(levels: number, school: string): Character {
     background: origin.background ?? "",
     abilities: { ...origin.abilities! },
     levels: choices.map((c) => ({ class: "Wizard", choices: c })),
-    items: [],
+    equipment: { "1": {}, "2": {}, "3": {} },
     notes: "",
   };
 }
@@ -161,7 +161,7 @@ describe("impact", () => {
   it("flags a feat whose requirement fails after an ability-bonus change, and keeps it", () => {
     const scores: Record<Ability, number> = { Strength: 15, Dexterity: 12, Constitution: 15, Intelligence: 8, Wisdom: 13, Charisma: 8 };
     const ranger = (bonus: string[]): Character => {
-      const c: Character = { id: "r", who: "player", race: "Halfling", subrace: "Halfling_Lightfoot", background: Object.keys(data.rules.backgrounds)[0] ?? "", abilities: { ...scores }, levels: ["Ranger", "Ranger", "Ranger", "Ranger"].map((cls) => ({ class: cls, choices: {} })), items: [], notes: "" };
+      const c: Character = { id: "r", who: "player", race: "Halfling", subrace: "Halfling_Lightfoot", background: Object.keys(data.rules.backgrounds)[0] ?? "", abilities: { ...scores }, levels: ["Ranger", "Ranger", "Ranger", "Ranger"].map((cls) => ({ class: cls, choices: {} })), equipment: { "1": {}, "2": {}, "3": {} }, notes: "" };
       const bonusSlot = resolve(c, data).levels[0]!.slots.find((s) => s.selector.function === "SelectAbilityBonus")!.id;
       c.levels[0]!.choices[bonusSlot] = bonus;
       c.levels[3]!.choices["feat:4"] = ["DefensiveDuelist"];
@@ -177,7 +177,7 @@ describe("impact", () => {
 
   it("reports the skills the active party gains and loses, and none for a character outside it", () => {
     const ranger = (skills: string[]): Character => {
-      const c: Character = { id: "r", who: "player", race: "Halfling", subrace: "Halfling_Lightfoot", background: Object.keys(data.rules.backgrounds).find((k) => data.rules.backgrounds[k]!.passives.includes("Background_HauntedOne"))!, abilities: { Strength: 8, Dexterity: 15, Constitution: 14, Intelligence: 8, Wisdom: 15, Charisma: 10 }, levels: [{ class: "Ranger", choices: {} }], items: [], notes: "" };
+      const c: Character = { id: "r", who: "player", race: "Halfling", subrace: "Halfling_Lightfoot", background: Object.keys(data.rules.backgrounds).find((k) => data.rules.backgrounds[k]!.passives.includes("Background_HauntedOne"))!, abilities: { Strength: 8, Dexterity: 15, Constitution: 14, Intelligence: 8, Wisdom: 15, Charisma: 10 }, levels: [{ class: "Ranger", choices: {} }], equipment: { "1": {}, "2": {}, "3": {} }, notes: "" };
       const skillSlot = resolve(c, data).levels[0]!.slots.find((s) => s.selector.function === "SelectSkills")!.id;
       c.levels[0]!.choices[skillSlot] = skills;
       return c;

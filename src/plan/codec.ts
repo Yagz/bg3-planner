@@ -5,14 +5,19 @@ import type { TextKind } from "../data/names.ts";
 import type { Texts } from "../data/types.ts";
 import { CodecError } from "./errors.ts";
 import { CURRENT_VERSION, MIGRATIONS, migrate } from "./migrations.ts";
-import type { Migration } from "./migrations.ts";
+import type { Migration, MigrationContext } from "./migrations.ts";
 import { ABILITIES, MAX_LEVELS } from "./model.ts";
 import { isOffData } from "./model.ts";
-import type { OffData, Run } from "./model.ts";
+import type { Equipment, Level, OffData, Run } from "./model.ts";
 
 export { CodecError };
 
 export const PREFIX = "BG3P";
+
+export type DecodeOptions = {
+  /** The data slot of an item id (null for an id outside the game data), used to place the items of an old run. */
+  itemSlot?: (id: string) => string | null;
+};
 
 type Json = unknown;
 type Obj = Record<string, unknown>;
@@ -64,9 +69,10 @@ export async function encode(run: Run): Promise<string> {
 export async function decode(
   text: string,
   registry: Record<number, Migration> = MIGRATIONS,
+  options: DecodeOptions = {},
 ): Promise<{ run: Run; warnings: string[] }> {
   try {
-    return await decodeText(text, registry);
+    return await decodeText(text, registry, options);
   } catch (error) {
     throw asCodecError(error);
   }
@@ -76,12 +82,12 @@ export async function decode(
  * Reads the run's JSON document synchronously (the form the browser stores), through the same hint stripping,
  * migrations and shape checks as `decode`; throws nothing but a `CodecError`.
  */
-export function decodeJson(text: string, registry: Record<number, Migration> = MIGRATIONS): Run {
+export function decodeJson(text: string, registry: Record<number, Migration> = MIGRATIONS, options: DecodeOptions = {}): Run {
   try {
     const trimmed = text.trim();
     if (!(trimmed.startsWith("{") || trimmed.startsWith("["))) throw new CodecError("Not a JSON document");
     const { raw, version } = readJsonDocument(trimmed);
-    return finish(raw, version, registry).run;
+    return finish(raw, version, registry, options).run;
   } catch (error) {
     throw asCodecError(error);
   }
@@ -104,20 +110,21 @@ function readJsonDocument(trimmed: string): { raw: Obj; version: number } {
   return { raw, version: declared };
 }
 
-/** Strips the hint fields, migrates to the current version and checks the shape. */
-function finish(raw: unknown, version: number, registry: Record<number, Migration>): { run: Run; warnings: string[] } {
+/** Strips the hint fields, migrates to the current version and checks the shape; the warnings are the hints' then the migrations'. */
+function finish(raw: unknown, version: number, registry: Record<number, Migration>, options: DecodeOptions): { run: Run; warnings: string[] } {
   const hints = { count: 0 };
   const cleaned = stripHints(raw, hints);
-  const migrated = migrate(cleaned, version, registry);
+  const context: MigrationContext = { itemSlot: options.itemSlot ?? null, warnings: [] };
+  const migrated = migrate(cleaned, version, registry, context);
   if (!isObject(migrated) || migrated["version"] !== CURRENT_VERSION) {
     throw new CodecError(`A migration left the data at version ${isObject(migrated) ? JSON.stringify(migrated["version"]) : "?"}, expected ${CURRENT_VERSION}`);
   }
   const run = validateRun(migrated);
   const warnings = hints.count > 0 ? [`Ignored ${hints.count} hint field(s) (_name / _names / _casting): they are display aids, not data`] : [];
-  return { run, warnings };
+  return { run, warnings: [...warnings, ...context.warnings] };
 }
 
-async function decodeText(text: string, registry: Record<number, Migration>): Promise<{ run: Run; warnings: string[] }> {
+async function decodeText(text: string, registry: Record<number, Migration>, options: DecodeOptions): Promise<{ run: Run; warnings: string[] }> {
   const trimmed = text.trim();
   if (trimmed === "") throw new CodecError("Nothing to import: the text is empty");
 
@@ -155,7 +162,7 @@ async function decodeText(text: string, registry: Record<number, Migration>): Pr
     }
   }
 
-  return finish(raw, version, registry);
+  return finish(raw, version, registry, options);
 }
 
 function parseJson(text: string): unknown {
@@ -253,6 +260,16 @@ function identity(value: unknown, path: string): string | OffData {
   return value;
 }
 
+function equipment(value: unknown, path: string): Equipment {
+  const e = object(value, path, ["1", "2", "3"]);
+  const act = (key: "1" | "2" | "3") =>
+    record(e[key], at(path, key), (v, p) => {
+      if (v !== null && typeof v !== "string") fail(p, "an item identifier or null");
+      return v;
+    });
+  return { "1": act("1"), "2": act("2"), "3": act("3") };
+}
+
 function difficulty(value: unknown): Run["difficulty"] {
   const d = object(value, "difficulty", ["ruleset", "overrides"]);
   const overrides = record(d["overrides"], "difficulty.overrides", (v, p) => {
@@ -291,7 +308,7 @@ function validateRun(raw: unknown): Run {
 
   const characters = array(r["characters"], "characters").map((value, i) => {
     const path = at("characters", i);
-    const c = object(value, path, ["id", "who", "race", "subrace", "background", "abilities", "levels", "items", "notes"]);
+    const c = object(value, path, ["id", "who", "race", "subrace", "background", "abilities", "levels", "equipment", "notes"]);
     const abilitiesRaw = object(c["abilities"], at(path, "abilities"), ABILITIES);
     const abilities = {} as Run["characters"][number]["abilities"];
     for (const ability of ABILITIES) abilities[ability] = int(abilitiesRaw[ability], at(at(path, "abilities"), ability));
@@ -299,8 +316,12 @@ function validateRun(raw: unknown): Run {
     if (levelsRaw.length > MAX_LEVELS) fail(at(path, "levels"), `at most ${MAX_LEVELS} levels`);
     const levels = levelsRaw.map((lv, j) => {
       const lp = at(at(path, "levels"), j);
-      const l = object(lv, lp, ["class", "choices"]);
-      return { class: identity(l["class"], at(lp, "class")), choices: record(l["choices"], at(lp, "choices"), choice) };
+      // `prepared` is optional: absent, the class's previous list holds; an empty list is explicit.
+      const optional = isObject(lv) && Object.hasOwn(lv, "prepared") ? ["prepared"] : [];
+      const l = object(lv, lp, ["class", "choices", ...optional]);
+      const level: Level = { class: identity(l["class"], at(lp, "class")), choices: record(l["choices"], at(lp, "choices"), choice) };
+      if (optional.length > 0) level.prepared = strings(l["prepared"], at(lp, "prepared"));
+      return level;
     });
     const subrace = c["subrace"];
     return {
@@ -311,13 +332,13 @@ function validateRun(raw: unknown): Run {
       background: identity(c["background"], at(path, "background")),
       abilities,
       levels,
-      items: strings(c["items"], at(path, "items")),
+      equipment: equipment(c["equipment"], at(path, "equipment")),
       notes: str(c["notes"], at(path, "notes")),
     };
   });
 
   return {
-    version: 3,
+    version: CURRENT_VERSION,
     id: str(r["id"], "id"),
     updatedAt,
     name: str(r["name"], "name"),
@@ -371,13 +392,14 @@ export function toReadableJson(run: Run, texts: Texts, data?: GameData): string 
         {
           ...names([idOf(level.class)], texts, "class"),
           ...names(Object.values(level.choices).flatMap((ch) => (Array.isArray(ch) ? ch : [])), texts, null),
+          ...names(level.prepared ?? [], texts, "spell"),
         },
       );
     });
     const found = {
       ...names([idOf(c.race), idOf(c.subrace)], texts, "race"),
       ...names([idOf(c.background)], texts, "background"),
-      ...names(c.items, texts, "item"),
+      ...names(Object.values(c.equipment).flatMap((act) => Object.values(act)), texts, "item"),
       ...names(c.levels.map((l) => idOf(l.class)), texts, "class"),
     };
     return withNames({ ...c, levels }, found);

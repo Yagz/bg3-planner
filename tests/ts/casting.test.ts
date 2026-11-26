@@ -17,7 +17,7 @@ function character(classes: string[], choices: Record<string, Choice>[], race = 
   return {
     id: "c1", who: "player", race, subrace, background: "", abilities: { ...SCORES },
     levels: classes.map((cls, i) => ({ class: cls, choices: choices[i] ?? {} })),
-    items: [], notes: "",
+    equipment: { "1": {}, "2": {}, "3": {} }, notes: "",
   };
 }
 

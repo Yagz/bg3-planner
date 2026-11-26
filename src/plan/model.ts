@@ -1,3 +1,5 @@
+import type { Act, EquipmentSlot } from "./equipmentSlots.ts";
+
 export const ABILITIES = ["Strength", "Dexterity", "Constitution", "Intelligence", "Wisdom", "Charisma"] as const;
 export type Ability = (typeof ABILITIES)[number];
 
@@ -18,7 +20,22 @@ export type Level = {
   class: string | OffData;
   /** Choices by slot id (`<progression UUID>/<selector index>`). */
   choices: Record<string, Choice>;
+  /**
+   * The spells prepared for this level's class from this level on; absent, the list of the class's previous level holds.
+   * An empty list is an explicit list.
+   */
+  prepared?: string[];
 };
+
+/**
+ * Per act, slot → item id, or null for a slot emptied on purpose. A slot absent from an act keeps the previous act's item.
+ * The codec accepts any slot key; the engine judges it.
+ */
+export type Equipment = Record<Act, Partial<Record<EquipmentSlot, string | null>>>;
+
+export function emptyEquipment(): Equipment {
+  return { "1": {}, "2": {}, "3": {} };
+}
 
 export type Character = {
   id: string;
@@ -31,7 +48,7 @@ export type Character = {
   abilities: Record<Ability, number>;
   /** Index 0 is character level 1; at most 12. */
   levels: Level[];
-  items: string[];
+  equipment: Equipment;
   notes: string;
 };
 
@@ -49,7 +66,7 @@ export type Difficulty = {
 };
 
 export type Run = {
-  version: 3;
+  version: 4;
   /** Stable identity of the run, kept across exports and renames; empty for a run migrated from version 1. */
   id: string;
   /** ISO date of the last edit; null when unknown. */
@@ -70,7 +87,7 @@ export type Run = {
 
 export function emptyRun(id: string = crypto.randomUUID()): Run {
   return {
-    version: 3,
+    version: 4,
     id,
     updatedAt: null,
     name: "",

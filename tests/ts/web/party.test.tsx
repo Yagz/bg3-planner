@@ -37,7 +37,7 @@ function ranger(levels: number): Character {
     background: hauntedOne,
     abilities: { Strength: 8, Dexterity: 15, Constitution: 14, Intelligence: 8, Wisdom: 15, Charisma: 10 },
     levels: Array.from({ length: levels }, () => ({ class: "Ranger", choices: {} })),
-    items: [],
+    equipment: { "1": {}, "2": {}, "3": {} },
     notes: "",
   };
   const first = resolve(c, data).levels[0]!;

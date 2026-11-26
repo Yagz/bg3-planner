@@ -25,7 +25,7 @@ function rangerRun(levels: number): Run {
       background: "",
       abilities: { Strength: 8, Dexterity: 15, Constitution: 14, Intelligence: 8, Wisdom: 13, Charisma: 10 },
       levels: Array.from({ length: levels }, () => ({ class: "Ranger", choices: {} })),
-      items: [],
+      equipment: { "1": {}, "2": {}, "3": {} },
       notes: "",
     },
   ];
@@ -97,7 +97,24 @@ describe("run command line", () => {
     expect(result.code).toBe(1);
     expect(result.out).toMatch(/incomplete c1 level 3 subclass:Ranger choiceMissing/);
     const decoded = JSON.parse(cli("decode", v1).out);
-    expect(decoded).toMatchObject({ version: 3, id: "", updatedAt: null });
+    expect(decoded).toMatchObject({ version: 4, id: "", updatedAt: null });
+  });
+
+  it("decode of a BG3P3 string prints version 4 JSON with equipment", () => {
+    const fixture = join(import.meta.dirname, "fixtures", "bg3p3.txt");
+    const result = cli("decode", fixture);
+    expect(result.code).toBe(0);
+    const decoded = JSON.parse(result.out);
+    expect(decoded.version).toBe(4);
+    expect(decoded.characters[0].items).toBeUndefined();
+    expect(decoded.characters[0].equipment).toEqual({
+      "1": { Ring: "DEN_Thiefling_Ring1", Ring2: "DEN_Thiefling_Ring3", Helmet: "ARM_Hat", Boots: "MAG_Acrobat_Shoes" },
+      "2": {},
+      "3": {},
+    });
+    expect(decoded.characters[0]._names).toHaveProperty("MAG_Acrobat_Shoes");
+    expect(decoded.characters[0].notes).toContain("BG3P3 items not placed: DEN_Thiefling_Ring5, NOT_AN_ITEM");
+    expect(result.err).toContain("warning: Item NOT_AN_ITEM of c1 could not be placed");
   });
 
   it("exits 3 on unreadable input and usage errors", () => {

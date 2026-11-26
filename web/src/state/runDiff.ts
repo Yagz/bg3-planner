@@ -154,7 +154,7 @@ export function runDiff(before: Run | null, after: Run): Change[] {
   return changes;
 }
 
-/** True when the two runs differ in anything but their edit date, whether or not `runDiff` reports it (items, decisions, bonuses, party status…). */
+/** True when the two runs differ in anything but their edit date, whether or not `runDiff` reports it (equipment, decisions, bonuses, party status…). */
 export function differsAtAll(before: Run, after: Run): boolean {
   return JSON.stringify({ ...before, updatedAt: null }) !== JSON.stringify({ ...after, updatedAt: null });
 }

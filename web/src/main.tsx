@@ -1,7 +1,7 @@
 // Fonts ship with the site (no other site is contacted). Marcellus: the latin and latin-ext subsets with their unicode-range (400.css; the per-subset latin.css files carry no range, so the later one would cover everything). Source Sans 3: the package's variable-weight stylesheet.
 import "@fontsource/marcellus/400.css";
 import "@fontsource-variable/source-sans-3/wght.css";
-import { StrictMode, useEffect, useState } from "react";
+import { StrictMode, useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import type { GameData } from "../../src/data/types.ts";
 import App from "./App.tsx";
@@ -31,18 +31,19 @@ function sessionStorageOrNull(): Storage | null {
 
 const backend = browserStorage();
 const session = sessionStorageOrNull();
-const store = createStore(backend);
 
 function Root() {
   const [data, setData] = useState<GameData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { t } = createI18n(loadSettings(backend).lang);
+  // The store is created once the game data is loaded: reading a stored run of an older version places its items through the data.
+  const store = useMemo(() => (data === null ? null : createStore(backend, { itemSlot: (id) => data.rules.items[id]?.slot ?? null })), [data]);
 
   useEffect(() => {
     loadGameDataFromUrl(import.meta.env.BASE_URL).then(setData, (reason: unknown) => setError(reason instanceof Error ? reason.message : String(reason)));
   }, []);
 
-  if (data !== null) return <App data={data} store={store} settingsBackend={backend} sessionBackend={session} />;
+  if (data !== null && store !== null) return <App data={data} store={store} settingsBackend={backend} sessionBackend={session} />;
   return <p className="wrap sub">{error === null ? t("app.loading") : t("app.loadError", { message: error })}</p>;
 }
 

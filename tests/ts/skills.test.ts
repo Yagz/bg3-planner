@@ -20,7 +20,7 @@ function elf(subrace: string, levels = 1): Character {
     background: GUILD_ARTISAN,
     abilities: { Strength: 8, Dexterity: 15, Constitution: 14, Intelligence: 8, Wisdom: 15, Charisma: 10 },
     levels: Array.from({ length: levels }, () => ({ class: "Cleric", choices: {} })),
-    items: [],
+    equipment: { "1": {}, "2": {}, "3": {} },
     notes: "",
   };
 }

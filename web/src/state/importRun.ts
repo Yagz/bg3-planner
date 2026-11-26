@@ -47,7 +47,7 @@ function newerOf(stored: string | null, incoming: string | null): Exclude<Confli
 export async function importRun(text: string, store: RunStore, data: GameData): Promise<ImportResult> {
   let decoded: { run: Run; warnings: string[] };
   try {
-    decoded = await decode(stringOf(text));
+    decoded = await decode(stringOf(text), undefined, { itemSlot: (id) => data.rules.items[id]?.slot ?? null });
   } catch (error) {
     return { kind: "error", message: error instanceof CodecError ? error.message : String(error) };
   }

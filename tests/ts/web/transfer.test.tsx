@@ -28,7 +28,7 @@ function badRun(name: string): Run {
     background: "Bg_X",
     abilities: { Strength: 8, Dexterity: 8, Constitution: 8, Intelligence: 8, Wisdom: 8, Charisma: 8 },
     levels: [],
-    items: [],
+    equipment: { "1": {}, "2": {}, "3": {} },
     notes: "",
   });
   return run;

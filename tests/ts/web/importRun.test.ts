@@ -25,10 +25,12 @@ describe("importRun", () => {
     const store = createStore(new MemoryBackend());
     const result = await importRun(await v1String(), store, data);
     if (result.kind !== "ready") throw new Error("expected ready");
-    expect(result.run.version).toBe(3);
+    expect(result.run.version).toBe(4);
     expect(result.run.id).toBe("");
     expect(result.run.name).toBe("Old");
-    const { version: _v, ...original } = v1Document();
+    // The stub data knows no item: the old item is listed in the notes, never dropped.
+    const { version: _v, ...document } = v1Document();
+    const original = { ...document, characters: document.characters.map(({ items: _items, ...c }) => ({ ...c, notes: "kept\n\nBG3P3 items not placed: Item_A", equipment: { "1": {}, "2": {}, "3": {} } })) };
     const { version: _w, id: _i, updatedAt: _u, ...migrated } = result.run;
     expect(migrated).toEqual(original);
     expect(result.report.issues.length).toBeGreaterThan(0);
@@ -39,6 +41,20 @@ describe("importRun", () => {
     expect(store.list().map((s) => s.name)).toEqual(["Old"]);
     const { id: _a, updatedAt: _b, version: _c, ...kept } = store.load(saved.id)!;
     expect(kept).toEqual(original);
+  });
+
+  it("migration warnings are shown on import", async () => {
+    const withItems = stubData();
+    (withItems.rules as { items: unknown }).items = { Item_A: { slot: "Ring" } };
+    const placed = await importRun(await v1String(), createStore(new MemoryBackend()), withItems);
+    if (placed.kind !== "ready") throw new Error("expected ready");
+    expect(placed.run.characters[0]!.equipment["1"]).toEqual({ Ring: "Item_A" });
+    expect(placed.run.characters[0]!.notes).toBe("kept");
+    expect(placed.warnings).toEqual([]);
+    const unplaced = await importRun(await v1String(), createStore(new MemoryBackend()), data);
+    if (unplaced.kind !== "ready") throw new Error("expected ready");
+    expect(unplaced.warnings).toHaveLength(1);
+    expect(unplaced.warnings[0]).toMatch(/^Item Item_A of c1 could not be placed: /);
   });
 
   it("reads a full link and a readable JSON document", async () => {

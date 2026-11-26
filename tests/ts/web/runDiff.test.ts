@@ -13,7 +13,7 @@ function character(id: string, who: string, classes: string[], choices: Record<s
     background: "Soldier",
     abilities: { Strength: 8, Dexterity: 8, Constitution: 8, Intelligence: 8, Wisdom: 8, Charisma: 8 },
     levels: classes.map((cls, i) => ({ class: cls, choices: choices[i] ?? {} })),
-    items: [],
+    equipment: { "1": {}, "2": {}, "3": {} },
     notes: "",
   };
 }
@@ -132,13 +132,13 @@ describe("runDiff", () => {
     ]);
   });
 
-  it("compares a version-2 JSON version with a version-3 one", () => {
-    const v3 = base();
-    const { difficulty: _difficulty, ...rest } = v3;
-    const v2 = JSON.stringify({ ...rest, version: 2, difficulty: "Balanced" });
+  it("compares a version-2 JSON version with a current one", () => {
+    const current = base();
+    const { difficulty: _difficulty, characters, ...rest } = current;
+    const v2 = JSON.stringify({ ...rest, version: 2, difficulty: "Balanced", characters: characters.map(({ equipment: _e, ...c }) => ({ ...c, items: [] })) });
     const older = decodeJson(v2);
-    expect(older.version).toBe(3);
-    const changes = runDiff(older, { ...v3, name: "Later" });
+    expect(older.version).toBe(4);
+    const changes = runDiff(older, { ...current, name: "Later" });
     expect(changes).toContainEqual({ kind: "name", before: "Main", after: "Later" });
   });
 });

@@ -1,4 +1,5 @@
 import { decodeJson } from "../../../src/plan/codec.ts";
+import type { DecodeOptions } from "../../../src/plan/codec.ts";
 import type { Run } from "../../../src/plan/model.ts";
 
 export type RunSummary = { id: string; name: string; updatedAt: string | null };
@@ -59,7 +60,7 @@ function validNote(note: unknown): note is HistoryNote | undefined {
 }
 
 /** Reads a stored record; throws on anything that is not a readable run. */
-function readRecord(text: string): { history: HistoryEntry[]; run: Run } {
+function readRecord(text: string, options: DecodeOptions): { history: HistoryEntry[]; run: Run } {
   const record: unknown = JSON.parse(text);
   const history = (record as { history?: unknown } | null)?.history;
   if (!Array.isArray(history) || history.length === 0) throw new Error("No saved version");
@@ -68,15 +69,19 @@ function readRecord(text: string): { history: HistoryEntry[]; run: Run } {
     if (Number.isNaN(Date.parse(entry.at))) throw new Error(`Saved version date ${JSON.stringify(entry.at)} is not a date`);
   }
   for (const entry of history as HistoryEntry[]) if (!validNote(entry.note)) delete entry.note;
-  return { history: history as HistoryEntry[], run: decodeJson((history[0] as HistoryEntry).text) };
+  return { history: history as HistoryEntry[], run: decodeJson((history[0] as HistoryEntry).text, undefined, options) };
 }
 
 function summaryOf(run: Run): RunSummary {
   return { id: run.id, name: run.name, updatedAt: run.updatedAt };
 }
 
-/** A run store over `backend` (normally `localStorage`); any storage failure switches it to memory, never throws. */
-export function createStore(backend: Storage | null): RunStore {
+/**
+ * A run store over `backend` (normally `localStorage`); any storage failure switches it to memory, never throws.
+ * `options.itemSlot` places the items of a stored run of an older version when it is read (see `decode`).
+ */
+export function createStore(backend: Storage | null, options: DecodeOptions = {}): RunStore {
+  const read = (text: string): Run => decodeJson(text, undefined, options);
   const entries = new Map<string, Entry>();
   const broken = new Map<string, string>();
   let available = backend !== null;
@@ -95,7 +100,7 @@ export function createStore(backend: Storage | null): RunStore {
       for (const key of keys) {
         const id = key.slice(RUN_PREFIX.length);
         try {
-          const { history, run } = readRecord(backend.getItem(key) ?? "");
+          const { history, run } = readRecord(backend.getItem(key) ?? "", options);
           entries.set(id, { summary: { ...summaryOf(run), id }, history });
         } catch (error) {
           broken.set(id, error instanceof Error ? error.message : String(error));
@@ -122,7 +127,7 @@ export function createStore(backend: Storage | null): RunStore {
     }
     if (text === null) return [];
     try {
-      return readRecord(text).history;
+      return readRecord(text, options).history;
     } catch (error) {
       entries.delete(id);
       broken.set(id, error instanceof Error ? error.message : String(error));
@@ -158,7 +163,7 @@ export function createStore(backend: Storage | null): RunStore {
     const keep = options.keepDate === true && run.updatedAt !== null && !Number.isNaN(Date.parse(run.updatedAt));
     if (!keep) {
       // A real edit is dated after the run's previous date too, which an imported copy may have set ahead of this clock.
-      const dates = [Date.parse(at), ...[held?.summary.updatedAt, previous[0] === undefined ? null : decodeJson(previous[0].text).updatedAt].map((date) => (date == null ? Number.NaN : Date.parse(date) + 1))];
+      const dates = [Date.parse(at), ...[held?.summary.updatedAt, previous[0] === undefined ? null : read(previous[0].text).updatedAt].map((date) => (date == null ? Number.NaN : Date.parse(date) + 1))];
       run.updatedAt = new Date(Math.max(...dates.filter((date) => !Number.isNaN(date)))).toISOString();
     }
     const stamp = keep ? at : (run.updatedAt as string);
@@ -174,7 +179,7 @@ export function createStore(backend: Storage | null): RunStore {
     list,
     load(id) {
       const current = entries.get(id)?.history[0];
-      return current === undefined ? null : decodeJson(current.text);
+      return current === undefined ? null : read(current.text);
     },
     save,
     history(id) {
@@ -183,7 +188,7 @@ export function createStore(backend: Storage | null): RunStore {
     restore(id, at) {
       const entry = entries.get(id)?.history.find((version) => version.at === at);
       if (entry === undefined) throw new Error(`No saved version of run ${id} at ${at}`);
-      return save(decodeJson(entry.text), { note: { kind: "restore", from: at } });
+      return save(read(entry.text), { note: { kind: "restore", from: at } });
     },
     refresh: scan,
     remove(id) {

@@ -31,7 +31,7 @@ function ranger(): Character {
     background: Object.keys(data.rules.backgrounds)[0]!,
     abilities: { Strength: 8, Dexterity: 15, Constitution: 14, Intelligence: 8, Wisdom: 15, Charisma: 10 },
     levels: [1, 2, 3].map(() => ({ class: "Ranger", choices: {} as Record<string, Choice> })),
-    items: [],
+    equipment: { "1": {}, "2": {}, "3": {} },
     notes: "",
   };
   const levels = resolve(c, data).levels;

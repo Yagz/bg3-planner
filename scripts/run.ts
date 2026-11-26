@@ -53,8 +53,9 @@ function parseArgs(args: string[]): { positional: string[]; lang: "en" | "fr" } 
   return { positional, lang };
 }
 
-async function readRun(arg: string): Promise<Run> {
-  const { run, warnings } = await decode(readInput(arg));
+/** Reads a run; the game data places the items of a run of an older version. */
+async function readRun(arg: string, data: GameData): Promise<Run> {
+  const { run, warnings } = await decode(readInput(arg), undefined, { itemSlot: (id) => data.rules.items[id]?.slot ?? null });
   for (const warning of warnings) console.error(`warning: ${warning}`);
   return run;
 }
@@ -163,25 +164,25 @@ async function main(argv: string[]): Promise<number> {
   switch (command) {
     case "decode": {
       need(1);
-      const run = await readRun(positional[0] ?? "");
       const data = await loadGameData(DATA_DIR);
+      const run = await readRun(positional[0] ?? "", data);
       console.log(toReadableJson(run, data.texts.en, data));
       return 0;
     }
     case "encode": {
       need(1);
-      console.log(await encode(await readRun(positional[0] ?? "")));
+      console.log(await encode(await readRun(positional[0] ?? "", await loadGameData(DATA_DIR))));
       return 0;
     }
     case "validate": {
       need(1);
-      const run = await readRun(positional[0] ?? "");
-      return validateCommand(run, await loadGameData(DATA_DIR), lang);
+      const data = await loadGameData(DATA_DIR);
+      return validateCommand(await readRun(positional[0] ?? "", data), data, lang);
     }
     case "slots": {
       need(2);
-      const run = await readRun(positional[0] ?? "");
-      return slotsCommand(run, await loadGameData(DATA_DIR), lang, positional[1] ?? "");
+      const data = await loadGameData(DATA_DIR);
+      return slotsCommand(await readRun(positional[0] ?? "", data), data, lang, positional[1] ?? "");
     }
     default:
       return fail(command === undefined ? "Missing subcommand" : `Unknown subcommand ${command}`, true);

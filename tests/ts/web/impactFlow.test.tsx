@@ -60,7 +60,7 @@ function gale(levels: number, school: string): Character {
     background: origin.background ?? "",
     abilities: { ...origin.abilities! },
     levels: Array.from({ length: levels }, (_, i) => ({ class: "Wizard", choices: (i === 1 ? { "subclass:Wizard": [school] } : {}) as Record<string, Choice> })),
-    items: [],
+    equipment: { "1": {}, "2": {}, "3": {} },
     notes: "",
   });
 }
@@ -149,7 +149,7 @@ describe("Tree view and impact preview", () => {
       background: Object.keys(data.rules.backgrounds)[0]!,
       abilities: { ...scores },
       levels: Array.from({ length: 4 }, () => ({ class: "Ranger", choices: {} as Record<string, Choice> })),
-      items: [],
+      equipment: { "1": {}, "2": {}, "3": {} },
       notes: "",
     };
     const bonus = resolve(c, data).levels[0]!.slots.find((s) => s.selector.function === "SelectAbilityBonus")!.id;
@@ -184,7 +184,7 @@ describe("Tree view and impact preview", () => {
       background: Object.keys(data.rules.backgrounds)[0]!,
       abilities: { ...scores },
       levels: Array.from({ length: 4 }, () => ({ class: "Ranger", choices: {} as Record<string, Choice> })),
-      items: [],
+      equipment: { "1": {}, "2": {}, "3": {} },
       notes: "",
     });
     const c = ranger("r", "player");
@@ -225,7 +225,7 @@ describe("Tree view and impact preview", () => {
       background: Object.keys(data.rules.backgrounds)[0]!,
       abilities: { Strength: 15, Dexterity: 10, Constitution: 14, Intelligence: 8, Wisdom: 15, Charisma: 10 },
       levels: Array.from({ length: 4 }, (_, i) => ({ class: "Cleric", choices: (i === 0 ? { "subclass:Cleric": ["NatureDomain"] } : {}) as Record<string, Choice> })),
-      items: [],
+      equipment: { "1": {}, "2": {}, "3": {} },
       notes: "",
     });
     before.levels[3]!.choices["feat:4"] = ["HeavyArmorMaster"];
@@ -271,7 +271,7 @@ describe("Tree view and impact preview", () => {
       background: Object.keys(data.rules.backgrounds)[0]!,
       abilities: { Strength: 8, Dexterity: 15, Constitution: 14, Intelligence: 8, Wisdom: 15, Charisma: 10 },
       levels: [1, 2].map(() => ({ class: "Ranger", choices: {} as Record<string, Choice> })),
-      items: [],
+      equipment: { "1": {}, "2": {}, "3": {} },
       notes: "",
     };
     const spells = resolve(c, data).levels[1]!.slots.find((s) => s.selector.function === "SelectSpells")!;

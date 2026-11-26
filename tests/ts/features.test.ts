@@ -20,7 +20,7 @@ function character(classes: string[], choices: Character["levels"][number]["choi
     background,
     abilities: { Strength: 8, Dexterity: 15, Constitution: 14, Intelligence: 8, Wisdom: 15, Charisma: 10 },
     levels: classes.map((cls, i) => ({ class: cls, choices: choices[i] ?? {} })),
-    items: [],
+    equipment: { "1": {}, "2": {}, "3": {} },
     notes: "",
   };
 }

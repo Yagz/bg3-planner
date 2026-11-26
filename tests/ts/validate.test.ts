@@ -23,7 +23,7 @@ const FIGHTER_SCORES: Scores = { Strength: 15, Dexterity: 15, Constitution: 15, 
 
 function character(classes: string[], choices: Record<string, Choice>[], scores: Scores, race: Character["race"] = "Halfling", subrace: Character["subrace"] = "Halfling_Lightfoot"): Character {
   const levels: Level[] = classes.map((cls, i) => ({ class: cls, choices: choices[i] ?? {} }));
-  return { id: "c1", who: "player", race, subrace, background, abilities: { ...scores }, levels, items: [], notes: "" };
+  return { id: "c1", who: "player", race, subrace, background, abilities: { ...scores }, levels, equipment: { "1": {}, "2": {}, "3": {} }, notes: "" };
 }
 
 function runOf(...characters: Character[]) {
