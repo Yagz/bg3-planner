@@ -283,5 +283,6 @@
   "spell.unknownLevel": "Other",
   "spell.cantripShort": "cantrip",
   "spell.levelShort": "lvl {level}",
-  "spell.castWith": "Cast with {ability}"
+  "spell.castWith": "Cast with {ability}",
+  "spell.castWithInline": "cast with {ability}"
 }

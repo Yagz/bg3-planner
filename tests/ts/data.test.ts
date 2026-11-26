@@ -100,6 +100,14 @@ describe("game data", () => {
   });
 });
 
+describe("spell levels (real data)", () => {
+  it("gives level 0 to a spell the game flags IsSpell without a Level, and keeps a class action without one at null", async () => {
+    const data = await loadGameData("data/larian");
+    expect(data.rules.spells["Shout_Thaumaturgy"]?.level).toBe(0);
+    expect(data.rules.spells["Target_Darkness_Monk"]?.level).toBeNull();
+  });
+});
+
 describe("description parameters (real data)", () => {
   it("renders every placeholder, and only level-dependent forms read as the marker", async () => {
     const data = await loadGameData("data/larian");

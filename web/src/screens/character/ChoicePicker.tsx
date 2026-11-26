@@ -46,6 +46,18 @@ export function spellLevel(data: GameData, id: string): number | null {
   return Object.hasOwn(data.rules.spells, id) ? (data.rules.spells[id]?.level ?? null) : null;
 }
 
+/** A spell's level tag ("lvl 1", "cantrip"), or null when the data does not know its level. */
+export function spellLevelTag(data: GameData, t: Translate, id: string): string | null {
+  const level = spellLevel(data, id);
+  return level === null ? null : level === 0 ? t("spell.cantripShort") : t("spell.levelShort", { level });
+}
+
+/** What a spell's chip shows besides its name, as text for screen readers: its level tag and the ability it is cast with. */
+export function spellFacts(data: GameData, lang: Lang, t: Translate, id: string, ability: Ability | null): string[] {
+  const tag = spellLevelTag(data, t, id);
+  return [...(tag === null ? [] : [tag]), ...(ability === null ? [] : [t("spell.castWithInline", { ability: gameName(data, lang, "ability", ability) })])];
+}
+
 /** The ability a spell is cast with: its game name, shortened only by the style, the full name in the title. */
 export function AbilityBadge({ data, lang, t, ability }: { data: GameData; lang: Lang; t: Translate; ability: Ability }) {
   const name = gameName(data, lang, "ability", ability);
@@ -183,10 +195,17 @@ export default function ChoicePicker({ data, spec, onSave, onClear, onClose }: P
 
   const full = mode.type === "set" && picks.length >= mode.max;
   const castWith = spec.spells?.ability ?? null;
+  const facts = (entry: string) => (spec.spells === undefined ? [] : spellFacts(data, lang, t, entry, castWith));
   const label = (entry: string) => {
     const text = description(entry);
+    const said = facts(entry);
     return (
       <span>
+        {said.length > 0 && (
+          <span className="sr" id={`${id}-${entry}-spell`}>
+            {said.join(", ")}
+          </span>
+        )}
         <b>{name(entry)}</b>
         {castWith !== null && (
           <>
@@ -202,7 +221,10 @@ export default function ChoicePicker({ data, spec, onSave, onClear, onClose }: P
       </span>
     );
   };
-  const describedBy = (entry: string) => (description(entry) === null ? undefined : `${id}-${entry}`);
+  const describedBy = (entry: string) => {
+    const ids = [...(facts(entry).length > 0 ? [`${id}-${entry}-spell`] : []), ...(description(entry) === null ? [] : [`${id}-${entry}`])];
+    return ids.length === 0 ? undefined : ids.join(" ");
+  };
 
   /** One entry of the game's list: a checkbox (a radio for a single pick) with its name and description. */
   const option = (entry: string) => {

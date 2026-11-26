@@ -51,6 +51,14 @@ def _split(value: str | None, separator: str = ";") -> list[str]:
     return [v.strip() for v in (value or "").split(separator) if v.strip()]
 
 
+def _spell_level(level: int | None, s: dict) -> int | None:
+    """A spell's level: its `Level`, else 0 for an entry the game flags `IsSpell` in `SpellFlags` (cantrips such as
+    Thaumaturgy and Booming Blade carry no `Level`), else None (class actions such as Arcane Shots or Shadow Arts)."""
+    if level is not None:
+        return level
+    return 0 if "IsSpell" in _split(s.get("SpellFlags")) else None
+
+
 def _params(attributes: dict) -> list[str]:
     """`DescriptionParams` split on `;` and stripped; empty parts are kept so positions stay aligned with `[n]`."""
     value = attributes.get("DescriptionParams")
@@ -464,7 +472,7 @@ class _Builder:
         for name, s in self.stats_entries(list(spell_refs), "spell", spell_refs).items():
             spells[name] = {
                 "type": s.get("SpellType") or s.get("type"),
-                "level": self.read_int(s, "Level", f"spell {name}"),
+                "level": _spell_level(self.read_int(s, "Level", f"spell {name}"), s),
                 "school": s.get("SpellSchool") or None,
                 "text": _text(s),
                 "params": _params(s),

@@ -283,5 +283,6 @@
   "spell.unknownLevel": "Autres",
   "spell.cantripShort": "mineur",
   "spell.levelShort": "niv. {level}",
-  "spell.castWith": "Lancé avec {ability}"
+  "spell.castWith": "Lancé avec {ability}",
+  "spell.castWithInline": "lancé avec {ability}"
 }

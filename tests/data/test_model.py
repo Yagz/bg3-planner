@@ -201,6 +201,18 @@ class TestModel(unittest.TestCase):
         self.assertEqual(spells["Target_B"]["params"], [])
         self.assertEqual(spells["Target_C"]["params"], ["1", "", "3"])
 
+    def test_spell_without_level_is_a_cantrip_only_when_flagged_is_spell(self):
+        data = dataset()
+        data[0]["ClassDescriptions"]["c-ek"]["attributes"]["SpellList"] = "l-class"
+        data[0]["SpellLists"]["l-class"] = node("SpellList", UUID="l-class", Name="Class", Spells="Shout_A;Target_B;Target_C")
+        data[2]["Shout_A"] = {"type": "SpellData", "SpellType": "Shout", "SpellFlags": "HasVerbalComponent;IsSpell;IsMelee"}
+        data[2]["Target_B"] = {"type": "SpellData", "SpellType": "Target", "Level": "", "SpellFlags": "IsMelee"}
+        data[2]["Target_C"] = {"type": "SpellData", "SpellType": "Target", "Level": "2", "SpellFlags": "IsSpell"}
+        spells = build(data)["spells"]
+        self.assertEqual(spells["Shout_A"]["level"], 0)
+        self.assertIsNone(spells["Target_B"]["level"])
+        self.assertEqual(spells["Target_C"]["level"], 2)
+
     def test_passive_description_params(self):
         data = dataset()
         self.assertEqual(build(data)["passives"]["Alert_Passive"]["params"], [])

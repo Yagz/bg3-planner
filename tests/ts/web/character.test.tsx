@@ -273,17 +273,31 @@ describe("Character screen", () => {
       expect(headings(dialog)).toEqual(["Niveau 1"]);
     });
 
-    it("puts a real list's spell without a level (Booming Blade on the High Elf cantrip list) in the last group", () => {
+    it("keeps Booming Blade, a cantrip the game stats give no level, among the High Elf cantrips, each said with its level and casting ability", () => {
       const c = bard(1);
       setup(runWith([c]), c.id);
       toFrench();
       const cantrips = slotOf(c, 1, "HighElfCantrip");
-      expect(data.rules.spells["Target_BoomingBlade_ClassSpell"]?.level ?? null).toBeNull();
       fireEvent.click(within(frLevel(1)).getByRole("button", { name: /^sorts \(1\)/ }));
       const dialog = screen.getByRole("dialog");
-      expect(headings(dialog)).toEqual(["Sorts mineurs", "Autres"]);
-      expect(within(within(dialog).getByRole("group", { name: "Autres" })).getByRole("checkbox", { name: gameName(data, "fr", "spell", "Target_BoomingBlade_ClassSpell") })).toBeTruthy();
+      expect(headings(dialog)).toEqual(["Sorts mineurs"]);
+      const booming = within(dialog).getByRole("checkbox", { name: gameName(data, "fr", "spell", "Target_BoomingBlade_ClassSpell") });
       expect(within(dialog).getAllByTitle("Lancé avec Intelligence").length).toBe(data.rules.lists[cantrips.selector.list]!.items.length);
+      // The level tag and the ability reach screen readers through the description.
+      const said = booming.getAttribute("aria-describedby")!.split(" ").map((ref) => document.getElementById(ref)!.textContent);
+      expect(said[0]).toBe("mineur, lancé avec Intelligence");
+    });
+
+    it("puts a real list's spells without a level (Arcane Archer's arcane shots) in the last group", () => {
+      const c: Character = { ...ranger(1), id: "archer", levels: Array.from({ length: 3 }, () => ({ class: "Fighter", choices: {} as Record<string, Choice> })) };
+      c.levels[2]!.choices[subclassSlot("Fighter")] = ["ArcaneArcher"];
+      const shots = resolve(c, data).levels[2]!.slots.find((s) => s.selector.function === "SelectSpells" && s.selector.count === 3)!;
+      setup(runWith([c]), c.id);
+      toFrench();
+      fireEvent.click(within(frLevel(3)).getByRole("button", { name: /^sorts \(3\)/ }));
+      const dialog = screen.getByRole("dialog");
+      expect(headings(dialog)).toEqual(["Autres"]);
+      expect(within(within(dialog).getByRole("group", { name: "Autres" })).getAllByRole("checkbox")).toHaveLength(data.rules.lists[shots.selector.list]!.items.length);
     });
 
     for (const view of ["list", "tree"] as const) {
@@ -304,6 +318,9 @@ describe("Character screen", () => {
         const badge = bardSpells[0]!.querySelector(".cast")!;
         expect(badge.textContent).toBe(gameName(data, "fr", "ability", "Charisma"));
         expect(badge.getAttribute("title")).toBe("Lancé avec Charisme");
+        expect(within(frLevel(1)).getByRole("button", { name: /^sorts \(4\)/ }).getAttribute("aria-label")).toBe(
+          `sorts (4): ${gameName(data, "fr", "spell", "Target_HealingWord")}, niv. 1, lancé avec Charisme; ${gameName(data, "fr", "spell", "Target_Sleep")}, niv. 1, lancé avec Charisme`,
+        );
         const [cantrip] = chipsOf(within(frLevel(1)).getByRole("button", { name: /^sorts \(1\)/ }));
         expect(cantrip!.querySelector(".lvl")!.textContent).toBe("mineur");
         expect(cantrip!.querySelector(".cast")!.getAttribute("title")).toBe("Lancé avec Intelligence");
@@ -311,6 +328,7 @@ describe("Character screen", () => {
         const feat = chipsOf(within(frLevel(4)).getByRole("button", { name: /^sorts \(2\)/ }));
         expect(feat).toHaveLength(2);
         expect(feat.every((chip) => chip.querySelector(".cast") === null)).toBe(true);
+        expect(within(frLevel(4)).getByRole("button", { name: /^sorts \(2\)/ }).getAttribute("aria-label")).not.toContain("lancé avec");
         expect(within(frLevel(1)).getByRole("button", { name: /^équipement/ }).textContent).toBe("Flûte");
       });
     }

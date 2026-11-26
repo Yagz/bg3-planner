@@ -13,7 +13,7 @@ import type { Ability, Character, Choice, OffData } from "../../../../src/plan/m
 import { useI18n } from "../../i18n/i18n.ts";
 import type { Lang, Translate } from "../../i18n/i18n.ts";
 import { gameName } from "../../names.ts";
-import { AbilityBadge, kindOfList, spellLevel } from "./ChoicePicker.tsx";
+import { AbilityBadge, kindOfList, spellFacts, spellLevelTag } from "./ChoicePicker.tsx";
 import IssueList from "./IssueList.tsx";
 
 /** The slot `class` stands for the class taken at the level, as in the engine's issues. */
@@ -71,19 +71,25 @@ export function SlotPick({ data, row, choice, ability = null, onPick }: { data: 
     shown = choiceText(data, lang, row.kind, choice, t("character.nothingPicked"));
   }
   const chips = row.spells && Array.isArray(choice) && choice.length > 0;
-  const chip = (entry: string, i: number) => {
+  // A replacement is tagged with the new spell's level.
+  const spellOf = (entry: string) => {
     const cut = entry.indexOf(SWAP_SEPARATOR);
-    const level = spellLevel(data, cut < 0 ? entry : entry.slice(cut + SWAP_SEPARATOR.length));
+    return cut < 0 ? entry : entry.slice(cut + SWAP_SEPARATOR.length);
+  };
+  const chip = (entry: string, i: number) => {
+    const tag = spellLevelTag(data, t, spellOf(entry));
     return (
       <span key={i} className="sp">
-        {level !== null && <span className="lvl">{level === 0 ? t("spell.cantripShort") : t("spell.levelShort", { level })}</span>}
+        {tag !== null && <span className="lvl">{tag}</span>}
         {choiceText(data, lang, row.kind, [entry], "")}
         {ability !== null && <AbilityBadge data={data} lang={lang} t={t} ability={ability} />}
       </span>
     );
   };
+  // Screen readers hear each chip whole: "Healing Word, lvl 1, cast with Charisma; Sleep, …".
+  const said = chips ? choice.map((entry) => [choiceText(data, lang, row.kind, [entry], ""), ...spellFacts(data, lang, t, spellOf(entry), ability)].join(", ")).join("; ") : shown;
   return (
-    <button className={chips ? `${className} spells` : className} aria-label={`${row.label}: ${shown}`} onClick={onPick}>
+    <button className={chips ? `${className} spells` : className} aria-label={`${row.label}: ${said}`} onClick={onPick}>
       {chips ? choice.map(chip) : shown}
     </button>
   );
