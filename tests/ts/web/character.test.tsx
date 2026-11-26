@@ -499,6 +499,6 @@ describe("IssueList", () => {
         <IssueList data={data} issues={[issue]} />
       </I18nContext.Provider>,
     );
-    expect(screen.getByText("Discrétion est déjà maîtrisée grâce à la sous-race : ce choix ne rapporte rien.")).toBeTruthy();
+    expect(screen.getByText("La maîtrise de Discrétion est déjà accordée par la sous-race : ce choix ne rapporte rien.")).toBeTruthy();
   });
 });

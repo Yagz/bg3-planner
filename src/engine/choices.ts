@@ -18,9 +18,9 @@ export type Known = {
   spells: Map<string, Set<string>>;
   /** Passives currently held, by the list they were picked from (`SelectPassives`, then `ReplacePassives`). */
   passives: Map<string, string[]>;
-  /** Skills picked by `SelectSkills`. */
+  /** Skills picked by `SelectSkills`, and by a `SelectSkillsExpertise` that grants proficiency (`requires_proficiency` false). */
   skills: Set<string>;
-  /** Skills picked by `SelectSkillsExpertise`. */
+  /** Skills picked by `SelectSkillsExpertise`; one picked where the selector grants proficiency is in `skills` too. */
   expertise: Set<string>;
 };
 
@@ -48,6 +48,8 @@ export type SlotContext = {
   grantedSkills?: ReadonlyMap<string, SkillSource>;
   /** Skills the character is proficient in, for `SelectSkillsExpertise`. Absent: expertise is not checked against proficiency. */
   proficientSkills?: ReadonlySet<string>;
+  /** Expertise granted without a pick (boosts of rows and passives), where proficient: a pick among them is `alreadyExpert`. */
+  grantedExpertise?: ReadonlySet<string>;
 };
 
 function listItems(data: GameData, list: string): string[] {
@@ -163,10 +165,17 @@ export function checkChoice(selector: Selector, choice: string[], ctx: SlotConte
       const valid = inList(choice);
       noDuplicates(choice);
       exactly(choice.length, selector.count);
+      // `requires_proficiency` false (Knowledge Domain): the pick grants proficiency along with expertise.
+      const grantsProficiency = selector.requires_proficiency === false;
       for (const entry of new Set(valid)) {
-        if (ctx.known.expertise.has(entry)) invalid("alreadyExpert", { item: entry });
-        else if (ctx.proficientSkills !== undefined && !ctx.proficientSkills.has(entry)) invalid("notProficient", { item: entry });
-        else ctx.known.expertise.add(entry);
+        if (ctx.known.expertise.has(entry) || ctx.grantedExpertise?.has(entry)) {
+          invalid("alreadyExpert", { item: entry });
+        } else if (!grantsProficiency && ctx.proficientSkills !== undefined && !ctx.proficientSkills.has(entry)) {
+          invalid("notProficient", { item: entry });
+        } else {
+          ctx.known.expertise.add(entry);
+          if (grantsProficiency) ctx.known.skills.add(entry);
+        }
       }
       break;
     }

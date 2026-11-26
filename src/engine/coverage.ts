@@ -1,11 +1,10 @@
 import type { GameData } from "../data/types.ts";
-import { isOffData } from "../plan/model.ts";
 import type { Ability, Character, Run } from "../plan/model.ts";
 import { abilityTotals } from "./abilities.ts";
-import { checkChoice, emptyKnown, heldPassives } from "./choices.ts";
+import { checkChoice, emptyKnown } from "./choices.ts";
 import { rulesetEffects } from "./difficulty.ts";
 import { resolve } from "./progression.ts";
-import { skillBoosts } from "./skills.ts";
+import { SkillTracker } from "./skills.ts";
 import { levelSlots } from "./validate.ts";
 import type { SelectorSlot } from "./validate.ts";
 
@@ -23,34 +22,26 @@ export type SkillCoverage = {
 
 /**
  * Skills a character is proficient in and has expertise in, over all its levels: `SelectSkills` and
- * `SelectSkillsExpertise` picks, and the `ProficiencyBonus(Skill,X)` / `ExpertiseBonus(X)` boosts of its rows, its
- * background's passives, its rows' added passives, the passives it holds from picks and its feats' passives. Expertise
- * counts only where the character is proficient. Identity fields outside the game data contribute nothing.
+ * `SelectSkillsExpertise` picks (proficiency too where the selector grants it), and the skills `SkillTracker` reads from
+ * its rows, background, feats and held passives. Expertise counts only where the character is proficient. Identity fields outside the game data contribute nothing.
  */
 export function skillProficiencies(character: Character, data: GameData): { proficient: Set<string>; expertise: Set<string> } {
-  const { backgrounds, feats, passives } = data.rules;
-  const proficient = new Set<string>();
-  const expertise = new Set<string>();
-  const passiveNames: string[] = [];
-  const boosts: string[] = [];
-  const { background } = character;
-  if (!isOffData(background) && Object.hasOwn(backgrounds, background)) passiveNames.push(...(backgrounds[background]?.passives ?? []));
-
+  const skills = new SkillTracker(character, data);
   const known = emptyKnown();
   const scores = { ...character.abilities };
   for (const level of resolve(character, data).levels) {
     const choices = character.levels[level.level - 1]?.choices ?? {};
-    for (const row of level.rows) {
-      boosts.push(...row.boosts);
-      passiveNames.push(...row.passives_added);
-    }
+    skills.addLevel(level);
     const slots = levelSlots(level, choices, data);
     const pick = ({ id, selector, scope }: SelectorSlot) => {
       const choice = Object.hasOwn(choices, id) ? choices[id] : undefined;
       if (!Array.isArray(choice)) return;
-      if (selector.function === "SelectSkills") for (const skill of choice) proficient.add(skill);
-      else if (selector.function === "SelectSkillsExpertise") for (const skill of choice) expertise.add(skill);
-      else if (selector.function === "SelectPassives" || selector.function === "ReplacePassives") {
+      if (selector.function === "SelectSkills") for (const skill of choice) known.skills.add(skill);
+      else if (selector.function === "SelectSkillsExpertise") {
+        // `requires_proficiency` false (Knowledge Domain): the pick grants proficiency along with expertise.
+        for (const skill of choice) known.expertise.add(skill);
+        if (selector.requires_proficiency === false) for (const skill of choice) known.skills.add(skill);
+      } else if (selector.function === "SelectPassives" || selector.function === "ReplacePassives") {
         // Replays the pick to know which passives are still held; its issues belong to `validate`.
         checkChoice(selector, choice, { data, character: character.id, level: level.level, scope, slot: id, scores, known });
       }
@@ -58,17 +49,10 @@ export function skillProficiencies(character: Character, data: GameData): { prof
     slots.selectors.forEach(pick);
     if (slots.feat?.feat != null) {
       slots.feat.selectors.forEach(pick);
-      passiveNames.push(...(feats[slots.feat.feat]?.passives ?? []));
+      skills.addFeat(slots.feat.feat);
     }
   }
-  passiveNames.push(...heldPassives(known));
-
-  for (const name of passiveNames) if (Object.hasOwn(passives, name)) boosts.push(...(passives[name]?.boosts ?? []));
-  const granted = skillBoosts(boosts);
-  for (const skill of granted.proficient) proficient.add(skill);
-  for (const skill of granted.expertise) expertise.add(skill);
-  for (const skill of expertise) if (!proficient.has(skill)) expertise.delete(skill);
-  return { proficient, expertise };
+  return { proficient: skills.proficient(known), expertise: skills.expertise(known) };
 }
 
 /** Proficiency bonus at a character level: 2 at levels 1-4, 3 at 5-8, 4 at 9-12. */

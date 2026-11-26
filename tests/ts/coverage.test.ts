@@ -97,6 +97,16 @@ describe("coverage", () => {
     expect(skillProficiencies(elf, data).proficient).toContain("Perception");
   });
 
+  it("counts Knowledge Domain expertise picks as proficiency and expertise", () => {
+    const cleric: Character = { ...character("k", ["Cleric"], []), race: "Human", subrace: null };
+    cleric.levels[0]!.choices["subclass:Cleric"] = ["KnowledgeDomain"];
+    const slot = resolve(cleric, data).levels[0]!.slots.find((s) => s.selector.function === "SelectSkillsExpertise")!;
+    cleric.levels[0]!.choices[slot.id] = ["Arcana", "Nature"];
+    const { proficient, expertise } = skillProficiencies(cleric, data);
+    expect([...proficient]).toEqual(expect.arrayContaining(["Arcana", "Nature"]));
+    expect([...expertise].sort()).toEqual(["Arcana", "Nature"]);
+  });
+
   describe("who is proficient", () => {
     const soldier = () => Object.keys(data.rules.backgrounds).find((k) => data.rules.backgrounds[k]!.passives.includes("Background_Soldier"))!;
     /** A Soldier Fighter (no Medicine) with Wisdom `wisdom`, and a Haunted One Fighter (Medicine) with Wisdom 10. */

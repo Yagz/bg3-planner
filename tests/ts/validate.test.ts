@@ -614,6 +614,58 @@ describe("validate, skills already granted and expertise", () => {
     expect(issues).toEqual([{ severity: "invalid", code: "notProficient", character: "c1", level: 3, slot: slot3, params: { item: "Arcana" } }]);
   });
 
+  it("counts expertise a feat's passive grants as held (Actor at 4, Performance expertise again at Bard 10)", () => {
+    const slot3 = bardSlot(10, 3, "SelectSkillsExpertise");
+    const slot10 = bardSlot(10, 10, "SelectSkillsExpertise");
+    const issues = skillIssues(
+      bard(10, (choices) => {
+        choices[2]![slot3] = ["Intimidation", "Stealth"];
+        choices[3] = { "feat:4": ["Actor"] };
+        choices[9] = { [slot10]: ["Performance", "History"] };
+      }),
+    );
+    expect(issues).toEqual([{ severity: "invalid", code: "alreadyExpert", character: "c1", level: 10, slot: slot10, params: { item: "Performance" } }]);
+  });
+
+  it("counts expertise a subrace passive grants as held (Rock Gnome History)", () => {
+    const slot3 = bardSlot(3, 3, "SelectSkillsExpertise");
+    const gnome = {
+      ...bard(3, (choices) => {
+        choices[2]![bardSlot(3, 3, "SelectSkills")] = ["Intimidation", "Stealth", "Arcana"];
+        choices[2]![slot3] = ["History", "Performance"];
+      }),
+      race: "Gnome",
+      subrace: "Gnome_Rock",
+    };
+    expect(skillIssues(gnome)).toEqual([{ severity: "invalid", code: "alreadyExpert", character: "c1", level: 3, slot: slot3, params: { item: "History" } }]);
+  });
+
+  describe("Knowledge Domain expertise, which grants proficiency (requires_proficiency false)", () => {
+    /** A Human Knowledge Domain Cleric; `edit` fills its choices. */
+    function knowledge(levels: number, edit: (choices: Record<string, Choice>[], slots: (lvl: number, fn: Selector["function"]) => string) => void): Character {
+      const classes = Array.from({ length: levels }, () => "Cleric");
+      const choices: Record<string, Choice>[] = Array.from({ length: levels }, () => ({}));
+      choices[0] = { "subclass:Cleric": ["KnowledgeDomain"] };
+      const probe = character(classes, choices, RANGER_SCORES, "Human", null);
+      const at = (lvl: number, fn: Selector["function"]) => resolve(probe, data).levels[lvl - 1]!.slots.find((s) => s.selector.function === fn)!.id;
+      edit(choices, at);
+      return character(classes, choices, RANGER_SCORES, "Human", null);
+    }
+
+    it("accepts expertise in skills the Cleric is not otherwise proficient in", () => {
+      const cleric = knowledge(1, (choices, at) => { choices[0]![at(1, "SelectSkillsExpertise")] = ["Arcana", "Nature"]; });
+      expect(skillIssues(cleric)).toEqual([]);
+    });
+
+    it("counts those picks as proficiency for a later skill pick", () => {
+      const cleric = knowledge(4, (choices, at) => {
+        choices[0]![at(1, "SelectSkillsExpertise")] = ["Arcana", "Nature"];
+        choices[3] = { "feat:4": ["Skilled"], "feat:4/0": ["Arcana", "Acrobatics", "Stealth"] };
+      });
+      expect(skillIssues(cleric)).toEqual([{ severity: "invalid", code: "alreadyKnown", character: "c1", level: 4, slot: "feat:4/0", params: { item: "Arcana" } }]);
+    });
+  });
+
   it("adds no granted-skill notice and never throws for an off-data background or race", () => {
     const offBackground = { ...bard(3, (choices) => { choices[0]![bardSlot(3, 1, "SelectSkills")] = ["Persuasion", "Deception", "Performance"]; }), background: { offData: "Mod background" } };
     expect(skillIssues(offBackground)).toEqual([]);

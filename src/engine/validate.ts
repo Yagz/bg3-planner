@@ -1,5 +1,4 @@
 import type { GameData, Requirement, Selector } from "../data/types.ts";
-import { isOffData } from "../plan/model.ts";
 import type { Character, Choice, Run } from "../plan/model.ts";
 import { abilityTotals, checkPointBuy } from "./abilities.ts";
 import { checkChoice, emptyKnown, heldPassives } from "./choices.ts";
@@ -8,7 +7,7 @@ import { reportFrom } from "./issues.ts";
 import type { Issue, IssueCode, Report } from "./issues.ts";
 import { resolve, subclassSlot } from "./progression.ts";
 import type { ResolvedLevel } from "./progression.ts";
-import { grantedSkills, passiveSkills, skillBoosts } from "./skills.ts";
+import { SkillTracker, grantedSkills } from "./skills.ts";
 
 export function featSlot(level: number): string {
   return `feat:${level}`;
@@ -148,14 +147,7 @@ function validateCharacter(character: Character, data: GameData): Issue[] {
     return all;
   };
   const featsTaken = new Set<string>();
-  /** Skills granted without a pick so far: the background's passives, then the boosts and passives of rows and feats. */
-  const skillsGranted = new Set<string>();
-  const { background } = character;
-  if (!isOffData(background) && Object.hasOwn(data.rules.backgrounds, background)) {
-    for (const skill of passiveSkills(data, data.rules.backgrounds[background]?.passives ?? [])) skillsGranted.add(skill);
-  }
-  /** Skills the character is proficient in now: picked, granted, or from the passives currently held from picks. */
-  const proficientSkills = (): Set<string> => new Set([...known.skills, ...skillsGranted, ...passiveSkills(data, heldPassives(known))]);
+  const skills = new SkillTracker(character, data);
 
   for (const level of resolved.levels) {
     const n = level.level;
@@ -168,8 +160,8 @@ function validateCharacter(character: Character, data: GameData): Issue[] {
     for (const row of level.rows) {
       grant(row.boosts, granted);
       grantPassives(row.passives_added, granted);
-      for (const skill of [...skillBoosts(row.boosts).proficient, ...passiveSkills(data, row.passives_added)]) skillsGranted.add(skill);
     }
+    skills.addLevel(level);
     const levelGranted = grantedSkills(character, data, n);
     /** Expertise slots of the level (feat ones included), checked last: a skill gained anywhere in the level counts. */
     const expertiseSlots: SelectorSlot[] = [];
@@ -183,7 +175,7 @@ function validateCharacter(character: Character, data: GameData): Issue[] {
       } else if (!Array.isArray(choice)) {
         issue("notice", "offData", slot, { selector: selector.function });
       } else {
-        const ctx = { data, character: character.id, level: n, scope, slot, scores, known, grantedSkills: levelGranted, proficientSkills: proficientSkills() };
+        const ctx = { data, character: character.id, level: n, scope, slot, scores, known, grantedSkills: levelGranted, proficientSkills: skills.proficient(known), grantedExpertise: skills.grantedExpertise(known) };
         issues.push(...checkChoice(selector, choice, ctx));
       }
     };
@@ -224,9 +216,9 @@ function validateCharacter(character: Character, data: GameData): Issue[] {
       checkFeat(slots.feat.id, slots.feat.feat);
       if (slots.feat.feat !== null) {
         slots.feat.selectors.forEach(visit);
-        // The feat's passives count for the feats of later levels only.
+        // The feat's passives count for the feats of later levels only, and for the skills from the level's expertise slots on.
         grantPassives(feats[slots.feat.feat]?.passives ?? [], granted);
-        for (const skill of passiveSkills(data, feats[slots.feat.feat]?.passives ?? [])) skillsGranted.add(skill);
+        skills.addFeat(slots.feat.feat);
       }
     }
 

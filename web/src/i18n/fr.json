@@ -47,7 +47,7 @@
   "issue.pointBuyUnderBudget": "Répartition par points : {spent} points dépensés sur {budget}.",
   "issue.requirementNotMet": "{feat} demande {ability} {value} (ici {actual}).",
   "issue.requirementNotMet.proficiency": "{feat} demande la maîtrise de {proficiency}.",
-  "issue.skillAlreadyGranted": "{item} est déjà maîtrisée grâce à {source} : ce choix ne rapporte rien.",
+  "issue.skillAlreadyGranted": "La maîtrise de {item} est déjà accordée par {source} : ce choix ne rapporte rien.",
   "issue.source.background": "l’historique",
   "issue.source.race": "la race",
   "issue.source.subrace": "la sous-race",

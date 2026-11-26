@@ -120,7 +120,7 @@ describe("issue messages", () => {
       "skill:Persuasion is already granted by the background: this pick adds nothing.",
     );
     expect(createI18n("fr").issueMessage(issue("skillAlreadyGranted", { item: "Stealth", source: "subrace" }), names)).toBe(
-      "skill:Stealth est déjà maîtrisée grâce à la sous-race : ce choix ne rapporte rien.",
+      "La maîtrise de skill:Stealth est déjà accordée par la sous-race : ce choix ne rapporte rien.",
     );
     expect(createI18n("en").issueMessage(issue("notProficient", { item: "Arcana" }), names)).toBe("Expertise needs proficiency in skill:Arcana.");
     expect(createI18n("en").issueMessage(issue("alreadyExpert", { item: "Arcana" }), names)).toBe("skill:Arcana already has expertise.");
