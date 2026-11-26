@@ -472,6 +472,30 @@ describe("Character screen", () => {
         expect(said(entry(dialog, "Target_HealingWord"))).toContain("Évocation");
       });
 
+      it("shows the school name in English too, and none for a spell whose school is null", () => {
+        const c = bard(2);
+        const none = Object.entries(data.rules.spells).find(([id, def]) => def.school === null && data.rules.lists[slotOf(c, 2, "BardSpells").selector.list]!.items.includes(id));
+        setup(runWith([c]), c.id);
+        fireEvent.click(within(level(2)).getByRole("button", { name: /^spells \(1\)/ }));
+        const dialog = screen.getByRole("dialog");
+        const healing = within(dialog).getByRole("checkbox", { name: gameName(data, "en", "spell", "Target_HealingWord") }).closest("label")!;
+        expect(within(healing).getByText("Evocation")).toBeTruthy();
+        if (none !== undefined) expect(within(within(dialog).getByRole("checkbox", { name: gameName(data, "en", "spell", none[0]) }).closest("label")!).queryByText(/Evocation|Illusion|Necromancy|Abjuration/)).toBeNull();
+        else expect(Object.values(data.rules.spells).some((def) => def.school === null)).toBe(true);
+      });
+
+      it("says only which source knows a spell when that source casts it with no ability (Ritual Caster), and adds this slot's ability", () => {
+        const c = bard(5);
+        c.levels[3]!.choices[featSlot(4)] = ["RitualCaster"];
+        c.levels[3]!.choices[`${featSlot(4)}/0`] = ["Target_FindFamiliar", "Target_Longstrider"];
+        setup(runWith([c]), c.id);
+        toFrench();
+        fireEvent.click(within(frLevel(5)).getByRole("button", { name: /^sorts \(1\)/ }));
+        const dialog = screen.getByRole("dialog");
+        const feat = gameName(data, "fr", "feat", "RitualCaster");
+        expect(said(entry(dialog, "Target_Longstrider"))).toContain(`Déjà connu par ${feat} ; ici avec Charisme`);
+      });
+
       it("keeps a stored spell known by the same source checked, with its reason, so it can be unchecked", () => {
         const c = { ...bard(2), id: "b3" };
         c.levels[0]!.choices[slotOf(c, 1, "BardSpells").id] = ["Target_HealingWord", "Target_Sleep", "Target_Bane", "Target_Heroism"];

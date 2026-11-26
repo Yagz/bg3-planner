@@ -239,7 +239,9 @@ export default function Character({ data, run, saveRun, characterId, onSelect, t
       const others: Record<string, { source: string; ability: Ability | null }[]> = {};
       for (const pick of snapshot?.spellPicks ?? []) {
         if (pick.scope === scope) continue;
-        (others[pick.spell] ??= []).push({ source: sourceName(pick.scope), ability: pick.ability });
+        const entry = { source: sourceName(pick.scope), ability: pick.ability };
+        const list = (others[pick.spell] ??= []);
+        if (!list.some((other) => other.source === entry.source && other.ability === entry.ability)) list.push(entry);
       }
       spec.spells = { ability: castingAbility(resolved, found, data), same: [...(snapshot?.known.spells.get(scope) ?? [])], others };
       if (selector.swaps > 0) spec.swaps = { max: selector.swaps, known: knownSpellsBefore(character, data, n, scope) };

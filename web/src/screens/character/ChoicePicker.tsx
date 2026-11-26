@@ -9,6 +9,7 @@ import type { SkillSource } from "../../../../src/engine/skills.ts";
 import { signed } from "../Coverage.tsx";
 import { useI18n } from "../../i18n/i18n.ts";
 import type { Lang, Translate } from "../../i18n/i18n.ts";
+import { nameOf } from "../../../../src/data/names.ts";
 import { gameDescription, gameName } from "../../names.ts";
 
 /**
@@ -224,8 +225,8 @@ export default function ChoicePicker({ data, spec, onSave, onClear, onClose }: P
   const schoolOf = (entry: string): string | null => {
     const school = spec.spells !== undefined && Object.hasOwn(data.rules.spells, entry) ? data.rules.spells[entry]?.school : null;
     if (school === null || school === undefined) return null;
-    const text = gameName(data, lang, "school", school);
-    return text === school ? null : text;
+    const text = nameOf(data.texts[lang], "school", school);
+    return text === null || text.trim() === "" ? null : text;
   };
   const facts = (entry: string) => (spec.spells === undefined ? [] : spellFacts(data, lang, t, entry, castWith));
   const skillOf = (entry: string): SkillEntry | null => (spec.skills !== undefined && Object.hasOwn(spec.skills, entry) ? (spec.skills[entry] ?? null) : null);
@@ -247,11 +248,12 @@ export default function ChoicePicker({ data, spec, onSave, onClear, onClose }: P
   /** For a spell: that this source already knows it, or which other sources do and with which ability each casts it. */
   const spellLines = (entry: string): string[] => [
     ...(sameSource(entry) ? [t("picker.knownHere")] : []),
-    ...otherSources(entry).map(({ source, ability }) =>
-      castWith === null
-        ? t("picker.knownElsewhere", { source, ability: ability === null ? "?" : gameName(data, lang, "ability", ability) })
-        : t("picker.knownElsewhereHere", { source, ability: ability === null ? "?" : gameName(data, lang, "ability", ability), here: gameName(data, lang, "ability", castWith) }),
-    ),
+    ...otherSources(entry).map(({ source, ability }) => {
+      const there = ability === null ? null : gameName(data, lang, "ability", ability);
+      const here = castWith === null ? null : gameName(data, lang, "ability", castWith);
+      if (there === null) return here === null ? t("picker.knownBy", { source }) : t("picker.knownByHere", { source, here });
+      return here === null ? t("picker.knownElsewhere", { source, ability: there }) : t("picker.knownElsewhereHere", { source, ability: there, here });
+    }),
   ];
   const detailLines = (entry: string) => [...skillLines(entry), ...spellLines(entry), ...(spec.details !== undefined && Object.hasOwn(spec.details, entry) ? (spec.details[entry] ?? []) : [])];
   const label = (entry: string) => {

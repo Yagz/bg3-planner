@@ -203,6 +203,8 @@
   "picker.refused.alreadyKnown": "Already proficient",
   "picker.granted": "Already granted by the {source}: this pick adds nothing",
   "picker.knownHere": "Already known by this source",
+  "picker.knownBy": "Already known by {source}",
+  "picker.knownByHere": "Already known by {source}; here with {here}",
   "picker.knownElsewhere": "Already known by {source}, cast with {ability}",
   "picker.knownElsewhereHere": "Already known by {source}, cast with {ability}; here with {here}",
   "picker.skillAbility": "({ability})",

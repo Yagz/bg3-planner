@@ -203,6 +203,8 @@
   "picker.refused.alreadyKnown": "Déjà maîtrisée",
   "picker.granted": "Déjà donnée par {source} : ce choix ne rapporte rien",
   "picker.knownHere": "Déjà connu par cette source",
+  "picker.knownBy": "Déjà connu par {source}",
+  "picker.knownByHere": "Déjà connu par {source} ; ici avec {here}",
   "picker.knownElsewhere": "Déjà connu par {source}, lancé avec {ability}",
   "picker.knownElsewhereHere": "Déjà connu par {source}, lancé avec {ability} ; ici avec {here}",
   "picker.skillAbility": "({ability})",
