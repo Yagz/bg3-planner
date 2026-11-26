@@ -72,6 +72,25 @@ describe("Party screen", () => {
     for (const frame of frames) expect(frame.parentElement?.classList.contains("stack")).toBe(true);
   });
 
+  it("the run frame holds difficulty, level reached, current act and party size", () => {
+    const run = { ...runWith(ranger(4), 3), name: "Maximus", difficulty: { ruleset: "DIFFICULTY_MEDIUM", overrides: {} } };
+    setup(run);
+    const frame = screen.getByRole("region", { name: "Maximus" });
+    expect(frame.classList.contains("frame")).toBe(true);
+    expect(within(frame).getByRole("combobox", { name: "Difficulty" })).toBeTruthy();
+    expect(within(frame).getByRole("combobox", { name: "Level reached" })).toBeTruthy();
+    expect(within(frame).getByRole("combobox", { name: "Current act" })).toBeTruthy();
+    expect(within(frame).getByRole("spinbutton", { name: "Party size" })).toBeTruthy();
+    expect(within(frame).getByText(/^Proficiency bonus \+2 · multiclassing allowed$/)).toBeTruthy();
+    // The difficulty picker has left the top of the screen.
+    expect(frame.parentElement!.classList.contains("stack")).toBe(true);
+  });
+
+  it("states a ruleset without multiclassing in the effect note", () => {
+    setup({ ...runWith(ranger(4), 3), difficulty: { ruleset: "DIFFICULTY_EASY", overrides: {} } });
+    expect(screen.getByText(/^Proficiency bonus \+4 · multiclassing not allowed$/)).toBeTruthy();
+  });
+
   it("shows the party composer, the active group and the ensemble, in that order, and no status", () => {
     let run = addCharacter(runWith(ranger(4), 3), data, "Gale");
     run = addCharacter(run, data, "Karlach");
@@ -80,10 +99,11 @@ describe("Party screen", () => {
     run.party["1"].active = ["ranger", gale.id];
     setup(run, "fr");
     const titles = [...document.querySelectorAll(".stack > .frame")].map((frame) => frame.querySelector("h2")?.textContent);
-    expect(titles).toEqual(["Composer le groupe", "Groupe actif", "Ensemble"]);
+    expect(titles).toEqual(["Partie sans nom", "Qui part en aventure", "Groupe actif", "Ensemble"]);
     for (const status of ["cœur", "alternative", "banc"]) expect(screen.queryByText(status)).toBeNull();
     expect(screen.queryByRole("combobox", { name: /Statut/ })).toBeNull();
-    const composer = screen.getByRole("region", { name: "Composer le groupe" });
+    const composer = screen.getByRole("region", { name: "Qui part en aventure" });
+    expect(within(composer).getByText("2 / 4")).toBeTruthy();
     expect(within(composer).getByText("Coche qui part en aventure ; les autres attendent au camp, comme dans le jeu.")).toBeTruthy();
     const entry = (name: string) => within(composer).getByRole("checkbox", { name }).closest("li")!;
     expect(within(entry("Gayle")).getByText("dans le groupe")).toBeTruthy();
@@ -117,10 +137,10 @@ describe("Party screen", () => {
     expect(brings.only.length).toBeGreaterThan(0);
     expect(brings.best).toContain("Medicine");
     expect(brings.highest.length).toBeGreaterThan(0);
-    const pills = [...card.querySelectorAll(".brings .pill")].map((pill) => pill.textContent);
-    for (const skill of brings.only) expect(pills).toContain(`${gameName(data, "fr", "skill", skill)} · seul`);
-    for (const skill of brings.best) expect(pills.some((text) => text!.startsWith(gameName(data, "fr", "skill", skill)) && text!.endsWith(" · meilleur"))).toBe(true);
-    for (const ability of brings.highest) expect(pills).toContain(`${gameName(data, "fr", "ability", ability)} la plus haute`);
+    const items = [...card.querySelectorAll(".brings .contrib > :not(.sep)")].map((item) => item.textContent);
+    for (const skill of brings.only) expect(items).toContain(`${gameName(data, "fr", "skill", skill)} · seul`);
+    for (const skill of brings.best) expect(items.some((text) => text!.startsWith(gameName(data, "fr", "skill", skill)) && text!.endsWith("★"))).toBe(true);
+    for (const ability of brings.highest) expect(items).toContain(`${gameName(data, "fr", "ability", ability)} la plus haute`);
     expect(within(card).getByText("Apport au groupe")).toBeTruthy();
     expect(within(card).getByText(/Plan niveau 12 : Rôdeur 12/)).toBeTruthy();
     expect(within(card).getByText(/^\d+ à décider$/)).toBeTruthy();
@@ -135,6 +155,46 @@ describe("Party screen", () => {
     expect(within(card).queryByText(/· seul$/)).toBeNull();
   });
 
+  it("every member card ends with the level-12 plan and the open button", () => {
+    let run = addCharacter(runWith(ranger(12), 3), data, "Gale");
+    run.party["1"].active = ["ranger", run.characters[1]!.id];
+    setup(run);
+    const cards = screen.getAllByRole("article");
+    expect(cards).toHaveLength(2);
+    for (const card of cards) {
+      const [plan, open] = [...card.children].slice(-2) as HTMLElement[];
+      expect(plan!.classList.contains("plan")).toBe(true);
+      expect(plan!.textContent).toMatch(/^Level 12 plan: /);
+      expect(open!.tagName).toBe("BUTTON");
+      expect(open!.textContent).toBe("Open the build");
+    }
+  });
+
+  it("contributions are plain text, the best of the party marked with a star and the accent class", () => {
+    let run = addCharacter(runWith(ranger(12), 3), data, "Gale");
+    const gale = { ...run.characters[1]!, background: run.characters[0]!.background };
+    run = { ...run, characters: [run.characters[0]!, gale] };
+    run.party["1"].active = ["ranger", gale.id];
+    setup(run);
+    const card = screen.getAllByRole("article")[0]!;
+    expect(card.querySelector(".pill.good")).toBeNull();
+    expect(card.querySelector(".brings .pill")).toBeNull();
+    const best = [...card.querySelectorAll(".brings .contrib .best")];
+    expect(best.length).toBeGreaterThan(0);
+    for (const mark of best) expect(mark.textContent).toMatch(/ ★$/);
+    expect(within(best[0] as HTMLElement).getByRole("img", { name: "best of the party" })).toBeTruthy();
+    expect(card.querySelectorAll(".brings .contrib > :not(.sep):not(.best)").length).toBeGreaterThan(0);
+    // The legend under the grid explains the star.
+    expect(screen.getByText(/^★ best of the party/)).toBeTruthy();
+  });
+
+  it("composes the roster as cards that are not pills", () => {
+    setup(runWith(ranger(4), 3));
+    const roster = document.querySelector(".roster")!;
+    expect(roster.tagName).toBe("UL");
+    expect(roster.querySelector(".pill")).toBeNull();
+  });
+
   it.each([1, 4, 6])("fills the frame with the cards of %i active members", (count) => {
     let run = { ...runWith(ranger(4), 3), partySize: 6 };
     for (const origin of ["Gale", "Karlach", "Shadowheart", "Laezel", "Astarion"]) run = addCharacter(run, data, origin);
@@ -143,7 +203,7 @@ describe("Party screen", () => {
     const cards = screen.getAllByRole("article");
     expect(cards).toHaveLength(count);
     const container = cards[0]!.parentElement!;
-    expect(container.classList.contains("fill")).toBe(true);
+    expect(container.classList.contains("cards")).toBe(true);
     for (const card of cards) expect(card.parentElement).toBe(container);
   });
 
@@ -151,7 +211,7 @@ describe("Party screen", () => {
     let run = addCharacter(runWith(ranger(4), 3), data, "Gale");
     run.party["1"].active = ["ranger", run.characters[1]!.id];
     const { store, id } = setup(run, "fr");
-    const composer = screen.getByRole("region", { name: "Composer le groupe" });
+    const composer = screen.getByRole("region", { name: "Qui part en aventure" });
     fireEvent.click(within(composer).getByRole("tab", { name: "Acte 2" }));
     const group = screen.getByRole("region", { name: "Groupe actif" });
     expect(within(group).getByText(/Personne n’est dans le groupe à l’acte 2\./)).toBeTruthy();
@@ -181,20 +241,37 @@ describe("Party screen", () => {
     const rows = coverage(run, data, 3);
     const holes = rows.filter((row) => row.proficient.length === 0).map((row) => gameName(data, "fr", "skill", row.skill));
     expect(Object.keys(data.skills)).toHaveLength(18);
-    expect(within(ensemble).getByText(`${18 - holes.length} sur 18`)).toBeTruthy();
-    const gaps = within(ensemble).getByText("Trous").nextElementSibling!;
-    expect([...gaps.querySelectorAll(".pill")].map((pill) => pill.textContent)).toEqual(holes);
+    expect(within(ensemble).getByText(`${18 - holes.length} compétences couvertes sur 18`)).toBeTruthy();
+    const gaps = ensemble.querySelector(".summary-line .gaps")!;
+    expect(gaps.textContent).toBe(`Trous : ${holes.join(", ")}`);
     expect(holes).toContain(gameName(data, "fr", "skill", "Arcana"));
     expect(holes).not.toContain(gameName(data, "fr", "skill", "Medicine"));
-    expect(within(ensemble).getByText("Classes").nextElementSibling!.textContent).toContain("Rôdeur");
+    expect(ensemble.querySelector(".summary-line")!.textContent).toMatch(/Classes : .*Rôdeur/);
     const groups = [...ensemble.querySelectorAll(".cov .grp")];
     const abilities = ["Strength", "Dexterity", "Constitution", "Intelligence", "Wisdom", "Charisma"].filter((ability) => Object.values(data.skills).includes(ability as never));
     expect(groups.map((group) => group.querySelector("h4")?.textContent)).toEqual(abilities.map((ability) => gameName(data, "fr", "ability", ability)));
     const dexterity = groups[abilities.indexOf("Dexterity")]!;
     const stealth = within(dexterity as HTMLElement).getByText(gameName(data, "fr", "skill", "Stealth")).closest(".row")!;
     expect(stealth.textContent).toContain("Joueur");
+    expect(stealth.querySelector(".pill")).toBeNull();
     const arcana = within(groups[abilities.indexOf("Intelligence")] as HTMLElement).getByText(gameName(data, "fr", "skill", "Arcana")).closest(".row")!;
     expect(arcana.textContent).toContain("personne");
+    expect(arcana.classList.contains("gap")).toBe(true);
+  });
+
+  it("coverage shows covered skills in neutral text and only gaps in the bad style, with a summary line naming the gaps", () => {
+    const run = runWith(ranger(3), 3);
+    setup(run);
+    const ensemble = screen.getByRole("region", { name: "Overall" });
+    const rows = coverage(run, data, 3);
+    const holes = rows.filter((row) => row.proficient.length === 0);
+    expect(holes.length).toBeGreaterThan(0);
+    expect(ensemble.querySelector(".pill")).toBeNull();
+    const gapRows = [...ensemble.querySelectorAll(".cov .row.gap")];
+    expect(gapRows).toHaveLength(holes.length);
+    expect(ensemble.querySelectorAll(".cov .row:not(.gap)")).toHaveLength(rows.length - holes.length);
+    const line = ensemble.querySelector(".summary-line .gaps")!.textContent!;
+    for (const hole of holes) expect(line).toContain(gameName(data, "en", "skill", hole.skill));
   });
 
   it("keeps every act's stored status in the export string when the party is edited", async () => {

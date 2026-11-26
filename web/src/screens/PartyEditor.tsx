@@ -3,7 +3,7 @@ import type { GameData } from "../../../src/data/types.ts";
 import type { Run } from "../../../src/plan/model.ts";
 import { useI18n } from "../i18n/i18n.ts";
 import { characterLabel, gameName } from "../names.ts";
-import { ACTS, PARTY_SIZE, addCharacter, isRecruitable, overFullActs, setActive, setPartySize } from "../state/partyOps.ts";
+import { ACTS, addCharacter, isRecruitable, overFullActs, setActive } from "../state/partyOps.ts";
 import type { Act } from "../state/partyOps.ts";
 import { classLineText } from "./party/MemberCard.tsx";
 
@@ -16,7 +16,7 @@ type Props = {
   setAct: (act: Act) => void;
 };
 
-/** Composes the party act by act: who goes adventuring, who waits at camp, the party size and the characters of the run. */
+/** Composes the party act by act: who goes adventuring, who waits at camp, and the characters of the run (the party size lives in the run frame). */
 export default function PartyEditor({ run, data, apply, act, setAct }: Props) {
   const { t, lang } = useI18n();
   const [adding, setAdding] = useState("");
@@ -49,7 +49,7 @@ export default function PartyEditor({ run, data, apply, act, setAct }: Props) {
   return (
     <section className="frame composer" aria-labelledby="composer-title">
       <div className="head">
-        <h2 id="composer-title">{t("party.composer")}</h2>
+        <h2 id="composer-title">{t("party.compose")}</h2>
         <div role="tablist" aria-label={t("party.editor.acts")} className="seg">
           {ACTS.map((n) => (
             <button key={n} role="tab" aria-selected={act === n} className={act === n ? "on" : ""} onClick={() => setAct(n)}>
@@ -57,20 +57,8 @@ export default function PartyEditor({ run, data, apply, act, setAct }: Props) {
             </button>
           ))}
         </div>
-        <label>
-          {t("party.editor.size")}{" "}
-          <input
-            type="number"
-            min={PARTY_SIZE.min}
-            max={PARTY_SIZE.max}
-            step={1}
-            value={run.partySize}
-            onChange={(event) => {
-              if (event.target.value !== "") apply((current) => setPartySize(current, Number(event.target.value)));
-            }}
-          />
-        </label>
-        <span className="sub">{t("party.composer.help")}</span>
+        <span className="note count">{party.active.length} / {run.partySize}</span>
+        <span className="note">{t("party.composer.help")}</span>
       </div>
       {overFullActs(run).map((over) => (
         <p key={over}>
@@ -87,8 +75,8 @@ export default function PartyEditor({ run, data, apply, act, setAct }: Props) {
                 <input type="checkbox" checked={active} disabled={!active && full} onChange={(event) => toggle(character.id, event.target.checked)} />
                 {label(character.who)}
               </label>
-              <span className="sub cls">{classLineText(character, run.progress.level, data, lang)}</span>
-              <span className={`pill ${active ? "good" : "muted"}`}>{active ? t("party.composer.inGroup") : t("party.composer.atCamp")}</span>
+              <span className="note cls">{classLineText(character, run.progress.level, data, lang)}</span>
+              <span className="note state">{active ? t("party.composer.inGroup") : t("party.composer.atCamp")}</span>
             </li>
           );
         })}

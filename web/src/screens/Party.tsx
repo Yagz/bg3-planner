@@ -8,7 +8,7 @@ import { MAX_LEVELS, isOffData } from "../../../src/plan/model.ts";
 import type { Run } from "../../../src/plan/model.ts";
 import { useI18n } from "../i18n/i18n.ts";
 import { gameName } from "../names.ts";
-import { ACTS, copyPartyFromPreviousAct, setProgress } from "../state/partyOps.ts";
+import { ACTS, PARTY_SIZE, copyPartyFromPreviousAct, setPartySize, setProgress } from "../state/partyOps.ts";
 import type { Act } from "../state/partyOps.ts";
 import Coverage from "./Coverage.tsx";
 import DifficultyPicker from "./DifficultyPicker.tsx";
@@ -48,7 +48,8 @@ export default function Party({ data, run, saveRun, onOpenCharacter }: Props) {
   const skills = useMemo(() => coverage(view, data, level), [view, data, level]);
   const brings = useMemo(() => contribution(view, data, level), [view, data, level]);
   const issues = useMemo(() => validate(run, data).issues, [run, data]);
-  const bonus = proficiencyBonus(level) + rulesetEffects(run.difficulty, data).proficiencyBonus;
+  const effects = rulesetEffects(run.difficulty, data);
+  const bonus = proficiencyBonus(level) + effects.proficiencyBonus;
 
   const undecided = (id: string) => issues.filter((issue) => issue.character === id && issue.code === "choiceMissing").length;
   const skillValues = Object.fromEntries(skills.flatMap((row) => (row.best === null ? [] : [[row.skill, row.best.value]])));
@@ -66,36 +67,58 @@ export default function Party({ data, run, saveRun, onOpenCharacter }: Props) {
           {t("party.error", { message: error })}
         </p>
       )}
-      <DifficultyPicker data={data} run={run} saveRun={saveRun} />
-      <div className="row progress" role="group" aria-label={t("party.progress")}>
-        <label>
-          {t("party.progress.level")}{" "}
-          <select value={level} onChange={(event) => apply((current) => setProgress(current, Number(event.target.value), current.progress.act))}>
-            {Array.from({ length: MAX_LEVELS }, (_, i) => i + 1).map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          {t("party.progress.act")}{" "}
-          <select value={run.progress.act} onChange={(event) => apply((current) => setProgress(current, level, Number(event.target.value) as Act))}>
-            {ACTS.map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
-
       <div className="stack">
+        <section className="frame runframe" aria-labelledby="run-title">
+          <div className="head">
+            <h2 id="run-title">{run.name === "" ? t("run.untitled") : run.name}</h2>
+            <span className="note">{t("party.run.effect", { bonus, multiclass: t(effects.multiclass ? "party.run.multiclassOn" : "party.run.multiclassOff") })}</span>
+          </div>
+          <div className="settings" role="group" aria-label={t("party.progress")}>
+            <div className="field">
+              <span aria-hidden="true">{t("difficulty.label")}</span>
+              <DifficultyPicker data={data} run={run} saveRun={saveRun} />
+            </div>
+            <label className="field">
+              <span>{t("party.progress.level")}</span>
+              <select value={level} onChange={(event) => apply((current) => setProgress(current, Number(event.target.value), current.progress.act))}>
+                {Array.from({ length: MAX_LEVELS }, (_, i) => i + 1).map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="field">
+              <span>{t("party.progress.act")}</span>
+              <select value={run.progress.act} onChange={(event) => apply((current) => setProgress(current, level, Number(event.target.value) as Act))}>
+                {ACTS.map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="field">
+              <span>{t("party.editor.size")}</span>
+              <input
+                type="number"
+                min={PARTY_SIZE.min}
+                max={PARTY_SIZE.max}
+                step={1}
+                value={run.partySize}
+                onChange={(event) => {
+                  if (event.target.value !== "") apply((current) => setPartySize(current, Number(event.target.value)));
+                }}
+              />
+            </label>
+          </div>
+        </section>
+
         <PartyEditor run={run} data={data} apply={apply} act={act} setAct={setAct} />
 
         <section className="frame" aria-labelledby="group-title">
           <h2 id="group-title">{t("party.group")}</h2>
-          <p className="sub">{t("party.group.line", { act, level, bonus, count: members.length, size: run.partySize })}</p>
+          <p className="note">{t("party.group.line", { act, level, bonus, count: members.length, size: run.partySize })}</p>
           {members.length === 0 ? (
             <p className="empty">
               {t("party.empty", { act })}{" "}
@@ -106,7 +129,7 @@ export default function Party({ data, run, saveRun, onOpenCharacter }: Props) {
               )}
             </p>
           ) : (
-            <div className="fill">
+            <div className="cards">
               {members.map((character) => (
                 <MemberCard
                   key={character.id}
@@ -123,28 +146,17 @@ export default function Party({ data, run, saveRun, onOpenCharacter }: Props) {
               ))}
             </div>
           )}
+          {members.length > 1 && <p className="note legend">{t("party.legend")}</p>}
         </section>
 
         <section className="frame" aria-labelledby="ensemble-title">
           <h2 id="ensemble-title">{t("party.ensemble")}</h2>
-          <div className="kv">
-            <span className="k">{t("party.ensemble.classes")}</span>
-            <span>{classes.length > 0 ? classes.join(", ") : "—"}</span>
-            <span className="k">{t("party.ensemble.covered")}</span>
-            <span>{t("party.ensemble.coveredCount", { count: skills.length - holes.length, total: skills.length })}</span>
-            <span className="k">{t("party.ensemble.holes")}</span>
-            <span className="pills">
-              {holes.length > 0
-                ? holes.map((hole) => (
-                    <span key={hole} className="pill bad">
-                      {hole}
-                    </span>
-                  ))
-                : t("party.ensemble.none")}
-            </span>
-            <span className="k">{t("party.ensemble.choices")}</span>
-            <span>{t("party.ensemble.choicesCount", { count: toDecide })}</span>
-          </div>
+          <p className="summary-line">
+            <span>{t("party.summary.covered", { count: skills.length - holes.length, total: skills.length })}</span>
+            {holes.length > 0 ? <span className="gaps">{t("party.summary.gaps", { names: holes.join(", ") })}</span> : <span>{t("party.summary.noGaps")}</span>}
+            <span className={toDecide > 0 ? "todo" : undefined}>{t("party.summary.choices", { count: toDecide })}</span>
+            <span className="note">{t("party.summary.classes", { classes: classes.length > 0 ? classes.join(", ") : "—" })}</span>
+          </p>
           <Coverage run={run} data={data} rows={skills} />
         </section>
       </div>

@@ -124,45 +124,64 @@ select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
 /* Party screen */
 .row { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin-bottom: 12px }
 .row select, .roster select { font: inherit; color: var(--fg); background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; max-width: 100% }
-.fill { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px }
-.fill > * { flex: 1 1 260px; min-width: 0 }
-.card { border: 1px solid var(--border); border-radius: 6px; background: var(--surface); padding: 12px 14px; display: grid; gap: 6px; align-content: start }
+/* Roster and member cards: 4, 2 or 1 columns by width, equal heights, plan and button pinned to the card bottom */
+.cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px }
+.card { border: 1px solid var(--border); border-radius: 6px; background: var(--bg); padding: 14px; display: flex; flex-direction: column; gap: 12px; min-width: 0 }
 .card p { margin: 0 }
 .chip { font: inherit; border: 1px solid var(--border); background: var(--surface2); color: var(--fg); border-radius: 999px; padding: 1px 10px; cursor: pointer }
 .seg { display: inline-flex; gap: 4px; margin: 8px 0 }
 .seg button.on { background: var(--surface); border-color: var(--border); font-weight: 600 }
 .pills { display: flex; flex-wrap: wrap; gap: 4px; align-items: center }
 .party h4 { font-size: 12px; margin: 6px 0; color: var(--muted); text-transform: uppercase; letter-spacing: .05em }
-.composer .head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 24px }
-.composer .head h2, .composer .head .seg, .composer .head .sub { margin: 0 }
-.composer input[type=number] { font: inherit; color: var(--fg); background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; width: 4em }
-.roster { list-style: none; margin: 8px 0 12px; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); column-gap: 24px }
-.roster li { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--border) }
-.roster label { display: flex; gap: 8px; align-items: center }
-.roster .cls { flex: 1; margin: 0; min-width: 0; font-size: 13px }
+.composer .head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px }
+.composer .head h2, .composer .head .seg, .composer .head .note { margin: 0 }
+.roster { list-style: none; margin: 8px 0 12px; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px }
+.roster li { display: grid; gap: 2px; align-content: start; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); min-width: 0 }
+.roster label { display: flex; gap: 8px; align-items: center; font-weight: 600 }
+.roster input[type=checkbox] { accent-color: var(--accent); width: 16px; height: 16px }
+.roster .cls { margin: 0; min-width: 0; padding-left: 24px }
+.roster .state { padding-left: 24px }
 .roster .add, .composer .row { margin-bottom: 0 }
 .party .frame > .sub { margin-bottom: 12px }
-.party .frame > .fill:last-child { margin-bottom: 0 }
+.party .frame > .cards:last-child { margin-bottom: 0 }
+.party .legend { margin: 10px 0 0 }
 .party .frame > .empty { margin: 0; display: flex; flex-wrap: wrap; gap: 8px; align-items: center }
-.member { padding: 14px; gap: 8px }
-.member .top { display: flex; justify-content: space-between; gap: 8px; align-items: baseline }
-.member .name { font-size: 16px; margin: 0 }
-.member .cls { font-size: 13px }
+.member .top { display: flex; justify-content: space-between; gap: 8px; align-items: flex-start }
+.member .name { font-size: 20px; margin: 0 }
+.member .cls { font-size: 14px }
+.member .brings { flex: 1 }
 .member .brings h4 { margin-top: 0 }
-.member .pills .sub { margin: 0; font-size: 13px }
+.member .brings .sub { margin: 0; font-size: 13.5px }
+.contrib { display: flex; flex-wrap: wrap; gap: 4px 6px; font-size: 13.5px }
+.contrib > span { white-space: nowrap }
+.contrib .best { color: var(--accent); font-weight: 600 }
+.contrib .sep { color: var(--faint) }
+.member .plan { margin-top: auto; border-top: 1px solid var(--line); padding-top: 10px; font-size: 13.5px; color: var(--muted) }
+.member .open { align-self: flex-start }
 .ab6 { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px }
 .ab6 .ab { text-align: center; border: 1px solid var(--border); border-radius: 6px; padding: 3px 0; min-width: 0 }
 .ab6 .ab span { font-size: 10px; color: var(--muted); letter-spacing: .04em }
 .ab6 .ab b { display: block; font-size: 15px; font-variant-numeric: tabular-nums }
 .ab6 .ab small { display: block; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums }
 .ab6 .ab.hi { border-color: var(--accent); background: var(--accent-bg) }
-.kv { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 12px; font-size: 13px; align-items: baseline }
-.kv .k { color: var(--muted) }
-.cov { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); gap: 0 16px; margin-top: 12px }
-.cov .grp { padding: 8px 0; border-top: 1px solid var(--border) }
-.cov .grp h4 { margin-top: 0 }
-.cov .row { display: flex; flex-wrap: nowrap; justify-content: space-between; gap: 8px; font-size: 13px; padding: 2px 0; margin: 0 }
+.runframe > .head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 16px; margin-bottom: 14px }
+.runframe .settings { display: flex; flex-wrap: wrap; gap: 12px 28px; align-items: end }
+.runframe .field { display: grid; gap: 4px; margin: 0 }
+.runframe .field > span { font-size: 12.5px; color: var(--muted) }
+.runframe .field select, .runframe .field input[type=number] { font: inherit; color: var(--fg); background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; min-width: 90px }
+.runframe .field input[type=number] { width: 90px }
+.summary-line { display: flex; flex-wrap: wrap; gap: 6px 24px; margin: 0 0 16px; font-size: 14px }
+.summary-line .gaps { color: var(--bad); font-weight: 600 }
+.summary-line .todo { color: var(--todo) }
+.cov { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px 24px }
+.cov .grp h4 { margin: 0 0 4px; padding-bottom: 6px; border-bottom: 1px solid var(--line) }
+.cov .row { display: flex; flex-wrap: nowrap; justify-content: space-between; gap: 8px; font-size: 14px; padding: 3px 0; margin: 0 }
+.cov .who { font-size: 13px; color: var(--muted); text-align: right }
+.cov .who b { font-weight: 600; color: var(--fg); font-variant-numeric: tabular-nums }
+.cov .row.gap > span { color: var(--bad); font-weight: 600 }
+@media (max-width: 1180px) { .cards, .roster { grid-template-columns: repeat(2, minmax(0, 1fr)) } .cov { grid-template-columns: repeat(3, minmax(0, 1fr)) } }
 @media (max-width: 640px) {
+  .cards, .roster, .cov { grid-template-columns: minmax(0, 1fr) }
   .row { flex-direction: column; align-items: stretch }
   .cov .row { flex-direction: row; align-items: center }
   .ab6 { grid-template-columns: repeat(3, minmax(0, 1fr)) }

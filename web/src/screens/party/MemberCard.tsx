@@ -110,6 +110,32 @@ export function BringsPills({ contribution, alone, skillValues, level, data, lan
   );
 }
 
+/** What a member brings as plain text joined by middle dots: skills only it has, skills where it is best (brass, with a star), abilities where it is highest; "alone" or "nothing unique" otherwise. */
+export function BringsText({ contribution, alone, skillValues, level, data, lang }: { contribution: Contribution; alone: boolean; skillValues: Record<string, number>; level: number; data: GameData; lang: Lang }) {
+  const { t } = useI18n();
+  const skill = (id: string) => gameName(data, lang, "skill", id);
+  const { only, best, highest } = contribution;
+  if (alone) return <p className="sub">{t("party.brings.alone")}</p>;
+  const items = [
+    ...only.map((id) => <span key={`only-${id}`}>{t("party.brings.only", { skill: skill(id) })}</span>),
+    ...best.map((id) => (
+      <span key={`best-${id}`} className="best">
+        {skillValues[id] === undefined ? skill(id) : `${skill(id)} ${signed(skillValues[id])}`}{" "}
+        <span role="img" aria-label={t("party.brings.bestMark")}>
+          ★
+        </span>
+      </span>
+    )),
+    ...highest.map((ability) => <span key={`high-${ability}`}>{t("party.brings.highest", { ability: gameName(data, lang, "ability", ability) })}</span>),
+  ];
+  if (items.length === 0) return <p className="sub">{t("party.brings.nothing", { level })}</p>;
+  return (
+    <p className="contrib">
+      {items.flatMap((item, i) => (i === 0 ? [item] : [<span key={`sep-${i}`} className="sep" aria-hidden="true">·</span>, item]))}
+    </p>
+  );
+}
+
 type Props = {
   character: Character;
   /** What the member brings to the active group (`contribution()`). */
@@ -118,7 +144,7 @@ type Props = {
   level: number;
   data: GameData;
   lang: Lang;
-  /** Whether the member is the only active one: nothing to compare with, so no pill. */
+  /** Whether the member is the only active one: nothing to compare with. */
   alone: boolean;
   /** The group's best value of each skill (`coverage().best.value`), shown with the skills where the member is best. */
   skillValues: Record<string, number>;
@@ -139,26 +165,24 @@ export default function MemberCard({ character, contribution, level, data, lang,
   return (
     <article className="card member">
       <div className="top">
-        <h3 className="name">{characterLabel(data, lang, character.who, t("party.player"))}</h3>
-        <span className={`pill ${undecided === 0 ? "good" : "todo"}`}>{undecided === 0 ? t("party.decided") : t(undecided === 1 ? "party.undecided.one" : "party.undecided", { count: undecided })}</span>
+        <div>
+          <h3 className="name">{characterLabel(data, lang, character.who, t("party.player"))}</h3>
+          <p className="cls">
+            <ClassLine character={character} level={level} data={data} lang={lang} none={t("party.noClass")} />
+          </p>
+          {identity !== "" && <p className="note">{identity}</p>}
+        </div>
+        <span className={`pill ${undecided === 0 ? "muted" : "todo"}`}>{undecided === 0 ? t("party.decided") : t(undecided === 1 ? "party.undecided.one" : "party.undecided", { count: undecided })}</span>
       </div>
-      <p className="cls">
-        <ClassLine character={character} level={level} data={data} lang={lang} none={t("party.noClass")} />
-      </p>
-      {identity !== "" && <p className="sub">{identity}</p>}
       <AbilityTiles totals={totals} highest={contribution.highest} data={data} lang={lang} />
       <div className="brings">
         <h4>{t("party.brings")}</h4>
-        <div className="pills">
-          <BringsPills contribution={contribution} alone={alone} skillValues={skillValues} level={level} data={data} lang={lang} />
-        </div>
+        <BringsText contribution={contribution} alone={alone} skillValues={skillValues} level={level} data={data} lang={lang} />
       </div>
-      <p className="sub">{t("party.plan", { level: MAX_LEVELS, classes: classLineText(character, MAX_LEVELS, data, lang) || t("party.noClass") })}</p>
-      <div>
-        <button className="btn small" onClick={onOpen}>
-          {t("party.openBuild")}
-        </button>
-      </div>
+      <p className="plan">{t("party.plan", { level: MAX_LEVELS, classes: classLineText(character, MAX_LEVELS, data, lang) || t("party.noClass") })}</p>
+      <button className="btn small open" onClick={onOpen}>
+        {t("party.openBuild")}
+      </button>
     </article>
   );
 }
