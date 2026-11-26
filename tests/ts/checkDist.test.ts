@@ -19,7 +19,10 @@ const INDEX = `<!doctype html><html><head><link rel="icon" href="data:,"><script
 function cleanBuild(): void {
   put("index.html", INDEX);
   put("assets/app.js", `console.log("hello");`);
-  put("assets/app.css", `body{background:url(data:image/png;base64,AAAA)}`);
+  put("assets/app.css", `body{background:url(data:image/png;base64,AAAA)}@font-face{font-family:F;src:url(./font.woff2) format("woff2")}`);
+  put("assets/font.woff2", "font");
+  put("fonts/OFL-marcellus.txt", "licence");
+  put("fonts/OFL-source-sans-3.txt", "licence");
   for (const file of DATA_FILES) put(file, "{}");
 }
 
@@ -85,6 +88,28 @@ describe("checkDist", () => {
     const problems = checkDist(dir);
     expect(problems).toHaveLength(1);
     expect(problems[0]).toContain(DATA_FILES[2]);
+  });
+
+  it("lists a CSS url() to a local file the build does not contain", () => {
+    cleanBuild();
+    put("assets/app.css", `@font-face{src:url(./font.woff2?v=1#x)}a{background:url("./missing.woff2")}`);
+    const problems = checkDist(dir);
+    expect(problems).toHaveLength(1);
+    expect(problems[0]).toContain("assets/app.css");
+    expect(problems[0]).toContain("missing.woff2");
+  });
+
+  it("requires a font file and both font licences in the build", () => {
+    cleanBuild();
+    put("assets/app.css", `body{color:red}`);
+    rmSync(join(dir, "assets/font.woff2"));
+    expect(checkDist(dir)).toEqual(["the build contains no font file"]);
+    cleanBuild();
+    rmSync(join(dir, "fonts/OFL-marcellus.txt"));
+    expect(checkDist(dir)).toEqual(["font licence is missing: fonts/OFL-marcellus.txt"]);
+    cleanBuild();
+    rmSync(join(dir, "fonts/OFL-source-sans-3.txt"));
+    expect(checkDist(dir)).toEqual(["font licence is missing: fonts/OFL-source-sans-3.txt"]);
   });
 
   it("reports a missing index.html", () => {

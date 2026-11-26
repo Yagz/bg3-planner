@@ -1,12 +1,15 @@
-// Checks a built site (web/dist): nothing is loaded from another site, and everything that must ship is there. Usage: node scripts/check-dist.ts <dist directory>
+// Checks a built site (web/dist): nothing is loaded from another site, and everything that must ship is there (page assets, data files, a font file and both font licences, every local file a stylesheet points to). Usage: node scripts/check-dist.ts <dist directory>
 // Exit 0 and no output when clean; exit 1 with one problem per line on stderr otherwise.
 import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from "node:fs";
-import { join, relative } from "node:path";
+import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { DATA_FILES } from "../web/src/data/loadInBrowser.ts";
 
 /** Sites an `<a href>` may point to (the host itself or any subdomain): the user follows these, the page never loads from them. */
 const LINK_HOSTS = ["bg3.wiki", "github.com", "larian.com"];
+
+/** The licence text of each shipped font (SIL Open Font License), next to the font files in the build. */
+const FONT_LICENCES = ["fonts/OFL-marcellus.txt", "fonts/OFL-source-sans-3.txt"];
 
 const EXTERNAL = /^(?:https?:)?\/\//i;
 
@@ -70,12 +73,18 @@ function checkHtml(name: string, html: string): string[] {
   return problems;
 }
 
-function checkCss(name: string, css: string): string[] {
+/** `cssDir` is the directory of the stylesheet inside the build (with `dir`, the build root): given for a stylesheet file, it makes a local `url()` to a file the build lacks a problem. */
+function checkCss(name: string, css: string, local?: { dir: string; cssDir: string }): string[] {
   const problems: string[] = [];
   const report = (kind: string, url: string) => problems.push(`${name}: CSS ${kind} to another site: ${url}`);
   for (const match of css.matchAll(/url\(\s*(?:"([^"]*)"|'([^']*)'|([^)\s]*))\s*\)/gi)) {
     const url = (match[1] ?? match[2] ?? match[3] ?? "").trim();
     if (EXTERNAL.test(url)) report("url()", url);
+    else if (local !== undefined && url !== "" && !/^data:/i.test(url) && !url.startsWith("#")) {
+      const path = url.split(/[?#]/)[0]!;
+      const beside = join(local.cssDir, path);
+      if (!(existsSync(beside) && statSync(beside).isFile()) && resolveInBuild(local.dir, path) === null) problems.push(`${name}: CSS url() to a file the build does not contain: ${url}`);
+    }
   }
   for (const match of css.matchAll(/@import\s+(?:"([^"]*)"|'([^']*)')/gi)) {
     const url = (match[1] ?? match[2] ?? "").trim();
@@ -135,9 +144,13 @@ export function checkDist(dir: string): string[] {
       const name = relative(dir, path);
       if (name === "index.html") continue;
       if (/\.html?$/i.test(name)) problems.push(...checkHtml(name, readFileSync(path, "utf8")));
-      else if (/\.css$/i.test(name)) problems.push(...checkCss(name, readFileSync(path, "utf8")));
+      else if (/\.css$/i.test(name)) problems.push(...checkCss(name, readFileSync(path, "utf8"), { dir, cssDir: dirname(path) }));
       else if (/\.(?:m?js|cjs)$/i.test(name)) problems.push(...checkJs(name, readFileSync(path, "utf8")));
     }
+    if (!listFiles(dir).some((path) => /\.woff2$/i.test(path))) problems.push("the build contains no font file");
+  }
+  for (const licence of FONT_LICENCES) {
+    if (!existsSync(join(dir, licence))) problems.push(`font licence is missing: ${licence}`);
   }
   return problems;
 }
