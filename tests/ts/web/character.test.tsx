@@ -21,6 +21,7 @@ import { signed } from "../../../web/src/screens/Coverage.tsx";
 import { addCharacter } from "../../../web/src/state/partyOps.ts";
 import { loadTab, saveTab } from "../../../web/src/state/sessionTab.ts";
 import { createStore } from "../../../web/src/state/storage.ts";
+import { setLanguage } from "./header.ts";
 import { MemoryBackend } from "./memoryBackend.ts";
 import { realData } from "./realData.ts";
 
@@ -129,7 +130,7 @@ describe("Character screen", () => {
     setup(runWith([c]), c.id);
     openSpells();
     fireEvent.click(within(screen.getByRole("dialog")).getByRole("checkbox", { name: gameName(data, "en", "spell", items[2]!) }));
-    fireEvent.change(screen.getByRole("combobox", { name: "Language" }), { target: { value: "fr" } });
+    setLanguage("fr");
     const dialog = screen.getByRole("dialog");
     expect(within(dialog).getByRole("checkbox", { name: gameName(data, "fr", "spell", items[2]!) })).toHaveProperty("checked", true);
     expect(within(dialog).getByText("1 / 2")).toBeTruthy();
@@ -439,7 +440,7 @@ describe("Character screen", () => {
       return { ...ranger(1), id: "bard", race: "Elf", subrace: "Elf_HighElf", levels: Array.from({ length: levels }, () => ({ class: "Bard", choices: {} as Record<string, Choice> })) };
     }
     const slotOf = (c: Character, n: number, id: string) => resolve(c, data).levels[n - 1]!.slots.find((s) => s.selector.id === id)!;
-    const toFrench = () => fireEvent.change(screen.getByRole("combobox", { name: "Language" }), { target: { value: "fr" } });
+    const toFrench = () => setLanguage("fr");
     const frLevel = (n: number) => screen.getByRole("group", { name: `Niveau ${n}` });
     const headings = (dialog: HTMLElement) => within(within(dialog).getByRole("group", { name: "La liste du jeu" })).getAllByRole("heading").map((h) => h.textContent);
 
@@ -755,7 +756,7 @@ describe("Character screen", () => {
       return c;
     }
     const sidebar = () => screen.getByRole("complementary");
-    const french = () => fireEvent.change(screen.getByRole("combobox", { name: "Language" }), { target: { value: "fr" } });
+    const french = () => setLanguage("fr");
     const viewedAt = (n: number) => fireEvent.change(within(sidebar()).getByRole("combobox", { name: "Vu au niveau" }), { target: { value: String(n) } });
     const kv = (region: HTMLElement, term: string) => {
       const dt = [...region.querySelectorAll("dt")].find((el) => el.textContent === term);
@@ -945,7 +946,7 @@ describe("Character screen", () => {
       const levels = screen.getByRole("region", { name: "Levels" });
       expect(within(levels).getByText("A level continues the previous one's class; “Multiclass” changes the class of that level only, and a new level takes the last level's class.")).toBeTruthy();
       expect(within(levels).queryByText(/from that level/)).toBeNull();
-      fireEvent.change(screen.getByRole("combobox", { name: "Language" }), { target: { value: "fr" } });
+      setLanguage("fr");
       expect(within(screen.getByRole("region", { name: "Niveaux" })).getByText("Un niveau continue la classe du précédent ; « Multiclasser » change la classe de ce niveau seulement, et un niveau ajouté reprend la classe du dernier niveau.")).toBeTruthy();
     });
 
@@ -977,7 +978,7 @@ describe("Character screen", () => {
 
 describe("skill and expertise pickers", () => {
   const GUILD_ARTISAN = "e9aeac40-6c4e-4d81-9a24-e9eeb6208e85";
-  const french = () => fireEvent.change(screen.getByRole("combobox", { name: "Language" }), { target: { value: "fr" } });
+  const french = () => setLanguage("fr");
   const niveau = (n: number) => screen.getByRole("group", { name: `Niveau ${n}` });
   /** A High Elf Guild Artisan Lore Bard of 12 levels: Performance, Deception, Acrobatics at 1; Intimidation, Stealth, History at 3 with expertise in Intimidation and Performance. */
   function loreBard(): { c: Character; expertise10: string; level10: number } {

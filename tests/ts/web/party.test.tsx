@@ -12,6 +12,7 @@ import type { Lang } from "../../../web/src/i18n/i18n.ts";
 import { gameName } from "../../../web/src/names.ts";
 import { addCharacter } from "../../../web/src/state/partyOps.ts";
 import { createStore } from "../../../web/src/state/storage.ts";
+import { runAction, setLanguage } from "./header.ts";
 import { MemoryBackend } from "./memoryBackend.ts";
 import { StreamingBlob } from "./streamingBlob.ts";
 import { realData } from "./realData.ts";
@@ -51,7 +52,7 @@ function setup(run: Run, lang: Lang = "en", store = createStore(new MemoryBacken
   const saved = store.save(run);
   window.history.replaceState(null, "", "#/party");
   render(<App data={data} store={store} settingsBackend={new MemoryBackend()} sessionBackend={new MemoryBackend()} />);
-  if (lang === "fr") fireEvent.change(screen.getByRole("combobox", { name: "Language" }), { target: { value: "fr" } });
+  if (lang === "fr") setLanguage("fr");
   return { store, id: saved.id };
 }
 
@@ -277,7 +278,7 @@ describe("Party screen", () => {
 
   it("keeps a rename made in the run bar when the party is edited afterwards", () => {
     const { store, id } = setup(runWith(ranger(3), 3));
-    fireEvent.click(screen.getByRole("button", { name: "Rename" }));
+    runAction("Rename");
     fireEvent.change(screen.getByRole("textbox", { name: "Run name" }), { target: { value: "Renamed" } });
     fireEvent.click(screen.getByRole("button", { name: "OK" }));
     fireEvent.change(screen.getByRole("combobox", { name: "Level reached" }), { target: { value: "5" } });

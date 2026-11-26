@@ -7,6 +7,7 @@ import type { Character, Run } from "../../../src/plan/model.ts";
 import App from "../../../web/src/App.tsx";
 import { HISTORY_LIMIT, createStore } from "../../../web/src/state/storage.ts";
 import type { RunStore } from "../../../web/src/state/storage.ts";
+import { runAction, setLanguage, setTheme } from "./header.ts";
 import { MemoryBackend } from "./memoryBackend.ts";
 import { StreamingBlob } from "./streamingBlob.ts";
 import { realData } from "./realData.ts";
@@ -35,6 +36,56 @@ afterEach(() => {
 });
 
 describe("app shell", () => {
+  it("the header holds the brand, the four screens, the run selector, the run menu and the settings menu", () => {
+    renderApp();
+    fireEvent.click(screen.getByRole("button", { name: "New run" }));
+    const header = screen.getByRole("banner");
+    expect(header.querySelector(".brand")?.textContent).toBe("BG3 Planner");
+    expect(header.querySelector(".brand b")?.textContent).toBe("BG3");
+    expect(within(within(header).getByRole("navigation")).getAllByRole("button").map((b) => b.textContent)).toEqual(["Party", "Character", "History", "Import / export"]);
+    expect(within(header).getByRole("combobox", { name: "Run" })).toBeTruthy();
+    expect(within(header).getByRole("button", { name: "Run actions" }).getAttribute("aria-haspopup")).toBe("menu");
+    expect(within(header).getByRole("button", { name: "Settings" }).getAttribute("aria-haspopup")).toBe("menu");
+    // Only the two menu buttons, the tabs and the run select: language and theme live in the settings menu.
+    expect(within(header).queryByRole("combobox", { name: "Language" })).toBeNull();
+    runAction("Duplicate");
+    expect(within(within(header).getByRole("combobox", { name: "Run" })).getAllByRole("option")).toHaveLength(2);
+    fireEvent.click(within(header).getByRole("button", { name: "Settings" }));
+    expect(within(header).getByRole("combobox", { name: "Language" })).toBeTruthy();
+    expect(within(header).getByRole("combobox", { name: "Theme" })).toBeTruthy();
+  });
+
+  it("with no run the header shows a visible Nouvelle partie button and no run menu", () => {
+    window.history.replaceState(null, "", "/");
+    const settings = new MemoryBackend();
+    settings.items.set("bg3p:settings", JSON.stringify({ lang: "fr" }));
+    renderApp(createStore(new MemoryBackend()), settings);
+    expect(screen.getByRole("button", { name: "Nouvelle partie" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Actions sur la partie" })).toBeNull();
+    expect(screen.queryByRole("combobox", { name: "Partie" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Réglages" })).toBeTruthy();
+  });
+
+  it("Renommer from the run menu opens the rename field and Supprimer the confirmation bar", () => {
+    const { store } = renderApp();
+    fireEvent.click(screen.getByRole("button", { name: "New run" }));
+    runAction("Rename");
+    expect(screen.getByRole("textbox", { name: "Run name" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    runAction("Delete");
+    expect(screen.getByText("Delete “New run” and its history from this browser?")).toBeTruthy();
+    expect(store.list()).toHaveLength(1);
+    fireEvent.click(screen.getByRole("button", { name: "Delete for good" }));
+    expect(store.list()).toHaveLength(0);
+  });
+
+  it("the difficulty is not in the header", () => {
+    renderApp();
+    fireEvent.click(screen.getByRole("button", { name: "New run" }));
+    expect(within(screen.getByRole("banner")).queryByRole("combobox", { name: /Difficult/ })).toBeNull();
+    expect(within(screen.getByRole("main")).getByRole("combobox", { name: /Difficult/ })).toBeTruthy();
+  });
+
   it("renders with an empty store", () => {
     renderApp();
     expect(screen.getByRole("navigation")).toBeTruthy();
@@ -53,16 +104,16 @@ describe("app shell", () => {
     expect(runSelector().selectedOptions[0]?.textContent).toBe("New run");
     expect(JSON.parse(settings.items.get("bg3p:settings")!).currentRun).toBe(store.list()[0]?.id);
 
-    fireEvent.click(screen.getByRole("button", { name: "Rename" }));
+    runAction("Rename");
     fireEvent.change(screen.getByRole("textbox", { name: "Run name" }), { target: { value: "Dark urges" } });
     fireEvent.click(screen.getByRole("button", { name: "OK" }));
     expect(runSelector().selectedOptions[0]?.textContent).toBe("Dark urges");
 
-    fireEvent.click(screen.getByRole("button", { name: "Duplicate" }));
+    runAction("Duplicate");
     expect(store.list().map((summary) => summary.name).sort()).toEqual(["Dark urges", "Dark urges (copy)"]);
     expect(runSelector().selectedOptions[0]?.textContent).toBe("Dark urges (copy)");
 
-    fireEvent.click(screen.getByRole("button", { name: "Delete" }));
+    runAction("Delete");
     fireEvent.click(screen.getByRole("button", { name: "Delete for good" }));
     expect(store.list().map((summary) => summary.name)).toEqual(["Dark urges"]);
     expect(runSelector().selectedOptions[0]?.textContent).toBe("Dark urges");
@@ -71,12 +122,12 @@ describe("app shell", () => {
   it("switches language without losing the run", () => {
     const { store } = renderApp();
     fireEvent.click(screen.getByRole("button", { name: "New run" }));
-    fireEvent.click(screen.getByRole("button", { name: "Rename" }));
+    runAction("Rename");
     fireEvent.change(screen.getByRole("textbox", { name: "Run name" }), { target: { value: "My run" } });
     fireEvent.click(screen.getByRole("button", { name: "OK" }));
     const id = runSelector().value;
 
-    fireEvent.change(screen.getByRole("combobox", { name: "Language" }), { target: { value: "fr" } });
+    setLanguage("fr");
     expect(screen.getByRole("button", { name: "Partie" })).toBeTruthy();
     expect(document.documentElement.lang).toBe("fr");
     expect(runSelector().value).toBe(id);
@@ -114,10 +165,9 @@ describe("app shell", () => {
 
   it("sets the theme on the document element, system removes it", () => {
     renderApp();
-    const theme = screen.getByRole("combobox", { name: "Theme" });
-    fireEvent.change(theme, { target: { value: "dark" } });
+    setTheme("dark");
     expect(document.documentElement.dataset["theme"]).toBe("dark");
-    fireEvent.change(theme, { target: { value: "system" } });
+    setTheme("system");
     expect(document.documentElement.hasAttribute("data-theme")).toBe(false);
   });
 
@@ -162,7 +212,7 @@ describe("app shell", () => {
     });
     expect(runSelector().selectedOptions[0]?.textContent).toBe("Renamed in another tab");
     // A save here keeps the other tab's version in the history.
-    fireEvent.click(screen.getByRole("button", { name: "Rename" }));
+    runAction("Rename");
     fireEvent.change(screen.getByRole("textbox", { name: "Run name" }), { target: { value: "Renamed here" } });
     fireEvent.click(screen.getByRole("button", { name: "OK" }));
     expect(createStore(backend).history(id).map((entry) => JSON.parse(entry.text).name)).toEqual(["Renamed here", "Renamed in another tab", "New run"]);
@@ -182,7 +232,7 @@ describe("history panel", () => {
   });
 
   const rename = (name: string) => {
-    fireEvent.click(screen.getByRole("button", { name: "Rename" }));
+    runAction("Rename");
     fireEvent.change(screen.getByRole("textbox", { name: "Run name" }), { target: { value: name } });
     fireEvent.click(screen.getByRole("button", { name: "OK" }));
   };

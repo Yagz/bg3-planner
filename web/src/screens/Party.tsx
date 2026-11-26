@@ -11,6 +11,7 @@ import { gameName } from "../names.ts";
 import { ACTS, copyPartyFromPreviousAct, setProgress } from "../state/partyOps.ts";
 import type { Act } from "../state/partyOps.ts";
 import Coverage from "./Coverage.tsx";
+import DifficultyPicker from "./DifficultyPicker.tsx";
 import PartyEditor from "./PartyEditor.tsx";
 import MemberCard from "./party/MemberCard.tsx";
 
@@ -65,6 +66,7 @@ export default function Party({ data, run, saveRun, onOpenCharacter }: Props) {
           {t("party.error", { message: error })}
         </p>
       )}
+      <DifficultyPicker data={data} run={run} saveRun={saveRun} />
       <div className="row progress" role="group" aria-label={t("party.progress")}>
         <label>
           {t("party.progress.level")}{" "}

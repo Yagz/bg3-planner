@@ -8,6 +8,8 @@
   "nav.character": "Character",
   "nav.history": "History",
   "nav.transfer": "Import / export",
+  "header.runMenu": "Run actions",
+  "header.settings": "Settings",
   "run.select": "Run",
   "run.new": "New run",
   "run.defaultName": "New run",

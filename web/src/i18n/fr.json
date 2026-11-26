@@ -8,6 +8,8 @@
   "nav.character": "Personnage",
   "nav.history": "Historique",
   "nav.transfer": "Import / export",
+  "header.runMenu": "Actions sur la partie",
+  "header.settings": "Réglages",
   "run.select": "Partie",
   "run.new": "Nouvelle partie",
   "run.defaultName": "Nouvelle partie",
