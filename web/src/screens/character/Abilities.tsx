@@ -41,9 +41,10 @@ type Props = {
   /**
    * Saves one edit session in one change: the base scores, and the level-1 bonus slot with the abilities `[+2, +1]` when
    * both are chosen and differ from the stored ones (null otherwise). Returns false (or throws) when the save was refused:
-   * the edits then stay pending and are offered again.
+   * the edits then stay pending and are offered again. `direct` is set when the frame unmounts or the page is hidden:
+   * the change must then be saved without the impact preview, which could no longer be answered.
    */
-  onCommit: (base: Record<Ability, number>, bonus: { slot: string; choice: string[] } | null) => boolean | void;
+  onCommit: (base: Record<Ability, number>, bonus: { slot: string; choice: string[] } | null, options: { direct: boolean }) => boolean | void;
 };
 
 /** Edits not saved yet, each kept only while what it was made against is still what is stored. */
@@ -91,28 +92,30 @@ export default function Abilities({ data, character, issues, onCommit }: Props) 
   const latest = useRef({ scores, bonus: null as { slot: string; choice: string[] } | null, dirty: false, onCommit });
   latest.current = { scores, bonus: pairChanged ? { slot: slot.id, choice: picked as Ability[] } : null, dirty: scoresChanged || pairChanged, onCommit };
 
-  const flush = () => {
+  /** `direct` on unmount and pagehide: saved without the impact preview (the engine still flags a later choice made invalid). */
+  const flush = (direct: boolean) => {
     const { scores: base, bonus, dirty, onCommit: save } = latest.current;
     if (!dirty) return;
     // Cleared only once the save went through (or opened the impact preview): a refused one is offered again.
-    if (save(base, bonus) === false) return;
+    if (save(base, bonus, { direct }) === false) return;
     latest.current.dirty = false;
     // A half-made bonus stays: it was not part of the save.
     setDraft((current) => ({ base: null, bonus: bonus === null ? current.bonus : null }));
   };
 
   useEffect(() => {
-    window.addEventListener("pagehide", flush);
+    const hidden = () => flush(true);
+    window.addEventListener("pagehide", hidden);
     return () => {
-      window.removeEventListener("pagehide", flush);
-      flush();
+      window.removeEventListener("pagehide", hidden);
+      flush(true);
     };
   }, []);
 
   const leave = (event: FocusEvent<HTMLDivElement>) => {
     const next = event.relatedTarget;
     if (next instanceof Node && event.currentTarget.contains(next)) return;
-    flush();
+    flush(false);
   };
 
   const choose = (index: number, ability: Ability) => {

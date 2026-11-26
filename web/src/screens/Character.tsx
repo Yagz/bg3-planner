@@ -323,9 +323,13 @@ export default function Character({ data, run, saveRun, characterId, onSelect, t
               data={data}
               character={character}
               issues={issues}
-              onCommit={(base, bonus) => {
+              onCommit={(base, bonus, { direct }) => {
                 const scored = setAbilities(character, base);
-                return commit(bonus === null ? scored : setChoice(scored, 1, bonus.slot, bonus.choice));
+                const after = bonus === null ? scored : setChoice(scored, 1, bonus.slot, bonus.choice);
+                // On unmount or pagehide the preview could not be answered. An ability edit adds or removes no slot, so the
+                // preview could only show later choices made invalid: a direct save stores what Apply would, and the
+                // engine flags those choices at their level.
+                return direct ? attempt(() => save(after)) : commit(after);
               }}
             />
             <section className="frame levelsframe" aria-labelledby="levels-title">

@@ -174,6 +174,47 @@ describe("Tree view and impact preview", () => {
     expect(within(screen.getByRole("group", { name: "Level 4" })).getByText(new RegExp(gameName(data, "en", "feat", "DefensiveDuelist")), { selector: ".pill.bad" })).toBeTruthy();
   });
 
+  it("saves directly, without the preview, an ability-bonus change pending when the table unmounts (character switch, leaving the screen); the later feat is flagged", () => {
+    const scores: Record<Ability, number> = { Strength: 15, Dexterity: 12, Constitution: 15, Intelligence: 8, Wisdom: 13, Charisma: 8 };
+    const ranger = (id: string, who: string): Character => ({
+      id,
+      who,
+      race: "Halfling",
+      subrace: "Halfling_Lightfoot",
+      background: Object.keys(data.rules.backgrounds)[0]!,
+      abilities: { ...scores },
+      levels: Array.from({ length: 4 }, () => ({ class: "Ranger", choices: {} as Record<string, Choice> })),
+      items: [],
+      notes: "",
+    });
+    const c = ranger("r", "player");
+    const bonus = resolve(c, data).levels[0]!.slots.find((s) => s.selector.function === "SelectAbilityBonus")!.id;
+    c.levels[0]!.choices[bonus] = ["Dexterity", "Wisdom"];
+    c.levels[3]!.choices["feat:4"] = ["DefensiveDuelist"];
+    const other = { ...ranger("g", "Gale"), levels: [{ class: "Wizard", choices: {} as Record<string, Choice> }] };
+    const { store, runId } = setup(runOf(c, other), c.id);
+    const strengthBonus = () => within(screen.getByRole("region", { name: "Abilities" })).getByRole("radio", { name: `+2 ${gameName(data, "en", "ability", "Strength")}` });
+    const versions = store.history(runId).length;
+
+    // Switching character without a blur unmounts the table.
+    fireEvent.click(strengthBonus());
+    fireEvent.click(screen.getByRole("button", { name: gameName(data, "en", "origin", "Gale") }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(store.history(runId).length).toBe(versions + 1);
+    const saved = store.load(runId)!.characters[0]!;
+    expect(saved.levels[0]!.choices[bonus]).toEqual(["Strength", "Wisdom"]);
+    expect(saved.levels[3]!.choices["feat:4"]).toEqual(["DefensiveDuelist"]);
+    fireEvent.click(screen.getByRole("button", { name: "Player" }));
+    expect(within(screen.getByRole("group", { name: "Level 4" })).getByText(new RegExp(gameName(data, "en", "feat", "DefensiveDuelist")), { selector: ".pill.bad" })).toBeTruthy();
+
+    // Back to Dexterity, then leaving the screen without a blur: saved too, no preview.
+    fireEvent.click(within(screen.getByRole("region", { name: "Abilities" })).getByRole("radio", { name: `+2 ${gameName(data, "en", "ability", "Dexterity")}` }));
+    fireEvent.click(screen.getByRole("button", { name: "Party" }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(store.history(runId).length).toBe(versions + 2);
+    expect(store.load(runId)!.characters[0]!.levels[0]!.choices[bonus]).toEqual(["Dexterity", "Wisdom"]);
+  });
+
   it("removes exactly the listed picks and keeps a later feat made impossible by the same subclass swap, flagged; restoring brings everything back", () => {
     // Nature Domain grants heavy armour and has its own skill and cantrip slots; Light Domain has neither.
     const before = fill({

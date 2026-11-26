@@ -266,7 +266,7 @@ describe("Character screen", () => {
       fireEvent.click(radio("Constitution", "+1"));
       unmount();
       expect(onCommit).toHaveBeenCalledTimes(1);
-      expect(onCommit).toHaveBeenCalledWith({ ...c.abilities, Strength: 9 }, { slot: bonus.id, choice: ["Charisma", "Constitution"] });
+      expect(onCommit).toHaveBeenCalledWith({ ...c.abilities, Strength: 9 }, { slot: bonus.id, choice: ["Charisma", "Constitution"] }, { direct: true });
       // On pagehide, then unmount: still one save. A half-made bonus is left out.
       onCommit.mockClear();
       const second = render(view());
@@ -275,7 +275,7 @@ describe("Character screen", () => {
       window.dispatchEvent(new Event("pagehide"));
       second.unmount();
       expect(onCommit).toHaveBeenCalledTimes(1);
-      expect(onCommit).toHaveBeenCalledWith({ ...c.abilities, Strength: 9 }, null);
+      expect(onCommit).toHaveBeenCalledWith({ ...c.abilities, Strength: 9 }, null, { direct: true });
     });
 
     it("tries a refused ability save again when focus next leaves the table", () => {
@@ -292,7 +292,7 @@ describe("Character screen", () => {
       expect(rowOf(abilitiesFrame(), "Strength").querySelector("td.tot")!.textContent).toBe("9");
       fireEvent.focusOut(button, { relatedTarget: null });
       expect(onCommit).toHaveBeenCalledTimes(2);
-      expect(onCommit).toHaveBeenLastCalledWith({ ...c.abilities, Strength: 9 }, null);
+      expect(onCommit).toHaveBeenLastCalledWith({ ...c.abilities, Strength: 9 }, null, { direct: false });
     });
 
     it("gives the level-1 bonuses in the order picked, +2 then +1, saved once both are chosen and focus leaves the table, with no picker", () => {
