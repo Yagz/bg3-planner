@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { isEquipmentIssue } from "./character/EquipmentTab.tsx";
 import type { GameData } from "../../../src/data/types.ts";
 import { encode, toReadableJson } from "../../../src/plan/codec.ts";
 import { useI18n } from "../i18n/i18n.ts";
@@ -176,7 +177,7 @@ export default function Transfer({ data, store, run, initialText, onImported }: 
                     <ul aria-label={label}>
                       {issues.map((issue, index) => (
                         <li key={index} className={issue.severity}>
-                          {issue.level === null ? "" : `${t("transfer.level", { level: issue.level })} · `}
+                          {issue.level !== null ? `${t("transfer.level", { level: issue.level })} · ` : isEquipmentIssue(issue) ? `${t("character.tab.equipment")} · ` : ""}
                           {issueMessage(issue, names)}
                         </li>
                       ))}

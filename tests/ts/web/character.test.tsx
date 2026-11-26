@@ -1108,11 +1108,11 @@ describe("tabs and notes", () => {
   const field = () => screen.getByRole("textbox", { name: "Notes" }) as HTMLTextAreaElement;
   const type = (text: string) => fireEvent.change(field(), { target: { value: text } });
 
-  it("offers Fiche and Notes, Fiche selected first, and Notes shows the stored notes", () => {
+  it("offers Fiche, Équipement and Notes, Fiche selected first, and Notes shows the stored notes", () => {
     const c = { ...ranger(1), notes: "Prendre Guérison" };
     setupFr([c], c.id);
     const tabs = within(screen.getByRole("tablist")).getAllByRole("tab");
-    expect(tabs.map((tab) => tab.textContent)).toEqual(["Fiche", "Notes"]);
+    expect(tabs.map((tab) => tab.textContent)).toEqual(["Fiche", "Équipement", "Notes"]);
     expect(screen.getByRole("tab", { name: "Fiche" }).getAttribute("aria-selected")).toBe("true");
     expect(document.getElementById("charpanel-notes")!.hasAttribute("hidden")).toBe(true);
     openNotes();
@@ -1127,6 +1127,10 @@ describe("tabs and notes", () => {
     const sheet = screen.getByRole("tab", { name: "Fiche" });
     sheet.focus();
     fireEvent.keyDown(sheet, { key: "ArrowRight" });
+    const equipment = screen.getByRole("tab", { name: "Équipement" });
+    expect(equipment.getAttribute("aria-selected")).toBe("true");
+    expect(document.activeElement).toBe(equipment);
+    fireEvent.keyDown(equipment, { key: "ArrowRight" });
     const notes = screen.getByRole("tab", { name: "Notes" });
     expect(notes.getAttribute("aria-selected")).toBe("true");
     expect(document.activeElement).toBe(notes);
@@ -1235,7 +1239,7 @@ describe("session tab storage", () => {
     saveTab(backend, "x", "notes");
     expect(loadTab(backend, "x")).toBe("notes");
     expect(loadTab(backend, "y")).toBe("sheet");
-    backend.setItem("bg3p:tab:x", "equipment");
+    backend.setItem("bg3p:tab:x", "unknown");
     expect(loadTab(backend, "x")).toBe("sheet");
     expect(loadTab(null, "x")).toBe("sheet");
   });

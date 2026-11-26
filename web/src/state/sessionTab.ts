@@ -1,4 +1,7 @@
-export type CharacterTab = "sheet" | "notes";
+export type CharacterTab = "sheet" | "equipment" | "notes";
+
+/** The tabs in display order. */
+export const CHARACTER_TABS: readonly CharacterTab[] = ["sheet", "equipment", "notes"];
 
 const key = (characterId: string) => `bg3p:tab:${characterId}`;
 
@@ -6,7 +9,7 @@ const key = (characterId: string) => `bg3p:tab:${characterId}`;
 export function loadTab(backend: Storage | null, characterId: string): CharacterTab {
   try {
     const stored = backend?.getItem(key(characterId));
-    return stored === "notes" ? "notes" : "sheet";
+    return CHARACTER_TABS.find((tab) => tab === stored) ?? "sheet";
   } catch {
     return "sheet";
   }

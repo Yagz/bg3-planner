@@ -3,6 +3,7 @@ import { impact } from "../../../src/engine/impact.ts";
 import type { Impact } from "../../../src/engine/impact.ts";
 import { MAX_LEVELS, isOffData } from "../../../src/plan/model.ts";
 import type { Ability, Character, Choice, OffData, Run } from "../../../src/plan/model.ts";
+import type { Act, EquipmentSlot } from "../../../src/plan/equipmentSlots.ts";
 
 // Pure operations on a character. Levels are 1-based, like the engine's slots. None of them fills a choice.
 
@@ -127,4 +128,16 @@ export function previewNeeded(before: Character, after: Character, run: Run, dat
   const laterInvalid = preview.newlyInvalid.some((issue) => issue.level !== null && issue.level > first && !edited.has(`${issue.level}|${issue.slot}`));
   const shown = preview.slotsRemoved.length > 0 || laterInvalid || (replacesMade && (preview.gained.length > 0 || preview.lost.length > 0));
   return shown ? preview : null;
+}
+
+/** Stores the item of one slot in one act (`null` empties it on purpose); other slots and acts are left as they are. */
+export function setEquipment(character: Character, act: Act, slot: EquipmentSlot, item: string | null): Character {
+  return { ...character, equipment: { ...character.equipment, [act]: { ...character.equipment[act], [slot]: item } } };
+}
+
+/** Removes the value an act holds for a slot: the slot inherits from the previous act again. */
+export function inheritEquipment(character: Character, act: Act, slot: EquipmentSlot): Character {
+  const stored = { ...character.equipment[act] };
+  delete stored[slot];
+  return { ...character, equipment: { ...character.equipment, [act]: stored } };
 }

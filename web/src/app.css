@@ -401,3 +401,51 @@ select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
 .notes textarea { width: 100%; box-sizing: border-box; font: inherit; color: var(--fg); background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; resize: vertical; min-height: 12em }
 /* A spell's school beside its name: muted text, never colour alone. */
 .opt .school { color: var(--muted); font-size: 12px; font-style: italic }
+
+/* Equipment tab: slots around a neutral silhouette (rarity colours only here) */
+.eqhead { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; justify-content: space-between; margin-bottom: 14px }
+.eqhead h2 { margin: 0 }
+.eqhead .chips { margin: 0 }
+.eqnotices { list-style: none; margin: 0 0 16px; padding: 0; display: grid; gap: 6px }
+.eqnotices li { font-size: 14px; padding: 8px 12px; border-radius: 6px; background: var(--todo-bg); color: var(--todo) }
+.doll { display: grid; grid-template-columns: minmax(0, 1fr) minmax(160px, 220px) minmax(0, 1fr); gap: 12px; align-items: start }
+.doll .col { display: grid; gap: 10px }
+.figure { align-self: stretch; display: grid; place-items: center; border-radius: 6px; background: radial-gradient(ellipse at 50% 40%, var(--surface2), transparent 70%) }
+.figure svg { width: 100%; max-width: 180px; height: auto }
+.figure svg * { fill: none; stroke: var(--faint); stroke-width: 1.5 }
+.slotgrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px }
+.equipment .eyebrow { font-family: var(--font); font-weight: 400; margin: 20px 0 8px }
+.eqslot { font: inherit; display: grid; gap: 2px; text-align: left; color: var(--fg); border: 1px solid var(--border); background: var(--bg); border-radius: 6px; padding: 10px 12px; cursor: pointer; min-width: 0; position: relative }
+.eqslot:hover { border-color: var(--accent) }
+.eqslot[aria-disabled="true"] { cursor: default }
+.eqslot[aria-disabled="true"]:hover { border-color: var(--border) }
+.eqslot .sl { font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 600 }
+.eqslot .flag { font-size: 11.5px; color: var(--muted) }
+.eqslot .it { font-weight: 600; display: flex; align-items: center; gap: 7px; min-width: 0 }
+.eqslot .it > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.eqslot .dot, .eqlegend .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; background: currentColor; display: inline-block }
+.eqslot .where { font-size: 12.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.eqslot.empty .it { color: var(--muted); font-weight: 400; font-style: italic }
+.eqslot.inh { border-style: dashed }
+.eqslot.warn { border-color: var(--todo); box-shadow: inset 3px 0 0 var(--todo) }
+.r-common { color: var(--r-common) }
+.r-uncommon { color: var(--r-uncommon) }
+.r-rare { color: var(--r-rare) }
+.r-veryrare { color: var(--r-veryrare) }
+.r-legendary { color: var(--r-legendary) }
+.eqlegend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--muted); margin: 16px 0 0 }
+.eqlegend > span { display: inline-flex; align-items: center; gap: 6px }
+.eqlegend .legtext { color: var(--muted) }
+.eqfilters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 8px }
+.eqfilters .search { flex: 1 1 220px; width: auto; margin: 0 }
+.eqfilters select { font: inherit; color: var(--fg); background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 5px 8px; max-width: 100% }
+.opt b.r-common, .opt b.r-uncommon, .opt b.r-rare, .opt b.r-veryrare, .opt b.r-legendary { font-weight: 600 }
+.sitefoot { padding-block: 0 32px; font-size: 13px; color: var(--muted) }
+.sitefoot p { margin: 0 }
+.sitefoot a { color: var(--accent) }
+@media (max-width: 900px) { .slotgrid { grid-template-columns: repeat(2, minmax(0, 1fr)) } }
+@media (max-width: 640px) {
+  .doll { grid-template-columns: repeat(2, minmax(0, 1fr)) }
+  .doll .figure { display: none }
+  .doll .col { display: contents }
+}

@@ -35,10 +35,12 @@ import { traitNames } from "./character/Traits.tsx";
 import ImpactPreview from "./character/ImpactPreview.tsx";
 import LevelList, { CLASS_SLOT } from "./character/LevelList.tsx";
 import LevelTree from "./character/LevelTree.tsx";
+import EquipmentTab, { isEquipmentIssue } from "./character/EquipmentTab.tsx";
 import NotesTab from "./character/NotesTab.tsx";
 import Sidebar from "./character/Sidebar.tsx";
 import { classLineText } from "./party/MemberCard.tsx";
-import { loadTab, saveTab } from "../state/sessionTab.ts";
+import { equipmentIssues } from "../../../src/engine/equipment.ts";
+import { CHARACTER_TABS, loadTab, saveTab } from "../state/sessionTab.ts";
 import type { CharacterTab } from "../state/sessionTab.ts";
 
 type Props = {
@@ -98,6 +100,9 @@ export default function Character({ data, run, saveRun, characterId, onSelect, t
   const character = characterId === null ? run.characters[0] : run.characters.find((c) => c.id === characterId);
   const issues = useMemo(() => (character === undefined ? [] : validate({ ...run, characters: [character] }, data).issues), [run, character, data]);
 
+  // Over the whole run: an item two characters share in an act shows on both.
+  const equipment = useMemo(() => (character === undefined ? [] : equipmentIssues(run, data).filter((issue) => issue.character === character.id)), [run, character, data]);
+
   if (character === undefined) return <p className="sub">{t(run.characters.length === 0 ? "character.none" : "character.unknown")}</p>;
 
   const tab = chosenTabs[character.id] ?? loadTab(sessionBackend, character.id);
@@ -106,7 +111,7 @@ export default function Character({ data, run, saveRun, characterId, onSelect, t
     setChosenTabs((tabs) => ({ ...tabs, [character.id]: next }));
   };
   const onTabKey = (event: KeyboardEvent<HTMLDivElement>) => {
-    const names = ["sheet", "notes"] as const;
+    const names = CHARACTER_TABS;
     const at = names.indexOf(tab);
     const target = { ArrowRight: (at + 1) % names.length, ArrowLeft: (at + names.length - 1) % names.length, Home: 0, End: names.length - 1 }[event.key];
     if (target === undefined) return;
@@ -304,7 +309,7 @@ export default function Character({ data, run, saveRun, characterId, onSelect, t
       <div className="charlayout">
         <div className="charmain">
           <div className="tabs" role="tablist" aria-label={t("character.tabs")} onKeyDown={onTabKey}>
-            {(["sheet", "notes"] as const).map((name) => (
+            {CHARACTER_TABS.map((name) => (
               <button key={name} type="button" role="tab" id={`chartab-${name}`} aria-selected={tab === name} aria-controls={`charpanel-${name}`} tabIndex={tab === name ? 0 : -1} onClick={() => chooseTab(name)}>
                 {t(`character.tab.${name}`)}
               </button>
@@ -314,7 +319,7 @@ export default function Character({ data, run, saveRun, characterId, onSelect, t
             <Creation
               data={data}
               character={character}
-              issues={issues.filter((issue) => issue.level === null)}
+              issues={issues.filter((issue) => issue.level === null && !isEquipmentIssue(issue))}
               locked={locked}
               hasSubraces={subraces.length > 0}
               onPick={(field) => setTarget({ field })}
@@ -369,6 +374,9 @@ export default function Character({ data, run, saveRun, characterId, onSelect, t
                 )}
               </div>
             </section>
+          </div>
+          <div role="tabpanel" id="charpanel-equipment" aria-labelledby="chartab-equipment" hidden={tab !== "equipment"}>
+            {tab === "equipment" && <EquipmentTab key={character.id} data={data} character={character} issues={equipment} onChange={(after) => attempt(() => save(after))} />}
           </div>
           <div role="tabpanel" id="charpanel-notes" aria-labelledby="chartab-notes" hidden={tab !== "notes"}>
             {tab === "notes" && <NotesTab key={character.id} notes={character.notes} onSave={(notes) => attempt(() => save(setNotes(character, notes)))} />}

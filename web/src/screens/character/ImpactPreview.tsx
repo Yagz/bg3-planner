@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef } from "react";
+import { isEquipmentIssue } from "./EquipmentTab.tsx";
 import type { KeyboardEvent, ReactNode } from "react";
 import type { GameData } from "../../../../src/data/types.ts";
 import type { Feature } from "../../../../src/engine/features.ts";
@@ -140,7 +141,7 @@ export default function ImpactPreview({ data, before, impact, onApply, onCancel 
             ) : (
               newlyInvalid.map((issue, i) => (
                 <span key={i} className="pill bad">
-                  {`${issue.level === null ? t("character.creation") : at(issue.level)} · ${issueMessage(issue, nameOf)}`}
+                  {`${issue.level === null ? (isEquipmentIssue(issue) ? t("character.tab.equipment") : t("character.creation")) : at(issue.level)} · ${issueMessage(issue, nameOf)}`}
                 </span>
               ))
             ),

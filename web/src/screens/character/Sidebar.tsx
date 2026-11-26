@@ -1,4 +1,5 @@
 import { useId, useMemo } from "react";
+import { isEquipmentIssue } from "./EquipmentTab.tsx";
 import type { GameData } from "../../../../src/data/types.ts";
 import { abilityTotals } from "../../../../src/engine/abilities.ts";
 import { spellSources } from "../../../../src/engine/casting.ts";
@@ -57,6 +58,8 @@ export default function Sidebar({ character, run, data, viewed, onViewed }: Prop
   const settle = new Map<number | null, { todo: number; invalid: number }>();
   for (const issue of issues) {
     if (issue.severity !== "incomplete" && issue.severity !== "invalid") continue;
+    // Equipment issues are settled on the Equipment tab, not at character creation.
+    if (isEquipmentIssue(issue)) continue;
     const entry = settle.get(issue.level) ?? { todo: 0, invalid: 0 };
     entry[issue.severity === "invalid" ? "invalid" : "todo"]++;
     settle.set(issue.level, entry);

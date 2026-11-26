@@ -7,10 +7,12 @@ import {
   addLevel,
   clearChoice,
   previewNeeded,
+  inheritEquipment,
   removeLastLevel,
   replaceCharacter,
   setAbilities,
   setChoice,
+  setEquipment,
   setIdentity,
   setLevelClass,
 } from "../../../web/src/state/characterOps.ts";
@@ -172,5 +174,22 @@ describe("previewNeeded", () => {
     const before = ranger();
     const preview = previewNeeded(before, setLevelClass(before, 2, "Wizard"), runOf(before), data);
     expect(preview?.slotsRemoved.map((pick) => pick.slot)).toContain(spellSlot(before));
+  });
+});
+
+describe("equipment operations", () => {
+  it("setEquipment null stores null; inheritEquipment deletes the key", () => {
+    const base = ranger();
+    const set = setEquipment(base, "2", "Helmet", "ARM_Helmet");
+    expect(set.equipment["2"]).toEqual({ Helmet: "ARM_Helmet" });
+    expect(base.equipment["2"]).toEqual({});
+    const emptied = setEquipment(set, "2", "Helmet", null);
+    expect(Object.hasOwn(emptied.equipment["2"], "Helmet")).toBe(true);
+    expect(emptied.equipment["2"].Helmet).toBeNull();
+    const kept = setEquipment(emptied, "2", "Cloak", "CL");
+    const inherited = inheritEquipment(kept, "2", "Helmet");
+    expect(Object.hasOwn(inherited.equipment["2"], "Helmet")).toBe(false);
+    expect(inherited.equipment["2"].Cloak).toBe("CL");
+    expect(inherited.equipment["1"]).toEqual({});
   });
 });

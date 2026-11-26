@@ -304,6 +304,11 @@ export default function App({ data, store, settingsBackend, sessionBackend }: Pr
           />
         )}
       </main>
+      <footer className="wrap sitefoot">
+        <p>
+          {t("footer.wiki")} <a href="https://bg3.wiki" rel="noreferrer">bg3.wiki</a>, <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noreferrer">CC BY-NC-SA 4.0</a>
+        </p>
+      </footer>
     </I18nContext.Provider>
   );
 }
