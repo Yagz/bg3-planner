@@ -208,21 +208,34 @@ describe("run command line", () => {
     expect(result.code).toBe(0);
     expect(result.out).toMatch(/^equipment act 1$/m);
     expect(result.out).toMatch(/^equipment act 3$/m);
-    expect(result.out).toMatch(/^  equipment:1\/Helmet: current empty \(unset\)$/m);
+    expect(result.out).toMatch(/^  equipment:1\/Helmet: none \(unset\)$/m);
     expect(result.out).toMatch(/^  equipment:2\/MeleeMainHand: /m);
-    const section = result.out.split("  equipment:1/Helmet:")[1]!.split("  equipment:1/Cloak:")[0]!;
-    expect(section).toMatch(/\n    [A-Za-z_0-9]+ \(.+\)/);
-    expect(section).not.toMatch(/\n    ARM_Camp_Boots/);
+    expect(result.out.split("\n").length).toBeLessThan(300);
+    expect(result.out).toMatch(/equipment:<Slot>/);
+    const list = cli("slots", runFile, "c1", "equipment:Helmet");
+    expect(list.code).toBe(0);
+    expect(list.out).toMatch(/^[A-Za-z_0-9]+ \(.+\)$/m);
+    expect(list.out).not.toContain("equipment:");
+    expect(cli("slots", runFile, "c1", "equipment:Nope").code).toBe(3);
+    expect(cli("slots", runFile, "c1", "Helmet").code).toBe(3);
   });
 
   it("slots shows the effective equipment value with the act that sets it", async () => {
     const run = rangerRun(1);
-    const probe = cli("slots", runFile, "c1").out.split("  equipment:1/Helmet:")[1]!.split("\n")[1]!.trim().split(" ")[0]!;
+    const probe = cli("slots", runFile, "c1", "equipment:Helmet").out.split("\n")[0]!.split(" ")[0]!;
     run.characters[0]!.equipment = { "1": { Helmet: probe }, "2": {}, "3": { Helmet: null } };
     const result = cli("slots", await encode(run), "c1");
-    expect(result.out).toMatch(new RegExp(`^  equipment:1/Helmet: current ${probe}.* \\(from act 1\\)$`, "m"));
-    expect(result.out).toMatch(new RegExp(`^  equipment:2/Helmet: current ${probe}.* \\(from act 1\\)$`, "m"));
-    expect(result.out).toMatch(/^  equipment:3\/Helmet: current empty \(from act 3\)$/m);
+    expect(result.out).toMatch(new RegExp(`^  equipment:1/Helmet: ${probe}.* \\(from act 1\\)$`, "m"));
+    expect(result.out).toMatch(new RegExp(`^  equipment:2/Helmet: ${probe}.* \\(from act 1\\)$`, "m"));
+    expect(result.out).toMatch(/^  equipment:3\/Helmet: empty \(from act 3\)$/m);
+  });
+
+  it("slots says No open slots for a character with nothing left to decide", async () => {
+    const run = rangerRun(0);
+    run.characters[0]!.background = cli("slots", await encode({ ...rangerRun(0), characters: [{ ...rangerRun(0).characters[0]!, background: "" }] }), "c1").out.match(/^    ([0-9a-f-]{36}) /m)![1]!;
+    const result = cli("slots", await encode(run), "c1");
+    expect(result.code).toBe(0);
+    expect(result.out).toMatch(/^No open slots$/m);
   });
 
   function clericRun(prepared?: string[]): Run {

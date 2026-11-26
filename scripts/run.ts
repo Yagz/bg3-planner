@@ -11,7 +11,7 @@ import { resolve } from "../src/engine/progression.ts";
 import { validate } from "../src/engine/validate.ts";
 import { CodecError, decode, encode, toReadableJson } from "../src/plan/codec.ts";
 import { EQUIPMENT_SLOTS } from "../src/plan/equipmentSlots.ts";
-import type { Act } from "../src/plan/equipmentSlots.ts";
+import type { Act, EquipmentSlot } from "../src/plan/equipmentSlots.ts";
 import { isOffData } from "../src/plan/model.ts";
 import type { Run } from "../src/plan/model.ts";
 
@@ -20,8 +20,10 @@ const USAGE = `Usage:
   node scripts/run.ts encode <file.json|->              export string
   node scripts/run.ts validate <string|file|-> [--lang en|fr]
                                                         report; exit 0 valid, 1 incomplete, 2 invalid, 3 unreadable
-  node scripts/run.ts slots <string|file|-> <character id> [--lang en|fr]
-                                                        open slots with their allowed identifiers, prepared spells by level, equipment by act
+  node scripts/run.ts slots <string|file|-> <character id> [equipment:<Slot>] [--lang en|fr]
+                                                        open slots with their allowed identifiers, prepared spells by level, equipment value by act;
+                                                        with equipment:<Slot>, the items that slot accepts.
+                                                        "none" = nothing set anywhere, "empty" = cleared on purpose
 Exit 4 (any command): the tool itself failed; this is not a run status.`;
 
 const DATA_DIR = join(import.meta.dirname, "..", "data", "larian");
@@ -89,9 +91,18 @@ function validateCommand(run: Run, data: GameData, lang: "en" | "fr"): number {
   return { valid: 0, incomplete: 1, invalid: 2 }[report.status];
 }
 
-function slotsCommand(run: Run, data: GameData, lang: "en" | "fr", characterId: string): number {
+function slotsCommand(run: Run, data: GameData, lang: "en" | "fr", characterId: string, equipmentSlot?: string): number {
   const character = run.characters.find((c) => c.id === characterId);
   if (character === undefined) fail(`Unknown character id ${JSON.stringify(characterId)}`);
+  if (equipmentSlot !== undefined) {
+    const name = equipmentSlot.slice("equipment:".length);
+    if (!equipmentSlot.startsWith("equipment:") || !(EQUIPMENT_SLOTS as readonly string[]).includes(name)) {
+      fail(`Unknown equipment slot ${JSON.stringify(equipmentSlot)}: expected equipment:<Slot> with Slot one of ${EQUIPMENT_SLOTS.join(", ")}`, true);
+    }
+    const items = itemsForSlot(name as EquipmentSlot, character, data);
+    console.log(items.length === 0 ? "No eligible items" : items.map((id) => label(id, data, lang)).join("\n"));
+    return 0;
+  }
   const { levels } = resolve(character, data);
   const out: string[] = [];
   const undecided = (choices: Record<string, unknown>, slot: string) => {
@@ -164,18 +175,20 @@ function slotsCommand(run: Run, data: GameData, lang: "en" | "fr", characterId: 
     if (out.length === before + 1) out.pop();
   }
 
-  // Equipment slots by act: the effective value with its source, then the items the slot accepts.
+  if (out.length === 0) out.push("No open slots");
+
+  // Equipment: one line per act and slot (value and source); the eligible items are listed on request.
   for (const act of ["1", "2", "3"] as Act[]) {
     const effective = effectiveEquipment(character, act, data);
     out.push(`equipment act ${act}`);
     for (const slot of EQUIPMENT_SLOTS) {
       const { item, source, level: pickLevel } = effective[slot];
-      const current = item === null ? "empty" : label(item, data, lang);
+      const current = item !== null ? label(item, data, lang) : source === null ? "none" : "empty";
       const from = source === null ? "unset" : source === "level" ? `from level ${pickLevel ?? "?"} pick` : `from act ${source}`;
-      out.push(`  equipment:${act}/${slot}: current ${current} (${from})`);
-      for (const id of itemsForSlot(slot, character, data)) out.push(`    ${label(id, data, lang)}`);
+      out.push(`  equipment:${act}/${slot}: ${current} (${from})`);
     }
   }
+  out.push(`To list the items a slot accepts: slots <run> ${characterId} equipment:<Slot>`);
   console.log(out.join("\n"));
   return 0;
 }
@@ -205,9 +218,9 @@ async function main(argv: string[]): Promise<number> {
       return validateCommand(await readRun(positional[0] ?? "", data), data, lang);
     }
     case "slots": {
-      need(2);
+      if (positional.length !== 2 && positional.length !== 3) fail("slots: expected 2 or 3 arguments", true);
       const data = await loadGameData(DATA_DIR);
-      return slotsCommand(await readRun(positional[0] ?? "", data), data, lang, positional[1] ?? "");
+      return slotsCommand(await readRun(positional[0] ?? "", data), data, lang, positional[1] ?? "", positional[2]);
     }
     default:
       return fail(command === undefined ? "Missing subcommand" : `Unknown subcommand ${command}`, true);

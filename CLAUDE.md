@@ -29,7 +29,7 @@ Machine-specific context (game paths, local tools, working rules, state of the p
 
 - Read it with `node scripts/run.ts decode <run>` (readable JSON; the `_names` fields are display hints and are ignored on import), change identifiers only, check with `node scripts/run.ts validate <file>`, then `node scripts/run.ts encode <file.json>`.
 - A run string starts with `BG3P4:` (the current format); `BG3P1:` to `BG3P3:` strings still decode and are migrated. A race, subrace, background or class may be `{"offData": "…"}` (a value outside the game data): the engine lists it as a notice and applies no rows for it.
-- `node scripts/run.ts slots <run> <character id>` lists the open choices with the identifiers the game allows; use it instead of guessing identifiers.
+- `node scripts/run.ts slots <run> <character id>` lists the open choices with the identifiers the game allows; use it instead of guessing identifiers; add `equipment:<Slot>` to list the items a slot accepts.
 - Never complete a build's game decisions (subclass, spells, feats, skills) unless the user asks: `incomplete` (exit 1, a choice still `"todo"`) is a normal state, `invalid` (exit 2, an impossible choice) is a defect to report, not to correct silently.
 - Exit 3 means unreadable input or a usage error; exit 4 means the tool itself failed (`error: <message>` on stderr), not a run status: report it, do not read it as `incomplete`.
 
