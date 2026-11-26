@@ -274,7 +274,26 @@ select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
   .charmain { grid-column: 1; grid-row: 1 }
   .charside { grid-column: 2; grid-row: 1; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 64px); max-height: calc(100vh - 80px); overflow: auto }
 }
-/* The character's name is the screen heading above; Task 4 replaces this summary. */
-.charside .summary h1 { display: none }
+.charside .sidebar > h2 { margin: 0 0 4px }
+.charside .subline { margin: 0; color: var(--fg-muted); font-size: 13px }
+.charside .cls { margin: 2px 0 8px; font-size: 14px }
+.charside .viewed { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; font-size: 13px }
+.charside .viewed select { font: inherit; color: var(--fg); background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 2px 8px }
+.charside h4 { font-size: 12px; margin: 14px 0 6px; color: var(--fg-muted); text-transform: uppercase; letter-spacing: .05em }
+.charside .sidekv { display: grid; grid-template-columns: minmax(0, 1fr) max-content; gap: 4px 12px; font-size: 13px; margin: 10px 0 0 }
+.charside .sidekv dt { color: var(--fg-muted) }
+.charside .sidekv dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums }
+.charside .sidekvrow { display: contents }
+.charside .sideskills { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; font-size: 13px }
+.charside .skl { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 3em 1.2em; gap: 6px; align-items: baseline }
+.charside .skl .nm { color: var(--fg-muted); border-radius: 4px }
+.charside .skl b { text-align: right; font-weight: 400; font-variant-numeric: tabular-nums }
+.charside .skl b.prof { font-weight: 600; color: var(--fg) }
+.charside .skl b.exp { font-weight: 700; color: var(--accent) }
+.charside .skl .mark { color: var(--accent) }
+.charside .skl .tip { display: none; position: absolute; left: 0; right: 0; top: 100%; z-index: 2; padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--fg); box-shadow: 0 2px 8px rgba(0, 0, 0, .25) }
+.charside .skl:hover .tip, .charside .skl:focus-within .tip { display: block }
+.charside .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap }
+.charside .settle { margin: 0; padding-left: 18px; font-size: 13px }
 .notes { display: grid; gap: 6px }
 .notes textarea { width: 100%; box-sizing: border-box; font: inherit; color: var(--fg); background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; resize: vertical; min-height: 12em }

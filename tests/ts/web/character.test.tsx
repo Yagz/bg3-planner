@@ -159,7 +159,7 @@ describe("Character screen", () => {
     // Creation's ability block keeps its own style: its tiles sit in `.abil`, never in the summary tiles' `.ab6`.
     expect(dexterity.closest(".abil")).not.toBeNull();
     expect(dexterity.closest(".ab6")).toBeNull();
-    const summaryTile = within(screen.getByRole("region", { name: "Summary" })).getByRole("group", { name: "Dexterity" });
+    const summaryTile = within(screen.getByRole("complementary")).getByRole("group", { name: "Dexterity" });
     expect(summaryTile.closest(".ab6")).not.toBeNull();
     expect(summaryTile.closest(".abil")).toBeNull();
     expect(level(1).className).toContain("played");
@@ -436,7 +436,7 @@ describe("Character screen", () => {
     expect(openBackgrounds(addCharacter(emptyRun("r"), data, "player"))).toBeNull();
   });
 
-  describe("summary", () => {
+  describe("sidebar", () => {
     /** A Lightfoot Halfling Rogue of one level with four skills and expertise in two of them. */
     function rogue(): Character {
       const c: Character = { ...ranger(1), id: "rogue", who: "Astarion", levels: [{ class: "Rogue", choices: {} }] };
@@ -445,59 +445,112 @@ describe("Character screen", () => {
       c.levels[0]!.choices[slots.find((s) => s.selector.function === "SelectSkillsExpertise")!.id] = ["Stealth", "Deception"];
       return c;
     }
-    const summary = () => screen.getByRole("region", { name: "Summary" });
-
-    it("shows the classes reached, the level-12 plan, six tiles with base and bonus, the skills and the choices left; Summary comes before Creation and the levels", () => {
-      const c = ranger(3);
+    /** A High Elf Cleric 1 / Bard 11 with +2 Charisma at level 1 and Ability Improvements on Charisma at levels 5 and 9. */
+    function bard(): Character {
+      const c: Character = {
+        ...ranger(1),
+        id: "bard",
+        race: "Elf",
+        subrace: "Elf_HighElf",
+        abilities: { Strength: 8, Dexterity: 10, Constitution: 14, Intelligence: 8, Wisdom: 14, Charisma: 14 },
+        levels: [{ class: "Cleric", choices: {} }, ...Array.from({ length: 11 }, () => ({ class: "Bard", choices: {} as Record<string, Choice> }))],
+      };
       const bonus = resolve(c, data).levels[0]!.slots.find((s) => s.selector.function === "SelectAbilityBonus")!;
-      c.levels[0]!.choices[bonus.id] = ["Dexterity", "Wisdom"];
-      c.levels[2]!.choices[subclassSlot("Ranger")] = ["GloomStalker"];
-      const run = runWith([c], 2);
-      setup(run, c.id);
-      const region = summary();
-      const order = [region, screen.getByRole("region", { name: "Creation" }), screen.getByRole("region", { name: "Levels" })];
-      for (let i = 1; i < order.length; i++) expect(order[i - 1]!.compareDocumentPosition(order[i]!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-      expect(region.querySelector(".cls")!.textContent).toBe("Ranger 2 at level 2");
-      expect(within(region).getByText("Level 12 plan: Ranger 3 (Gloom Stalker)")).toBeTruthy();
-      expect(within(region).getByText("Abilities at level 2")).toBeTruthy();
-      const dexterity = within(region).getByRole("group", { name: "Dexterity" });
-      expect(within(dexterity).getByText("17")).toBeTruthy();
-      expect(within(dexterity).getByText("+3")).toBeTruthy();
-      expect(within(dexterity).getByText("base 15 +2")).toBeTruthy();
-      const strength = within(region).getByRole("group", { name: "Strength" });
-      expect(within(strength).getByText("8")).toBeTruthy();
-      expect(within(strength).queryByText(/base \d+ \+/)).toBeNull();
-      expect(region.querySelectorAll(".ab")).toHaveLength(6);
-      expect(within(region).getByText("Brings to the party (act 1)")).toBeTruthy();
-      expect(within(region).getByText("Alone in the party")).toBeTruthy();
-      const skills = [...within(region).getByRole("group", { name: "Skills" }).querySelectorAll(".pill")].map((pill) => pill.textContent);
-      const known = [...skillProficiencies(c, data).proficient];
-      expect(known).toEqual(expect.arrayContaining(["Perception", "Stealth", "Survival"]));
-      expect(skills.sort()).toEqual(known.map((id) => gameName(data, "en", "skill", id)).sort());
-      const undecided = validate({ ...run, characters: [c] }, data).issues.filter((issue) => issue.code === "choiceMissing").length;
-      expect(undecided).toBeGreaterThan(1);
-      expect(within(region).getByText(`${undecided} choices to make`)).toBeTruthy();
+      c.levels[0]!.choices[bonus.id] = ["Charisma", "Wisdom"];
+      for (const n of [5, 9]) {
+        c.levels[n - 1]!.choices[`feat:${n}`] = ["AbilityScoreIncrease"];
+        c.levels[n - 1]!.choices[`feat:${n}/0`] = ["Charisma", "Charisma"];
+      }
+      return c;
+    }
+    const sidebar = () => screen.getByRole("complementary");
+    const french = () => fireEvent.change(screen.getByRole("combobox", { name: "Language" }), { target: { value: "fr" } });
+    const viewedAt = (n: number) => fireEvent.change(within(sidebar()).getByRole("combobox", { name: "Vu au niveau" }), { target: { value: String(n) } });
+    const kv = (region: HTMLElement, term: string) => {
+      const dt = [...region.querySelectorAll("dt")].find((el) => el.textContent === term);
+      return dt?.nextElementSibling?.textContent;
+    };
+
+    it("views a 12-level character at its last level by default and at another level on request, in French: abilities, proficiency bonus, spell save DCs", () => {
+      const c = bard();
+      setup(runWith([c], 3), c.id);
+      french();
+      const region = sidebar();
+      const select = within(region).getByRole("combobox", { name: "Vu au niveau" }) as HTMLSelectElement;
+      expect(select.value).toBe("12");
+      expect([...select.options].map((o) => o.textContent)).toEqual(["1", "2", "3 (partie)", ...Array.from({ length: 9 }, (_, i) => String(i + 4))]);
+      expect(within(within(region).getByRole("group", { name: "Charisme" })).getByText("20")).toBeTruthy();
+      expect(kv(region, "Bonus de maîtrise")).toBe("+4");
+      expect(kv(region, "Sorts de Barde : Charisme")).toBe("DD 17");
+      expect(kv(region, "Sorts de Haut-elfe : Intelligence")).toBeDefined();
+      viewedAt(4);
+      expect(within(within(region).getByRole("group", { name: "Charisme" })).getByText("16")).toBeTruthy();
+      expect(kv(region, "Bonus de maîtrise")).toBe("+2");
+      expect(kv(region, "Sorts de Barde : Charisme")).toBe("DD 13");
+    });
+
+    it("lists every skill with its value, and reaches the game description through aria-describedby", () => {
+      const c = bard();
+      setup(runWith([c], 3), c.id);
+      french();
+      const region = sidebar();
+      const items = within(region).getAllByRole("listitem").filter((li) => li.classList.contains("skl"));
+      expect(items).toHaveLength(Object.keys(data.skills).length);
+      expect(items).toHaveLength(18);
+      const names = items.map((li) => li.querySelector(".nm")!.textContent!);
+      expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b, "fr")));
+      const persuasion = within(region).getByText(gameName(data, "fr", "skill", "Persuasion"));
+      expect(persuasion.closest("li")!.querySelector("b")!.textContent).toMatch(/^[+−]\d+$/);
+      const describedBy = persuasion.getAttribute("aria-describedby")!;
+      expect(document.getElementById(describedBy)!.textContent).toBe("Usez de vos charmes pour manipuler et amadouer vos interlocuteurs.");
+      expect(persuasion.getAttribute("tabindex")).toBe("0");
+    });
+
+    it("lists a level with a choice missing under À régler, with the creation line for issues without a level", () => {
+      const c = ranger(2);
+      setup(runWith([c], 2), c.id);
+      french();
+      const region = sidebar();
+      expect(within(region).getByText("À régler")).toBeTruthy();
+      expect(within(region).getByText(/^Niveau 2 : \d+ choix à faire$/)).toBeTruthy();
+      expect(within(region).queryByText("Rien à régler")).toBeNull();
+    });
+
+    it("offers only the levels a character has, without the run's level when beyond them, and keeps the default on the new last level after a removal", () => {
+      const c = ranger(2);
+      setup(runWith([c], 5), c.id);
+      const select = within(sidebar()).getByRole("combobox", { name: "Seen at level" }) as HTMLSelectElement;
+      expect([...select.options].map((o) => o.textContent)).toEqual(["1", "2"]);
+      cleanup();
+      const d = ranger(3);
+      setup(runWith([d], 1), d.id);
+      expect((within(sidebar()).getByRole("combobox", { name: "Seen at level" }) as HTMLSelectElement).value).toBe("3");
+      fireEvent.click(screen.getByRole("button", { name: /^Remove level 3/ }));
+      const after = within(sidebar()).getByRole("combobox", { name: "Seen at level" }) as HTMLSelectElement;
+      expect(after.value).toBe("2");
+      expect(after.options).toHaveLength(2);
     });
 
     it("marks expertise, lists what the character brings next to another member, and says a character outside the active group is at camp, in French", () => {
       const r = ranger(1);
       const g = rogue();
-      const run = runWith([r, g]);
-      setup(run, g.id);
-      fireEvent.change(screen.getByRole("combobox", { name: "Language" }), { target: { value: "fr" } });
-      const region = screen.getByRole("region", { name: "Résumé" });
-      expect(within(region).getByText("Caractéristiques au niveau 1")).toBeTruthy();
+      setup(runWith([r, g]), g.id);
+      french();
+      const region = sidebar();
       expect(within(region).getByText("Apport au groupe (acte 1)")).toBeTruthy();
-      const skills = within(region).getByRole("group", { name: "Compétences" });
-      expect(within(skills).getByText(`${gameName(data, "fr", "skill", "Stealth")} · expertise`)).toBeTruthy();
-      expect(within(skills).getByText(gameName(data, "fr", "skill", "Insight"))).toBeTruthy();
+      const stealth = within(region).getByText(gameName(data, "fr", "skill", "Stealth")).closest("li")!;
+      expect(stealth.textContent).toContain("expertise");
+      expect(stealth.querySelector("b")!.className).toContain("exp");
+      const insight = within(region).getByText(gameName(data, "fr", "skill", "Insight")).closest("li")!;
+      expect(insight.textContent).not.toContain("expertise");
+      expect(insight.textContent).toContain("maîtrise");
       expect(within(region).getByText(`${gameName(data, "fr", "skill", "Deception")} · seul`)).toBeTruthy();
       cleanup();
       const camp = runWith([r, g]);
       camp.party["1"].active = [r.id];
       setup(camp, g.id);
-      fireEvent.change(screen.getByRole("combobox", { name: "Language" }), { target: { value: "fr" } });
-      const away = screen.getByRole("region", { name: "Résumé" });
+      french();
+      const away = sidebar();
       expect(within(away).getByText("Au camp à l’acte 1")).toBeTruthy();
       expect(away.querySelectorAll(".brings .pill")).toHaveLength(0);
     });

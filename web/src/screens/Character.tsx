@@ -32,7 +32,7 @@ import ImpactPreview from "./character/ImpactPreview.tsx";
 import LevelList, { CLASS_SLOT } from "./character/LevelList.tsx";
 import LevelTree from "./character/LevelTree.tsx";
 import NotesTab from "./character/NotesTab.tsx";
-import Summary from "./character/Summary.tsx";
+import Sidebar from "./character/Sidebar.tsx";
 import { classLineText } from "./party/MemberCard.tsx";
 import { loadTab, saveTab } from "../state/sessionTab.ts";
 import type { CharacterTab } from "../state/sessionTab.ts";
@@ -86,6 +86,8 @@ export default function Character({ data, run, saveRun, characterId, onSelect, t
   const [target, setTarget] = useState<Target | null>(null);
   /** Tabs chosen on this screen; a character not in it opens on the tab remembered for the session. */
   const [chosenTabs, setChosenTabs] = useState<Record<string, CharacterTab>>({});
+  /** The level each character is seen at in the sidebar; absent means its last planned level. */
+  const [viewedLevels, setViewedLevels] = useState<Record<string, number>>({});
   const [error, setError] = useState<string | null>(null);
   /** A change waiting in the impact preview, with the character it replaces and, for a change of origin, the run's new origin. */
   const [pending, setPending] = useState<{ before: CharacterModel; impact: Impact; origin?: string } | null>(null);
@@ -248,7 +250,18 @@ export default function Character({ data, run, saveRun, characterId, onSelect, t
       </header>
       <div className="charlayout">
         <aside className="charside" aria-label={t("character.summary")}>
-          <Summary character={character} run={run} data={data} lang={lang} />
+          <Sidebar
+            character={character}
+            run={run}
+            data={data}
+            viewed={viewedLevels[character.id] ?? character.levels.length}
+            onViewed={(level) =>
+              setViewedLevels((levels) => {
+                const { [character.id]: _dropped, ...rest } = levels;
+                return level >= character.levels.length ? rest : { ...rest, [character.id]: level };
+              })
+            }
+          />
         </aside>
         <div className="charmain">
           <div className="tabs" role="tablist" aria-label={t("character.tabs")} onKeyDown={onTabKey}>
