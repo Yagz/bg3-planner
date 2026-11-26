@@ -202,4 +202,54 @@ describe("run command line", () => {
     expect(subrace.out).toMatch(/^    Halfling_Lightfoot \(.+\)$/m);
     expect(subrace.out).not.toMatch(/^  race: /m);
   });
+
+  it("slots lists equipment slots with their eligible items", () => {
+    const result = cli("slots", runFile, "c1");
+    expect(result.code).toBe(0);
+    expect(result.out).toMatch(/^equipment act 1$/m);
+    expect(result.out).toMatch(/^equipment act 3$/m);
+    expect(result.out).toMatch(/^  equipment:1\/Helmet: current empty \(unset\)$/m);
+    expect(result.out).toMatch(/^  equipment:2\/MeleeMainHand: /m);
+    const section = result.out.split("  equipment:1/Helmet:")[1]!.split("  equipment:1/Cloak:")[0]!;
+    expect(section).toMatch(/\n    [A-Za-z_0-9]+ \(.+\)/);
+    expect(section).not.toMatch(/\n    ARM_Camp_Boots/);
+  });
+
+  it("slots shows the effective equipment value with the act that sets it", async () => {
+    const run = rangerRun(1);
+    const probe = cli("slots", runFile, "c1").out.split("  equipment:1/Helmet:")[1]!.split("\n")[1]!.trim().split(" ")[0]!;
+    run.characters[0]!.equipment = { "1": { Helmet: probe }, "2": {}, "3": { Helmet: null } };
+    const result = cli("slots", await encode(run), "c1");
+    expect(result.out).toMatch(new RegExp(`^  equipment:1/Helmet: current ${probe}.* \\(from act 1\\)$`, "m"));
+    expect(result.out).toMatch(new RegExp(`^  equipment:2/Helmet: current ${probe}.* \\(from act 1\\)$`, "m"));
+    expect(result.out).toMatch(/^  equipment:3\/Helmet: current empty \(from act 3\)$/m);
+  });
+
+  function clericRun(prepared?: string[]): Run {
+    const run = rangerRun(1);
+    const cleric = run.characters[0]!;
+    cleric.abilities.Wisdom = 15;
+    cleric.levels[0] = prepared === undefined ? { class: "Cleric", choices: {} } : { class: "Cleric", choices: {}, prepared };
+    return run;
+  }
+
+  it("slots lists prepared spells with the expected count and the pool", async () => {
+    const result = cli("slots", await encode(clericRun()), "c1");
+    expect(result.code).toBe(0);
+    expect(result.out).toMatch(/^  prepared: Cleric class level 1, count \d+, current none$/m);
+    expect(result.out).toMatch(/^    Target_CureWounds \(Cure Wounds\)$/m);
+    const prepared = cli("slots", await encode(clericRun(["Target_CureWounds"])), "c1");
+    expect(prepared.out).toMatch(/^  prepared: Cleric class level 1, count \d+, current Target_CureWounds \(Cure Wounds\) \(own list\)$/m);
+    expect(cli("slots", runFile, "c1").out).not.toContain("  prepared:");
+  });
+
+  it("validate exits 1 with preparedMissing and 2 with preparedTooMany", async () => {
+    const missing = cli("validate", await encode(clericRun()));
+    expect(missing.code).toBe(1);
+    expect(missing.out).toMatch(/incomplete c1 level 1 prepared preparedMissing count=0 expected=\d+/);
+    const pool = cli("slots", await encode(clericRun()), "c1").out.split("  prepared:")[1]!.split("\n").slice(1).filter((l) => l.startsWith("    ")).map((l) => l.trim().split(" ")[0]!);
+    const tooMany = cli("validate", await encode(clericRun(pool)));
+    expect(tooMany.code).toBe(2);
+    expect(tooMany.out).toMatch(/invalid c1 level 1 prepared preparedTooMany/);
+  });
 });

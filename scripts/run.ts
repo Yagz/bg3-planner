@@ -5,9 +5,13 @@ import { loadGameData } from "../src/data/load.ts";
 import { bareNameOf, nameOf } from "../src/data/names.ts";
 import type { TextKind } from "../src/data/names.ts";
 import type { GameData } from "../src/data/types.ts";
+import { effectiveEquipment, itemsForSlot } from "../src/engine/equipment.ts";
+import { preparedState } from "../src/engine/prepared.ts";
 import { resolve } from "../src/engine/progression.ts";
 import { validate } from "../src/engine/validate.ts";
 import { CodecError, decode, encode, toReadableJson } from "../src/plan/codec.ts";
+import { EQUIPMENT_SLOTS } from "../src/plan/equipmentSlots.ts";
+import type { Act } from "../src/plan/equipmentSlots.ts";
 import { isOffData } from "../src/plan/model.ts";
 import type { Run } from "../src/plan/model.ts";
 
@@ -17,7 +21,7 @@ const USAGE = `Usage:
   node scripts/run.ts validate <string|file|-> [--lang en|fr]
                                                         report; exit 0 valid, 1 incomplete, 2 invalid, 3 unreadable
   node scripts/run.ts slots <string|file|-> <character id> [--lang en|fr]
-                                                        open slots with their allowed identifiers
+                                                        open slots with their allowed identifiers, prepared spells by level, equipment by act
 Exit 4 (any command): the tool itself failed; this is not a run status.`;
 
 const DATA_DIR = join(import.meta.dirname, "..", "data", "larian");
@@ -149,9 +153,30 @@ function slotsCommand(run: Run, data: GameData, lang: "en" | "fr", characterId: 
         });
       }
     }
+    // Prepared spells of a preparing class: the effective list, where it comes from, the expected count and the pool.
+    const state = offClass ? null : preparedState(character, data, level.level);
+    if (state !== null) {
+      const list = state.list === null ? "none" : state.list.length === 0 ? "empty" : state.list.map((id) => label(id, data, lang)).join(", ");
+      const from = state.from === null ? "" : state.from === level.level ? " (own list)" : ` (from level ${state.from})`;
+      out.push(`  prepared: ${state.cls} class level ${state.classLevel}, count ${state.count}, current ${list}${from}`);
+      for (const id of state.pool) out.push(`    ${label(id, data, lang)}`);
+    }
     if (out.length === before + 1) out.pop();
   }
-  console.log(out.length === 0 ? "No open slots" : out.join("\n"));
+
+  // Equipment slots by act: the effective value with its source, then the items the slot accepts.
+  for (const act of ["1", "2", "3"] as Act[]) {
+    const effective = effectiveEquipment(character, act, data);
+    out.push(`equipment act ${act}`);
+    for (const slot of EQUIPMENT_SLOTS) {
+      const { item, source, level: pickLevel } = effective[slot];
+      const current = item === null ? "empty" : label(item, data, lang);
+      const from = source === null ? "unset" : source === "level" ? `from level ${pickLevel ?? "?"} pick` : `from act ${source}`;
+      out.push(`  equipment:${act}/${slot}: current ${current} (${from})`);
+      for (const id of itemsForSlot(slot, character, data)) out.push(`    ${label(id, data, lang)}`);
+    }
+  }
+  console.log(out.join("\n"));
   return 0;
 }
 
