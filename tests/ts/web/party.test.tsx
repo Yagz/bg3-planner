@@ -144,7 +144,7 @@ describe("Party screen", () => {
     expect(within(card).getByText("Apport au groupe")).toBeTruthy();
     expect(within(card).getByText(/Plan niveau 12 : Rôdeur 12/)).toBeTruthy();
     expect(within(card).getByText(/^\d+ à décider$/)).toBeTruthy();
-    fireEvent.click(within(card).getByRole("button", { name: "Ouvrir le build" }));
+    fireEvent.click(within(card).getByRole("button", { name: "Ouvrir la fiche" }));
     expect(window.location.hash).toBe("#/character/ranger");
   });
 
@@ -166,7 +166,7 @@ describe("Party screen", () => {
       expect(plan!.classList.contains("plan")).toBe(true);
       expect(plan!.textContent).toMatch(/^Level 12 plan: /);
       expect(open!.tagName).toBe("BUTTON");
-      expect(open!.textContent).toBe("Open the build");
+      expect(open!.textContent).toBe("Open sheet");
     }
   });
 
