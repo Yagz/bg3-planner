@@ -281,6 +281,8 @@ select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
 .difficulty .pill { white-space: normal; line-height: 1.4; padding-block: 2px }
 
 /* Character screen: heading, tabs, and the sheet beside a sticky side column */
+/* Not the app bar: the global header rule would make it sticky and cover the bar */
+.charhead { position: static; z-index: auto; background: none; border-bottom: 0 }
 .charhead h1 { margin: 0 0 2px }
 .charhead .sub { margin: 0 0 12px }
 .tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--border); margin-bottom: 16px; flex-wrap: wrap }
@@ -288,7 +290,8 @@ select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
 .tabs button[aria-selected="true"] { border-color: var(--border); border-bottom-color: var(--bg); background: var(--bg); color: var(--fg); font-weight: 600 }
 .charlayout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; align-items: start }
 .charmain { min-width: 0 }
-.charside { min-width: 0 }
+/* After the main column in the DOM (tab order), shown above it in one column */
+.charside { min-width: 0; order: -1 }
 @media (min-width: 1100px) {
   .charlayout { grid-template-columns: minmax(0, 1fr) 340px }
   .charmain { grid-column: 1; grid-row: 1 }

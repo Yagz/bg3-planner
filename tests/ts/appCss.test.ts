@@ -17,6 +17,18 @@ describe("app.css", () => {
     expect(selectors(readFileSync("web/src/app.css", "utf8")).some((selector) => selector.startsWith(".abiltable "))).toBe(true);
   });
 
+  it("keeps the character heading (header.charhead) static: the global sticky header rule is for the app bar only", () => {
+    const bare = readFileSync("web/src/app.css", "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+    const rules = [...bare.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter((match) => match[1]!.split(",").some((selector) => selector.trim() === ".charhead"));
+    expect(rules.map((match) => match[2]!).join(";")).toMatch(/position:\s*static/);
+  });
+
+  it("puts the character sidebar above the main column in the one-column layout, as it comes after it in the DOM", () => {
+    const bare = readFileSync("web/src/app.css", "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+    const rules = [...bare.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter((match) => match[1]!.trim() === ".charside");
+    expect(rules.map((match) => match[2]!).join(";")).toMatch(/order:\s*-1/);
+  });
+
   it("keeps [hidden] stronger than display rules, which jsdom cannot show", () => {
     const css = readFileSync("web/src/app.css", "utf8");
     expect(css).toMatch(/\[hidden\]\s*\{\s*display:\s*none\s*!important\s*\}/);

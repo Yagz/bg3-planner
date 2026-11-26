@@ -276,6 +276,8 @@ export default function Character({ data, run, saveRun, characterId, onSelect, t
   const raceName = (value: string | { offData: string } | null) => (value === null || value === "" ? "" : isOffData(value) ? value.offData : gameName(data, lang, "race", value));
   const identity = raceName(character.subrace === null || character.subrace === "" ? character.race : character.subrace);
   const levelIssues = issues.filter((issue) => issue.level !== null);
+  // The level the sidebar shows, which the heading's classes follow.
+  const viewed = Math.max(1, Math.min(viewedLevels[character.id] ?? character.levels.length, character.levels.length));
 
   return (
     <div className="character">
@@ -295,23 +297,9 @@ export default function Character({ data, run, saveRun, characterId, onSelect, t
       )}
       <header className="charhead">
         <h1>{label(character)}</h1>
-        <p className="sub">{[identity, classLineText(character, run.progress.level, data, lang)].filter((part) => part !== "").join(" · ")}</p>
+        <p className="sub">{[identity, classLineText(character, viewed, data, lang)].filter((part) => part !== "").join(" · ")}</p>
       </header>
       <div className="charlayout">
-        <aside className="charside" aria-label={t("character.summary")}>
-          <Sidebar
-            character={character}
-            run={run}
-            data={data}
-            viewed={viewedLevels[character.id] ?? character.levels.length}
-            onViewed={(level) =>
-              setViewedLevels((levels) => {
-                const { [character.id]: _dropped, ...rest } = levels;
-                return level >= character.levels.length ? rest : { ...rest, [character.id]: level };
-              })
-            }
-          />
-        </aside>
         <div className="charmain">
           <div className="tabs" role="tablist" aria-label={t("character.tabs")} onKeyDown={onTabKey}>
             {(["sheet", "notes"] as const).map((name) => (
@@ -375,6 +363,22 @@ export default function Character({ data, run, saveRun, characterId, onSelect, t
             {tab === "notes" && <NotesTab key={character.id} notes={character.notes} onSave={(notes) => attempt(() => save(setNotes(character, notes)))} />}
           </div>
         </div>
+        {/* After the main column so the tabs come first in keyboard order; the stylesheet shows it beside or above. */}
+        <aside className="charside" aria-label={t("character.summary")}>
+          <Sidebar
+            character={character}
+            name={label(character)}
+            run={run}
+            data={data}
+            viewed={viewed}
+            onViewed={(level) =>
+              setViewedLevels((levels) => {
+                const { [character.id]: _dropped, ...rest } = levels;
+                return level >= character.levels.length ? rest : { ...rest, [character.id]: level };
+              })
+            }
+          />
+        </aside>
       </div>
       {opened !== null && (
         <ChoicePicker

@@ -107,6 +107,13 @@ describe("spellSources", () => {
     expect(spellSources(c, data, 2)).toEqual([{ kind: "class", id: "Ranger", ability: "Wisdom" }]);
   });
 
+  it("counts a class only once its rows give a spell with a level: Paladin from level 2, never a Monk 2 (ki actions)", () => {
+    const paladin = character(["Paladin", "Paladin"], [{}, {}]);
+    expect(spellSources(paladin, data, 1)).toEqual([]);
+    expect(spellSources(paladin, data, 2)).toEqual([{ kind: "class", id: "Paladin", ability: "Charisma" }]);
+    expect(spellSources(character(["Monk", "Monk"], [{}, {}]), data, 2)).toEqual([]);
+  });
+
   it("takes the ability of a spellcasting subclass", () => {
     const c = character(["Fighter", "Fighter", "Fighter"], [{}, {}, { "subclass:Fighter": ["EldritchKnight"] }]);
     const expected = data.rules.classes.EldritchKnight?.spellcasting_ability;

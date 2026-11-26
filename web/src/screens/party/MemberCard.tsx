@@ -60,7 +60,7 @@ const shortLabel = (data: GameData, lang: Lang, ability: string) => gameName(dat
 
 /**
  * The six ability tiles: short label, total and modifier, the group's highest ones marked; with `base`, a last line
- * gives the base score and what the level choices add to it.
+ * gives the base score and what the level choices add to it, only on an ability they raise.
  */
 export function AbilityTiles({ totals, highest, data, lang, base }: { totals: Record<Ability, number>; highest: Ability[]; data: GameData; lang: Lang; base?: Record<Ability, number> }) {
   const { t } = useI18n();
@@ -74,9 +74,7 @@ export function AbilityTiles({ totals, highest, data, lang, base }: { totals: Re
             <span>{shortLabel(data, lang, ability)}</span>
             <b>{totals[ability]}</b>
             <small>{signed(Math.floor((totals[ability] - 10) / 2))}</small>
-            {base !== undefined && (
-              <small className={bonus > 0 ? "up" : undefined}>{bonus > 0 ? t("character.summary.base", { base: base[ability], bonus }) : t("character.summary.baseOnly")}</small>
-            )}
+            {base !== undefined && bonus > 0 && <small className="up">{t("character.summary.base", { base: base[ability], bonus })}</small>}
           </div>
         );
       })}

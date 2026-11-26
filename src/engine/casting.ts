@@ -1,4 +1,4 @@
-import type { GameData } from "../data/types.ts";
+import type { GameData, Selector } from "../data/types.ts";
 import type { Ability, Character } from "../plan/model.ts";
 import { truncate } from "./coverage.ts";
 import { resolve } from "./progression.ts";
@@ -26,14 +26,18 @@ export type SpellSource = { kind: "class" | "race"; id: string; ability: Ability
 /**
  * The spell sources of a character at `level` (the character cut to its first `level` levels): one per base class taken
  * whose subclass (if picked and having a spellcasting ability) or else class has one, and whose class or subclass rows
- * up to `level` hold a `SelectSpells` or `AddSpells` selector (a Ranger 1 has no spell yet); the ability is the
- * subclass's when it has one. Then one per race or subrace row with such a selector naming an ability. In order of
+ * up to `level` hold a `SelectSpells` or `AddSpells` selector whose list has at least one spell with a level, cantrips
+ * included (a Ranger 1 has no spell yet; a Paladin 1's Lay on Hands and a Monk's ki actions have no level and do not
+ * count); the ability is the subclass's when it has one. Then one per race or subrace row with such a selector naming an ability. In order of
  * first level, deduplicated by id and ability.
  */
 export function spellSources(character: Character, data: GameData, level: number): SpellSource[] {
   const { classes, races } = data.rules;
   const levels = resolve(truncate(character, level), data).levels;
-  const hasSpells = (row: { selectors: { function: string }[] }) => row.selectors.some((s) => s.function === "SelectSpells" || s.function === "AddSpells");
+  const { lists, spells } = data.rules;
+  const hasLevel = (id: string) => Object.hasOwn(spells, id) && spells[id]!.level !== null && spells[id]!.level !== undefined;
+  const hasSpells = (row: { selectors: Selector[] }) =>
+    row.selectors.some((s) => (s.function === "SelectSpells" || s.function === "AddSpells") && Object.hasOwn(lists, s.list) && lists[s.list]!.items.some(hasLevel));
   const abilityOf = (name: string) => asAbility(Object.hasOwn(classes, name) ? classes[name]?.spellcasting_ability : null);
 
   const sources: SpellSource[] = [];

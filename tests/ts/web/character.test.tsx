@@ -680,6 +680,40 @@ describe("Character screen", () => {
       expect(kv(region, "Sorts de Barde : Charisme")).toBe("DD 13");
     });
 
+    it("shows in the page heading the classes at the viewed level, not at the run's level", () => {
+      const c = bard();
+      setup(runWith([c], 3), c.id);
+      const heading = () => document.querySelector(".charhead .sub")!.textContent!;
+      const cleric = gameName(data, "en", "class", "Cleric");
+      const bardName = gameName(data, "en", "class", "Bard");
+      expect(heading()).toContain(`${cleric} 1 · ${bardName} 11`);
+      fireEvent.change(within(sidebar()).getByRole("combobox", { name: "Seen at level" }), { target: { value: "4" } });
+      expect(heading()).toContain(`${cleric} 1 · ${bardName} 3`);
+      expect(heading()).not.toContain(`${bardName} 11`);
+    });
+
+    it("heads the sidebar with the character's name, no Summary title, and puts it after the tabs in the DOM", () => {
+      const c = { ...bard(), who: "Gale" };
+      setup(runWith([c], 3), c.id);
+      const region = screen.getByRole("complementary", { name: "Summary" });
+      expect(within(region).getByRole("heading", { level: 2 }).textContent).toBe(gameName(data, "en", "origin", "Gale"));
+      expect(within(region).queryByRole("heading", { name: "Summary" })).toBeNull();
+      const select = within(region).getByRole("combobox", { name: "Seen at level" });
+      expect(screen.getByRole("tablist").compareDocumentPosition(select) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    });
+
+    it("marks the group's highest abilities only at the level the group contribution was computed for", () => {
+      const r = { ...ranger(3), id: "r2" };
+      const c = bard();
+      setup(runWith([r, c], 3), c.id);
+      const charisma = () => within(sidebar()).getByRole("group", { name: "Charisma" });
+      const seenAt = (n: number) => fireEvent.change(within(sidebar()).getByRole("combobox", { name: "Seen at level" }), { target: { value: String(n) } });
+      seenAt(3);
+      expect(charisma().className).toContain("hi");
+      seenAt(4);
+      expect(charisma().className).not.toContain("hi");
+    });
+
     it("lists every skill with its value, and reaches the game description through aria-describedby", () => {
       const c = bard();
       setup(runWith([c], 3), c.id);

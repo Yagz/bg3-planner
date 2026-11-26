@@ -15,6 +15,8 @@ import { AbilityTiles, BringsPills, ClassLine } from "../party/MemberCard.tsx";
 
 type Props = {
   character: Character;
+  /** The character's display name, the sidebar's heading (the same as the page's). */
+  name: string;
   run: Run;
   data: GameData;
   /** The level the character is seen at, 1 to its number of levels (a larger value reads as its last level). */
@@ -26,7 +28,7 @@ type Props = {
  * The character's side column: identity, classes, abilities, proficiency bonus, spell save DCs and all 18 skills at the
  * viewed level, what it brings to the current act's active group, and what is left to settle in its whole plan.
  */
-export default function Sidebar({ character, run, data, viewed, onViewed }: Props) {
+export default function Sidebar({ character, name, run, data, viewed, onViewed }: Props) {
   const { t, lang } = useI18n();
   const id = useId();
   const levels = character.levels.length;
@@ -70,7 +72,7 @@ export default function Sidebar({ character, run, data, viewed, onViewed }: Prop
 
   return (
     <section className="frame sidebar">
-      <h2>{t("character.summary")}</h2>
+      <h2>{name}</h2>
       <p className="subline">{identity}</p>
       <p className="cls">
         <ClassLine character={character} level={at} data={data} lang={lang} none={t("party.noClass")} />
@@ -85,7 +87,8 @@ export default function Sidebar({ character, run, data, viewed, onViewed }: Prop
           ))}
         </select>
       </label>
-      <AbilityTiles totals={totals} highest={brings?.highest ?? []} data={data} lang={lang} base={character.abilities} />
+      {/* The group's highest abilities hold at the level the contribution was computed for (the run's, within the plan) only. */}
+      <AbilityTiles totals={totals} highest={at === Math.min(run.progress.level, levels) ? (brings?.highest ?? []) : []} data={data} lang={lang} base={character.abilities} />
       <dl className="sidekv">
         <dt>{t("character.summary.proficiency")}</dt>
         <dd>{signed(bonus)}</dd>

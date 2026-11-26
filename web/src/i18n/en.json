@@ -211,7 +211,6 @@
   "character.tree": "Tree",
   "character.summary": "Summary",
   "character.summary.base": "base {base} +{bonus}",
-  "character.summary.baseOnly": "base",
   "character.summary.brings": "Brings to the party (act {act})",
   "character.summary.atCamp": "At camp in act {act}",
   "character.summary.skills": "Skills",
