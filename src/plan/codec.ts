@@ -1,3 +1,5 @@
+import { castingAbilities } from "../engine/casting.ts";
+import type { GameData } from "../data/types.ts";
 import { bareNameOf, nameOf } from "../data/names.ts";
 import type { TextKind } from "../data/names.ts";
 import type { Texts } from "../data/types.ts";
@@ -15,7 +17,7 @@ export const PREFIX = "BG3P";
 type Json = unknown;
 type Obj = Record<string, unknown>;
 
-const HINT_KEYS = new Set(["_name", "_names"]);
+const HINT_KEYS = new Set(["_name", "_names", "_casting"]);
 
 // ---------------------------------------------------------------- base64url and compression
 
@@ -111,7 +113,7 @@ function finish(raw: unknown, version: number, registry: Record<number, Migratio
     throw new CodecError(`A migration left the data at version ${isObject(migrated) ? JSON.stringify(migrated["version"]) : "?"}, expected ${CURRENT_VERSION}`);
   }
   const run = validateRun(migrated);
-  const warnings = hints.count > 0 ? [`Ignored ${hints.count} hint field(s) (_name / _names): they are display aids, not data`] : [];
+  const warnings = hints.count > 0 ? [`Ignored ${hints.count} hint field(s) (_name / _names / _casting): they are display aids, not data`] : [];
   return { run, warnings };
 }
 
@@ -354,18 +356,24 @@ function withNames<T extends object>(value: T, found: Record<string, string>): T
   return Object.keys(found).length > 0 ? { ...value, _names: found } : value;
 }
 
-/** Pretty JSON of the run with a `_names` hint (display names in one language) on each object that holds identifiers. */
-export function toReadableJson(run: Run, texts: Texts): string {
+/**
+ * Pretty JSON of the run with a `_names` hint (display names in one language) on each object that holds identifiers; with
+ * the game data, each level also gets a `_casting` hint: the ability each of its spell slots is cast with.
+ */
+export function toReadableJson(run: Run, texts: Texts, data?: GameData): string {
   const characters = run.characters.map((c) => {
-    const levels = c.levels.map((level) =>
-      withNames(
-        level,
+    const casting = data === undefined ? [] : castingAbilities(c, data);
+    const levels = c.levels.map((level, i) => {
+      const abilities = casting[i] ?? {};
+      const hinted = Object.keys(abilities).length > 0 ? { ...level, _casting: abilities } : level;
+      return withNames(
+        hinted,
         {
           ...names([idOf(level.class)], texts, "class"),
           ...names(Object.values(level.choices).flatMap((ch) => (Array.isArray(ch) ? ch : [])), texts, null),
         },
-      ),
-    );
+      );
+    });
     const found = {
       ...names([idOf(c.race), idOf(c.subrace)], texts, "race"),
       ...names([idOf(c.background)], texts, "background"),

@@ -54,6 +54,7 @@ describe("run command line", () => {
     expect(decoded.code).toBe(0);
     expect(JSON.parse(decoded.out).name).toBe("CLI fixture");
     expect(decoded.out).toContain('"_names"');
+    expect(decoded.out).toContain('"_casting"');
     const readable = join(dir, "readable.json");
     writeFileSync(readable, decoded.out);
     const again = cli("encode", readable);

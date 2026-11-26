@@ -165,7 +165,7 @@ async function main(argv: string[]): Promise<number> {
       need(1);
       const run = await readRun(positional[0] ?? "");
       const data = await loadGameData(DATA_DIR);
-      console.log(toReadableJson(run, data.texts.en));
+      console.log(toReadableJson(run, data.texts.en, data));
       return 0;
     }
     case "encode": {

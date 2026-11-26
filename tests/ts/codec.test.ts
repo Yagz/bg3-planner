@@ -79,6 +79,28 @@ describe("readable JSON", () => {
     expect(decoded.warnings[0]).toMatch(/hint/);
   });
 
+  it("hints the casting ability of the spell slots, and ignores the hint on import", async () => {
+    const data = await loadGameData("data/larian");
+    const run = emptyRun("r1");
+    run.characters = [
+      {
+        id: "c1", who: "player", race: "Elf", subrace: "Elf_HighElf", background: "",
+        abilities: { Strength: 8, Dexterity: 15, Constitution: 14, Intelligence: 8, Wisdom: 13, Charisma: 10 },
+        levels: [{ class: "Bard", choices: {} }],
+        items: [], notes: "",
+      },
+    ];
+    const json = toReadableJson(run, data.texts.en, data);
+    const casting = JSON.parse(json).characters[0].levels[0]._casting;
+    expect(casting["db13a1fb-7d64-4309-a1c8-e2a5c752ded5/0"]).toBe("Intelligence");
+    expect(Object.values(casting)).toContain("Charisma");
+    const decoded = await decode(json);
+    expect(decoded.run).toEqual(run);
+    expect(decoded.warnings).toHaveLength(1);
+    expect(decoded.warnings[0]).toMatch(/hint/);
+    expect(JSON.parse(toReadableJson(run, data.texts.en)).characters[0].levels[0]._casting).toBeUndefined();
+  });
+
   it("resolves names from the real texts tables, in each language", async () => {
     const data = await loadGameData("data/larian");
     const background = Object.keys(data.rules.backgrounds)[0] ?? "";

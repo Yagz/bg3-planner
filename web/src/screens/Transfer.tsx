@@ -66,7 +66,7 @@ export default function Transfer({ data, store, run, initialText, onImported }: 
     }
     encode(run).then(
       (string) => {
-        if (live) setExports({ string, json: toReadableJson(run, data.texts[lang]), link: `${window.location.origin}${import.meta.env.BASE_URL}#${string}` });
+        if (live) setExports({ string, json: toReadableJson(run, data.texts[lang], data), link: `${window.location.origin}${import.meta.env.BASE_URL}#${string}` });
       },
       (error: unknown) => {
         if (!live) return;
