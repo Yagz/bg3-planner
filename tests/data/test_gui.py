@@ -48,6 +48,22 @@ def school_texts() -> tuple[dict[str, str], dict[str, str]]:
             {f"{SCHOOL_LABEL}_{n}": s for n, s in enumerate(FRENCH_SCHOOLS, 1)})
 
 
+RARITY_LABEL = "hpopular"
+# The popular filters' indexes holding a rarity, with the English and French texts of the game.
+RARITY_TEXTS = {128: ("Common", "Commun"), 256: ("Uncommon", "Peu courant"), 512: ("Rare", "Rare"),
+                1024: ("Very Rare", "Très rare"), 2048: ("Legendary", "Légendaire")}
+
+
+def rarity_filter(label: str = RARITY_LABEL) -> str:
+    return f'<ls:EnumFilterItem EnumId="ls.EPopularFilters" Label="{label}" AlwaysVisible="True" />\n'
+
+
+def rarity_texts() -> tuple[dict[str, str], dict[str, str]]:
+    """English and French texts of the popular filters: the rarities and a non-rarity index."""
+    return ({f"{RARITY_LABEL}_{n}": en for n, (en, _) in RARITY_TEXTS.items()} | {f"{RARITY_LABEL}_1": "Equipment"},
+            {f"{RARITY_LABEL}_{n}": fr for n, (_, fr) in RARITY_TEXTS.items()} | {f"{RARITY_LABEL}_1": "Équipement"})
+
+
 def complete() -> tuple[str, str, str, dict[str, str], dict[str, str]]:
     """Tooltips, sheet and keyboard sheet XAML naming every required id, with English and French tables."""
     tooltips = "".join(skill(s, f"hskill{s}") for s in ui_names.SKILLS)
@@ -56,8 +72,11 @@ def complete() -> tuple[str, str, str, dict[str, str], dict[str, str]]:
     handles = ([f"hskill{s}" for s in ui_names.SKILLS] + [f"hdamage{d}" for d in gui.DAMAGE_TYPES]
                + [f"hslot{s}" for s in gui.PLANNED_SLOTS])
     school_en, school_fr = school_texts()
-    return (tooltips, sheet, school_filter(), {h: f"EN {h}" for h in handles} | school_en,
-            {h: f"FR {h}" for h in handles} | school_fr)
+    rarity_en, rarity_fr = rarity_texts()
+    # The keyboard sheet holds the popular filters twice, with the same label.
+    return (tooltips, sheet, rarity_filter() + school_filter() + rarity_filter(),
+            {h: f"EN {h}" for h in handles} | school_en | rarity_en,
+            {h: f"FR {h}" for h in handles} | school_fr | rarity_fr)
 
 
 class TriggersTest(unittest.TestCase):
@@ -98,7 +117,7 @@ class ResolveTest(unittest.TestCase):
         self.assertEqual(out_en["slot:Ring2"], {"name": "EN hslotRing2", "description": None})
         self.assertEqual(out_fr["damage:Fire"], {"name": "FR hdamageFire", "description": None})
         self.assertNotIn("slot:Wings", out_en)
-        self.assertEqual(len(out_en), 18 + 16 + 13 + 8)
+        self.assertEqual(len(out_en), 18 + 16 + 13 + 8 + 5)
         self.assertEqual(set(out_en), set(out_fr))
 
     def test_missing_and_duplicate_listed(self):
@@ -168,18 +187,65 @@ class ResolveTest(unittest.TestCase):
     def test_school_range_too_short_listed(self):
         tooltips, sheet, _, en, fr = complete()
         with self.assertRaises(texts.MissingText) as ctx:
-            gui.resolve(tooltips, sheet, school_filter(end=7), en, fr)
+            gui.resolve(tooltips, sheet, rarity_filter() + school_filter(end=7), en, fr)
         self.assertEqual(ctx.exception.errors, [f"school:Transmutation: found under no index of the ESpellSchool "
                                                 f"filter ({SCHOOL_LABEL}_1 to _7) in {gui.GUI_FILES[2]}"])
 
     def test_school_filter_missing_listed(self):
         tooltips, sheet, _, en, fr = complete()
-        for sheet_k in ("", school_filter() + school_filter("hother")):
+        for sheet_k in (rarity_filter(), rarity_filter() + school_filter() + school_filter("hother")):
             with self.subTest(count=sheet_k.count("ESpellSchool")):
                 with self.assertRaises(texts.MissingText) as ctx:
                     gui.resolve(tooltips, sheet, sheet_k, en, fr)
                 self.assertEqual(len(ctx.exception.errors), 1, ctx.exception.errors)
                 self.assertIn("ESpellSchool", ctx.exception.errors[0])
+                self.assertIn(gui.GUI_FILES[2], ctx.exception.errors[0])
+
+    def test_rarity_names(self):
+        tooltips, sheet, sheet_k, en, fr = complete()
+        out_en, out_fr = gui.resolve(tooltips, sheet, sheet_k, en, fr)
+        self.assertEqual(sorted(k for k in out_en if k.startswith("rarity:")),
+                         sorted(f"rarity:{r}" for r in gui.RARITIES))
+        self.assertEqual(sorted(k for k in out_fr if k.startswith("rarity:")),
+                         sorted(f"rarity:{r}" for r in gui.RARITIES))
+        self.assertEqual(out_fr["rarity:Uncommon"], {"name": "Peu courant", "description": None})
+        self.assertEqual(out_en["rarity:VeryRare"], {"name": "Very Rare", "description": None})
+        self.assertEqual(out_fr["rarity:Legendary"], {"name": "Légendaire", "description": None})
+
+    def test_rarity_text_mismatch_listed(self):
+        tooltips, sheet, sheet_k, en, fr = complete()
+        en[f"{RARITY_LABEL}_1024"] = "VeryRare"
+        with self.assertRaises(texts.MissingText) as ctx:
+            gui.resolve(tooltips, sheet, sheet_k, en, fr)
+        self.assertEqual(len(ctx.exception.errors), 1, ctx.exception.errors)
+        self.assertIn("rarity:VeryRare", ctx.exception.errors[0])
+        self.assertIn(f"{RARITY_LABEL}_1024", ctx.exception.errors[0])
+        self.assertIn("'VeryRare'", ctx.exception.errors[0])
+
+    def test_rarity_handle_missing_or_empty_listed(self):
+        for language, rarity, index in (("English", "Common", 128), ("French", "Legendary", 2048)):
+            for value in (None, " "):
+                with self.subTest(language=language, value=value):
+                    tooltips, sheet, sheet_k, en, fr = complete()
+                    table = en if language == "English" else fr
+                    if value is None:
+                        del table[f"{RARITY_LABEL}_{index}"]
+                    else:
+                        table[f"{RARITY_LABEL}_{index}"] = value
+                    with self.assertRaises(texts.MissingText) as ctx:
+                        gui.resolve(tooltips, sheet, sheet_k, en, fr)
+                    self.assertEqual(len(ctx.exception.errors), 1, ctx.exception.errors)
+                    self.assertIn(f"rarity:{rarity}", ctx.exception.errors[0])
+                    self.assertIn(language, ctx.exception.errors[0])
+
+    def test_rarity_filter_missing_or_ambiguous_listed(self):
+        tooltips, sheet, _, en, fr = complete()
+        for sheet_k in (school_filter(), rarity_filter() + school_filter() + rarity_filter("hother")):
+            with self.subTest(count=sheet_k.count("EPopularFilters")):
+                with self.assertRaises(texts.MissingText) as ctx:
+                    gui.resolve(tooltips, sheet, sheet_k, en, fr)
+                self.assertEqual(len(ctx.exception.errors), 1, ctx.exception.errors)
+                self.assertIn("EPopularFilters", ctx.exception.errors[0])
                 self.assertIn(gui.GUI_FILES[2], ctx.exception.errors[0])
 
 

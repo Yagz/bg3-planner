@@ -137,7 +137,7 @@ HANDLES = ["hFighter", "hFighterDesc", "hElf", "hElfDesc", "hAcolyte", "hAcolyte
 UI_TEXTS = ({f"{ui_names.SKILL_HANDLE}_{i}": (ui_names.label(s), f"FR {s}") for i, s in enumerate(ui_names.SKILLS)}
             | {f"{ui_names.ABILITY_HANDLE}_{i}": (a, f"FR {a}") for i, a in enumerate(ui_names.ABILITIES, 1)})
 ATHLETICS = f"{ui_names.SKILL_HANDLE}_12"
-# The interface files and their texts: every skill description, planned slot, damage type and spell school.
+# The interface files and their texts: every skill description, planned slot, damage type, spell school and rarity.
 TOOLTIPS, SHEET, SHEET_K, GUI_EN, GUI_FR = complete()
 FRENCH = {"hEasy": "Explorateur", CUSTOM_MODE: "Mode Personnalisé", "hFighter": "Guerrier", "hFireBolt2": "Trait de feu", "hBase": "Épée"}
 WIKI = {"source": "https://example.org", "license": "test", "items": {
