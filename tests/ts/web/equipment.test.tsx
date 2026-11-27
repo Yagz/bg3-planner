@@ -164,6 +164,27 @@ describe("Equipment tab", () => {
     expect(screen.getByRole("dialog")).toBeTruthy();
   });
 
+  it("an impossible equipment choice is red, never amber, and is counted in the sidebar under Equipment", () => {
+    setup([fighter({ "1": { Helmet: "NOT_AN_ITEM" }, "2": {}, "3": {} })]);
+    expect(card("Helmet").className).toContain("bad");
+    expect(card("Helmet").className).not.toContain("warn");
+    expect(within(card("Helmet")).getByText("Impossible choice")).toBeTruthy();
+    const notice = screen.getByRole("list", { name: "Equipment notices" }).querySelector("li")!;
+    expect(notice.className).toBe("bad");
+    // A notice-level issue stays amber.
+    cleanup();
+    const late = itemIn("Helmet", 3);
+    setup([fighter({ "1": { Helmet: late }, "2": {}, "3": {} })]);
+    expect(card("Helmet").className).toContain("warn");
+    expect(card("Helmet").className).not.toContain("bad");
+    expect(screen.getByRole("list", { name: "Equipment notices" }).querySelector("li")!.className).toBe("");
+    cleanup();
+    setup([fighter({ "1": { Helmet: "NOT_AN_ITEM" }, "2": {}, "3": {} })]);
+    fireEvent.click(screen.getByRole("tab", { name: "Sheet" }));
+    expect(document.querySelector(".settle")?.textContent ?? "").toContain("Equipment: 1 impossible choice");
+    expect(document.querySelector(".settle")?.textContent ?? "").not.toContain("Creation");
+  });
+
   it("equipment notices appear above the silhouette", () => {
     const late = itemIn("Helmet", 3);
     setup([fighter({ "1": { Helmet: late }, "2": {}, "3": {} })]);

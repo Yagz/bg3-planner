@@ -55,7 +55,8 @@ export default function EquipmentTab({ data, character, issues, onChange }: Prop
   const own = character.equipment[act] ?? {};
   const changes = Object.keys(own).length;
   const actIssues = issues.filter((issue) => issueSpot(issue)?.act === act);
-  const warned = new Set(actIssues.map((issue) => issueSpot(issue)!.slot));
+  const badSlots = new Set(actIssues.filter((issue) => issue.severity === "invalid").map((issue) => issueSpot(issue)!.slot));
+  const warned = new Set(actIssues.filter((issue) => issue.severity !== "invalid").map((issue) => issueSpot(issue)!.slot));
   const slotName = (name: EquipmentSlot) => gameName(data, lang, "slot", name);
   const names = (kind: Parameters<typeof gameName>[2], id: string) => gameName(data, lang, kind, id);
 
@@ -73,13 +74,14 @@ export default function EquipmentTab({ data, character, issues, onChange }: Prop
         key={name}
         type="button"
         data-slot={name}
-        className={`eqslot${item === null ? " empty" : ""}${inherited || source === "level" ? " inh" : ""}${warned.has(name) ? " warn" : ""}`}
+        className={`eqslot${item === null ? " empty" : ""}${inherited || source === "level" ? " inh" : ""}${badSlots.has(name) ? " bad" : warned.has(name) ? " warn" : ""}`}
         aria-disabled={openable ? undefined : true}
         title={description ?? undefined}
         onClick={() => openable && setSlot(name)}
       >
         <span className="sl">{slotName(name)}</span>
         {flag !== "" && <span className="flag">{flag}</span>}
+        {badSlots.has(name) && <span className="flag badflag">{t("equipment.invalidFlag")}</span>}
         <span className={`it${className === "" ? "" : ` ${className}`}`}>
           {item !== null && <i className="dot" aria-hidden="true" />}
           <span>{item === null ? t("equipment.empty") : gameName(data, lang, "item", item)}</span>
@@ -108,7 +110,7 @@ export default function EquipmentTab({ data, character, issues, onChange }: Prop
       {actIssues.length > 0 && (
         <ul className="eqnotices" aria-label={t("equipment.notices")}>
           {actIssues.map((issue, i) => (
-            <li key={i}>{issueMessage(issue, names)}</li>
+            <li key={i} className={issue.severity === "invalid" ? "bad" : undefined}>{issueMessage(issue, names)}</li>
           ))}
         </ul>
       )}
@@ -132,6 +134,7 @@ export default function EquipmentTab({ data, character, issues, onChange }: Prop
         ))}
         <span>{t("equipment.legend.inherited")}</span>
         <span>{t("equipment.legend.warning")}</span>
+        <span>{t("equipment.legend.invalid")}</span>
       </p>
       {picking !== null && (
         <ItemPicker

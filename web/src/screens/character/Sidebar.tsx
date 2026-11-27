@@ -56,20 +56,26 @@ export default function Sidebar({ character, run, data, viewed, onViewed }: Prop
 
   const count = (key: string, n: number) => t(n === 1 ? `${key}.one` : key, { count: n });
   const settle = new Map<number | null, { todo: number; invalid: number }>();
+  const equipment = new Map<number | null, { todo: number; invalid: number }>();
   for (const issue of issues) {
     if (issue.severity !== "incomplete" && issue.severity !== "invalid") continue;
-    // Equipment issues are settled on the Equipment tab, not at character creation.
-    if (isEquipmentIssue(issue)) continue;
-    const entry = settle.get(issue.level) ?? { todo: 0, invalid: 0 };
+    // Equipment issues are settled on the Equipment tab: counted apart, not as character creation.
+    const target = isEquipmentIssue(issue) ? equipment : settle;
+    const key = isEquipmentIssue(issue) ? 0 : issue.level;
+    const entry = target.get(key) ?? { todo: 0, invalid: 0 };
     entry[issue.severity === "invalid" ? "invalid" : "todo"]++;
-    settle.set(issue.level, entry);
+    target.set(key, entry);
   }
-  const lines = [...settle]
-    .sort(([a], [b]) => (a ?? 0) - (b ?? 0))
-    .map(([level, { todo, invalid }]) => {
-      const parts = [...(todo > 0 ? [count("character.summary.todo", todo)] : []), ...(invalid > 0 ? [count("character.summary.invalid", invalid)] : [])].join(" · ");
-      return { key: level ?? "creation", text: level === null ? t("character.summary.settleCreation", { parts }) : t("character.summary.settleLevel", { level, parts }) };
-    });
+  const partsOf = ({ todo, invalid }: { todo: number; invalid: number }) => [...(todo > 0 ? [count("character.summary.todo", todo)] : []), ...(invalid > 0 ? [count("character.summary.invalid", invalid)] : [])].join(" · ");
+  const lines = [
+    ...[...settle]
+      .sort(([a], [b]) => (a ?? 0) - (b ?? 0))
+      .map(([level, entry]) => {
+        const parts = partsOf(entry);
+        return { key: String(level ?? "creation"), text: level === null ? t("character.summary.settleCreation", { parts }) : t("character.summary.settleLevel", { level, parts }) };
+      }),
+    ...[...equipment.values()].map((entry) => ({ key: "equipment", text: t("character.summary.settleEquipment", { parts: partsOf(entry) }) })),
+  ];
 
   return (
     <section className="frame sidebar">

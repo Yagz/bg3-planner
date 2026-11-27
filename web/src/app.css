@@ -427,6 +427,9 @@ select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
 .eqslot .where { font-size: 12.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
 .eqslot.empty .it { color: var(--muted); font-weight: 400; font-style: italic }
 .eqslot.inh { border-style: dashed }
+.eqnotices li.bad { background: var(--bad-bg); color: var(--bad) }
+.eqslot.bad { border-color: var(--bad); box-shadow: inset 3px 0 0 var(--bad) }
+.eqslot .badflag { color: var(--bad); font-weight: 600 }
 .eqslot.warn { border-color: var(--todo); box-shadow: inset 3px 0 0 var(--todo) }
 .r-common { color: var(--r-common) }
 .r-uncommon { color: var(--r-uncommon) }
