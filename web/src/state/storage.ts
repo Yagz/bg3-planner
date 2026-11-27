@@ -1,5 +1,6 @@
-import { decodeJson } from "../../../src/plan/codec.ts";
+import { decodeJson, decodeJsonReport } from "../../../src/plan/codec.ts";
 import type { DecodeOptions } from "../../../src/plan/codec.ts";
+import type { UnplacedItem } from "../../../src/plan/migrations.ts";
 import type { Run } from "../../../src/plan/model.ts";
 
 export type RunSummary = { id: string; name: string; updatedAt: string | null };
@@ -9,6 +10,13 @@ export type HistoryEntry = { at: string; text: string; note?: HistoryNote };
 
 /** Why a version was saved when it is not an edit: an import, or the restore of the version saved at `from`. */
 export type HistoryNote = { kind: "import" } | { kind: "restore"; from: string };
+
+/**
+ * What reading a stored run's current version reported when that version is of an older format: the version's save time,
+ * the format version it came from, the items the migration could not place (kept in their character's notes) and the
+ * codec's warnings (English, as the CLI prints them). A stored version keeps its format until the run is saved again.
+ */
+export type MigrationReport = { at: string; fromVersion: number; unplaced: UnplacedItem[]; warnings: string[] };
 
 /** A stored run that could not be read; it is kept in storage untouched. */
 export type UnreadableRun = { id: string; message: string };
@@ -38,6 +46,8 @@ export type RunStore = {
   history(id: string): HistoryEntry[];
   /** Saves version `at` as the current run (so the replaced one stays in history) and returns it. */
   restore(id: string, at: string): Run;
+  /** What the migration of run `id`'s current stored version reported; null when that version is of the current format. */
+  migration(id: string): MigrationReport | null;
   remove(id: string): void;
   /** Reads the stored runs again (another tab may have added, changed or removed some); a no-op without storage. */
   refresh(): void;
@@ -50,7 +60,7 @@ const INDEX_KEY = "bg3p:index";
 const RUN_PREFIX = "bg3p:run:";
 export const HISTORY_LIMIT = 20;
 
-type Entry = { summary: RunSummary; history: HistoryEntry[] };
+type Entry = { summary: RunSummary; history: HistoryEntry[]; migration: MigrationReport | null };
 
 /** A note this site wrote; anything else (a later version's note kind, a damaged one) is dropped when read. */
 function validNote(note: unknown): note is HistoryNote | undefined {
@@ -60,7 +70,7 @@ function validNote(note: unknown): note is HistoryNote | undefined {
 }
 
 /** Reads a stored record; throws on anything that is not a readable run. */
-function readRecord(text: string, options: DecodeOptions): { history: HistoryEntry[]; run: Run } {
+function readRecord(text: string, options: DecodeOptions): { history: HistoryEntry[]; run: Run; migration: MigrationReport | null } {
   const record: unknown = JSON.parse(text);
   const history = (record as { history?: unknown } | null)?.history;
   if (!Array.isArray(history) || history.length === 0) throw new Error("No saved version");
@@ -69,7 +79,10 @@ function readRecord(text: string, options: DecodeOptions): { history: HistoryEnt
     if (Number.isNaN(Date.parse(entry.at))) throw new Error(`Saved version date ${JSON.stringify(entry.at)} is not a date`);
   }
   for (const entry of history as HistoryEntry[]) if (!validNote(entry.note)) delete entry.note;
-  return { history: history as HistoryEntry[], run: decodeJson((history[0] as HistoryEntry).text, undefined, options) };
+  const current = history[0] as HistoryEntry;
+  const { run, fromVersion, unplaced, warnings } = decodeJsonReport(current.text, undefined, options);
+  const migration = fromVersion === run.version ? null : { at: current.at, fromVersion, unplaced, warnings };
+  return { history: history as HistoryEntry[], run, migration };
 }
 
 function summaryOf(run: Run): RunSummary {
@@ -100,8 +113,8 @@ export function createStore(backend: Storage | null, options: DecodeOptions = {}
       for (const key of keys) {
         const id = key.slice(RUN_PREFIX.length);
         try {
-          const { history, run } = readRecord(backend.getItem(key) ?? "", options);
-          entries.set(id, { summary: { ...summaryOf(run), id }, history });
+          const { history, run, migration } = readRecord(backend.getItem(key) ?? "", options);
+          entries.set(id, { summary: { ...summaryOf(run), id }, history, migration });
         } catch (error) {
           broken.set(id, error instanceof Error ? error.message : String(error));
         }
@@ -170,7 +183,8 @@ export function createStore(backend: Storage | null, options: DecodeOptions = {}
     const saved: HistoryEntry = { at: stamp, text: JSON.stringify(run) };
     if (options.note !== undefined) saved.note = options.note;
     const history = [saved, ...previous].slice(0, HISTORY_LIMIT);
-    entries.set(run.id, { summary: summaryOf(run), history });
+    // The saved version is of the current format: nothing migrates any more.
+    entries.set(run.id, { summary: summaryOf(run), history, migration: null });
     write((storage) => storage.setItem(RUN_PREFIX + run.id, JSON.stringify({ history })));
     return structuredClone(run);
   };
@@ -189,6 +203,10 @@ export function createStore(backend: Storage | null, options: DecodeOptions = {}
       const entry = entries.get(id)?.history.find((version) => version.at === at);
       if (entry === undefined) throw new Error(`No saved version of run ${id} at ${at}`);
       return save(read(entry.text), { note: { kind: "restore", from: at } });
+    },
+    migration(id) {
+      const report = entries.get(id)?.migration;
+      return report == null ? null : structuredClone(report);
     },
     refresh: scan,
     remove(id) {

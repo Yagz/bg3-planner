@@ -196,6 +196,36 @@ describe("run store", () => {
     expect(store.restore("old", "2026-11-25T10:00:00.000Z").characters[0]!.equipment["1"]).toEqual({ Ring: "RING_A", Ring2: "RING_B" });
   });
 
+  it("keeps what the migration of a stored version-3 run reported: the version it came from and each item not placed, until a version-4 save", () => {
+    const backend = new MemoryBackend();
+    const character = { id: "c1", who: "player", race: "", subrace: null, background: "", abilities: { Strength: 8, Dexterity: 8, Constitution: 8, Intelligence: 8, Wisdom: 8, Charisma: 8 }, levels: [], items: ["RING_A", "RING_B", "RING_C", "UNKNOWN"], notes: "" };
+    const v3 = { ...named("Old", "old"), version: 3, characters: [character] };
+    backend.items.set("bg3p:run:old", JSON.stringify({ history: [{ at: "2026-11-25T10:00:00.000Z", text: JSON.stringify(v3) }] }));
+    const slots: Record<string, string> = { RING_A: "Ring", RING_B: "Ring", RING_C: "Ring" };
+    const store = createStore(backend, { itemSlot: (id) => slots[id] ?? null });
+    expect(store.migration("old")).toEqual({
+      at: "2026-11-25T10:00:00.000Z",
+      fromVersion: 3,
+      unplaced: [
+        { character: "c1", item: "RING_C", reason: "taken" },
+        { character: "c1", item: "UNKNOWN", reason: "noSlot" },
+      ],
+      warnings: ["Item RING_C of c1 could not be placed: Ring and Ring2 already taken", "Item UNKNOWN of c1 could not be placed: not an item of the game data"],
+    });
+    // Saved in version 4, the run no longer migrates.
+    store.save(store.load("old")!);
+    expect(store.migration("old")).toBeNull();
+    expect(createStore(backend, { itemSlot: (id) => slots[id] ?? null }).migration("old")).toBeNull();
+  });
+
+  it("reports no migration for a stored version-4 run or an unknown id", () => {
+    const backend = new MemoryBackend();
+    createStore(backend).save(named("New", "new"));
+    const store = createStore(backend);
+    expect(store.migration("new")).toBeNull();
+    expect(store.migration("missing")).toBeNull();
+  });
+
   it("treats a stored version whose date is not a date as unreadable, and keeps it", () => {
     const backend = new MemoryBackend();
     const record = JSON.stringify({ history: [{ at: "yesterday", text: JSON.stringify(named("Dated")) }] });

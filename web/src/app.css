@@ -114,6 +114,11 @@ body { margin: 0 }
 @media (max-width: 600px) { .history li { grid-template-columns: minmax(0, 1fr) } }
 .history details summary { cursor: pointer; color: var(--accent); font-size: 13px }
 .banner { padding-block: 8px; color: var(--todo); background: var(--todo-bg); border-bottom: 1px solid var(--border); max-width: none }
+.banner.migrated { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 16px; align-items: start; box-shadow: inset 4px 0 0 var(--todo) }
+.banner.migrated p, .banner.migrated ul { grid-column: 1; margin: 0; overflow-wrap: anywhere }
+.banner.migrated ul { padding-left: 1.4em }
+.banner.migrated .sign { font-weight: 700 }
+.banner.migrated .btn { grid-column: 2; grid-row: 1 / span 2 }
 select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
 @media (max-width: 640px) {
   .history li { grid-template-columns: minmax(0, 1fr) }

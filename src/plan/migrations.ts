@@ -4,10 +4,17 @@ import { CodecError } from "./errors.ts";
 export const CURRENT_VERSION = 4;
 
 /**
- * What a migration may use beyond the document: the data slot of an item id (null for an id outside the game data), or
- * null when the caller has no game data; and the list the migration adds its warnings to.
+ * An item of a version-3 character the 3→4 migration could not place: `noSlot` when no equipment slot is known for it (no game
+ * data, an id outside the data, or a data slot that is not an equipment slot), `taken` when its slots were already filled.
  */
-export type MigrationContext = { itemSlot: ((id: string) => string | null) | null; warnings: string[] };
+export type UnplacedItem = { character: string; item: string; reason: "noSlot" | "taken" };
+
+/**
+ * What a migration may use beyond the document: the data slot of an item id (null for an id outside the game data), or
+ * null when the caller has no game data; the list the migration adds its warnings to (English sentences, for the CLI);
+ * and the same unplaced items as structured entries, for an interface that names them in its own language.
+ */
+export type MigrationContext = { itemSlot: ((id: string) => string | null) | null; warnings: string[]; unplaced: UnplacedItem[] };
 
 export type Migration = (raw: unknown, context: MigrationContext) => unknown;
 
@@ -54,10 +61,11 @@ function equipCharacter(character: unknown, context: MigrationContext): unknown 
   const act: Record<string, string> = {};
   const unplaced: string[] = [];
   for (const id of items) {
-    const reason = place(id, act, context.itemSlot);
-    if (reason === null) continue;
+    const failure = place(id, act, context.itemSlot);
+    if (failure === null) continue;
     unplaced.push(id);
-    context.warnings.push(`Item ${id} of ${who} could not be placed: ${reason}`);
+    context.warnings.push(`Item ${id} of ${who} could not be placed: ${failure.text}`);
+    context.unplaced.push({ character: who, item: id, reason: failure.reason });
   }
   let notes = rest["notes"];
   if (unplaced.length > 0 && typeof notes === "string") {
@@ -68,14 +76,14 @@ function equipCharacter(character: unknown, context: MigrationContext): unknown 
 }
 
 /** Puts `id` in the first free slot of `act` its data slot allows; returns null when placed, or why it was not. */
-function place(id: string, act: Record<string, string>, itemSlot: MigrationContext["itemSlot"]): string | null {
-  if (itemSlot === null) return "no game data to find its slot";
+function place(id: string, act: Record<string, string>, itemSlot: MigrationContext["itemSlot"]): { reason: UnplacedItem["reason"]; text: string } | null {
+  if (itemSlot === null) return { reason: "noSlot", text: "no game data to find its slot" };
   const slot = itemSlot(id);
-  if (slot === null) return "not an item of the game data";
-  if (!Object.hasOwn(DATA_SLOT_TARGETS, slot)) return `its slot ${slot} is not an equipment slot`;
+  if (slot === null) return { reason: "noSlot", text: "not an item of the game data" };
+  if (!Object.hasOwn(DATA_SLOT_TARGETS, slot)) return { reason: "noSlot", text: `its slot ${slot} is not an equipment slot` };
   const targets = DATA_SLOT_TARGETS[slot] ?? [];
   const free = targets.find((target) => !Object.hasOwn(act, target));
-  if (free === undefined) return `${targets.join(" and ")} already taken`;
+  if (free === undefined) return { reason: "taken", text: `${targets.join(" and ")} already taken` };
   act[free] = id;
   return null;
 }
@@ -98,7 +106,7 @@ export function migrate(
   raw: unknown,
   fromVersion: number,
   registry: Record<number, Migration> = MIGRATIONS,
-  context: MigrationContext = { itemSlot: null, warnings: [] },
+  context: MigrationContext = { itemSlot: null, warnings: [], unplaced: [] },
 ): unknown {
   if (!Number.isInteger(fromVersion) || fromVersion < 0) {
     throw new CodecError(`Invalid format version ${String(fromVersion)}`);

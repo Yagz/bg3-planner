@@ -5,7 +5,7 @@ import type { TextKind } from "../data/names.ts";
 import type { Texts } from "../data/types.ts";
 import { CodecError } from "./errors.ts";
 import { CURRENT_VERSION, MIGRATIONS, migrate } from "./migrations.ts";
-import type { Migration, MigrationContext } from "./migrations.ts";
+import type { Migration, MigrationContext, UnplacedItem } from "./migrations.ts";
 import { ABILITIES, MAX_LEVELS } from "./model.ts";
 import { isOffData } from "./model.ts";
 import type { Equipment, Level, OffData, Run } from "./model.ts";
@@ -18,6 +18,12 @@ export type DecodeOptions = {
   /** The data slot of an item id (null for an id outside the game data), used to place the items of an old run. */
   itemSlot?: (id: string) => string | null;
 };
+
+/**
+ * A run read from its JSON document, with what reading it reported: the format version the document declared (lower than the
+ * current one when it was migrated), the warnings `decode` returns, and the items the migration could not place.
+ */
+export type DecodedJson = { run: Run; fromVersion: number; warnings: string[]; unplaced: UnplacedItem[] };
 
 type Json = unknown;
 type Obj = Record<string, unknown>;
@@ -72,7 +78,8 @@ export async function decode(
   options: DecodeOptions = {},
 ): Promise<{ run: Run; warnings: string[] }> {
   try {
-    return await decodeText(text, registry, options);
+    const { run, warnings } = await decodeText(text, registry, options);
+    return { run, warnings };
   } catch (error) {
     throw asCodecError(error);
   }
@@ -83,11 +90,16 @@ export async function decode(
  * migrations and shape checks as `decode`; throws nothing but a `CodecError`.
  */
 export function decodeJson(text: string, registry: Record<number, Migration> = MIGRATIONS, options: DecodeOptions = {}): Run {
+  return decodeJsonReport(text, registry, options).run;
+}
+
+/** `decodeJson` with what reading the document reported (see `DecodedJson`); throws nothing but a `CodecError`. */
+export function decodeJsonReport(text: string, registry: Record<number, Migration> = MIGRATIONS, options: DecodeOptions = {}): DecodedJson {
   try {
     const trimmed = text.trim();
     if (!(trimmed.startsWith("{") || trimmed.startsWith("["))) throw new CodecError("Not a JSON document");
     const { raw, version } = readJsonDocument(trimmed);
-    return finish(raw, version, registry, options).run;
+    return { ...finish(raw, version, registry, options), fromVersion: version };
   } catch (error) {
     throw asCodecError(error);
   }
@@ -111,20 +123,20 @@ function readJsonDocument(trimmed: string): { raw: Obj; version: number } {
 }
 
 /** Strips the hint fields, migrates to the current version and checks the shape; the warnings are the hints' then the migrations'. */
-function finish(raw: unknown, version: number, registry: Record<number, Migration>, options: DecodeOptions): { run: Run; warnings: string[] } {
+function finish(raw: unknown, version: number, registry: Record<number, Migration>, options: DecodeOptions): { run: Run; warnings: string[]; unplaced: UnplacedItem[] } {
   const hints = { count: 0 };
   const cleaned = stripHints(raw, hints);
-  const context: MigrationContext = { itemSlot: options.itemSlot ?? null, warnings: [] };
+  const context: MigrationContext = { itemSlot: options.itemSlot ?? null, warnings: [], unplaced: [] };
   const migrated = migrate(cleaned, version, registry, context);
   if (!isObject(migrated) || migrated["version"] !== CURRENT_VERSION) {
     throw new CodecError(`A migration left the data at version ${isObject(migrated) ? JSON.stringify(migrated["version"]) : "?"}, expected ${CURRENT_VERSION}`);
   }
   const run = validateRun(migrated);
   const warnings = hints.count > 0 ? [`Ignored ${hints.count} hint field(s) (_name / _names / _casting): they are display aids, not data`] : [];
-  return { run, warnings: [...warnings, ...context.warnings] };
+  return { run, warnings: [...warnings, ...context.warnings], unplaced: context.unplaced };
 }
 
-async function decodeText(text: string, registry: Record<number, Migration>, options: DecodeOptions): Promise<{ run: Run; warnings: string[] }> {
+async function decodeText(text: string, registry: Record<number, Migration>, options: DecodeOptions): Promise<{ run: Run; warnings: string[]; unplaced: UnplacedItem[] }> {
   const trimmed = text.trim();
   if (trimmed === "") throw new CodecError("Nothing to import: the text is empty");
 

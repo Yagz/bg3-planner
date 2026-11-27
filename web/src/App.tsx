@@ -4,6 +4,7 @@ import type { GameData } from "../../src/data/types.ts";
 import { I18nContext, LANGS, createI18n } from "./i18n/i18n.ts";
 import Character from "./screens/Character.tsx";
 import HistoryPanel from "./screens/HistoryPanel.tsx";
+import MigrationBanner from "./screens/MigrationBanner.tsx";
 import Party from "./screens/Party.tsx";
 import Transfer from "./screens/Transfer.tsx";
 import Disclosure from "./ui/Disclosure.tsx";
@@ -71,6 +72,7 @@ export default function App({ data, store, settingsBackend, sessionBackend }: Pr
   // The current run is read from the store here and nowhere else; screens receive it and `saveRun`.
   const [run, setRun] = useState<Run | null>(() => (currentId === null ? null : store.load(currentId)));
   const unreadable = store.unreadable().length;
+  const migration = currentId === null ? null : store.migration(currentId);
 
   useEffect(() => saveSettings(settingsBackend, settings), [settingsBackend, settings]);
 
@@ -277,6 +279,9 @@ export default function App({ data, store, settingsBackend, sessionBackend }: Pr
         <div className="banner wrap" role="alert">
           {t(unreadable === 1 ? "storage.unreadable" : "storage.unreadable.many", { count: unreadable })}
         </div>
+      )}
+      {migration !== null && run !== null && currentId !== null && (
+        <MigrationBanner key={`${currentId}|${migration.at}`} data={data} runId={currentId} run={run} report={migration} storage={settingsBackend} />
       )}
       <main className="wrap">
         {route.screen === "transfer" ? (

@@ -322,7 +322,7 @@ describe("migrations", () => {
       ["", ""], ["RULESET_LARIAN", "RULESET_LARIAN"], ["balanced", "DIFFICULTY_MEDIUM"], ["EXPLORER", "DIFFICULTY_EASY"], ["Nightmare", "Nightmare"],
     ];
     for (const [label, ruleset] of table) {
-      const migrated = MIGRATIONS[2]!({ version: 2, difficulty: label }, { itemSlot: null, warnings: [] }) as { version: number; difficulty: unknown };
+      const migrated = MIGRATIONS[2]!({ version: 2, difficulty: label }, { itemSlot: null, warnings: [], unplaced: [] }) as { version: number; difficulty: unknown };
       expect(migrated.version).toBe(3);
       expect(migrated.difficulty).toEqual({ ruleset, overrides: {} });
     }
