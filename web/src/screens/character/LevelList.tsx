@@ -277,6 +277,30 @@ export function PreparedBlock({ data, character, level, state, casts, before, is
   );
 }
 
+/** What the prepared block of each level needs: its state, whether its class casts there, and the list the class had at its previous level. */
+export type PreparedLevel = { state: PreparedState | null; casts: boolean; before: { list: string[]; from: number } | null };
+
+/** The prepared block's inputs for every level, one resolution per level (shared by the list and the tree). */
+export function usePreparedLevels(character: Character, data: GameData, levels: { class: string }[]): PreparedLevel[] {
+  return useMemo(() => {
+    const states = levels.map((_, i) => preparedState(character, data, i + 1));
+    return levels.map((level, i) => {
+      const state = states[i] ?? null;
+      // Whether the level's class gives spells at that point, from the class or its subclass (only asked where nothing is prepared).
+      const casts = state === null && level.class !== "" && spellSources(character, data, i + 1).some((source) => source.kind === "class" && source.id === level.class);
+      let before: PreparedLevel["before"] = null;
+      for (let j = i - 1; j >= 0 && state !== null; j--) {
+        const earlier = states[j];
+        if (earlier?.cls === state.cls && earlier.list !== null && earlier.from !== null) {
+          before = { list: earlier.list, from: earlier.from };
+          break;
+        }
+      }
+      return { state, casts, before };
+    });
+  }, [character, data]); // eslint-disable-line react-hooks/exhaustive-deps
+}
+
 type Props = {
   data: GameData;
   character: Character;
@@ -302,13 +326,7 @@ export default function LevelList({ data, character, issues, progressLevel, mult
   const { t, lang } = useI18n();
   const resolved = resolve(character, data).levels;
   const abilities = castingAbilities(character, data);
-  // One resolution per level for the whole list; the previous list of each level's class comes from the states before it.
-  const prepared = useMemo(() => resolved.map((_, i) => preparedState(character, data, i + 1)), [character, data]); // eslint-disable-line react-hooks/exhaustive-deps
-  // Whether each level's class gives spells at that point, from the class or its subclass (only asked where nothing is prepared).
-  const casting = useMemo(
-    () => resolved.map((level, i) => prepared[i] === null && level.class !== "" && spellSources(character, data, i + 1).some((source) => source.kind === "class" && source.id === level.class)),
-    [character, data], // eslint-disable-line react-hooks/exhaustive-deps
-  );
+  const prepared = usePreparedLevels(character, data, resolved);
 
   const firstUpcoming = resolved.find((level) => level.level > progressLevel)?.level ?? null;
 
@@ -322,15 +340,7 @@ export default function LevelList({ data, character, issues, progressLevel, mult
         const here = issues.filter((issue) => issue.level === n);
         const at = (slot: string) => here.filter((issue) => issue.slot === slot);
         const preparedHere = here.filter((issue) => issue.slot === PREPARED_SLOT);
-        const state = prepared[n - 1] ?? null;
-        let before: { list: string[]; from: number } | null = null;
-        for (let i = n - 2; i >= 0 && state !== null; i--) {
-          const earlier = prepared[i];
-          if (earlier?.cls === state.cls && earlier.list !== null && earlier.from !== null) {
-            before = { list: earlier.list, from: earlier.from };
-            break;
-          }
-        }
+        const { state, casts, before } = prepared[n - 1] ?? { state: null, casts: false, before: null };
         const rows = slotRows(slots, data, t, n);
         const placed = new Set(rows.map((row) => row.slot));
         const elsewhere = here.filter((issue) => issue.slot !== PREPARED_SLOT && (issue.slot === null || !placed.has(issue.slot)));
@@ -371,7 +381,7 @@ export default function LevelList({ data, character, issues, progressLevel, mult
                     </div>
                   </Fragment>
                 ))}
-                <PreparedBlock data={data} character={character} level={n} state={state} casts={casting[n - 1] ?? false} before={before} issues={preparedHere} onEdit={() => onPick(n, PREPARED_SLOT)} onInherit={() => onInherit(n)} />
+                <PreparedBlock data={data} character={character} level={n} state={state} casts={casts} before={before} issues={preparedHere} onEdit={() => onPick(n, PREPARED_SLOT)} onInherit={() => onInherit(n)} />
                 {rows.length === 0 && state === null && preparedHere.length === 0 && <span className="full feat">{t("character.nothingToChoose")}</span>}
                 <div className="full">
                   <GrantedList names={features} />

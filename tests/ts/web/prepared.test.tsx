@@ -106,6 +106,27 @@ describe("Prepared spells in the level list", () => {
     expect(within(row(2)).queryByRole("button", { name: /Take the list of level/ })).toBeNull();
   });
 
+  it("the tree view carries the same block: count, Edit opening the picker, taking the previous list again, and a missing list said once", () => {
+    const [a, b] = pool(cleric(2));
+    setup(cleric(3, { 1: [a!], 2: [a!, b!] }));
+    fireEvent.click(screen.getByRole("checkbox", { name: "Tree" }));
+    expect(document.querySelector(".tree")).not.toBeNull();
+    const second = within(row(2));
+    expect(second.getByText("Prepared spells")).toBeTruthy();
+    expect(second.getByText("2 / 5")).toBeTruthy();
+    expect(second.getByText(name(b!))).toBeTruthy();
+    fireEvent.click(second.getByRole("button", { name: "Edit" }));
+    expect(screen.getByRole("dialog")).toBeTruthy();
+    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Cancel" }));
+    fireEvent.click(within(row(2)).getByRole("button", { name: "Take the list of level 1 again" }));
+    expect(within(row(2)).getByText("Takes the list of level 1")).toBeTruthy();
+    // Level 1's list of one spell is short of its count: the issue sits in the block, not again under the level.
+    const first = row(1);
+    expect(first.querySelector(".treeprep")!.textContent).toContain("1 / 4");
+    expect(within(first).getAllByText("1 of 4 spells prepared: spells still to choose.")).toHaveLength(1);
+    expect(within(first.querySelector<HTMLElement>(".treeprep")!).getByText("1 of 4 spells prepared: spells still to choose.")).toBeTruthy();
+  });
+
   it("an own empty list says no spell prepared (chosen)", () => {
     setup(cleric(1, { 1: [] }));
     expect(within(row(1)).getByText("No spell prepared (chosen)")).toBeTruthy();

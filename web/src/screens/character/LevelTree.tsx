@@ -2,13 +2,14 @@ import type { GameData } from "../../../../src/data/types.ts";
 import { castingAbilities } from "../../../../src/engine/casting.ts";
 import { grantedFeatures } from "../../../../src/engine/features.ts";
 import type { Issue } from "../../../../src/engine/issues.ts";
+import { PREPARED_SLOT } from "../../../../src/engine/prepared.ts";
 import { resolve } from "../../../../src/engine/progression.ts";
 import { levelSlots } from "../../../../src/engine/validate.ts";
 import type { Character, Choice } from "../../../../src/plan/model.ts";
 import { useI18n } from "../../i18n/i18n.ts";
 import { gameName } from "../../names.ts";
 import IssueList from "./IssueList.tsx";
-import { CLASS_SLOT, GrantedList, LevelClass, SlotPick, classStep, slotRows } from "./LevelList.tsx";
+import { CLASS_SLOT, GrantedList, LevelClass, PreparedBlock, SlotPick, classStep, slotRows, usePreparedLevels } from "./LevelList.tsx";
 
 type Props = {
   data: GameData;
@@ -22,16 +23,20 @@ type Props = {
   onPick: (level: number, slot: string) => void;
   /** Stores `choice` at a slot directly (an untaken branch); the change goes through the impact preview. */
   onChoose: (level: number, slot: string, choice: Choice) => void;
+  /** Removes the level's own prepared list, which takes the previous one again (or just clears it). */
+  onInherit: (level: number) => void;
 };
 
 /**
  * The levels as a vertical line of nodes: branch nodes where the class changes (multiclass), a subclass or a feat is taken,
- * and the subclasses the data offers but the build does not take, as dashed buttons that preview the swap.
+ * and the subclasses the data offers but the build does not take, as dashed buttons that preview the swap; a preparing class's
+ * levels carry the same prepared-spells block as the list.
  */
-export default function LevelTree({ data, character, issues, progressLevel, multiclass, onPick, onChoose }: Props) {
+export default function LevelTree({ data, character, issues, progressLevel, multiclass, onPick, onChoose, onInherit }: Props) {
   const { t, lang } = useI18n();
   const resolved = resolve(character, data).levels;
   const abilities = castingAbilities(character, data);
+  const prepared = usePreparedLevels(character, data, resolved);
 
   return (
     <div className="tree">
@@ -46,7 +51,9 @@ export default function LevelTree({ data, character, issues, progressLevel, mult
         const here = issues.filter((issue) => issue.level === n);
         const at = (slot: string) => here.filter((issue) => issue.slot === slot);
         const placed = new Set(rows.map((row) => row.slot));
-        const elsewhere = here.filter((issue) => issue.slot === null || !placed.has(issue.slot));
+        const preparedHere = here.filter((issue) => issue.slot === PREPARED_SLOT);
+        const { state, casts, before } = prepared[n - 1] ?? { state: null, casts: false, before: null };
+        const elsewhere = here.filter((issue) => issue.slot !== PREPARED_SLOT && (issue.slot === null || !placed.has(issue.slot)));
         const undecided = here.filter((issue) => issue.severity === "incomplete").length;
         const played = n <= progressLevel;
         const branch = step === "changes" || slots.subclass !== null || slots.feat !== null;
@@ -86,6 +93,9 @@ export default function LevelTree({ data, character, issues, progressLevel, mult
                   )}
                 </div>
               ))}
+              <div className="treeprep">
+                <PreparedBlock data={data} character={character} level={n} state={state} casts={casts} before={before} issues={preparedHere} onEdit={() => onPick(n, PREPARED_SLOT)} onInherit={() => onInherit(n)} />
+              </div>
               <GrantedList names={features} />
               <IssueList data={data} issues={elsewhere} />
             </div>

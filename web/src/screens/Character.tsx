@@ -376,6 +376,7 @@ export default function Character({ data, run, saveRun, characterId, onSelect, t
                   multiclass={multiclass}
                   onPick={(level, slot) => setTarget({ level, slot })}
                   onChoose={(level, slot, choice) => commit(setChoice(character, level, slot, choice))}
+                  onInherit={(level) => commit(inheritPrepared(character, level))}
                 />
               ) : (
                 <LevelList data={data} character={character} issues={levelIssues} progressLevel={run.progress.level} multiclass={multiclass} onPick={(level, slot) => setTarget({ level, slot })} onInherit={(level) => commit(inheritPrepared(character, level))} onRemove={() => commit(removeLastLevel(character))} />
