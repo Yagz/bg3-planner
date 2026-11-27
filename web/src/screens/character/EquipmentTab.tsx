@@ -74,7 +74,7 @@ export default function EquipmentTab({ data, character, issues, onChange }: Prop
         key={name}
         type="button"
         data-slot={name}
-        className={`eqslot${item === null ? " empty" : ""}${inherited || source === "level" ? " inh" : ""}${badSlots.has(name) ? " bad" : warned.has(name) ? " warn" : ""}`}
+        className={`eqslot${item === null ? " empty" : ""}${inherited ? " inh" : ""}${badSlots.has(name) ? " bad" : warned.has(name) ? " warn" : ""}`}
         aria-disabled={openable ? undefined : true}
         title={description ?? undefined}
         onClick={() => openable && setSlot(name)}

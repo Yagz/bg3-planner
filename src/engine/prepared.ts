@@ -8,8 +8,10 @@ import type { ResolvedLevel } from "./progression.ts";
 
 /**
  * Number of spells a class prepares: floor(class level / divisor) + modifier of its casting ability, minimum 1.
- * bg3.wiki's class pages give the full class level for all four (the Paladin's halved level of the spec and Fextralife was
- * not kept); the divisor stays so that a correction is one value.
+ * bg3.wiki's class pages give the full class level for all four. The Paladin count follows bg3.wiki (Paladin level + Charisma
+ * modifier, minimum 1) by the user's decision of 2026-11-27; the other sources differ: the spec's « moitié du niveau +
+ * modificateur » and Fextralife's "1 + Charisma modifier + half the Paladin level". The divisor stays so that a correction
+ * is one value.
  */
 export const PREPARED_COUNT: Record<string, { divisor: 1 | 2 }> = {
   Cleric: { divisor: 1 },
