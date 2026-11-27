@@ -1,6 +1,7 @@
-// Fonts ship with the site (no other site is contacted). Marcellus: the latin and latin-ext subsets with their unicode-range (400.css; the per-subset latin.css files carry no range, so the later one would cover everything). Source Sans 3: the package's variable-weight stylesheet.
+// Fonts ship with the site (no other site is contacted). Marcellus: the latin and latin-ext subsets with their unicode-range (400.css; the per-subset latin.css files carry no range, so the later one would cover everything). Source Sans 3: the package's variable-weight stylesheets, upright and italic (the stylesheet sets font-synthesis: none, so italic text needs the real face).
 import "@fontsource/marcellus/400.css";
 import "@fontsource-variable/source-sans-3/wght.css";
+import "@fontsource-variable/source-sans-3/wght-italic.css";
 import { StrictMode, useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import type { GameData } from "../../src/data/types.ts";

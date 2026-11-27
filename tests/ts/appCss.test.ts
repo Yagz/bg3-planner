@@ -119,6 +119,11 @@ describe("app.css", () => {
       for (const selector of [".charside .sidetitle", ".dlg header h2", ".spgroup h3", ".equipment .eyebrow"]) expect(textFace(selector), selector).toBe(true);
     });
 
+    it("italic text has a real italic face to render with, as synthesis is off", () => {
+      expect(css).toMatch(/font-style:\s*italic/);
+      expect(readFileSync("web/src/main.tsx", "utf8")).toMatch(/import "@fontsource-variable\/source-sans-3\/wght-italic\.css";/);
+    });
+
     it("the casting-ability badge is never clipped", () => {
       const rules = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter((m) => /\.cast(?![\w-])/.test(m[1]!));
       expect(rules.length).toBeGreaterThan(0);
