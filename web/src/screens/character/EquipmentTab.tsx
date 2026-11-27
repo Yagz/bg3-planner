@@ -34,7 +34,7 @@ function issueSpot(issue: Issue): { act: string; slot: string } | null {
 type Props = {
   data: GameData;
   character: Character;
-  /** The engine's equipment issues for this character (over the whole run, so sharing between characters shows). */
+  /** The engine's equipment issues for this character (over the whole run, so sharing between characters shows), a notice at every act where it holds. */
   issues: Issue[];
   /** Saves the changed character. */
   onChange: (character: Character) => void;

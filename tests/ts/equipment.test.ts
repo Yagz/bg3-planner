@@ -145,6 +145,8 @@ describe("equipment checks", () => {
     expect(equipmentIssues(runOf(c), data)).toEqual([
       { severity: "notice", code: "offHandWithTwoHanded", character: "c1", level: null, slot: "equipment:1/MeleeOffHand", params: { item: "WPN_Greatsword", act: 1 } },
     ]);
+    // Shown one act at a time, the clash held since act 1 is reported again in acts 2 and 3 (the off hand is emptied in act 3).
+    expect(equipmentIssues(runOf(c), data, { everyAct: true }).map((i) => i.slot)).toEqual(["equipment:1/MeleeOffHand", "equipment:2/MeleeOffHand"]);
     const longsword = equipped(character("c1", "player"), { "1": { MeleeMainHand: "WPN_Longsword", MeleeOffHand: "MAG_ChargedLightning_StaticDischarge_Shield" } });
     expect(equipmentIssues(runOf(longsword), data)).toEqual([]);
   });

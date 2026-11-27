@@ -129,9 +129,10 @@ const equipmentSlot = (act: string, slot: string) => `equipment:${act}/${slot}`;
  * Checks the equipment of every character. Stored values: an unknown slot key or item id is invalid, where it is written.
  * Effective values per act: an item in a slot it cannot go to, found only in a later act, held by another character in
  * the same act (rarity above common), or in an off hand beside a two-handed weapon is a notice, reported at the first act
- * where it holds and again only after it stopped holding or its values changed.
+ * where it holds and again only after it stopped holding or its values changed; with `everyAct`, at every act where it
+ * holds (a screen that shows one act at a time).
  */
-export function equipmentIssues(run: Run, data: GameData): Issue[] {
+export function equipmentIssues(run: Run, data: GameData, { everyAct = false }: { everyAct?: boolean } = {}): Issue[] {
   const issues: Issue[] = [];
   const issue = (severity: Issue["severity"], code: IssueCode, character: string, slot: string, params: Issue["params"]) => {
     issues.push({ severity, code, character, level: null, slot, params });
@@ -155,7 +156,7 @@ export function equipmentIssues(run: Run, data: GameData): Issue[] {
     const notice = (code: IssueCode, character: string, slot: EquipmentSlot, params: Issue["params"]) => {
       const key = JSON.stringify([code, character, slot, params]);
       current.add(key);
-      if (!previous.has(key)) issue("notice", code, character, equipmentSlot(act, slot), { ...params, act: Number(act) });
+      if (everyAct || !previous.has(key)) issue("notice", code, character, equipmentSlot(act, slot), { ...params, act: Number(act) });
     };
     /** Item -> holders in this act, in run order (each character once, at its first slot). */
     const holders = new Map<string, { character: Character; slot: EquipmentSlot }[]>();

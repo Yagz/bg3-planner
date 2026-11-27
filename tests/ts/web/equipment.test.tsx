@@ -200,6 +200,17 @@ describe("Equipment tab", () => {
     expect(document.querySelector(".creation")?.textContent ?? "").not.toContain("only found in act");
   });
 
+  it("a notice set in act 1 and inherited still shows, with the amber edge, in act 2; never past the act where it stops", () => {
+    const late = itemIn("Helmet", 3);
+    setup([fighter({ "1": { Helmet: late }, "2": {}, "3": {} })]);
+    fireEvent.click(screen.getByRole("button", { name: "Act 2" }));
+    expect(screen.getByRole("list", { name: "Equipment notices" }).textContent).toContain(`${name(late)}: only found in act 3, equipped in act 2.`);
+    expect(card("Helmet").className).toContain("warn");
+    fireEvent.click(screen.getByRole("button", { name: "Act 3" }));
+    expect(screen.queryByRole("list", { name: "Equipment notices" })).toBeNull();
+    expect(card("Helmet").className).not.toContain("warn");
+  });
+
   it("the footer credits bg3.wiki with its licence", () => {
     setup([fighter()]);
     const foot = screen.getByRole("contentinfo");

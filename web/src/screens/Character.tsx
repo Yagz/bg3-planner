@@ -103,8 +103,8 @@ export default function Character({ data, run, saveRun, characterId, onSelect, t
   const character = characterId === null ? run.characters[0] : run.characters.find((c) => c.id === characterId);
   const issues = useMemo(() => (character === undefined ? [] : validate({ ...run, characters: [character] }, data).issues), [run, character, data]);
 
-  // Over the whole run: an item two characters share in an act shows on both.
-  const equipment = useMemo(() => (character === undefined ? [] : equipmentIssues(run, data).filter((issue) => issue.character === character.id)), [run, character, data]);
+  // Over the whole run: an item two characters share in an act shows on both. The tab shows one act at a time, so a notice is listed at every act where it holds.
+  const equipment = useMemo(() => (character === undefined ? [] : equipmentIssues(run, data, { everyAct: true }).filter((issue) => issue.character === character.id)), [run, character, data]);
 
   if (character === undefined) return <p className="sub">{t(run.characters.length === 0 ? "character.none" : "character.unknown")}</p>;
 
