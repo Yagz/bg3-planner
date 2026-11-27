@@ -50,6 +50,11 @@ describe("HistoryPanel", () => {
     expect(lines).toContain("Player: Equipment · act 2 · Attire: inherited from act 1 → Old Vest");
   });
 
+  it("marks the current version in a neutral pill, not the green of a valid state", () => {
+    render(<HistoryPanel data={data()} name="Run" versions={versions(run({ Breast: "ARM_New" }), run({ Breast: "ARM_Old" }))} onRestore={() => {}} />);
+    expect(screen.getByText("current version").className).toBe("pill muted");
+  });
+
   it("a prepared-spells change names the spells added at its level and class", () => {
     render(<HistoryPanel data={data()} name="Run" versions={versions(run({}, ["Sanctuary"]), run({}, []))} onRestore={() => {}} />);
     expect([...document.querySelectorAll(".diffline")].map((el) => el.textContent)).toContain("Player: Prepared spells · level 1 (Cleric 1): Sanctuary added");

@@ -90,8 +90,9 @@ export function BringsPills({ contribution, alone, skillValues, level, data, lan
   if (alone) return <span className="sub">{t("party.brings.alone")}</span>;
   return (
     <>
+      {/* A skill only this member has is a fact, not a valid state: neutral, as on the party cards. */}
       {only.map((id) => (
-        <span key={id} className="pill good">
+        <span key={id} className="pill muted">
           {t("party.brings.only", { skill: skill(id) })}
         </span>
       ))}

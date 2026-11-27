@@ -874,7 +874,9 @@ describe("Character screen", () => {
       const insight = within(region).getByText(gameName(data, "fr", "skill", "Insight")).closest("li")!;
       expect(insight.textContent).not.toContain("expertise");
       expect(insight.textContent).toContain("maîtrise");
-      expect(within(region).getByText(`${gameName(data, "fr", "skill", "Deception")} · seul`)).toBeTruthy();
+      const only = within(region).getByText(`${gameName(data, "fr", "skill", "Deception")} · seul`);
+      // A skill only this member has is neutral: green is for valid states.
+      expect(only.className).toBe("pill muted");
       cleanup();
       const camp = runWith([r, g]);
       camp.party["1"].active = [r.id];

@@ -285,7 +285,7 @@ export default function HistoryPanel({ data, name, versions, onRestore }: Props)
                   )}
                 </div>
                 {index === 0 ? (
-                  <span className="pill good">{t("history.current")}</span>
+                  <span className="pill muted">{t("history.current")}</span>
                 ) : (
                   <button className="btn" aria-label={t("history.restoreLabel", { date })} onClick={() => setAsking(version.at)}>
                     {t("history.restore")}
