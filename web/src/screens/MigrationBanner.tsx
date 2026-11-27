@@ -59,11 +59,15 @@ export default function MigrationBanner({ data, runId, run, report, storage }: P
         </span>{" "}
         {t(count === 1 ? "migration.banner" : "migration.banner.many", { version: report.fromVersion, count })}
       </p>
-      <ul>
-        {report.unplaced.map((entry, index) => (
-          <li key={index}>{t("migration.item", { character: who(entry.character), item: gameName(data, lang, "item", entry.item), reason: t(`migration.reason.${entry.reason}`) })}</li>
-        ))}
-      </ul>
+      {/* Folded: a long list would fill a phone screen and push the screen content away. */}
+      <details>
+        <summary>{t(count === 1 ? "migration.show" : "migration.show.many", { count })}</summary>
+        <ul>
+          {report.unplaced.map((entry, index) => (
+            <li key={index}>{t("migration.item", { character: who(entry.character), item: gameName(data, lang, "item", entry.item), reason: t(`migration.reason.${entry.reason}`) })}</li>
+          ))}
+        </ul>
+      </details>
       <button type="button" className="btn" onClick={close}>
         {t("migration.close")}
       </button>

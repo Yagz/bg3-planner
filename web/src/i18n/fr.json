@@ -36,6 +36,8 @@
   "storage.unreadable.many": "{count} parties enregistrées n’ont pas pu être lues ; elles sont conservées telles quelles.",
   "migration.banner": "Cette partie vient d’un ancien format (BG3P{version}) : {count} objet n’a pas pu être placé et est noté dans les notes de son personnage.",
   "migration.banner.many": "Cette partie vient d’un ancien format (BG3P{version}) : {count} objets n’ont pas pu être placés et sont notés dans les notes de leur personnage.",
+  "migration.show": "Voir l’objet",
+  "migration.show.many": "Voir les {count} objets",
   "migration.item": "{character} : {item} ({reason})",
   "migration.reason.noSlot": "aucun emplacement connu",
   "migration.reason.taken": "emplacement déjà occupé",

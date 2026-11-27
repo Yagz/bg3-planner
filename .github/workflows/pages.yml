@@ -30,6 +30,8 @@ jobs:
         run: npx tsc --noEmit -p .
       - name: Type-check the web app
         run: npx tsc --noEmit -p web
+      - name: Type-check the web tests (Node types allowed there, never in the web app)
+        run: npx tsc --noEmit -p tests/ts/web
       - run: npm run build
       - name: Refuse any resource loaded from another site
         run: node scripts/check-dist.ts web/dist

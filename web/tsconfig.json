@@ -15,5 +15,5 @@
     "resolveJsonModule": true,
     "skipLibCheck": true
   },
-  "include": ["src", "../tests/ts/web"]
+  "include": ["src"]
 }

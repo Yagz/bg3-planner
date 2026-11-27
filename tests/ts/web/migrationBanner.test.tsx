@@ -42,7 +42,15 @@ describe("migration banner", () => {
     const shown = banner();
     expect(shown).not.toBeNull();
     expect(shown!.textContent).toContain("This run comes from an older format (BG3P3): 2 items could not be placed and are written in their character's notes.");
-    expect([...shown!.querySelectorAll("li")].map((li) => li.textContent)).toEqual(["Player: Ring C (placeholder) (slot already taken)", "Player: UNKNOWN (no known slot)"]);
+    // The list is folded by default, so a long one never fills a phone screen; the count and Close stay visible.
+    const details = shown!.querySelector("details")!;
+    expect(details.open).toBe(false);
+    expect(details.querySelector("summary")!.textContent).toBe("Show the 2 items");
+    expect(screen.getByRole("button", { name: "Close" }).closest("details")).toBeNull();
+    expect([...shown!.querySelectorAll("li")].every((li) => details.contains(li))).toBe(true);
+    fireEvent.click(details.querySelector("summary")!);
+    expect(details.open).toBe(true);
+    expect([...details.querySelectorAll("li")].map((li) => li.textContent)).toEqual(["Player: Ring C (placeholder) (slot already taken)", "Player: UNKNOWN (no known slot)"]);
     // The banner sits above the screen content, not inside it.
     expect(shown!.closest("main")).toBeNull();
   });
@@ -52,6 +60,7 @@ describe("migration banner", () => {
     settings.items.set("bg3p:settings", JSON.stringify({ lang: "fr" }));
     renderApp(v3Backend(), settings);
     expect(banner()!.textContent).toContain("Cette partie vient d’un ancien format (BG3P3) : 2 objets n’ont pas pu être placés et sont notés dans les notes de leur personnage.");
+    expect(banner()!.querySelector("summary")!.textContent).toBe("Voir les 2 objets");
     expect([...banner()!.querySelectorAll("li")].map((li) => li.textContent)).toEqual(["Joueur : Anneau C (placeholder) (emplacement déjà occupé)", "Joueur : UNKNOWN (aucun emplacement connu)"]);
     expect(screen.getByRole("button", { name: "Fermer" })).toBeTruthy();
   });

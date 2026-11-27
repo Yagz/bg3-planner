@@ -1,5 +1,3 @@
-/// <reference types="node" />
-// This jsdom test reads the stylesheet with node:fs (Vitest does not load CSS, even through ?raw); @types/node is already installed for the node-side tests.
 import { readFileSync } from "node:fs";
 import { resolve as resolve_ } from "node:path";
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
