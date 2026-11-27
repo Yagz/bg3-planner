@@ -29,6 +29,8 @@ export type PreparedState = {
   /** Whether the level carries its own list. */
   own: boolean;
   count: number;
+  /** Modifier of the class's casting ability at this level, the second term of `count` (0 when the class has no known ability). */
+  modifier: number;
   /** Spells the class may prepare at this class level (always-prepared ones excluded). */
   pool: string[];
   /** Leveled spells always prepared by the class's and subclass's rows; they do not count. */
@@ -93,7 +95,8 @@ function states(character: Character, data: GameData, levels: ResolvedLevel[]): 
     const ability = classes[cls]?.spellcasting_ability ?? null;
     const score = isAbility(ability) ? abilityTotals(character, data, n)[ability] : 10;
     const divisor = PREPARED_COUNT[cls]?.divisor ?? 1;
-    const count = Math.max(1, Math.floor(resolved.classLevel / divisor) + Math.floor((score - 10) / 2));
+    const modifier = Math.floor((score - 10) / 2);
+    const count = Math.max(1, Math.floor(resolved.classLevel / divisor) + modifier);
     return {
       cls,
       classLevel: resolved.classLevel,
@@ -101,6 +104,7 @@ function states(character: Character, data: GameData, levels: ResolvedLevel[]): 
       from: effective?.from ?? null,
       own: entry?.prepared !== undefined,
       count,
+      modifier,
       pool: [...pool].filter((spell) => !fixed.has(spell)),
       always: [...fixed],
     };

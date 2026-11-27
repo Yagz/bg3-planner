@@ -18,6 +18,7 @@ import { gameName } from "../../names.ts";
 import { kindOfList, spellFacts, spellLevel } from "./ChoicePicker.tsx";
 import Menu from "../../ui/Menu.tsx";
 import type { MenuItem } from "../../ui/Menu.tsx";
+import { signed } from "../Coverage.tsx";
 import { classesAt, shortAbility } from "../party/MemberCard.tsx";
 import IssueList from "./IssueList.tsx";
 
@@ -228,7 +229,7 @@ export function PreparedBlock({ data, character, level, state, casts, before, is
   if (list === null && pool.length === 0 && always.length === 0) return null;
   const n = list?.length ?? 0;
   const tone = n > count ? "bad" : n < Math.min(count, pool.length) ? "todo" : "good";
-  const formula = t(state.cls === "Wizard" ? "prepared.formulaWizard" : "prepared.formula", { class: gameName(data, lang, "class", state.cls), level: state.classLevel, ability: ability === null ? "" : gameName(data, lang, "ability", ability) });
+  const formula = t(state.cls === "Wizard" ? "prepared.formulaWizard" : "prepared.formula", { class: gameName(data, lang, "class", state.cls), level: state.classLevel, ability: ability === null ? "" : gameName(data, lang, "ability", ability), modifier: signed(state.modifier) });
   return (
     <>
       <span className="lab">{t("prepared.title")}</span>

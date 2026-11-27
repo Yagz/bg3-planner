@@ -80,7 +80,8 @@ describe("prepared spells", () => {
     expect(preparedState(c, data, 1)?.count).toBe(2);
     expect(preparedState(c, data, 8)?.count).toBe(3);
     expect(preparedState(c, data, 8)?.classLevel).toBe(2);
-    expect(preparedState(character([{ class: "Cleric", choices: LIFE }], { Wisdom: 8 }), data, 1)?.count).toBe(1);
+    expect(preparedState(c, data, 8)?.modifier).toBe(1);
+    expect(preparedState(character([{ class: "Cleric", choices: LIFE }], { Wisdom: 8 }), data, 1)).toMatchObject({ count: 1, modifier: -1 });
   });
 
   it("level 8 inherits level 1's list; its own list replaces it", () => {

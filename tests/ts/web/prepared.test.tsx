@@ -8,6 +8,7 @@ import type { Character, Choice, Run } from "../../../src/plan/model.ts";
 import App from "../../../web/src/App.tsx";
 import { gameName } from "../../../web/src/names.ts";
 import { createStore } from "../../../web/src/state/storage.ts";
+import { setLanguage } from "./header.ts";
 import { MemoryBackend } from "./memoryBackend.ts";
 import { realData } from "./realData.ts";
 
@@ -54,7 +55,7 @@ describe("Prepared spells in the level list", () => {
     const level = within(row(1));
     expect(level.getByText("Prepared spells")).toBeTruthy();
     expect(level.getByText("2 / 4")).toBeTruthy();
-    expect(level.getByText("Cleric level 1 + Wisdom modifier, at least 1")).toBeTruthy();
+    expect(level.getByText("Cleric 1 + Wisdom +3, at least 1")).toBeTruthy();
     expect(level.getByText(name(a!))).toBeTruthy();
     expect(level.getByText(name(b!))).toBeTruthy();
   });
@@ -183,12 +184,19 @@ describe("Prepared spells in the level list", () => {
     expect(within(row(2)).queryByText("All prepared by default")).toBeNull();
   });
 
-  it("a Wizard level says its formula is chosen among the spellbook", () => {
+  it("the French formula names the class, its level, the ability and its signed modifier", () => {
+    setup(cleric(1));
+    setLanguage("fr");
+    expect(within(screen.getByRole("group", { name: "Niveau 1" })).getByText("Clerc 1 + Sagesse +3, au moins 1")).toBeTruthy();
+  });
+
+  it("a Wizard level says its formula is chosen from the spellbook", () => {
     const c = cleric(1, {}, ["Wizard"]);
     // The spellbook is the Wizard's own spell choice: the pool is what it holds.
     const book = resolve(c, data).levels[0]!.slots.find((slot) => slot.selector.function === "SelectSpells" && slot.selector.prepare === null)!;
     c.levels[0]!.choices[book.id] = data.rules.lists[book.selector.list]!.items.filter((spell) => (data.rules.spells[spell]?.level ?? 0) >= 1).slice(0, 6);
     setup(c);
-    expect(within(row(1)).getByText("Wizard level 1 + Intelligence modifier, at least 1, chosen among the spellbook")).toBeTruthy();
+    // Intelligence 8 (−1), and the count floor of 1 said in words.
+    expect(within(row(1)).getByText("Wizard 1 + Intelligence −1, at least 1, chosen from the spellbook")).toBeTruthy();
   });
 });
