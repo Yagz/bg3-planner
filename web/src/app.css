@@ -95,10 +95,10 @@ body { margin: 0 }
 .menupanel [role="menuitem"]:hover, .menupanel [role="menuitem"]:focus-visible { background: var(--surface2) }
 .menupanel [role="menuitem"].danger { color: var(--bad) }
 .menupanel hr { border: 0; border-top: 1px solid var(--border); margin: 6px 0 }
-.menucustom { padding: 6px 12px }
-.menucustom label { display: grid; gap: 4px; font-size: 13.5px; color: var(--muted) }
-.menucustom select { font: inherit; color: var(--fg); background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; min-height: 36px }
-.menupanel button:focus-visible, .menucustom select:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px }
+.setting { padding: 6px 12px }
+.setting label { display: grid; gap: 4px; font-size: 13.5px; color: var(--muted) }
+.setting select { font: inherit; color: var(--fg); background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; min-height: 36px }
+.menupanel button:focus-visible, .setting select:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px }
 .btn.danger { background: var(--bad); border-color: var(--bad); color: var(--surface) }
 .confirm { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding-block: 8px; border-top: 1px solid var(--head-muted) }
 .history { min-width: 0 }

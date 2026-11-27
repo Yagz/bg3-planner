@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import type { KeyboardEvent, ReactNode } from "react";
 
-export type MenuItem = { label: string; onSelect: () => void; danger?: boolean; separatorBefore?: boolean } | { custom: ReactNode };
+export type MenuItem = { label: string; onSelect: () => void; danger?: boolean; separatorBefore?: boolean };
 
 type Props = {
   /** The accessible name of the button that opens the menu. */
@@ -11,9 +11,9 @@ type Props = {
   items: MenuItem[];
 };
 
-const FOCUSABLE = "button:not([disabled]), select:not([disabled]), input:not([disabled])";
+const FOCUSABLE = '[role="menuitem"]';
 
-/** A button that opens a list of actions (and, for a `custom` entry, any controls). Opens on click; arrow keys move between the entries; Escape, a click outside and a choice (an item, or a change in a custom control) close it, Escape and a choice give the focus back to the button. */
+/** A button that opens a list of actions (menu items only; a panel of form controls is a `Disclosure`). Opens on click; arrow keys move between the entries; Escape, a click outside and a choice close it, Escape and a choice give the focus back to the button. */
 export default function Menu({ label, icon, items }: Props) {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
@@ -63,8 +63,7 @@ export default function Menu({ label, icon, items }: Props) {
       }
       return;
     }
-    // A select keeps its own arrow keys (they change its value).
-    if (!open || (event.target as HTMLElement).tagName === "SELECT") return;
+    if (!open) return;
     const list = entries();
     const at = list.indexOf(event.target as HTMLElement);
     const move = (to: number) => {
@@ -102,28 +101,22 @@ export default function Menu({ label, icon, items }: Props) {
       </button>
       {open && (
         <div className="menupanel" id={panelId} role="menu" aria-label={label} ref={panel}>
-          {items.map((item, index) =>
-            "custom" in item ? (
-              <div key={index} className="menucustom" role="none" onChange={() => close(true)}>
-                {item.custom}
-              </div>
-            ) : (
-              <div key={index} role="none">
-                {item.separatorBefore === true && <hr role="separator" />}
-                <button
-                  type="button"
-                  role="menuitem"
-                  className={item.danger === true ? "danger" : undefined}
-                  onClick={() => {
-                    close(true);
-                    item.onSelect();
-                  }}
-                >
-                  {item.label}
-                </button>
-              </div>
-            ),
-          )}
+          {items.map((item, index) => (
+            <div key={index} role="none">
+              {item.separatorBefore === true && <hr role="separator" />}
+              <button
+                type="button"
+                role="menuitem"
+                className={item.danger === true ? "danger" : undefined}
+                onClick={() => {
+                  close(true);
+                  item.onSelect();
+                }}
+              >
+                {item.label}
+              </button>
+            </div>
+          ))}
         </div>
       )}
     </div>

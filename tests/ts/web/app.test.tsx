@@ -45,7 +45,9 @@ describe("app shell", () => {
     expect(within(within(header).getByRole("navigation")).getAllByRole("button").map((b) => b.textContent)).toEqual(["Party", "Character", "History", "Import / export"]);
     expect(within(header).getByRole("combobox", { name: "Run" })).toBeTruthy();
     expect(within(header).getByRole("button", { name: "Run actions" }).getAttribute("aria-haspopup")).toBe("menu");
-    expect(within(header).getByRole("button", { name: "Settings" }).getAttribute("aria-haspopup")).toBe("menu");
+    // Settings is a disclosure of form controls, not a menu.
+    expect(within(header).getByRole("button", { name: "Settings" }).hasAttribute("aria-haspopup")).toBe(false);
+    expect(within(header).getByRole("button", { name: "Settings" }).getAttribute("aria-expanded")).toBe("false");
     // Only the two menu buttons, the tabs and the run select: language and theme live in the settings menu.
     expect(within(header).queryByRole("combobox", { name: "Language" })).toBeNull();
     runAction("Duplicate");
@@ -79,7 +81,7 @@ describe("app shell", () => {
     expect(store.list()).toHaveLength(0);
   });
 
-  it("a run action gives the focus back to the run menu button, and a language or theme choice closes the settings menu on its button", () => {
+  it("a run action gives the focus back to the run menu button; a language or theme choice keeps the settings panel open, and Escape closes it on its button", () => {
     renderApp();
     fireEvent.click(screen.getByRole("button", { name: "New run" }));
     runAction("Duplicate");
@@ -87,11 +89,17 @@ describe("app shell", () => {
     expect(screen.queryByRole("menu")).toBeNull();
     setTheme("dark");
     expect(document.documentElement.dataset["theme"]).toBe("dark");
-    expect(screen.queryByRole("menu")).toBeNull();
-    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Settings" }));
+    // A change does not close the panel (Chromium fires one per arrow key on a closed select).
+    expect(screen.getByRole("button", { name: "Settings" }).getAttribute("aria-expanded")).toBe("true");
     setLanguage("fr");
-    expect(screen.queryByRole("menu")).toBeNull();
-    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Réglages" }));
+    const button = screen.getByRole("button", { name: "Réglages" });
+    expect(button.getAttribute("aria-expanded")).toBe("true");
+    const theme = screen.getByRole("combobox", { name: "Thème" });
+    theme.focus();
+    fireEvent.keyDown(theme, { key: "Escape" });
+    expect(button.getAttribute("aria-expanded")).toBe("false");
+    expect(screen.queryByRole("combobox", { name: "Thème" })).toBeNull();
+    expect(document.activeElement).toBe(button);
   });
 
   it("the difficulty is not in the header", () => {

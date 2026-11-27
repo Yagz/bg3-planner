@@ -88,37 +88,4 @@ describe("menu", () => {
     expect(screen.queryByRole("menu")).toBeNull();
     expect(document.activeElement).toBe(outside);
   });
-
-  it("holds a custom entry, keeps the arrows of a select to itself and closes on a change in it", () => {
-    const onChange = vi.fn();
-    render(
-      <Menu
-        label="Settings"
-        icon="s"
-        items={[
-          { label: "Plain", onSelect: () => {} },
-          {
-            custom: (
-              <select aria-label="Mode" onChange={onChange}>
-                <option value="a">A</option>
-                <option value="b">B</option>
-              </select>
-            ),
-          },
-        ]}
-      />,
-    );
-    const button = screen.getByRole("button", { name: "Settings" });
-    fireEvent.click(button);
-    const select = screen.getByRole("combobox", { name: "Mode" });
-    // The select is reachable with the arrows, and an arrow key on it is not taken over.
-    fireEvent.keyDown(screen.getByRole("menuitem", { name: "Plain" }), { key: "ArrowDown" });
-    expect(document.activeElement).toBe(select);
-    expect(fireEvent.keyDown(select, { key: "ArrowDown" })).toBe(true);
-    expect(document.activeElement).toBe(select);
-    fireEvent.change(select, { target: { value: "b" } });
-    expect(onChange).toHaveBeenCalledTimes(1);
-    expect(screen.queryByRole("menu")).toBeNull();
-    expect(document.activeElement).toBe(button);
-  });
 });

@@ -6,6 +6,7 @@ import Character from "./screens/Character.tsx";
 import HistoryPanel from "./screens/HistoryPanel.tsx";
 import Party from "./screens/Party.tsx";
 import Transfer from "./screens/Transfer.tsx";
+import Disclosure from "./ui/Disclosure.tsx";
 import Menu from "./ui/Menu.tsx";
 import type { Lang } from "./i18n/i18n.ts";
 import { createRun, currentRunId, deleteRun, duplicateRun, renameRun } from "./state/runs.ts";
@@ -218,7 +219,7 @@ export default function App({ data, store, settingsBackend, sessionBackend }: Pr
                 />
               </>
             )}
-            <Menu
+            <Disclosure
               label={t("header.settings")}
               icon={
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true">
@@ -227,37 +228,32 @@ export default function App({ data, store, settingsBackend, sessionBackend }: Pr
                   <circle cx="12" cy="13" r="2" fill="var(--head-bg)" />
                 </svg>
               }
-              items={[
-                {
-                  custom: (
-                    <label>
-                      {t("settings.language")}
-                      <select value={settings.lang} onChange={(event) => update({ lang: event.target.value as Lang })}>
-                        {LANGS.map((lang) => (
-                          <option key={lang} value={lang}>
-                            {t(`lang.${lang}`)}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                  ),
-                },
-                {
-                  custom: (
-                    <label>
-                      {t("settings.theme")}
-                      <select value={settings.theme} onChange={(event) => update({ theme: event.target.value as Theme })}>
-                        {THEMES.map((theme) => (
-                          <option key={theme} value={theme}>
-                            {t(`theme.${theme}`)}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                  ),
-                },
-              ]}
-            />
+            >
+              <div className="setting">
+                <label>
+                  {t("settings.language")}
+                  <select value={settings.lang} onChange={(event) => update({ lang: event.target.value as Lang })}>
+                    {LANGS.map((lang) => (
+                      <option key={lang} value={lang}>
+                        {t(`lang.${lang}`)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+              <div className="setting">
+                <label>
+                  {t("settings.theme")}
+                  <select value={settings.theme} onChange={(event) => update({ theme: event.target.value as Theme })}>
+                    {THEMES.map((theme) => (
+                      <option key={theme} value={theme}>
+                        {t(`theme.${theme}`)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+            </Disclosure>
           </div>
         </div>
         {deleting && current !== null && (
