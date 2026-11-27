@@ -7367,6 +7367,26 @@
   "description": "Les tieffelins de la lignée de Zariel possèdent une force hors du commun et ont la possibilité de faire apparaître des flammes pour incinérer leurs ennemis.",
   "name": "Tieffelin de la lignée de Zariel"
  },
+ "rarity:Common": {
+  "description": null,
+  "name": "Commun"
+ },
+ "rarity:Legendary": {
+  "description": null,
+  "name": "Légendaire"
+ },
+ "rarity:Rare": {
+  "description": null,
+  "name": "Rare"
+ },
+ "rarity:Uncommon": {
+  "description": null,
+  "name": "Peu courant"
+ },
+ "rarity:VeryRare": {
+  "description": null,
+  "name": "Très rare"
+ },
  "ruleset:DIFFICULTY_EASY": {
   "description": "Expérience narrative donnant la priorité à l'histoire par rapport aux combats.",
   "name": "Explorateur"

@@ -7367,6 +7367,26 @@
   "description": "Tieflings from Zariel's bloodline are empowered with martial strength, and can channel searing flame to punish their enemies.",
   "name": "Zariel Tiefling"
  },
+ "rarity:Common": {
+  "description": null,
+  "name": "Common"
+ },
+ "rarity:Legendary": {
+  "description": null,
+  "name": "Legendary"
+ },
+ "rarity:Rare": {
+  "description": null,
+  "name": "Rare"
+ },
+ "rarity:Uncommon": {
+  "description": null,
+  "name": "Uncommon"
+ },
+ "rarity:VeryRare": {
+  "description": null,
+  "name": "Very Rare"
+ },
  "ruleset:DIFFICULTY_EASY": {
   "description": "A narrative experience placing story before combat.",
   "name": "Explorer"
