@@ -103,8 +103,10 @@ describe("Equipment tab", () => {
     expect(within(helmet).getByText(gameName(data, "en", "slot", "Helmet"))).toBeTruthy();
     expect(helmet.querySelector(".it")!.className).toContain("r-rare");
     expect(within(helmet).getByText(name(rare))).toBeTruthy();
-    expect(helmet.querySelector(".where")!.textContent).toMatch(/^Act 2 · .+/);
-    expect(helmet.textContent).toContain("rare");
+    // The rarity is a visible word at the head of the location line, coloured as reinforcement.
+    expect(helmet.querySelector(".where")!.textContent).toMatch(/^rare · Act 2 · .+/);
+    expect(helmet.querySelector(".where .rw")!.className).toContain("r-rare");
+    expect(helmet.querySelector(".sr")).toBeNull();
   });
 
   it("the picker filters by name, act and rarity, chooses, empties for the act, and offers Reprendre l'acte précédent only when the act sets the slot and never at act 1", () => {

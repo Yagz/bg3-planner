@@ -86,8 +86,16 @@ export default function EquipmentTab({ data, character, issues, onChange }: Prop
           {item !== null && <i className="dot" aria-hidden="true" />}
           <span>{item === null ? t("equipment.empty") : gameName(data, lang, "item", item)}</span>
         </span>
-        {rarity !== null && <span className="sr">{rarityName(t, rarity)}</span>}
-        <span className="where">{where}</span>
+        <span className="where">
+          {/* The rarity in words, its colour only reinforcing it. */}
+          {rarity !== null && (
+            <>
+              <span className={`rw${className === "" ? "" : ` ${className}`}`}>{rarityName(t, rarity)}</span>
+              {" · "}
+            </>
+          )}
+          {where}
+        </span>
       </button>
     );
   };

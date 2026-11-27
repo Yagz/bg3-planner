@@ -91,6 +91,8 @@ describe("app.css", () => {
       const pairs: [string, string][] = [
         ["fg", "bg"], ["fg", "surface"], ["muted", "bg"], ["muted", "surface"], ["accent", "surface"], ["accent", "accent-bg"], ["on-accent", "accent"], ["muted", "surface2"], ["surface", "bad"],
         ["good", "good-bg"], ["todo", "todo-bg"], ["bad", "bad-bg"], ["head-fg", "head-bg"], ["head-accent", "head-bg"],
+        // Rarity names: slot cards sit on --bg, the picker's options and the legend on --surface.
+        ...["r-common", "r-uncommon", "r-rare", "r-veryrare", "r-legendary"].flatMap((rarity): [string, string][] => [[rarity, "bg"], [rarity, "surface"]]),
       ];
       for (const [name, theme] of [["light", light()], ["dark media", darkMedia()], ["dark attribute", darkAttr()]] as const) {
         for (const [text, surface] of pairs) {
@@ -109,6 +111,12 @@ describe("app.css", () => {
         expect(rule.body, rule.selectors).toMatch(/font-synthesis:\s*none/);
         expect(rule.body, rule.selectors).not.toMatch(/font:[^;]*var\(--display\)/);
       }
+    });
+
+    it("headings that hold numbers (sidebar classes, dialog titles, spell level groups) and the equipment section labels use the text face, which beats the Marcellus heading rule", () => {
+      const rules = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((m) => ({ selectors: m[1]!.split(",").map((s) => s.trim()), body: m[2]! }));
+      const textFace = (selector: string) => rules.some((rule) => rule.selectors.includes(selector) && /font-family:\s*var\(--font\)/.test(rule.body));
+      for (const selector of [".charside .sidetitle", ".dlg header h2", ".spgroup h3", ".equipment .eyebrow"]) expect(textFace(selector), selector).toBe(true);
     });
 
     it("the casting-ability badge is never clipped", () => {
