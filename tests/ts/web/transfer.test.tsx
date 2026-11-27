@@ -123,6 +123,10 @@ describe("Transfer", () => {
     expect(linkBox.value).toBe(`${window.location.origin}/#${string}`);
     expect((screen.getByRole("textbox", { name: "Export string" }) as HTMLTextAreaElement).value).toBe(string);
     expect((screen.getByRole("textbox", { name: "Readable JSON" }) as HTMLTextAreaElement).value).toContain('"name": "Mine"');
+    // The readable JSON is folded in a details element, after the link and the string.
+    const fold = screen.getByRole("textbox", { name: "Readable JSON" }).closest("details")!;
+    expect(fold.open).toBe(false);
+    expect(linkBox.compareDocumentPosition(fold) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     const panel = linkBox.closest(".field")! as HTMLElement;
     fireEvent.click(within(panel).getByRole("button", { name: "Copy" }));
     await waitFor(() => expect(writeText).toHaveBeenCalledWith(linkBox.value));
@@ -204,5 +208,15 @@ describe("Transfer", () => {
     await paste(await encode(badRun("Incoming")));
     expect((await screen.findByRole("alert")).textContent).toMatch(/storage exploded/);
     expect((screen.getByRole("button", { name: "Check" }) as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  it("keeps both frames in one equal-height pair, the paste zone before its Check button", async () => {
+    const store = createStore(new MemoryBackend());
+    renderTransfer(store);
+    const frames = document.querySelectorAll(".pair > section.frame");
+    expect(frames.length).toBe(2);
+    const zone = screen.getByRole("textbox", { name: "Paste a run" });
+    const check = screen.getByRole("button", { name: "Check" });
+    expect(zone.compareDocumentPosition(check) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 });

@@ -31,7 +31,7 @@ export function versionDate(at: string, lang: Lang): string {
 }
 
 /** One line of a version: who it concerns, what changed, and the value it replaced (shown struck). */
-type Line = { who: string; what: string; was?: string };
+type Line = { who: string; what: string; was?: string; /** The value that replaced `was`, shown after an arrow. */ to?: string };
 
 function readRun(entry: HistoryEntry | undefined, data: GameData): Run | null {
   if (entry === undefined) return null;
@@ -171,6 +171,28 @@ export default function HistoryPanel({ data, name, versions, onRestore }: Props)
         return swap(`${t("diff.choice", { level })}${sep}`, null);
       case "notes":
         return { who, what: t("diff.notes") };
+      case "equipment": {
+        const act = Number(change.act ?? "0");
+        const state = (item: string | undefined, kind: Change["beforeState"]) =>
+          item !== undefined ? gameName(data, lang, "item", item) : kind === "empty" ? t("equipment.empty") : act > 1 ? t("equipment.inherited", { act: act - 1 }) : t("history.none");
+        return {
+          who,
+          what: `${t("diff.equipment", { act, slot: gameName(data, lang, "slot", change.slot ?? "") })}${sep}`,
+          was: state(change.before, change.beforeState),
+          to: state(change.after, change.afterState),
+        };
+      }
+      case "prepared": {
+        const added = change.added ?? [];
+        const removed = change.removed ?? [];
+        const head = t("diff.prepared", { level, class: gameName(data, lang, "class", change.class ?? ""), classLevel: change.classLevel ?? 0 });
+        const spells = [
+          ...(added.length === 0 ? [] : [t("diff.preparedAdded", { names: list("spell", added) })]),
+          ...(removed.length === 0 ? [] : [t("diff.preparedRemoved", { names: list("spell", removed) })]),
+        ].join(", ");
+        const mode = change.mode === undefined ? "" : `${t(change.mode === "own" ? "diff.preparedOwn" : "diff.preparedInherited")}${spells === "" ? "" : ` (${spells})`}`;
+        return { who, what: `${head}${sep}${mode === "" ? spells : mode}` };
+      }
       default:
         return { who, what: t("diff.choiceChanged", { level }) };
     }
@@ -185,10 +207,11 @@ export default function HistoryPanel({ data, name, versions, onRestore }: Props)
       {line.what}
       {line.was !== undefined && (
         <>
-          {" "}
+          {line.to === undefined && " "}
           <s className="was">{line.was}</s>
         </>
       )}
+      {line.to !== undefined && ` → ${line.to}`}
     </div>
   );
   const [asking, setAsking] = useState<string | null>(null);

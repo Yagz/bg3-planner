@@ -1,5 +1,6 @@
 import { ABILITIES, isOffData } from "../../../src/plan/model.ts";
 import type { Character, Choice, OffData, Run } from "../../../src/plan/model.ts";
+import { EQUIPMENT_SLOTS } from "../../../src/plan/equipmentSlots.ts";
 
 export type ChangeKind =
   | "name"
@@ -18,7 +19,12 @@ export type ChangeKind =
   | "levelRemoved"
   | "levelClass"
   | "choice"
-  | "notes";
+  | "notes"
+  | "equipment"
+  | "prepared";
+
+/** What an equipment slot holds in an act when it holds no item of its own: emptied there, or taking the previous act's item. */
+export type EquipmentState = "empty" | "inherited";
 
 /**
  * One difference between two versions of a run. Values are identifiers (numbers as strings), never names.
@@ -33,6 +39,15 @@ export type Change = {
   after?: string;
   added?: string[];
   removed?: string[];
+  /** On an equipment change: the slot's identifier; `before` / `after` are item ids, or absent when `beforeState` / `afterState` say why. */
+  slot?: string;
+  beforeState?: EquipmentState;
+  afterState?: EquipmentState;
+  /** On a prepared-spells change: the class of the level and the level's rank among that class's levels. */
+  class?: string;
+  classLevel?: number;
+  /** On a prepared-spells change that switches between an own list and the inherited one; `added` / `removed` then hold the own list's content. */
+  mode?: "own" | "inherited";
 };
 
 const ACTS = ["1", "2", "3"] as const;
@@ -72,6 +87,49 @@ function swap(kind: ChangeKind, before: string, after: string, extra: Partial<Ch
   return change;
 }
 
+/** The state of an equipment slot in one act: its item, `"empty"` when emptied there, `"inherited"` when the act holds no value for it. */
+function slotState(character: Character, act: (typeof ACTS)[number], slot: string): string | EquipmentState {
+  const value = (character.equipment[act] as Record<string, string | null> | undefined)?.[slot];
+  return value === undefined ? "inherited" : value === null ? "empty" : value;
+}
+
+function equipmentChanges(before: Character, after: Character): Change[] {
+  const changes: Change[] = [];
+  for (const act of ACTS) {
+    const keys = new Set([...Object.keys(before.equipment[act] ?? {}), ...Object.keys(after.equipment[act] ?? {})]);
+    const slots = [...EQUIPMENT_SLOTS.filter((slot) => keys.has(slot)), ...[...keys].filter((slot) => !(EQUIPMENT_SLOTS as readonly string[]).includes(slot))];
+    for (const slot of slots) {
+      const was = slotState(before, act, slot);
+      const now = slotState(after, act, slot);
+      if (was === now) continue;
+      const change: Change = { kind: "equipment", character: after.who, act, slot };
+      if (was === "empty" || was === "inherited") change.beforeState = was;
+      else change.before = was;
+      if (now === "empty" || now === "inherited") change.afterState = now;
+      else change.after = now;
+      changes.push(change);
+    }
+  }
+  return changes;
+}
+
+/** The rank of level `index` (0-based) among the levels of its class. */
+function rankInClass(character: Character, index: number): number {
+  const cls = valueText(character.levels[index]!.class);
+  return character.levels.slice(0, index + 1).filter((level) => valueText(level.class) === cls).length;
+}
+
+function preparedChange(who: string, level: number, was: string[] | undefined, now: string[] | undefined, after: Character): Change | null {
+  if (was === undefined && now === undefined) return null;
+  const at = { class: valueText(after.levels[level - 1]!.class), classLevel: rankInClass(after, level - 1) };
+  const base: Change = { kind: "prepared", character: who, level, ...at };
+  if (was === undefined) return { ...base, mode: "own", added: [...now!], removed: [] };
+  if (now === undefined) return { ...base, mode: "inherited", added: [], removed: [...was] };
+  const added = without(now, was);
+  const removed = without(was, now);
+  return added.length === 0 && removed.length === 0 ? null : { ...base, added, removed };
+}
+
 function characterChanges(before: Character, after: Character): Change[] {
   const changes: Change[] = [];
   const who = after.who;
@@ -83,6 +141,7 @@ function characterChanges(before: Character, after: Character): Change[] {
   const scores = (character: Character) => ABILITIES.map((ability) => character.abilities[ability]).join("/");
   if (scores(before) !== scores(after)) changes.push({ kind: "abilities", character: who, before: scores(before), after: scores(after) });
   if (before.notes !== after.notes) changes.push({ kind: "notes", character: who });
+  changes.push(...equipmentChanges(before, after));
   const common = Math.min(before.levels.length, after.levels.length);
   for (let i = 0; i < common; i++) {
     const was = before.levels[i]!;
@@ -91,6 +150,8 @@ function characterChanges(before: Character, after: Character): Change[] {
     if (valueText(was.class) !== valueText(now.class)) {
       changes.push({ kind: "levelClass", character: who, level, before: valueText(was.class), after: valueText(now.class) });
     }
+    const prepared = preparedChange(who, level, was.prepared, now.prepared, after);
+    if (prepared !== null) changes.push(prepared);
     const slots = [...new Set([...Object.keys(was.choices), ...Object.keys(now.choices)])];
     for (const slot of slots) {
       const a = picks(was.choices[slot]);

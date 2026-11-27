@@ -141,4 +141,44 @@ describe("runDiff", () => {
     const changes = runDiff(older, { ...current, name: "Later" });
     expect(changes).toContainEqual({ kind: "name", before: "Main", after: "Later" });
   });
+
+  it("reports an equipment change by act and slot, with the item before and after", () => {
+    const before = base();
+    before.characters[0]!.equipment = { "1": { Breast: "ARM_Old" }, "2": {}, "3": {} };
+    const after = structuredClone(before);
+    after.characters[0]!.equipment = { "1": { Breast: "ARM_Old" }, "2": { Breast: "ARM_New" }, "3": {} };
+    expect(runDiff(before, after)).toEqual([{ kind: "equipment", character: "player", act: "2", slot: "Breast", beforeState: "inherited", after: "ARM_New" }]);
+    const swapped = structuredClone(after);
+    swapped.characters[0]!.equipment["2"] = { Breast: "ARM_Other" };
+    expect(runDiff(after, swapped)).toEqual([{ kind: "equipment", character: "player", act: "2", slot: "Breast", before: "ARM_New", after: "ARM_Other" }]);
+  });
+
+  it("tells emptying and inheriting apart", () => {
+    const before = base();
+    before.characters[0]!.equipment = { "1": { Cloak: "ARM_Cloak" }, "2": { Cloak: "ARM_Cloak" }, "3": {} };
+    const emptied = structuredClone(before);
+    emptied.characters[0]!.equipment["2"] = { Cloak: null };
+    expect(runDiff(before, emptied)).toEqual([{ kind: "equipment", character: "player", act: "2", slot: "Cloak", before: "ARM_Cloak", afterState: "empty" }]);
+    const inherited = structuredClone(before);
+    inherited.characters[0]!.equipment["2"] = {};
+    expect(runDiff(before, inherited)).toEqual([{ kind: "equipment", character: "player", act: "2", slot: "Cloak", before: "ARM_Cloak", afterState: "inherited" }]);
+    expect(runDiff(emptied, inherited)).toEqual([{ kind: "equipment", character: "player", act: "2", slot: "Cloak", beforeState: "empty", afterState: "inherited" }]);
+  });
+
+  it("a prepared-spells change lists added and removed spells at its level, with its class and class level", () => {
+    const before = base();
+    before.characters[0]!.levels = [{ class: "Cleric", choices: {} }, { class: "Fighter", choices: {} }, { class: "Cleric", choices: {}, prepared: ["A", "B"] }];
+    const after = structuredClone(before);
+    after.characters[0]!.levels[2]!.prepared = ["B", "C"];
+    expect(runDiff(before, after)).toEqual([{ kind: "prepared", character: "player", level: 3, class: "Cleric", classLevel: 2, added: ["C"], removed: ["A"] }]);
+  });
+
+  it("a prepared list switching between own and inherited is reported with its mode", () => {
+    const before = base();
+    before.characters[0]!.levels[1]!.prepared = ["A"];
+    const after = structuredClone(before);
+    delete after.characters[0]!.levels[1]!.prepared;
+    expect(runDiff(before, after)).toEqual([{ kind: "prepared", character: "player", level: 2, class: "Fighter", classLevel: 2, mode: "inherited", added: [], removed: ["A"] }]);
+    expect(runDiff(after, before)).toEqual([{ kind: "prepared", character: "player", level: 2, class: "Fighter", classLevel: 2, mode: "own", added: ["A"], removed: [] }]);
+  });
 });

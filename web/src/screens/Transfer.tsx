@@ -135,9 +135,12 @@ export default function Transfer({ data, store, run, initialText, onImported }: 
           <p className="sub">{t("transfer.noRun")}</p>
         ) : (
           <>
-            <ExportBox id="export-string" label={t("transfer.string")} value={exports.string} />
             <ExportBox id="export-link" label={t("transfer.link")} value={exports.link} />
-            <ExportBox id="export-json" label={t("transfer.json")} value={exports.json} />
+            <ExportBox id="export-string" label={t("transfer.string")} value={exports.string} />
+            <details className="jsonfold">
+              <summary>{t("transfer.jsonHelp")}</summary>
+              <ExportBox id="export-json" label={t("transfer.json")} value={exports.json} />
+            </details>
           </>
         )}
       </section>
@@ -146,11 +149,13 @@ export default function Transfer({ data, store, run, initialText, onImported }: 
         <div className="field grow">
           <div className="lab">
             <label htmlFor="import-text">{t("transfer.paste")}</label>
-            <button className="btn small primary" disabled={checking || text.trim() === ""} onClick={() => void check(text)}>
-              {t("transfer.check")}
-            </button>
           </div>
           <textarea id="import-text" value={text} onChange={(event) => setText(event.target.value)} />
+        </div>
+        <div className="runbar">
+          <button className="btn primary" disabled={checking || text.trim() === ""} onClick={() => void check(text)}>
+            {t("transfer.check")}
+          </button>
         </div>
         {result?.kind === "error" && (
           <p role="alert" className="banner">

@@ -100,13 +100,16 @@ body { margin: 0 }
 .btn.danger { background: var(--bad); border-color: var(--bad); color: var(--surface) }
 .confirm { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding-block: 8px; border-top: 1px solid var(--head-muted) }
 .history { min-width: 0 }
-.history h2 { font-size: 1rem; margin: 0 0 4px }
+.history h2 { font-size: 1.15rem; margin: 0 0 4px }
 .history ol { list-style: none; margin: 0; padding: 0 }
 .history li { display: grid; grid-template-columns: minmax(110px, 150px) minmax(0, 1fr) auto; gap: 4px 16px; align-items: start; padding-block: 10px; border-top: 1px solid var(--border) }
 .history .what { display: grid; gap: 2px; min-width: 0 }
 .history .muted { color: var(--muted) }
 .history .was { color: var(--muted); text-decoration: line-through }
 .history .note { font-size: 13px; color: var(--muted) }
+.history time { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 13.5px }
+.history .diffline { overflow-wrap: anywhere }
+@media (max-width: 600px) { .history li { grid-template-columns: minmax(0, 1fr) } }
 .history details summary { cursor: pointer; color: var(--accent); font-size: 13px }
 .banner { padding-block: 8px; color: var(--todo); background: var(--todo-bg); border-bottom: 1px solid var(--border); max-width: none }
 select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
@@ -330,6 +333,12 @@ select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
 .btn.small { padding: 1px 10px }
 .frame > h2 { margin: 0 0 12px }
 .importframe .field.grow { margin-bottom: 16px }
+.field textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px }
+.jsonfold { margin-bottom: 16px }
+.jsonfold summary { cursor: pointer; color: var(--accent); font-weight: 600; margin-bottom: 8px }
+.jsonfold summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+.jsonfold .field { margin-bottom: 0 }
+.jsonfold textarea.box { height: 14em }
 
 /* Character screen, second pass (mockup v6: summary frame, levels frame with the tree switch top right) */
 .summary h1 { margin: 0 0 4px }
@@ -398,7 +407,7 @@ select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
 .charside .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap }
 .charside .settle { margin: 0; padding-left: 18px; font-size: 13px }
 .notes { display: grid; gap: 6px }
-.notes textarea { width: 100%; box-sizing: border-box; font: inherit; color: var(--fg); background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; resize: vertical; min-height: 12em }
+.notes textarea { width: 100%; box-sizing: border-box; font: inherit; font-size: 15px; color: var(--fg); background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; resize: vertical; min-height: 12em }
 /* A spell's school beside its name: muted text, never colour alone. */
 .opt .school { color: var(--muted); font-size: 12px; font-style: italic }
 
