@@ -1,14 +1,16 @@
-import { Fragment, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import type { TextKind } from "../../../../src/data/names.ts";
 import type { GameData } from "../../../../src/data/types.ts";
-import { castingAbilities } from "../../../../src/engine/casting.ts";
+import { castingAbilities, spellSources } from "../../../../src/engine/casting.ts";
 import { SWAP_SEPARATOR } from "../../../../src/engine/choices.ts";
 import { grantedFeatures } from "../../../../src/engine/features.ts";
 import type { Issue } from "../../../../src/engine/issues.ts";
+import { PREPARED_SLOT, preparedState } from "../../../../src/engine/prepared.ts";
+import type { PreparedState } from "../../../../src/engine/prepared.ts";
 import { resolve } from "../../../../src/engine/progression.ts";
 import { isOptionalSelector, levelSlots } from "../../../../src/engine/validate.ts";
 import type { LevelSlots, SelectorSlot } from "../../../../src/engine/validate.ts";
-import { isOffData } from "../../../../src/plan/model.ts";
+import { ABILITIES, isOffData } from "../../../../src/plan/model.ts";
 import type { Ability, Character, Choice, OffData } from "../../../../src/plan/model.ts";
 import { useI18n } from "../../i18n/i18n.ts";
 import type { Lang, Translate } from "../../i18n/i18n.ts";
@@ -187,6 +189,94 @@ export function GrantedList({ names, limit = 6 }: { names: string[]; limit?: num
   );
 }
 
+/**
+ * The prepared spells of one level, for the class it takes: a count chip (good when met, to decide when short, bad when
+ * over) with the formula, the effective list as chips (the level's own, or the previous level's, said so), the spells
+ * always prepared apart (`before`: the list the class had at its previous level), and the buttons to edit the list or to take the previous level's list again. A class that
+ * does not prepare shows "all prepared" when it casts (`casts`: the class or its subclass gives spells at this level); a leftover list on one is an issue with a button that clears it.
+ */
+export function PreparedBlock({ data, character, level, state, casts, before, issues, onEdit, onInherit }: { data: GameData; character: Character; level: number; state: PreparedState | null; casts: boolean; before: { list: string[]; from: number } | null; issues: Issue[]; onEdit: () => void; onInherit: () => void }) {
+  const { t, lang } = useI18n();
+  const own = character.levels[level - 1]?.prepared !== undefined;
+  const cls = character.levels[level - 1]?.class ?? "";
+  if (state === null) {
+    if (own && issues.some((issue) => issue.code === "preparedNotOffered")) {
+      return (
+        <>
+          <span className="lab">{t("prepared.title")}</span>
+          <div className="val">
+            <IssueList data={data} issues={issues} />
+            <button type="button" className="btn small" onClick={onInherit}>
+              {t("prepared.clearList")}
+            </button>
+          </div>
+        </>
+      );
+    }
+    if (!casts) return null;
+    return (
+      <>
+        <span className="lab">{t("prepared.title")}</span>
+        <div className="val">
+          <span className="feat">{t("prepared.all")}</span>
+        </div>
+      </>
+    );
+  }
+  const ability = (ABILITIES as readonly string[]).includes(data.rules.classes[state.cls]?.spellcasting_ability ?? "") ? (data.rules.classes[state.cls]!.spellcasting_ability as Ability) : null;
+  const { list, count, pool, always } = state;
+  if (list === null && pool.length === 0 && always.length === 0) return null;
+  const n = list?.length ?? 0;
+  const tone = n > count ? "bad" : n < Math.min(count, pool.length) ? "todo" : "good";
+  const formula = t(state.cls === "Wizard" ? "prepared.formulaWizard" : "prepared.formula", { class: gameName(data, lang, "class", state.cls), level: state.classLevel, ability: ability === null ? "" : gameName(data, lang, "ability", ability) });
+  return (
+    <>
+      <span className="lab">{t("prepared.title")}</span>
+      <div className="val prepared">
+        <div className="prephead">
+          <span className={`pill ${tone}`} aria-label={t("prepared.countLabel", { count: n, expected: count })}>
+            {`${n} / ${count}`}
+          </span>
+          <span className="sub">{formula}</span>
+        </div>
+        {list === null && <span className="feat">{t("prepared.none")}</span>}
+        {list !== null && !state.own && <span className="feat">{t("prepared.inherits", { level: state.from ?? 0 })}</span>}
+        {list !== null && state.own && list.length === 0 && <span className="feat">{t("prepared.emptyChosen")}</span>}
+        {list !== null && list.length > 0 && (
+          <div className="chipsrow">
+            {list.map((spell) => (
+              <SpellChip key={spell} data={data} spell={spell} ability={ability} isNew={state.own && before !== null && !before.list.includes(spell)} />
+            ))}
+          </div>
+        )}
+        {always.length > 0 && (
+          <div className="always">
+            <span className="sub">{t("prepared.always")}</span>
+            <div className="chipsrow">
+              {always.map((spell) => (
+                <SpellChip key={spell} data={data} spell={spell} ability={ability} />
+              ))}
+            </div>
+          </div>
+        )}
+        <IssueList data={data} issues={issues} />
+        <div className="row">
+          {pool.length > 0 && (
+            <button type="button" className="btn small" onClick={onEdit}>
+              {t("prepared.edit")}
+            </button>
+          )}
+          {state.own && (
+            <button type="button" className="btn small" onClick={onInherit}>
+              {before === null ? t("prepared.clearList") : t("prepared.inheritFrom", { level: before.from })}
+            </button>
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
+
 type Props = {
   data: GameData;
   character: Character;
@@ -197,6 +287,8 @@ type Props = {
   /** Whether the run's ruleset allows multiclassing. */
   multiclass: boolean;
   onPick: (level: number, slot: string) => void;
+  /** Removes the level's own prepared list, which takes the previous one again (or just clears it). */
+  onInherit: (level: number) => void;
   /** Removes the last level (through the impact preview). */
   onRemove: () => void;
 };
@@ -206,10 +298,17 @@ type Props = {
  * the choices (picks or a dashed "to decide", the engine's issues under their pick, what the level grants) and a level menu
  * (change the class at this level; remove the level on the last row).
  */
-export default function LevelList({ data, character, issues, progressLevel, multiclass, onPick, onRemove }: Props) {
+export default function LevelList({ data, character, issues, progressLevel, multiclass, onPick, onInherit, onRemove }: Props) {
   const { t, lang } = useI18n();
   const resolved = resolve(character, data).levels;
   const abilities = castingAbilities(character, data);
+  // One resolution per level for the whole list; the previous list of each level's class comes from the states before it.
+  const prepared = useMemo(() => resolved.map((_, i) => preparedState(character, data, i + 1)), [character, data]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Whether each level's class gives spells at that point, from the class or its subclass (only asked where nothing is prepared).
+  const casting = useMemo(
+    () => resolved.map((level, i) => prepared[i] === null && level.class !== "" && spellSources(character, data, i + 1).some((source) => source.kind === "class" && source.id === level.class)),
+    [character, data], // eslint-disable-line react-hooks/exhaustive-deps
+  );
 
   const firstUpcoming = resolved.find((level) => level.level > progressLevel)?.level ?? null;
 
@@ -222,9 +321,19 @@ export default function LevelList({ data, character, issues, progressLevel, mult
         const slots = levelSlots(level, choices, data);
         const here = issues.filter((issue) => issue.level === n);
         const at = (slot: string) => here.filter((issue) => issue.slot === slot);
+        const preparedHere = here.filter((issue) => issue.slot === PREPARED_SLOT);
+        const state = prepared[n - 1] ?? null;
+        let before: { list: string[]; from: number } | null = null;
+        for (let i = n - 2; i >= 0 && state !== null; i--) {
+          const earlier = prepared[i];
+          if (earlier?.cls === state.cls && earlier.list !== null && earlier.from !== null) {
+            before = { list: earlier.list, from: earlier.from };
+            break;
+          }
+        }
         const rows = slotRows(slots, data, t, n);
         const placed = new Set(rows.map((row) => row.slot));
-        const elsewhere = here.filter((issue) => issue.slot === null || !placed.has(issue.slot));
+        const elsewhere = here.filter((issue) => issue.slot !== PREPARED_SLOT && (issue.slot === null || !placed.has(issue.slot)));
         const features = grantedFeatures(level, data).map((feature) => gameName(data, lang, feature.kind, feature.id));
         const played = n <= progressLevel;
         const cls = entry?.class ?? "";
@@ -262,7 +371,8 @@ export default function LevelList({ data, character, issues, progressLevel, mult
                     </div>
                   </Fragment>
                 ))}
-                {rows.length === 0 && <span className="full feat">{t("character.nothingToChoose")}</span>}
+                <PreparedBlock data={data} character={character} level={n} state={state} casts={casting[n - 1] ?? false} before={before} issues={preparedHere} onEdit={() => onPick(n, PREPARED_SLOT)} onInherit={() => onInherit(n)} />
+                {rows.length === 0 && state === null && preparedHere.length === 0 && <span className="full feat">{t("character.nothingToChoose")}</span>}
                 <div className="full">
                   <GrantedList names={features} />
                   <IssueList data={data} issues={elsewhere} />

@@ -9,13 +9,15 @@ import { rulesetEffects } from "../../../src/engine/difficulty.ts";
 import { resolve } from "../../../src/engine/progression.ts";
 import { characterSkillValues } from "../../../src/engine/coverage.ts";
 import { isOptionalSelector, knownSpellsBefore, levelSlots, skillRefusal, slotSnapshot, validate } from "../../../src/engine/validate.ts";
-import { MAX_LEVELS, isOffData } from "../../../src/plan/model.ts";
+import { PREPARED_SLOT, preparedState } from "../../../src/engine/prepared.ts";
+import { ABILITIES, MAX_LEVELS, isOffData } from "../../../src/plan/model.ts";
 import type { Ability, Character as CharacterModel, Choice, Run } from "../../../src/plan/model.ts";
 import { useI18n } from "../i18n/i18n.ts";
 import { characterLabel, gameName } from "../names.ts";
 import {
   addLevel,
   clearChoice,
+  inheritPrepared,
   previewNeeded,
   removeLastLevel,
   replaceCharacter,
@@ -24,6 +26,7 @@ import {
   setIdentity,
   setLevelClass,
   setNotes,
+  setPrepared,
   withOriginLock,
 } from "../state/characterOps.ts";
 import ChoicePicker, { kindOfList } from "./character/ChoicePicker.tsx";
@@ -200,6 +203,21 @@ export default function Character({ data, run, saveRun, characterId, onSelect, t
     if (resolved === undefined || entry === undefined) return null;
     const where = t("character.level", { level: n });
     const initial = Object.hasOwn(entry.choices, slot) ? entry.choices[slot] : undefined;
+    if (slot === PREPARED_SLOT) {
+      const state = preparedState(character, data, n);
+      if (state === null) return null;
+      const ability = data.rules.classes[state.cls]?.spellcasting_ability ?? null;
+      const spec: PickerSpec = {
+        title: `${t("prepared.title")} · ${where} (${gameName(data, lang, "class", state.cls)} ${state.classLevel})`,
+        items: state.pool,
+        kind: "spell",
+        mode: { type: "set", min: 0, max: state.count },
+        spells: { ability: (ABILITIES as readonly string[]).includes(ability ?? "") ? (ability as Ability) : null, same: [], others: {} },
+        initial: state.own ? (state.list ?? []) : undefined,
+        prepared: { prefill: state.list ?? [] },
+      };
+      return { spec, save: (choice) => (Array.isArray(choice) ? setPrepared(character, n, choice) : character), clear: () => inheritPrepared(character, n) };
+    }
     if (slot === CLASS_SLOT) {
       const items = sortByName(Object.keys(data.rules.classes).filter((name) => data.rules.classes[name]!.parent === null), "class");
       return {
@@ -360,7 +378,7 @@ export default function Character({ data, run, saveRun, characterId, onSelect, t
                   onChoose={(level, slot, choice) => commit(setChoice(character, level, slot, choice))}
                 />
               ) : (
-                <LevelList data={data} character={character} issues={levelIssues} progressLevel={run.progress.level} multiclass={multiclass} onPick={(level, slot) => setTarget({ level, slot })} onRemove={() => commit(removeLastLevel(character))} />
+                <LevelList data={data} character={character} issues={levelIssues} progressLevel={run.progress.level} multiclass={multiclass} onPick={(level, slot) => setTarget({ level, slot })} onInherit={(level) => commit(inheritPrepared(character, level))} onRemove={() => commit(removeLastLevel(character))} />
               )}
               <div className="row levelactions">
                 <button className="btn" disabled={character.levels.length >= MAX_LEVELS} onClick={() => commit(addLevel(character))}>

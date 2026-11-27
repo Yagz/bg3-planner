@@ -46,6 +46,8 @@ export type PickerSpec = {
   details?: Record<string, string[]>;
   /** The stored choice; absent when nothing is stored. */
   initial: Choice | undefined;
+  /** Prepared spells: the pool is the list, entries start from `prefill` when nothing is stored, and a value outside the game data is not offered. */
+  prepared?: { prefill: string[] };
 };
 
 /** One skill of a skill picker (see `PickerSpec.skills`). */
@@ -105,7 +107,7 @@ type Swap = { old: string; new: string };
 
 function initialState(spec: PickerSpec) {
   const { initial, mode } = spec;
-  const entries = Array.isArray(initial) ? initial : [];
+  const entries = Array.isArray(initial) ? initial : initial === undefined ? (spec.prepared?.prefill ?? []) : [];
   const picks = entries.filter((entry) => !entry.includes(SWAP_SEPARATOR));
   const swaps = entries
     .filter((entry) => entry.includes(SWAP_SEPARATOR))
@@ -466,7 +468,7 @@ export default function ChoicePicker({ data, spec, onSave, onClear, onClose }: P
               </button>
             </fieldset>
           )}
-          <div className="offdata">
+          {spec.prepared === undefined && <div className="offdata">
             <label className="opt">
               <input
                 type="checkbox"
@@ -483,7 +485,7 @@ export default function ChoicePicker({ data, spec, onSave, onClear, onClose }: P
               </span>
             </label>
             {offData && <input className="search" aria-label={t("picker.offDataValue")} value={offText} onChange={(event) => setOffText(event.target.value)} />}
-          </div>
+          </div>}
         </div>
         <footer>
           {spec.initial !== undefined && (

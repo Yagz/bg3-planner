@@ -452,3 +452,10 @@ select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
   .doll .figure { display: none }
   .doll .col { display: contents }
 }
+
+/* Prepared spells in a level row */
+.lv .picks > .val.prepared { display: grid; gap: 6px }
+.lv .prephead { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px }
+.lv .chipsrow { display: flex; flex-wrap: wrap; gap: 6px }
+.lv .always { display: grid; gap: 4px }
+.lv .val.prepared .row { display: flex; flex-wrap: wrap; gap: 8px }

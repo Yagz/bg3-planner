@@ -8,12 +8,15 @@ import {
   clearChoice,
   previewNeeded,
   inheritEquipment,
+  inheritPrepared,
   removeLastLevel,
   replaceCharacter,
   setAbilities,
   setChoice,
   setEquipment,
   setIdentity,
+  setPrepared,
+
   setLevelClass,
 } from "../../../web/src/state/characterOps.ts";
 import { realData } from "./realData.ts";
@@ -191,5 +194,20 @@ describe("equipment operations", () => {
     expect(Object.hasOwn(inherited.equipment["2"], "Helmet")).toBe(false);
     expect(inherited.equipment["2"].Cloak).toBe("CL");
     expect(inherited.equipment["1"]).toEqual({});
+  });
+});
+
+describe("prepared lists", () => {
+  it("setPrepared stores a copy of the list at one level; inheritPrepared deletes it, empty lists included", () => {
+    const base: Character = { ...ranger(), levels: [{ class: "Cleric", choices: {} }, { class: "Cleric", choices: {} }] };
+    const list = ["Target_A"];
+    const set = setPrepared(base, 2, list);
+    expect(set.levels[1]!.prepared).toEqual(["Target_A"]);
+    expect(set.levels[1]!.prepared).not.toBe(list);
+    expect(set.levels[0]).toBe(base.levels[0]);
+    expect(setPrepared(base, 1, []).levels[0]!.prepared).toEqual([]);
+    expect("prepared" in inheritPrepared(set, 2).levels[1]!).toBe(false);
+    expect(base.levels[1]!.prepared).toBeUndefined();
+    expect(() => setPrepared(base, 3, [])).toThrow();
   });
 });

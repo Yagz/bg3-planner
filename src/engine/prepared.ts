@@ -35,7 +35,8 @@ export type PreparedState = {
   always: string[];
 };
 
-const PREPARED_SLOT = "prepared";
+/** The slot of the issues about prepared spells. */
+export const PREPARED_SLOT = "prepared";
 
 function isAbility(value: string | null): value is Ability {
   return value !== null && (ABILITIES as readonly string[]).includes(value);

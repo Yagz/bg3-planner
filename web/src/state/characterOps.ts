@@ -141,3 +141,16 @@ export function inheritEquipment(character: Character, act: Act, slot: Equipment
   delete stored[slot];
   return { ...character, equipment: { ...character.equipment, [act]: stored } };
 }
+
+/** Stores the list of spells prepared from one level on (an empty list is an explicit list); the other levels are left as they are. */
+export function setPrepared(character: Character, level: number, spells: string[]): Character {
+  return withLevel(character, level, (entry) => ({ ...entry, prepared: [...spells] }));
+}
+
+/** Removes the level's own list: it takes the one of the class's previous level again. */
+export function inheritPrepared(character: Character, level: number): Character {
+  return withLevel(character, level, (entry) => {
+    const { prepared: _dropped, ...rest } = entry;
+    return rest;
+  });
+}
