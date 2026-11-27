@@ -90,7 +90,7 @@ export default function EquipmentTab({ data, character, issues, onChange }: Prop
           {/* The rarity in words, its colour only reinforcing it. */}
           {rarity !== null && (
             <>
-              <span className={`rw${className === "" ? "" : ` ${className}`}`}>{rarityName(t, rarity)}</span>
+              <span className={`rw${className === "" ? "" : ` ${className}`}`}>{rarityName(data, lang, t, rarity)}</span>
               {" · "}
             </>
           )}
@@ -137,7 +137,7 @@ export default function EquipmentTab({ data, character, issues, onChange }: Prop
         {LEGEND.map((value) => (
           <span key={value} className={`r-${value.replace(" ", "")}`}>
             <i className="dot" aria-hidden="true" />
-            <span className="legtext">{rarityName(t, value)}</span>
+            <span className="legtext">{rarityName(data, lang, t, value)}</span>
           </span>
         ))}
         <span>{t("equipment.legend.inherited")}</span>

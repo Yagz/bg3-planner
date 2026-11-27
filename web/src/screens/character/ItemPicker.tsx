@@ -86,7 +86,7 @@ export default function ItemPicker({ data, slotName, act, items, current, ownVal
               <option value="">{t("equipment.picker.allRarities")}</option>
               {RARITIES.map((name) => (
                 <option key={name} value={name}>
-                  {rarityName(t, name)}
+                  {rarityName(data, lang, t, name)}
                 </option>
               ))}
             </select>
@@ -99,7 +99,7 @@ export default function ItemPicker({ data, slotName, act, items, current, ownVal
                 <input type="radio" name={id} aria-label={entry.name} aria-describedby={`${id}-${entry.id}`} checked={picked === entry.id} onChange={() => setPicked(entry.id)} />
                 <span>
                   <b className={rarityClass(entry.rarity)}>{entry.name}</b>
-                  {entry.rarity !== null && <span className="d">{rarityName(t, entry.rarity)}</span>}
+                  {entry.rarity !== null && <span className="d">{rarityName(data, lang, t, entry.rarity)}</span>}
                   <span className="d" id={`${id}-${entry.id}`}>
                     {entry.where}
                     {entry.description !== null && ` — ${entry.description}`}

@@ -29,7 +29,7 @@ describe("game data", () => {
     expect(Object.keys(data.texts.en).length).toBeGreaterThan(0);
     expect(Object.keys(data.texts.fr).length).toBeGreaterThan(0);
     for (const texts of [data.texts.en, data.texts.fr]) {
-      for (const key of Object.keys(texts)) expect(key, key).toMatch(/^(ability|background|class|feat|item|label|modifier|origin|passive|race|ruleset|skill|slot|damage|school|spell):./);
+      for (const key of Object.keys(texts)) expect(key, key).toMatch(/^(ability|background|class|feat|item|label|modifier|origin|passive|race|ruleset|skill|slot|damage|school|rarity|spell):./);
     }
     expect(data.texts.en["class:Ranger"]?.name).toBeTruthy();
     expect(data.meta.game).toMatch(/^\d/);
@@ -107,6 +107,13 @@ describe("game data", () => {
       expect(data.texts.fr[`school:${school}`]?.name, school).toBeTruthy();
     }
     expect(nameOf(data.texts.fr, "school", "Evocation")).toBe("Évocation");
+  });
+  it("names the five item rarities of the game in both tables, keyed by the game's rarity ids", async () => {
+    const data = await loadGameData("data/larian");
+    const rarities = ["Common", "Uncommon", "Rare", "VeryRare", "Legendary"];
+    for (const texts of [data.texts.en, data.texts.fr]) expect(Object.keys(texts).filter((k) => k.startsWith("rarity:")).sort()).toEqual(rarities.map((id) => `rarity:${id}`).sort());
+    expect(nameOf(data.texts.en, "rarity", "VeryRare")).toBe("Very Rare");
+    expect(nameOf(data.texts.fr, "rarity", "Uncommon")).toBe("Peu courant");
   });
 });
 

@@ -104,9 +104,24 @@ describe("Equipment tab", () => {
     expect(helmet.querySelector(".it")!.className).toContain("r-rare");
     expect(within(helmet).getByText(name(rare))).toBeTruthy();
     // The rarity is a visible word at the head of the location line, coloured as reinforcement.
-    expect(helmet.querySelector(".where")!.textContent).toMatch(/^rare · Act 2 · .+/);
+    expect(helmet.querySelector(".where")!.textContent).toMatch(/^Rare · Act 2 · .+/);
     expect(helmet.querySelector(".where .rw")!.className).toContain("r-rare");
     expect(helmet.querySelector(".sr")).toBeNull();
+  });
+
+  it("rarity names are the game's texts as written, in the slot card, the legend, the picker's filter and its entries; story keeps the interface's word", () => {
+    const uncommon = itemIn("Helmet", 1, "uncommon");
+    setup([fighter({ "1": { Helmet: uncommon }, "2": {}, "3": {} })]);
+    setLanguage("fr");
+    expect(card("Helmet").querySelector(".where .rw")!.textContent).toBe("Peu courant");
+    expect([...document.querySelectorAll(".eqlegend .legtext")].map((e) => e.textContent)).toEqual(["Commun", "Peu courant", "Rare", "Très rare", "Légendaire"]);
+    fireEvent.click(card("Helmet"));
+    const dialog = screen.getByRole("dialog");
+    const filter = within(dialog).getByRole("combobox", { name: "Filtre de rareté" });
+    expect([...filter.querySelectorAll("option")].slice(1).map((o) => o.textContent)).toEqual(["Commun", "Peu courant", "Rare", "Très rare", "Légendaire", "d’histoire"]);
+    // Two items can share a name: the entry is found by its item id.
+    const entry = within(dialog).getAllByRole("radio").find((radio) => radio.getAttribute("aria-describedby")!.endsWith(`-${uncommon}`))!.closest("label")!;
+    expect(entry.querySelector("b + .d")!.textContent).toBe("Peu courant");
   });
 
   it("the picker filters by name, act and rarity, chooses, empties for the act, and offers Reprendre l'acte précédent only when the act sets the slot and never at act 1", () => {
